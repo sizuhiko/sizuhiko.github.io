@@ -1,0 +1,723 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - PHPのBDDフレームワーク Behat について発表してきました</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+          <!-- more -->
+
+<h3 id="php">第55回PHP勉強会＠関東で発表してきました</h3>
+
+<p>2011/2/10にPHP勉強会が約半年ぶりに開催されました。以前、発表するぜーと公言していたので、今回は万全を期してと思いきや最近の多忙に負けそうになりました。が、前日（というか当日朝４時）までバタバタしながら準備してました。。。  </p>
+
+<p>今回は昨年のPHP祭りで日本語ハックしたBehatの入門編です。あのときはLTという形であまり詳細に触れられなかったので、30分という時間ですが実際に１からやってみました。
+ここでは実際に「やってみよう」で実践した手順について解説します。  </p>
+
+<h3 id="section">はじめに</h3>
+
+<p>スライドの「1. インストール」でも書いていますが、まずBehat本体をインストールしてください。私がforkした日本語対応版をcloneすると「3. 日本語環境」の部分をスキップできます。
+「2. テスト環境」に関しては、今回behat_webstepsを流用しました。それ以外にもGoutte-for-Behat（<a href="https://github.com/ThePixelDeveloper/Goutte-for-Behat">https://github.com/ThePixelDeveloper/Goutte-for-Behat</a>）というものもあります。どちらもHTMLクライアントのエンジンとして「Goutte」を使っています。前者はgoutte.pharが含まれていますが、後者は含まれていないので別途Goutteをcloneする必要があります。ただ後者の方がstepsのコードは流用しやすいかもしれません。  </p>
+
+<h3 id="section-1">準備しよう</h3>
+
+<p>まず初期状態のディレクトリを以下のようにしました。</p>
+
+<pre><code>|-- Behat Behat本体のclone
+|-- behat_websteps behat_webstepsのclone
+</code></pre>
+
+<h3 id="section-2">練習環境を作る</h3>
+
+<p>behat_webstepsを土台にして、テスト環境を作ります。といっても、まずは単にコピーするだけです。</p>
+
+<pre><code>cp -R behat_websteps sandbox
+</code></pre>
+
+<h3 id="section-3">フィーチャーファイルを作成する</h3>
+
+<p>スライドでも引用したgihyo.jpでのcucumberについてとてもわかりやすい連載「<a href="http://gihyo.jp/dev/serial/01/ruby/0022">第22回　Railsアプリの受け入れテストをCucumberで書こう</a>」のフィーチャーを使用します。  </p>
+
+<pre><code>vi sandbox/features/sample.feature
+</code></pre>
+
+<p>実際のコードは以下のとおりです。</p>
+
+<pre><code># language: ja
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録
+    前提 "ユーザ登録"ページを表示している
+    もし "email"に"example@example.com"と入力する
+    かつ "name"に"赤松 祐希"と入力する
+    かつ "age"に"22"と入力する
+    かつ "Create"ボタンをクリックする
+    ならば "User was successfully created."と表示されていること
+    かつ "example@example.com"と表示されていること
+    かつ "赤松 祐希"と表示されていること
+    かつ "22"と表示されていること
+</code></pre>
+
+<p>ここでcucumberと違うのは1行目（フェーチャの前）に言語指定をするところです。現時点のBehatではこれを書く事でja.xmlを利用してくれます。</p>
+
+<h3 id="section-4">実行してみる</h3>
+
+<p>フィーチャーはbin/behatコマンドでテストします。</p>
+
+<pre><code>bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+</code></pre>
+
+<p>画面には、以下のように出力されます。</p>
+
+<pre><code>&lt;code&gt;
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録                                     # features/sample.feature:4
+
+&lt;span style="color: goldenrod"&gt;
+    前提 "ユーザ登録"ページを表示している
+    もし "email"に"example@example.com"と入力する
+    かつ "name"に"赤松 祐希"と入力する
+    かつ "age"に"22"と入力する
+    かつ "Create"ボタンをクリックする
+    ならば "User was successfully created."と表示されていること
+    かつ "example@example.com"と表示されていること
+    かつ "赤松 祐希"と表示されていること
+    かつ "22"と表示されていること
+&lt;/span&gt;
+1 scenario (&lt;span style="color: goldenrod"&gt;1 undefined&lt;/span&gt;)
+9 steps (&lt;span style="color: goldenrod"&gt;9 undefined&lt;/span&gt;)
+0.123s
+&lt;span style="color: goldenrod"&gt;
+You can implement step definitions for undefined steps with these snippets:
+
+$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $arg1, $arg2) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+&lt;/span&gt;
+&lt;/code&gt;
+</code></pre>
+
+<p>ステップ（テストの定義）が記述されていないので、9つの未定義エラーが表示されています。その下にはスケルトンが表示されているので、まずこれをコピペしてstepファイルを作成します。</p>
+
+<h3 id="section-5">ステップファイルの作成</h3>
+
+<p>stepファイル「web_test_step.php」に前節のスケルトンを貼付けます。以下のようになるでしょう。</p>
+
+<pre><code>&lt;?php
+
+$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $arg1, $arg2) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+
+$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $arg1) {
+    throw new EverzetBehatExceptionPending();
+});
+</code></pre>
+
+<p>また実行してみましょう。</p>
+
+<pre><code>&lt;code&gt;
+bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録                                     # features/sample.feature:4
+
+&lt;span style="color: goldenrod"&gt;
+    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:5
+      TODO: write pending definition
+&lt;/span&gt;&lt;span style="color: skyblue"&gt;
+    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:9
+    ...（** 省略 **）
+&lt;/span&gt;
+
+1 scenario (&lt;span style="color: goldenrod"&gt;1 pending&lt;/span&gt;)
+9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;, &lt;span style="color: goldenrod"&gt;1 pending&lt;/span&gt;)
+0.089s
+&lt;/code&gt;
+</code></pre>
+
+<p>未定義（undefined）から、ペンディングに変わりましたね。これは貼付けたコードが現時点でPending例外を投げているためです。</p>
+
+<h3 id="section-6">ステップを記述する</h3>
+
+<p>ステップの中身はbehat_webstepsのcommon.phpを流用しました。</p>
+
+<pre><code>&lt;?php
+
+$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $page) {
+  $page = $world-&gt;__getPath($page);
+
+  $world-&gt;client-&gt;request('GET', $page);
+  $world-&gt;__getClientProperties();
+});
+
+$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $field, $value) {
+  assertNotNull($world-&gt;page,"No webpage loaded");
+  $form = $world-&gt;__getForm('Create');
+  $form[$field]-&gt;setValue($value);
+});
+
+$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $button) {
+  assertNotNull($world-&gt;page,"No webpage loaded");
+  $form = $world-&gt;__getForm('Create');
+  $world-&gt;client-&gt;submit($form);
+  $world-&gt;__getClientProperties();
+});
+
+$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $text) {
+  assertNotNull($world-&gt;page,"No webpage loaded");
+  assertContains($text,$world-&gt;output);
+});
+</code></pre>
+
+<p>実行してみましょう。</p>
+
+<pre><code>&lt;code&gt;
+bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録                                     # features/sample.feature:4
+
+&lt;span style="color: firebrick"&gt;    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8
+      Unknown path 'ユーザ登録'. You can define it in [features_folder]/support/paths.php
+      Failed asserting that an array has the key &lt;string:ユーザ登録&gt;.
+&lt;/span&gt;&lt;span style="color: skyblue"&gt;    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
+    ...（** 省略 **）
+&lt;/span&gt;
+
+1 scenario (&lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
+9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;), &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
+0.355s
+&lt;/code&gt;
+</code></pre>
+
+<p>すると「ユーザ登録」なんてURLは見つからないというエラーになります。まぁそうですね。URLに関しては画面名と実際のhttpリクエストするURLを関連づけておく必要があります。これはgoutte以外のHTTPクライアントを使っても同じことです。ベースとしたbehat_webstepsではsupport/paths.phpにそのマッピングを書くようにしていますので、追加します。</p>
+
+<pre><code>&lt;?php
+$world-&gt;paths = array();
+$world-&gt;paths['ユーザ登録'] = "http://localhost/user_regist.php";
+</code></pre>
+
+<h3 id="section-7">テストを失敗させる</h3>
+
+<p>ここまでで、初期段階の準備は完了です。ではまたテストを実行してみましょう。</p>
+
+<pre><code>&lt;code&gt;
+bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録                                     # features/sample.feature:4
+
+    &lt;span style="color: green"&gt;前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8&lt;/span&gt;
+    &lt;span style="color: firebrick"&gt;もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
+      The current node list is empty.&lt;/span&gt;
+    &lt;span style="color: skyblue"&gt;...（** 省略 **）&lt;/span&gt;
+
+1 scenario (&lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
+9 steps (&lt;span style="color: green"&gt;1 passed&lt;/span&gt;, &lt;span style="color: skyblue"&gt;7 skipped&lt;/span&gt;, &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
+0.114s
+&lt;/code&gt;
+</code></pre>
+
+<p>テストを実行してみると、最初に入力フォームに値をセットしようとするところで失敗します。まだユーザ登録画面を表示するプログラムはありません。  </p>
+
+<p>それでは実際に動作するコードを書いてみましょう。  </p>
+
+<h3 id="section-8">実装する</h3>
+
+<p>ここではあくまでテストを通過させる簡単なコードを書いてみます。画面の入力フォームから入力された値を表示するuser_regist.phpを書いてみましょう。</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+      &lt;title&gt;ユーザ登録&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div&gt;&lt;?
+            if ($_POST["submit"]) {
+                echo "User was successfully created.". "&lt;br /&gt;";
+                echo "name = "     . $_POST['name']  . "&lt;br /&gt;";
+                echo "e-mail = "   . $_POST['email'] . "&lt;br /&gt;";
+                echo "age = "      . $_POST['age']   . "&lt;br /&gt;";
+            }
+        ?&gt;&lt;/div&gt;
+        &lt;form method="post" action="user_regist.php"&gt;
+            &lt;div&gt;
+                &lt;label&gt;名前:&lt;/label&gt;&lt;input type="text" name="name" value=""&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;label&gt;e-mail:&lt;/label&gt;&lt;input type="text" name="email" value=""&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;label&gt;年齢:&lt;/label&gt;&lt;input type="text" name="age" value=""&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+                &lt;input type="submit" name="submit" value="Create"&gt;
+            &lt;/div&gt;
+        &lt;/form&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>※まぁなんとも安直なコードですが、ご勘弁を・・・</p>
+
+<p>作成したファイルをドキュメントルートに設置してテストを実行しましょう。</p>
+
+<pre><code>&lt;code&gt;
+bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+フィーチャ: ユーザを管理したい
+
+  シナリオ: ユーザの登録                                     # features/sample.feature:4
+
+&lt;span style="color: green"&gt;    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8
+    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
+    かつ "name"に"赤松 祐希"と入力する                         # features/steps/web_test_step.php:14
+    かつ "age"に"22"と入力する                             # features/steps/web_test_step.php:14
+    かつ "Create"ボタンをクリックする                          # features/steps/web_test_step.php:21
+    ならば "User was successfully created."と表示されていること # features/steps/web_test_step.php:26
+    かつ "example@example.com"と表示されていること             # features/steps/web_test_step.php:26
+    かつ "赤松 祐希"と表示されていること                           # features/steps/web_test_step.php:26
+    かつ "22"と表示されていること                              # features/steps/web_test_step.php:26
+&lt;/span&gt;
+1 scenario (&lt;span style="color: green"&gt;1 passed&lt;/span&gt;)
+9 steps (&lt;span style="color: green"&gt;9 passed&lt;/span&gt;)
+0.389s
+&lt;/code&gt;
+</code></pre>
+
+<p>やったー、グリーンでテスト成功です。  </p>
+
+<h3 id="section-9">さいごに</h3>
+
+<p>今回はbehat_webstepsをベースにしましたが、HTTPクライアントは何でも大丈夫です。今回goutteでしたが、BehatはPHPUnitを使うのでPHPUnitのPHPUnit_Extensions_SeleniumTestCaseを使うのも１つでしょう。Javascriptが使われているサイトなどでは、こちらの選択になりますね。  </p>
+
+<p>大事なことはアジャイルでドキュメントを書く事と、無駄なドキュメントでなく実行可能なドキュメントである、ということですね。プレーンテキストなのでプログラマじゃなくても、お客さんでも読めるし、書いてもらう事も可能かもしれません。打ち合わせでフィーチャファイルを議事録的に書きながら進めることもできると思います。  </p>
+
+<p>今後の展開としては、一般的なwebstepに関してはgoutteを使った日本語版を、私のgithubアカウントで公開予定です。4/2のPHPカンファレンス関西までには公開して何かしゃべりたいなーと思っていますが、ちょっとテーマと違うか。。LT狙いで何か。。  </p>
+
+<p>Behat RC1も期待して待ちましょう！！  </p>
+
+<div style="width:425px" id="__ss_6907127">
+<strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/kishida4slideshare/behat" title="Behat入門" rel="nofollow">Behat入門</a></strong><object id="__sse6907127" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy201102-110212212213-phpapp02&amp;stripped_title=behat&amp;userName=kishida4slideshare" />
+<param name="allowFullScreen" value="true" />
+<param name="allowScriptAccess" value="never" />
+<embed name="__sse6907127" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy201102-110212212213-phpapp02&amp;stripped_title=behat&amp;userName=kishida4slideshare" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never" /></object><div style="padding:5px 0 12px">View more <a href="http://www.slideshare.net/" rel="nofollow">presentations</a> from <a href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
+</div>
+
+<p>懇親会でも話題になったのですが、PHPSpecはどこへ行ってしまったのか・・・  </p>
+
+<p>それと、pharファイルが使えないよ！という方（当日朝3時までのオレ）、は<a href="http://d.hatena.ne.jp/brtRiver/20101029/1288342181">こちらの「Pharは便利だけど <code>--enalbe-zend-multibyte</code>が有効だと文字化けしてしまう」</a>を参考にしてください！！</p>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

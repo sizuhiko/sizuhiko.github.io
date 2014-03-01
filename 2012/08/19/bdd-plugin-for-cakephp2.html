@@ -1,0 +1,595 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - BDD Plugin for CakePHP2を公開しました</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+          <!-- more -->
+<p><img alt="" src="/images/blog/bdd.png" />   </p>
+
+<p>BDD Plugin for CakePHP (<a href="https://github.com/sizuhiko/Bdd">https://github.com/sizuhiko/Bdd</a>) はCakePHPからRuby on Railsのように2つのBDDフレームワークを実行できるようにするインテグレーション・プラグインです。<br />
+2つのBDDフレームワークは  </p>
+
+<ul>
+  <li>スペック・フレームワークは Spec for PHP</li>
+  <li>ストーリー・フレームワークは Behat
+を利用しています。<br />
+それぞれのフレームワークの特徴は、共に外側のインターフェースを自然言語で記述できることでコミュニケーション・ツールとしての役割を持っています。  </li>
+</ul>
+
+<p>BehatをCakePHPから利用するためのプラグインとしてCakeBehatを公開してきました。<br />
+そういう意味で、これはCakeBehatの改良版と言って間違いありません。<br />
+CakeBehatからの進化ポイントは以下のとおりです。  </p>
+
+<ul>
+  <li>スペックフレームワーク Spec for PHP を実行可能に</li>
+  <li>依存関係の解決に Composer を利用</li>
+</ul>
+
+<p>詳しくは github のREADMEで書いているのですが、英語（あっているか不安がたっぷりですが）で書いてあるので、安心の日本語で解説したいと思います。<br />
+今回はサンプルアプリケーション BddExampleApp (<a href="https://github.com/sizuhiko/BddExampleApp">https://github.com/sizuhiko/BddExampleApp</a>) に簡単なチュートリアルを書いているので、こちらの流れを中心に説明していきます。  </p>
+
+<h3 id="section">インストール</h3>
+
+<ul>
+  <li>CakePHP2 をインストール （2.2以降を推奨）</li>
+  <li>PHPUnit をインストール（pearなどを利用）</li>
+  <li>git cloneを使うかgithubのサイトからサンプルアプリケーションBddExampleAppをCakePHPのルートディレクトリに展開。このとき app, feature, spec ディレクトリが必要になります。</li>
+  <li>
+    <p>テストデータを投入するのにfixture以外の仕組みとして fixture-factory(<a href="https://github.com/rodrigorm/fixture-factory">https://github.com/rodrigorm/fixture-factory</a>) を使っています。リンク先の installation を参考にインストールして欲しいのですが、ディレクトリ名が解決できない問題(?)があるのでvendorsディレクトリをvendorにリネームしてください。  </p>
+
+    <p>$ mv app/Plugin/fixture_factory/vendors app/Plugin/fixture_factory/vendor</p>
+  </li>
+  <li>データベースを作成して、テーブルを作成してください。データベースはテスト用、開発用の2つが必要で、その両方に app/Config/sql/posts_ja.sql のSQLを実行してください。</li>
+  <li>環境設定ファイル app/Config/core.php と database.php を環境に合わせて変更してください。database.phpのデータベース名やログイン、パスワードなどは前項で設定した値に変更してください。またブラウザ経由のテストでテスト用データベースを参照するために test.localhost のようなテスト時のホスト名が必要なので、そのままhostsに設定するか違う名前に変更してください。</li>
+  <li>BDDプラグインをインストールします。CakePHPのプラグインディレクトリ (/plugins) 　に移動して git clone するか、githubのサイトからダウンロードして展開してください。</li>
+  <li>
+    <p>そうすると /plugings/Bdd のようなディレクトリ階層になるので、その /plugings/Bdd に移動してください。Composerをインストールして依存関係を解決します。  </p>
+
+    <p>curl -s https://getcomposer.org/installer | php
+php composer.phar install –dev</p>
+  </li>
+  <li>最後にbehatが利用するテスト用URLを設定します。app/Config/behat.ymlの設定値はひとまず「base_url:  '<a href="http://test.localhost:8888/bdd/">http://test.localhost:8888/bdd/</a>'」のようになっているので、実際にインストールしたアクセス可能なURLに変更してください。このときdatabase.phpで設定したテスト用のホスト名になってることが重要です。</li>
+</ul>
+
+<p>インストールが完了したら、<a href="http://localhost:8888/bdd/posts/">http://localhost:8888/bdd/posts/</a> にアクセスして3件のリストが表示されていれば大丈夫です。  </p>
+
+<h3 id="section-1">テストを実行してみる</h3>
+
+<p>CakePHPのルートディレクトリに移動して以下のようにコマンドを実行します。behatのテストでseleniumを利用しているので、可能であればコチラ(<a href="http://www.phpunit.de/manual/3.6/ja/selenium.html">http://www.phpunit.de/manual/3.6/ja/selenium.html</a>)を参考にseleniumをダウンロードして実行しておいてください。  </p>
+
+<pre><code>$ lib/Cake/Console/cake Bdd.spec
+
+Welcome to CakePHP v2.x.x Console
+---------------------------------------------------------------
+App : app
+Path: /your CakePHP root/app/
+---------------------------------------------------------------
+•••••••••••••••••••••••••••••••••••••••••••••••••
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+✔ OK ❯ Passed 49 of 49 (0.17s 22Mb)
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+$ lib/Cake/Console/cake Bdd.story
+
+Welcome to CakePHP v2.x.x Console
+---------------------------------------------------------------
+App : app
+Path: /your CakePHP root/app/
+---------------------------------------------------------------
+Feature:
+  In order to tell the masses what's on my mind
+  As a user
+  I want to read articles on the site
+
+  Background:              # /your CakePHP root/features/posts.feature:7
+    Given there is a post: # /your CakePHP root/features/steps/posts_step.php:3
+      | Title              | Body                          |
+      | The title          | This is the post body.        |
+      | A title once again | And the post body follows.    |
+      | Title strikes back | This is really exciting! Not. |
+
+  Scenario: Show articles                 # /your CakePHP root/features/posts.feature:14
+    When I am on "TopPage"                # FeatureContext::visit()
+    Then I should see "The title"         # FeatureContext::assertPageContainsText()
+    And I should see "A title once again" # FeatureContext::assertPageContainsText()
+    And I should see "Title strikes back" # FeatureContext::assertPageContainsText()
+
+....
+</code></pre>
+
+<h3 id="section-2">スペックフレームワークの使い方</h3>
+
+<p>基本的なコマンドラインのオプションなどはSpec for PHP(<a href="https://github.com/drslump/Spec-PHP">https://github.com/drslump/Spec-PHP</a>) に対して透過的になっていて、意味もPHPUnitと似ている（実際内部はPHPUnitである）ので、感覚は掴みやすいと思います。<br />
+前のコマンド実行例では Bdd.spec にオプションがない状況でしたが、代表的な使い方は以下のとおりです。  </p>
+
+<pre><code># デフォルトディレクトリ（spec）にあるspecファイルをすべて実行
+lib/Cake/Console/cake Bdd.spec
+
+# 指定したディレクトリ（spec）にあるspecファイルをすべて実行
+lib/Cake/Console/cake Bdd.spec spec
+
+# 指定したファイルだけを実行
+lib/Cake/Console/cake Bdd.spec spec/post.spec.php
+
+# オプションの詳細を見る
+lib/Cake/Console/cake Bdd.spec --help
+</code></pre>
+
+<p>スペックファイルの命名ルールは以下のようにspec.phpで終わる3通りです。  </p>
+
+<ul>
+  <li>post.spec.php</li>
+  <li>post_spec.php</li>
+  <li>PostSpec.php</li>
+</ul>
+
+<h4 id="section-3">モデルをテストする</h4>
+
+<p>モデルをテストするためにCakeTestCaseを継承したCakeSpecというPHPUnitのテストケースを用意しています。これを classアノテーションで指定します。  </p>
+
+<p>あとはフィクスチャですが、これはCake本来のテストで利用するものと同じで、宣言する場所と意味がちょっと変わってきます。<br />
+Cakeのユニットテストでは、テストケースクラスのメンバ変数として$fixuresを宣言するのですが、スペックでは$W（ワールド）インスタンスのfixtures変数にセットします。arrayの書き方は同じです。ただしスペックコードではitブロックの度にfixturesが解決されるのでitの前のbeforeやbefore_eachブロックで書いておけば1ファイル中に何度出て来ても問題ありません。ちょうどloadFixtures()のような動きなのですが、この場合もCakeTestCaseではfixturesにテストケース内で利用するすべてのフィクスチャを書いておく必要がありますが、スペックでは下位階層で利用する分だけでOKです。これはスペックコードのスコープによることろなのですが、これを詳しく知るには、Spec for PHPがどのようにDSLで解釈してPHPコードをPHPUnitに実行させるかを見た方が良いでしょう。  </p>
+
+<pre><code># スペックコードをPHPコードに変換して出力
+$ lib/Cake/Console/Bdd.spec spec/post.spec.php --dump
+</code></pre>
+
+<p>Spec for PHP はPHPUnitのTestSuiteとTestCaseを利用しています。このうちitブロックがTestCaseに該当します。その他のdescribe、contextやbeforeはTestSuiteになっています。つまりitブロックで $this 変数を使うと TestCase のインスタンスになります。それ以外のbeforeなどは実際にはTestSuiteにマッピングされるので、実行中のテストケースインスタンスを取得したい場合は DrSlumpSpec::test() を呼び出す事で利用可能になります。このスコープが重要になってくるのが、次のコントローラのテストです。  </p>
+
+<h4 id="section-4">コントローラをテストする</h4>
+
+<p>コントローラをテストするためにControllerTestCaseを継承したControllerSpecというPHPUnitのテストケースを用意しています。モデルと同様にclassアノテーションで指定します。ControllerTestCaseを継承しているのでもちろんtestAction()が利用可能なのですが、ここで重要になるのが、スコープです。it以外でtestActionはControllerTestCase($this)から呼び出せないので、DrSlumpSpec::test()-&gt;testAction のように記述します。fixturesに関してはモデルと同じく下位階層に対して有効になります。  </p>
+
+<h4 id="spec-for-php">Spec for PHPを使いこなすには</h4>
+
+<p>Spec for PHPの評価（マッチング）はHamcrestを利用しているので自然言語で書く事が可能です。私はPHPUnitのassertXXXXXを覚えるよりも直感的で、こう書いたらできそう（実際できる!!）というのが良いと思っています。<br />
+どんな書き方があるかは、サンプルアプリケーションの spec 下に post 以外のテストコードも使い方例として入れてあるので、それを読むとわかるのではないかと思います。  </p>
+
+<h3 id="section-5">ストーリーフレームワークを利用する</h3>
+
+<p>こちらもスペックと同じく基本的なコマンドラインのオプションなどはBehat(<a href="http://behat.org/">http://behat.org/</a>) に対して透過的になっているので、詳しくは公式のドキュメントかhelpで見るのが良いでしょう。<br />
+先のコマンド実行例では Bdd.stoy にオプションがない状況でしたが、代表的な使い方は以下のとおりです。  </p>
+
+<pre><code># デフォルトディレクトリ（features）にあるfeatureファイルをすべて実行
+lib/Cake/Console/cake Bdd.story
+
+# 指定されたfeatureファイルを実行
+lib/Cake/Console/cake Bdd.story features/posts_ja.feature
+
+# より詳しいヘルプを見る
+lib/Cake/Console/cake Bdd.story --help
+</code></pre>
+
+<p>これ以外に関していえばCakeBehatと基本的な仕組みは変わっていません。  </p>
+
+<h4 id="section-6">フィーチャーを書く</h4>
+
+<p>公式ドキュメントの "Define your Feature in Quick Intro to Behat" : <a href="http://docs.behat.org/quick_intro.html#define-your-feature">http://docs.behat.org/quick_intro.html#define-your-feature</a> を見ると良いかな….（手抜きですみません）  </p>
+
+<p>実際のサンプルには日本語記述も入っています。  </p>
+
+<h4 id="section-7">ステップを書く</h4>
+
+<p>これも公式ドキュメント(See "Writing your Step definitions in Quick Intro to Behat" : <a href="http://docs.behat.org/quick_intro.html#writing-your-step-definitions">http://docs.behat.org/quick_intro.html#writing-your-step-definitions</a>)を読むといいね、ってことなんですが、Behatのドキュメントで最初に出会えるステップの書き方は、FeatureContextにステップを追加していく書き方です。これだと独自ステップが少ないうちは良いのですが、増えて来たら分割するのか、どういう単位で分割するのか、そのままビッククラスにするのか…という分岐点にたたされます。<br />
+それぐらいなら最初から分けておこうということで、例えばフィーチャの単位であったり自分たちで決めたルールでステップファイルを分割できる方式にしておきましょう。Behatではクロージャ定義も可能なので <a href="http://docs.behat.org/guides/5.closures.html">http://docs.behat.org/guides/5.closures.html</a> の書き方に従って書いてみましょう。サンプルアプリケーションもこの流れに沿っています。<br />
+基本的にステップをstepディレクトリ以下に書くようにすることで、FeatureContextを弄る必要はなくなるはずで、将来プラグインのバージョンが上がってFeatureContextが書き変わっても問題はおきません。  </p>
+
+<h4 id="cakephp">CakePHPとの関係</h4>
+
+<p>まぁこのままだとただのBehatなので、プラグインは何をしてくれるの？というとCakeBehatと同じくapp/Config/database.phpの設定を元にテストデータを投入するためのインターフェースを用意しています。まぁそれだけなんですが（それを言うとスペックもアノテーション部分ぐらいしか…. ）  </p>
+
+<p>先の日本語フィーチャでテストデータを登録するステップで、以下の2つのCakePHP連携APIが利用可能です。  </p>
+
+<ul>
+  <li>truncateModel(モデル名) : 指定されたモデル名のテストデータを削除します</li>
+  <li>getModel(モデル名) : テストデータを登録するモデルのインスタンスを取得します（ClassRegistory::init(モデル名)と同じです）</li>
+</ul>
+
+<p>テストデータは自動で削除されないので、このように必要なタイミングにてtruncateModelを呼び出すようにしてください。  </p>
+
+<h4 id="section-8">ちょっと便利な機能</h4>
+
+<p>Behatは表面的には「前提 "トップページ" を表示している」のように表示するページを指定する場合はURLを書くようにガイドされています。しかし内部的には別名をURLに置き換える事も可能なので、BDDプラグインでは features/support/env.php にページ別名を書けるようにしています。この方がフィーチャファイルの可読性があがると覆います。  </p>
+
+<h3 id="section-9">今後の展開</h3>
+
+<p>このプラグインを使ったBDDについてCakeFest2012の30分枠で話します。<br />
+その後、CakeBehatは完全にこちらへ移行となり（マイグレーションもそれほど難しくないと思う）ます。<br />
+Spec for PHPについては、私のdevelopブランチを利用しています。こちらは本家にはない機能（subjectもその1つ）を実装していたりします（そのうちPRするかも）。<br />
+Behat/Minkについても日本語問題をチェックしていたりしますので、統合的にメンテしていきたいと思っています。<br />
+また、これらで発生した問題についてもgithubのissueに日本語で構わないので指摘していただければと思います。  </p>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

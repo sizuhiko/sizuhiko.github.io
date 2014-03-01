@@ -1,0 +1,511 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - CakePHPのデータジェネレータ Fabricate を作りました</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+          <!-- more -->
+<p>Fabricate は Ruby の Fabricator に影響を受けたもので、データを簡単にすばやく生成する CakePHP2 用のプラグインです。  </p>
+
+<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
+
+<p>動作確認しているバージョンはCakePHP2.3.10, CakePHP2.4.1ですが、他のバージョンでもCakePHP2系なら動くと思います。  </p>
+
+<h3 id="section">インストール方法</h3>
+
+<p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
+
+<pre><code>    "extra": {
+        "installer-paths": {
+            "Plugin/Fabricate": ["sizuhiko/fabricate"]
+        }
+    },
+    "require": {
+        "composer/installers": "*",
+        "sizuhiko/fabricate": "*"
+    }
+</code></pre>
+
+<p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
+
+<p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
+
+<pre><code>CakePlugin::load('Fabricate');
+</code></pre>
+
+<h3 id="section-1">概要</h3>
+
+<p>Fabricateプラグインには3つのメソッドがあります。  </p>
+
+<ul>
+  <li>Fabricate::attributes_for(:model_name, :number_of_generation, :callback) : CakePHPの属性配列をデータ付きで返します（複数件生成可能）</li>
+  <li>Fabricate::build(:model_name, :callback) : CakePHPのモデルインスタンスを返します（1件のみ生成可能）</li>
+  <li>Fabricate::create(:model_name, :number_of_generation, :callback) : 指定された件数分データベースに生成する</li>
+</ul>
+
+<h3 id="section-2">用途</h3>
+
+<p>このプラグインは以下のような用途にとても向いています。  </p>
+
+<ul>
+  <li>ページングのテストをするのに大量にデータを生成したい</li>
+  <li>fixture だと各テストケースで同じデータが生成されてしまうけど、各テストケース毎に違うデータを生成したい。かつテスト対象のカラム以外は適当な値が自動的に入って欲しい</li>
+  <li>Bddプラグイン（CakePHPのBehatインテグレーションプラグイン）のステップで「Postモデルに100件のデータが登録されていること」みたいなのを書きたいのに、簡単に記述できないなぁと思ったとき</li>
+</ul>
+
+<h3 id="section-3">使い方＆サンプル</h3>
+
+<h4 id="attributesfor">attributes_for</h4>
+
+<pre><code>$results = Fabricate::attributes_for('Post', 10, function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+
+// $results is followings :
+array (
+  0 =&gt; 
+  array (
+    'id' =&gt; 1,
+    'title' =&gt; 'Lorem ipsum dolor sit amet',
+    'body' =&gt; 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+    'created' =&gt; '2013-10-09 12:40:28',
+    'updated' =&gt; '2013-10-09 12:40:28',
+  ),
+  1 =&gt; 
+  array (
+  ....
+</code></pre>
+
+<p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br />
+第二引数に生成するレコード件数を指定します。<br />
+ただ、全部自動的だと困るという場合があるので、3つ目の引数にコールバック関数を指定可能になっています。このコールバック関数は、10件のデータを生成する場合、都度計10回呼び出されます。<br />
+戻り値として、属性名をキーに値を持つ連想配列を指定すると、都度array_mergeが実行されます（recursiveではありません）。<br />
+データの自動生成処理は、CakePHPのコアにあった FixtureTask の _generateRecords() というメソッドを拝借してきて、そのまま利用しています。<br />
+CakePHPでfixtureを生成したときrecordsに入っている内容と同じ物になります。  </p>
+
+<p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
+
+<p>また、第二引数、第三引数は省略可能ですので、  </p>
+
+<pre><code>// 1件だけ生成
+Fabricate::attributes_for('Post');
+// 1件だけコールバックを指定して生成
+Fabricate::attributes_for('Post', function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+// 10件生成
+Fabricate::attributes_for('Post', 10);
+</code></pre>
+
+<p>というバリエーションでも利用可能です。  </p>
+
+<h4 id="build">build</h4>
+
+<p>とりあえず本家のFabricatorに近づけたたくて作ったメソッドですが、CakePHPではモデルのインスタンスを複数同時に持てないので、正直使い勝手としては微妙です（作者が言うなという話ですが）。  </p>
+
+<h4 id="create">create</h4>
+
+<p>最も簡単にデータをデータベースに保存するなら、このメソッドで十分です。<br />
+attributes_forで作ったレコードをすべてデータベースに保存します。<br />
+引数の使い方はattributes_forと同一になっています。  </p>
+
+<h3 id="section-4">きっかけと今後</h3>
+
+<p>ページングのテストを書こうとして、とにかく面倒になってきて「<strong>何でCakePHPにはFabricatorがないんだー</strong>」というノリで、カッとなって作った系ですので、機能的には最低限になっています。<br />
+かつたぶん最新のFabricatorのクローンとも言い難い状況です。  </p>
+
+<p>またカッとなったら、最新のFabricatorの機能に近づけようかな〜、どなかた使っていただける方がいればご要望、機能追加は GitHubのIssue、Pull Requestでお願いします。  </p>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

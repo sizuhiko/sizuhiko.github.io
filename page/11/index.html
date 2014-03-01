@@ -1,0 +1,700 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2008/04/22/flex2%e3%81%a7coverflow%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%82%92%e4%bd%9c%e3%82%8b-3-%ef%bd%9e%e7%94%bb%e5%83%8f%e3%82%92%e8%a1%a8%e7%a4%ba%e3%81%99%e3%82%8b.html">Flex2でCoverFlowクローンを作る (3) ～画像を表示する</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 08:04:50 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第三回は、Flashコンポーネント内に画像を表示する手順を整理します。  </p>
+
+<h3 id="section">■今回サンプルの完成イメージ</h3>
+
+<p>単純に画像が表示されるだけですが、まずはじめの一歩として取り組んでみましょう。  </p>
+
+<h3 id="section-1">■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_3/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+  <li>reflector.as3proj</li>
+  <li>reflector.mxml</li>
+  <li>ImageReflector.as</li>
+</ul>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3 id="section-2">■動かしてみよう！</h3>
+
+<p><img alt="" src="/images/blog/images/flex2_coverflow_3/test.jpg" /> 
+細かい解説は後にして、ひとまずソースコードを記述したら、コンパイルです。
+ツールバーの再生ボタンをクリックするとコンパイルが始まり、下ペインにコンパイルメッセージが出力されます。
+「reflector.swf」ができあがると、自動的に再生がはじまり、<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_3/run.jpg" /> 
+amazon.comから取得したWeb2.0ビギナーズバイブル[*1]の書籍画像が表示できましたね。  </p>
+
+<h3 id="uicomponent">■カスタムコントロールを作るなら、UIComponent</h3>
+
+<p>Flex2でカスタムコントロールを作るには、いくつか方法がありますが、本サンプルのように、UIComponentクラスを継承するのが最も簡単です。UIComponentはPlayerからのイベントを制御してくれるので、カスタムコントロールを作る場合、特定のメソッドのみオーバライドすれば良い事になります。また、表示する画像自体は、_contentという属性に持たせることにします。UIComponentは表示要素のスーパークラスです。</p>
+
+<h3 id="commitproperties">■コントロールの値を変更する、commitProperties</h3>
+
+<p>commitProperties()メソッドをオーバライドして、このカスタムコントロールが持つ値を設定します。FlashPlayerがmxml上の</p>
+
+<pre><code>&lt;local:ImageReflector /&gt;
+</code></pre>
+
+<p>を解析すると、内部的にはaddChild() メソッドを使用してコンポーネントが追加されまず。するとFlexはinvalidateProperties()を自動的に呼び出します。  </p>
+
+<p>つまり、必ず１度は最初にcommitProperties()が呼び出されるのです。カスタムコントロールの場合、コンストラクタでなく、ここで描画情報を初期化します。  </p>
+
+<p>まず、画像(Imageクラス)を実体として、UIComponentを作成します。</p>
+
+<pre><code>_content = UIComponent(new Image());
+</code></pre>
+
+<p>Amazonの画像を指定します。IDataRenderer.dataに画像のパスを指定すると、実際の描画はImageクラスが担当してくれます。</p>
+
+<pre><code>IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
+</code></pre>
+
+<p>カスタムコントロールの要素として、自身の子エレメントとして追加します。</p>
+
+<pre><code>addChild(_content);
+</code></pre>
+
+<p>つまり、mxml上では、</p>
+
+<pre><code>      &lt;local:ImageReflector &gt;
+        &lt;Image /&gt;
+      &lt;/local:ImageReflector &gt;
+</code></pre>
+
+<p>と書いたのと同じような状態となります。  </p>
+
+<p>最後に、invalidateDisplayList()メソッドを呼びます。
+invalidateDisplayList()を呼び出すと、画像の描画サイズを調整するため、updateDisplayList()が呼ばれる仕組みとなっています。  </p>
+
+<h3 id="measure">■コントロールのサイズを指定する、measure</h3>
+
+<p>invalidateProperties()では、commitProperties()の後にmeasure()メソッドの呼び出されます。このメソッドではFlashPlayer上に表示するサイズを設定する必要があるので、_contentから実際の画像サイズを取得して、measuredHeightとmeasuredWidthのプロパティに値を設定します。  </p>
+
+<h3 id="updatedisplaylist">■画像サイズを調整する、updateDisplayList</h3>
+
+<p>commitProperties()の最後で、子要素の描画を行うためにinvalidateDisplayList()を呼び出しています。ここでは主に子要素の表示サイズ、位置を調整します。  </p>
+
+<p>親要素のどの辺に、どのくらいの大きさで表示するか指定するのです。今回は画像を表示するだけなので、画像サイズを取得して、UIComponentのサイ
+ズに設定します。</p>
+
+<pre><code>_content.setActualSize(contentWidth,contentHeight);
+</code></pre>
+
+<h3 id="section-3">■まとめ</h3>
+
+<p>今回は画像を表示するだけだったので、これほどコードを記述しなくても、もっと簡単な方法もあったのですが、この過程は鏡面効果画像を表示するまでに重要なものです。いよいよ次回は画像を鏡面加工しますので、楽しみに待っていてください。  </p>
+
+<h4 id="web20">[1]:Web2.0ビギナーズバイブル</h4>
+
+<p>著者名：伊藤 浩一、大津 真、岸田 健一郎、まえだ ひさこ、安井 力  </p>
+
+<p>Web2.0に不可欠なオープンソース技術にはどのようなものがあるのか、そして、それらを使用して具体的にどのようなWebアプリケーション作成ができるのかということを一冊の書籍としてまとめたものです。  </p>
+
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839923221/xpjp-22">http://www.amazon.co.jp/exec/obidos/ASIN/4839923221/xpjp-22</a></p>
+
+  </div>
+  <h2 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 07:04:25 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第二回は、FlexでFlashコンポーネントを開発するのに便利なIDEを導入する手順を整理します。  </p>
+
+<h3 id="flashdevelop">■FlashDevelopとは</h3>
+
+<p>FlashDevelopは、フリーで利用可能なFlashの統合開発環境です。Flex Builderは有償版なので、タダで開発したいという人は、このツールを使うのがオススメです。Flex2,Flex3に必要なmxmlやActionScriptのコード補完機能などプログラミングをするには十分な機能を持っています。メニューなどすべて英語表記ですが、Eclipse IDEと操作性は似ているので、大きな問題はないでしょう。  </p>
+
+<h3 id="section">■ダウンロードする</h3>
+
+<p><a href="http://www.flashdevelop.org/">FlashDevelopのサイト</a>へアクセスします。
+<img alt="" src="/images/blog/images/flex2_coverflow_2/download1.jpg" /> 最新版を入手するには、Releasesを選択します。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/download2.jpg" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/download3.jpg" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
+
+<h3 id="section-1">■インストールする</h3>
+
+<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/install1.jpg" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/install2.jpg" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
+
+<h3 id="section-2">■はじめにすること</h3>
+
+<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/dev1.jpg" /> まずインストールしたFlashDevelopを実行します。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/dev2.jpg" /> Tools - Program Settings… （もしくはF10）を選択します。<br />
+<img alt="" src="/images/blog/images/flex2_coverflow_2/dev4.jpg" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
+
+<h3 id="section-3">■次回</h3>
+
+<p>Flex2を使って画像を表示する簡単なサンプルからスタートしていきます。</p>
+
+  </div>
+  <h2 class="title"><a href="/2008/04/22/flex2-coverflow-1.html">Flex2でCoverFlowクローンを作る (1) ～環境を整える </a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 03:04:15 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>今回は第一回として、FlexでFlashコンポーネントを開発するための環境を整える手順を整理します。  </p>
+
+<h3 id="flex">■Flexとは</h3>
+
+<p>Flexは、プログラミング言語を使ってFlashアプリケーションを作るための製品群を表すもので、Flex製品ラインナップには、以下のようなものがあります。  </p>
+
+<ul>
+  <li>Adobe Flex SDK (ソフトウェア開発キット)</li>
+  <li>Adobe Flex Builder</li>
+  <li>Adobe Flex Data Services</li>
+  <li>Adobe Flex Charting
+メルマガ執筆時点の正式版はFlex 2でしたので、このシリーズはFlex2でテストされたコードで記述されていますが、現在Flex 3がAirとして正式公開されています。おそらくFlex3でも動きます。  </li>
+</ul>
+
+<h3 id="section">■ダウンロードする</h3>
+
+<p>早速Flexで開発する環境を作っていきましょう。本シリーズではWindows XP Proを使った手順を説明をしていきます。  </p>
+
+<p><a href="http://www.adobe.com/jp/products/flex/">Adobe Flexのサイト</a>へアクセスします。  </p>
+
+<p>Flex2の頃、ダウンロードページには</p>
+
+<ul>
+  <li>Flex Builderを30日間無償で試用（SDK込み）</li>
+  <li>Flex 2 SDKを利用して、無償でFlexアプリケーションの開発・実装をスタート</li>
+  <li>Flex Data Services 2 Expressエディションをダウンロード（無償）
+の3つのコンテンツがあったのですが、現在は、以下のようなページに変わっています。  </li>
+</ul>
+
+<p><img alt="" src="/images/blog/download_page.jpg" /> 
+なお、ダウンロードページへ行くには、Adobe IDでログインを求められます。Adobe ID自体の登録は無料ですので、まだな人は登録をしてからログインしてください。仕方がないので、日本語 | Windows | 425.0MB を選択して、ダウンロードします。またSDKだけダウンロードできるようになってほしいですね。。。  </p>
+
+<h3 id="section-1">■インストールする</h3>
+
+<p>おそろしく大きいファイルFB3_WWEJ.exeのダウンロードが終了したら、ファイルを実行します。<img alt="" src="/images/blog/download_page3.jpg" /> 
+インストールプログラムの実行にしばらく時間がかかります。。。。。。<br />
+<img alt="" src="/images/blog/download_page4.jpg" /> 
+日本語を選択してインストールを開始します。その後、ライセンスに同意とか、インストールする場所とか聞いてくるので、お好みで進んでいきます。インストールを開始すると、以下のような画面になります。<br />
+<img alt="" src="/images/blog/download_page5.jpg" /> 
+ボクのマシンは結構スペックが良いと思っているのですが、それでも20分近く時間がかかりました。気長に待ちましょう。。。。<br />
+<img alt="" src="/images/blog/flexdir.jpg" /> インストールが完了すると、自動的にインストールしたディレクトリ（デフォルトだとC:Program FilesAdobeFlex Builder 3）が開きます。よくみると、ディレクトリ名にsdksというフォルダがあるのに気が付きます。ディレクトリを移動すると、<br />
+<img alt="" src="/images/blog/flexdir2.jpg" /> のようになっていて、なんだFlex2もあるじゃないですか。それぞれのバージョンディレクトリの下、たとえば2.0.1frameworkslocaleには日本語のファイルも入っているようで、コンパイルメッセージも無事日本語で表示できそうです。しかしそうなると、やっぱり個別にインストールさせてほしい。。。。とにかくダウンロードとインストールは辛抱です・・・  </p>
+
+<h3 id="section-2">■次回は</h3>
+
+<p>Flex Builderは便利だし使いやすいのですが、有償なので仕事以外では使うのをためらいます。そんなときはフリーの開発環境FlashDevelopを使うと良いと思います。次回はこのFlashDevelopのインストール方法を紹介したいと思います。</p>
+
+  </div>
+  <h2 class="title"><a href="/2008/04/11/opera-backstage-tokyo.html">Opera Backstage Tokyo に参加してきた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/11.html">Friday, April 11, 2008 08:04:19 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/backstage.html">Backstage</a>
+    
+      <a rel="tag" href="/tags/lt.html">LT</a>
+    
+      <a rel="tag" href="/tags/opera.html">Opera</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>昨日開催された<a href="http://my.opera.com/chooseopera-Japan/blog/2008/03/17/opera-backstage-tokyo-2008-4-10">Opera Backstage Tokyo</a>へ参加してきました。  </p>
+
+<p>あいにくの雨の中、ライトニングトークスをやるので、ものすごく重いＰＣを抱えてノルウェー大使館へ。  </p>
+
+<p>時間が読めなかったので、現地でランチでいいや、と思ったのですが、良く考えるとそこはセレブな街。ランチがすごく高いです。。。。。  </p>
+
+<p>まぁなんかあるだろう、とお気楽モードで歩いていたら、ラーメン香月がありました。なんとかなるもんです。いつもながらの出たとこ勝負。  </p>
+
+<p>後はEZナビウォークの力を借りて、無事大使館へ到着です。  </p>
+
+<p>そういえば大使館はスウェディッシュスタイルで、スウェーデン大使館に入った以来、というかそれ以外では初めて。なんだかプールがあったりして良い感じでした。ホールはスウェーデン大使館の方が広いかな？  </p>
+
+<p>アジェンダを見たら、ＬＴが先頭バッターじゃないですか・・・  </p>
+
+<p>いくらＬＴ慣れているとはいえ、最初は緊張感が違いました。まぁそんなこんなで時間がたっぷりおして、イベントは終了。その後、広尾の土間土間で懇親会でしたが、翔泳社のかたと神田で飲み会が入っていたので、19:30に抜け出てしまいました。そういえばグループディスカッションの結果は発表したのかなぁ～？  </p>
+
+<p>名刺交換していただいた皆様、ありがとうございました。今後ともよろしくお願いいたします。  </p>
+
+<div style="width:425px;text-align:left" id="__ss_346996">
+<object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slideshare.net/swf/ssplayer2.swf?doc=operawithfonts-1207874636410635-8" />
+<param name="allowFullScreen" value="true" />
+<param name="allowScriptAccess" value="never" />
+<embed src="http://static.slideshare.net/swf/ssplayer2.swf?doc=operawithfonts-1207874636410635-8" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never" /></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">
+<a href="http://www.slideshare.net/?src=embed" rel="nofollow"><img src="http://static.slideshare.net/swf/logo_embd.png" style="border:0px none;margin-bottom:-5px" alt="SlideShare" /></a> | <a href="http://www.slideshare.net/kishida4slideshare/opera-backstage-tokyo-2008?src=embed" title="View 'Opera Backstage Tokyo 2008&amp;#39; ライトニングトークス' on SlideShare" rel="nofollow">View</a> | <a href="http://www.slideshare.net/upload?src=embed" rel="nofollow">Upload your own</a>
+</div>
+</div>
+
+<p>その後、神田から帰る頃には、ほとんど記憶がないくらい呑んでしまい・・・  </p>
+
+
+  </div>
+
+  <p class="pagenav">
+    
+      <a href="/page/10/">« Prev</a>
+    
+    
+      
+        
+        <a href="/page/7/">7</a>
+      
+    
+      
+        
+        <a href="/page/8/">8</a>
+      
+    
+      
+        
+        <a href="/page/9/">9</a>
+      
+    
+      
+        
+        <a href="/page/10/">10</a>
+      
+    
+      
+        <b>11</b>
+      
+    
+    
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,525 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+          <!-- more -->
+<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第五回は、画像を横に並べて、中央の画像以外は台形表示する手順を整理します。  </p>
+
+<h3 id="section">■今回サンプルの完成イメージ</h3>
+
+<p>前回は画像を鏡面効果表示するサンプルを紹介しました。今回はその画像いくつか並べて中央以外は台形加工して表示します。今回は、カスタムコントロール(ImageReflector.as)とmxmlファイルを修正していきます。  </p>
+
+<h3 id="section-1">■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_5/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+  <li>reflector.as3proj</li>
+  <li>reflector.mxml</li>
+  <li>ImageReflector.as</li>
+  <li>TransformUtil.as</li>
+</ul>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3 id="section-2">■要素を並べて、繰り返し表示するには</h3>
+
+<p>Flashでは、Boxを使うとBox内に要素を並べることができます。BoxにはHBox（横並び）とVBox（縦並び）の実装があり、CoverFlowでは横並びを利用します。  </p>
+
+<p>HBoxを使って以下のようなコードを書けばよいのですが、</p>
+
+<pre><code>&lt;HBox&gt;
+  &lt;local:ImageReflector id="imageReflector0" /&gt;
+  &lt;local:ImageReflector id="imageReflector1" /&gt;
+  &lt;local:ImageReflector id="imageReflector2" /&gt;
+  &lt;local:ImageReflector id="imageReflector3" /&gt;
+&lt;/HBox&gt;
+</code></pre>
+
+<p>これだとImageReflectorを必要な分、記述しなければいけないのでかなり面倒です。そこで、繰り返しを便利にしてくれるRepeaterという要素があります。今回のmxmlでは以下のように記述しています。</p>
+
+<pre><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
+	&lt;Repeater id="rp" dataProvider="{dp}"&gt;
+		&lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
+	&lt;/Repeater&gt;
+&lt;/HBox&gt;
+</code></pre>
+
+<p>Repeaterで繰り返したい要素はdataProviderというパラメータで指定することができます。dpは同じmxmlのスクリプト部分に記述しています。</p>
+
+<pre><code>[Bindable]
+private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655", "4274066940", "4822283143", "4839923221", "4873113202", "4797333502", "4822282295"]);
+</code></pre>
+
+<p>配列要素（ArrayCollection）に、amazonのasinidを指定していけば、値が変更になった場合も簡単です。後々XMLファイルに外だしにする場合もそれほど変更が必要になりません。  </p>
+
+<h3 id="actionscript">■画面とActionScriptで情報を交換する</h3>
+
+<p>dataProviderで指定した、asinidをActionScriptに引き渡すには、[Bindable]を宣言すれば良いだけです。この宣言は変数でも関数でも、直前に記述すれば、MXMLとActionScriptの間で情報を交換することができます。本サンプルでは、asinIdと、選択表示（今回は中央）のIndexをMXMLからActionScriptに対して引き渡しています。引渡し方法は、タグの中で指定する方法や、MXMLのScriptからID指定で渡す方法があります。  </p>
+
+<p>タグの中で指定するには、</p>
+
+<pre><code>&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
+</code></pre>
+
+<p>と書くことで、ImageReflectorクラスのasinId変数の初期値として、rp.currentItemの値がセットされます。rp.currentItemはRepeater(idがrp)の現在のdataProvider配列の値です。繰り返している現在の値を引き渡しています。  </p>
+
+<p>スクリプトの中で指定するには、</p>
+
+<pre><code>imageReflector[0].selectedIndex = dp.length / 2;
+</code></pre>
+
+<p>と書くことで、idがimageReflectorの要素の0番目のselectedIndex変数に値をセットすることができます。imageReflectorはRepeaterで繰り返しているImageReflector要素のidで同じIDが複数出現すると、自動的に配列要素となってくれます。  </p>
+
+<h3 id="measure">■measureを修正して、個々の横幅を指定する</h3>
+
+<p>Flashが個々の要素の幅を決定するときに呼ぶmeasure関数で、選択要素は等幅、それ以外は台形変形したときに横幅を指定するようにします。</p>
+
+<pre><code>if(selectedIndex == repeaterIndex) {
+	measuredWidth = _content.getExplicitOrMeasuredWidth();
+}
+else {
+	measuredWidth = tiltingWidth;
+}
+</code></pre>
+
+<p>selectedIndexはMXMLとバインディングしている変数ですが、repeaterIndexはどこにも出てきません。これは自分のコントロールがRepeaterの中にある場合に有効な変数で、自分がRepeaterの何番目かを知ることができるのです。ですからMXMLから指定された選択Indexである場合は、画像の幅を指定し、それ以外の場合はtiltingWidthを指定します。このtiltingWidthも変数宣言していませんが、今回追加したコードに関数が記述されています。</p>
+
+<pre><code>public function set tiltingWidth(value:Number):void
+{
+	// no set
+}
+public function get tiltingWidth():Number
+{
+	var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
+	var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
+	var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
+	var rotation:Number = radians * 180 / Math.PI;
+	var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
+	return Math.min(maxTiltingWidth, w);
+}
+</code></pre>
+
+<p>functionの後にset,getと書くとプロパティ値のsetter,getterの意味を持つことができ、あたかもtiltingWidthというメンバ変数があるように見せかけることができます。  </p>
+
+<p><img alt="" src="/images/blog/1image01.gif" /> 
+台形変形したときの横幅は、前回も出たMathの三角関数を使って出しています。図のように台形に変形したときに切り落とされる三角形の底辺となる幅を想定すればよいでしょう。最初に上のように高さがtiltingMarginで、幅がmaxTiltingWidthの三角形で斜辺への角度を求めます。  </p>
+
+<p>同じ角度で斜辺の長さが実際の画像幅になった場合に、底辺がどのくらいの幅になるかを求めます。そこで小さいほうの幅を採用すると幅の異なる様々な画像でもうまく幅を指定することができます。  </p>
+
+<h3 id="section-3">■実際に描画する</h3>
+
+<p>updateDisplayListを修正して、ビットマップを台形変形するなどの描画を行います。  </p>
+
+<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br />
+<img alt="" src="/images/blog/image02.gif" /> 
+transformImage関数では、図のように６つの点を計算しています。位置が計算できたら、drawImageShape関数でTransformUtilを呼び出して、描画領域へ表示するようにします。  </p>
+
+<h3 id="section-4">■クロスドメインの注意事項</h3>
+
+<p>前回も書いたのですが、amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは前回記事を参考にしてください。  </p>
+
+<h3 id="section-5">■次回予告</h3>
+
+<p>アニメーション表示に取り掛かりたいと思います。</p>
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

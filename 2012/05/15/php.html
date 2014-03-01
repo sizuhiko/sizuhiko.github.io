@@ -1,0 +1,557 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - PHPのスペックフレームワーク</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+          <!-- more -->
+<p><img alt="" src="/images/blog/phpspec_cover.png" /> </p>
+
+<p>PHPでのBDDについては、何度か取り上げてきましたがほとんどがストーリフレームワークであるBehatについてで、スペックフレームワークについてはあまりふれてきませんでした。せっかく今回はPHPカンファレンス関西のLTで2種類のBDDフレームワークについて話したので、スペックフレームワークについてまとめてみたいと思います。  </p>
+
+<h3 id="phpspec">最初にたどり着くのはPHPSpec</h3>
+
+<p>LTのスライドでも紹介したのはPHPといえばまず最初に思いつく <a href="http://www.phpspec.net/">PHPSpec</a> です。大抵はまず「言語プレフィクス+Spec」で検索してみますよね。PHPはユニットテストがPHPUnitだからPHPSpecだよね、と誰もが連想できます。  </p>
+
+<p>で、PHPSpecの書き方としては、</p>
+
+<pre><code>class DescribeNewBowlingGame extends PHPSpecContext {  
+    private $_bowling = null;  
+    public function before() {  
+        $this-&gt;_bowling = $this-&gt;spec(new Bowling);  
+    }  
+    public function itShouldScore0ForGutterGame() {  
+        for ($i=1; $i&lt;=20; $i++) {  
+            // someone is really bad at bowling!  
+            $this-&gt;_bowling-&gt;hit(0);  
+        }  
+        $this-&gt;_bowling-&gt;score-&gt;should-&gt;equal(0);  
+    }  
+}  
+</code></pre>
+
+<p>のように、まぁPHPのコードだとすれば読むのはそれほど困難ではないわけですが、やっぱりSpec（仕様）という視点で眺めると、ちょっと無駄な記述が目立ちますよね。それは言語の文法だからしょうがない、そうなんですが。  </p>
+
+<h3 id="section">その他のスペックフレームワーク</h3>
+
+<p>で、試しにGitHubで他にないのかと探すと、意外とスペックフレームワークがある事に気がつきました。  </p>
+
+<p>名前所感</p>
+
+<p><a href="http://www.phpspec.net/">PHPSpec</a>
+最初に出てくる有名どころ</p>
+
+<p><a href="https://github.com/noonat/pecs">pecs</a>
+JSpecに影響を受けている。しばらくメンテされていない…</p>
+
+<p><a href="https://github.com/mkharitonov/spectrum">spectrum</a>
+まだα版でドキュメントもロシア語しかないが、設計の筋が良くいろいろできそう。今後に期待</p>
+
+<p><a href="https://github.com/speciphy/speciphy">speciphy</a>
+yuya-takeyamaさん(@yuya_takeyama)がRspecに影響を受けて作成。subjectが使える。コアはPHPSpecを利用している</p>
+
+<p><a href="https://github.com/drslump/Spec-PHP">Spec for PHP</a>
+Hamcrestライブラリとtoken_get_all関数を使って、自然に英語として読める文章として記述が可能。解析した結果をPHPUnitのテストケースとして生成して実行している</p>
+
+<p>以下のコードは、Speciphy を例にPHPSpec以外でどのように書けるかをあらわしています。pecsもspectrumもほぼ同じような記述になります。</p>
+
+<pre><code>namespace SpeciphyDSL;
+return
+describe('Bowling',
+    describe('-&gt;score',
+        context('all gutter game',
+            subject(function () {
+                $bowling = new Bowling;
+                for ($i = 1; $i &lt;= 20; $i++) {
+                    $bowling-&gt;hit(0);
+                }
+                return $bowling;
+            }),
+            it('should equal 0', function ($bowling) {
+                $bowling-&gt;score-&gt;should-&gt;equal(0);
+            })
+        )
+    )
+);
+</code></pre>
+
+<p>だいぶ読みやすくなりました。ではRSpecと比較してみま….す？えっ、やっちゃうの、それは….</p>
+
+<pre><code>describe Bowling, "#score" do
+  it "returns 0 for all gutter game" do
+    bowling = Bowling.new
+    20.times { bowling.hit(0) }
+    bowling.score.should eq(0)
+  end
+end
+</code></pre>
+
+<p>こんな感じです。subjectやcontext使っている違いとかありますが、PHPの場合はどうしても無名関数を使うのに </p>
+
+<blockquote>
+  <p>function () {…}</p>
+</blockquote>
+
+<p>を使わなくてはならないので、そこが惜しいのです。  </p>
+
+<h3 id="php-spec-for-php">変態PHPスペックフレームワーク Spec for PHP</h3>
+
+<p>そこで Spec for PHP ということなのですが、こいつはだいぶ変態です（ごめんなさい。良い意味です）。まず先程紹介したような funcition(){ … } の無名関数で書いたような記法も使えます。それはほぼ同じように書く事が可能です。で、何が変態かと言うと Hamcrestライブラリとtoken_get_all関数を使って構文解析することで、以下のようなSpecが書けちゃいます。</p>
+
+<pre><code>describe "Bowling"
+  describe "#score"
+    it "returns 0 for all gutter game"
+      $bowling = new Bowling;
+      for ($i = 1; $i &lt;= 20; $i++) {
+        $bowling-&gt;hit(0);
+      }
+      $bowling-&gt;score should equal 0
+    end
+  end
+end
+</code></pre>
+
+<p>it ブロックの内容は、Hamcrestを使って$bowling-&gt;score should equal 0 のように書いていますが、基本的にはPHPのソースコードであるとわかるでしょう。ただしdescribeやitなどの構文からはfunctionが消えて見通しが良くなっています。  </p>
+
+<h4 id="section-1">では早速試してみましょう</h4>
+
+<p>Spec for PHP は以下の依存関係を持っています。</p>
+
+<ul>
+  <li>PHP 5.3</li>
+  <li>PHPUnit 3.5</li>
+  <li>Hamcrest matchers library（ベータ版のときに作成されたらしい）</li>
+  <li>PHP Object_Freezer 1.0.0</li>
+</ul>
+
+<p>この記事の執筆時点で最新版の依存関係を適用すると、PHPUnitとHamcrestを利用している箇所で一部エラーになってしまいます。そこで、これらを修正し本家にPull Requestを送付しています。<br />
+<img alt="" src="/images/blog/spec4php_pr.png" /> 
+このため、本家に取り込まれるまでは、私のforkリポジトリから取得することを推奨します。  </p>
+
+<p><a href="https://github.com/sizuhiko/Spec-PHP">https://github.com/sizuhiko/Spec-PHP</a>  </p>
+
+<p>上記問題に対応するための修正と、日本語関連でPHP関数名の正規表現に x7f-xff の範囲を追加した修正が、 <strong>develop ブランチ</strong>に入っていますので、こちらでお試しください。  </p>
+
+<p>まず必要なpearパッケージをインストールします。すでにインストール済みならスキップして構いません。</p>
+
+<pre><code>pear channel-discover pear.phpunit.de
+pear install phpunit/PHPUnit
+pear install phpunit/Object_Freezer
+pear install Console_CommandLine
+
+Install Hamcrest matchers library
+pear channel-discover hamcrest.googlecode.com/svn/pear
+pear install hamcrest/Hamcrest
+</code></pre>
+
+<p>つづいて、githubからcloneしてdevelopにスイッチします。</p>
+
+<pre><code>git clone git@github.com:sizuhiko/Spec-PHP.git
+git checkout origin/develop -b develop
+</code></pre>
+
+<p>Spec for PHPはPHPUnit経由の実行方法と、Cliランナーも持っています。</p>
+
+<ul>
+  <li>phpunit tests/AllTests.php</li>
+  <li>./spec4php.php tests</li>
+</ul>
+
+<h3 id="section-2">さいごに</h3>
+
+<p>Spec for PHP はテストコードを書いていて楽しい気分になれるような気がします。まだまだ奥がありそうなので、ちょっと追いかけてみようと思っています。また本家にPRが取り込まれたときなどに、インストール方法など更新予定です。  </p>
+
+<p>また、PHPのスペックフレームワークについて「もくもく会」か「勉強会」をやろうと思っていますので、こちらは<a href="http://twitter.com/sizuhiko">@sizuhiko</a>のTwitterなどをチェックしておいていただければと思います。</p>
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

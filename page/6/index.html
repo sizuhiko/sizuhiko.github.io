@@ -1,0 +1,1015 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+      </style>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <script id="twitter-wjs" src="http://platform.twitter.com/widgets.js"></script>
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><span>Technote</span></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2010/12/06/plugin.html">バリデーションプラグインと組み合わせて使うと便利な、確認画面を出すjQueryプラグイン</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2010/12/06.html">Monday, December 06, 2010 09:12:51 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/confirm.html">confirm</a>
+    
+      <a rel="tag" href="/tags/form.html">form</a>
+    
+      <a rel="tag" href="/tags/jquery.html">jQuery</a>
+    
+      <a rel="tag" href="/tags/plugin.html">plugin</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>これまで確認画面を出すだけのものや、入力チェックだけをするものはプラグインとして出ていたのですが、どうも組み合わせて使おうとすると不便なことが多かったので、プラグインを自作してみました。</p>
+
+<h3 id="section">ダウンロード：</h3>
+
+<p>ソースコードは以下のgithubで公開しています。  </p>
+
+<p><a href="https://github.com/sizuhiko/confirmForm">https://github.com/sizuhiko/confirmForm</a></p>
+
+<h3 id="section-1">デモ：</h3>
+
+<p>まずどのような動作をするのか、デモページで確認したほうがわかりやすいと思います。以下のURLから操作してみてください。  </p>
+
+<p><a href="/demo/confirmForm/demo/">/demo/confirmForm/demo/index.html</a>  </p>
+
+<p>デモサイトでは入力チェックに<a href="http://5509.me/log/exvalidation">ex-valudationプラグイン</a>を使っています。</p>
+
+<h3 id="section-2">必須条件：</h3>
+
+<ul>
+  <li><a href="http://jquery.com/">jQuery本体</a> (1.4.2以上を推奨）</li>
+  <li><a href="http://dev.iceburg.net/jquery/jqModal/">jqModal</a>プラグイン</li>
+</ul>
+
+<h3 id="section-3">特徴：</h3>
+
+<ul>
+  <li>確認画面を出すかどうかは自分で判断します</li>
+  <li>確認画面でOKが選択されるまでフォームはSubmitされません</li>
+  <li>一般的なフォームの形式であれば、ほとんどカスタマイズ（オプションで指定する）の必要なし</li>
+</ul>
+
+<h3 id="section-4">一般的なフォームって？</h3>
+
+<p>このプラグインでは以下のような構造のHTMLフォームが利用されることを想定しています。</p>
+
+<pre><code>&lt;form action="posted.html" method="get" id="inputForm"&gt;
+  &lt;div&gt;
+    &lt;label for="user_id"&gt;ID:&lt;/label&gt;
+    &lt;input type="text" name="id" id="user_id" value=""&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_name"&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" id="user_name" value=""&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_sex"&gt;Sex:&lt;/label&gt;
+    &lt;fieldset id="user_sex"&gt;
+      &lt;input type="radio" name="sex" id="user_sex_male" value="1"&gt;&lt;label for="user_sex_male"&gt;Male&lt;/label&gt;
+      &lt;input type="radio" name="sex" id="user_sex_female" value="2"&gt;&lt;label for="user_sex_female"&gt;Female&lt;/label&gt;
+      &lt;span class="required"&gt;*&lt;/span&gt;
+    &lt;/fieldset&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_lang"&gt;Language:&lt;/label&gt;
+    &lt;select name="lang" id="user_lang"&gt;
+      &lt;option value=""&gt;-- please select --&lt;/option&gt;&lt;option value="jp"&gt;Japanese&lt;/option&gt;&lt;option value="en"&gt;English&lt;/option&gt;
+    &lt;/select&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_receive_news"&gt;Receive News Mail:&lt;/label&gt;
+    &lt;fieldset id="user_receive_news"&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_sports" value="1"&gt;&lt;label for="user_receive_news_sports"&gt;Sports&lt;/label&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_music" value="2"&gt;&lt;label for="user_receive_news_music"&gt;Music&lt;/label&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_computer" value="3"&gt;&lt;label for="user_receive_news_computer"&gt;Computer&lt;/label&gt;
+    &lt;/fieldset&gt;
+  &lt;/div&gt;
+  &lt;div class="buttons"&gt;
+    &lt;input type="submit" value="next" id="submit_ok"&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
+
+<p>これはデモページのフォーム部分そのものなのですが、項目をdivタグで囲い、その中の項目名はlabelで入力フィールドはinputやselectを使うようなデザインです。</p>
+
+<h3 id="section-5">プラグインで必要になる記述</h3>
+
+<p>javascriptファイルをロードします。
+jqModelプラグインを使っているので、jqModal、もちろんjqueryもロードしてください。</p>
+
+<pre><code>&lt;script charset="utf-8" type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.js"&gt;&lt;/script&gt;
+&lt;script charset="utf-8" type="text/javascript" src="http://dev.iceburg.net/jquery/jqModal/jqModal.js"&gt;&lt;/script&gt;
+&lt;script src="../src/confirmform.js"&gt;&lt;/script&gt;
+</code></pre>
+
+<p>jqModalのスタイルシートが必要になります。また、jqModalのexampleで記述されているConfirmサンプルのスタイル定義を利用しているので、サンプルHTML上から切り出したスタイルシートをvendorディレクトリに用意しました。これを使うと簡単に利用を開始することができます。</p>
+
+<pre><code>&lt;link charset="utf-8" href="../vendor/jqModal/jqmConfirm.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
+&lt;link charset="utf-8" href="http://dev.iceburg.net/jquery/jqModal/jqModal.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
+</code></pre>
+
+<h3 id="section-6">プラグインの初期化</h3>
+
+<p>プラグインを利用するためには、HTML上に１つ確認画面用の空エレメントを追加する必要があります。場所はbody内であればどこでもかまいません。</p>
+
+<pre><code>&lt;div id="confirmForm"&gt;&lt;/div&gt;
+</code></pre>
+
+<p>idの値も特に意味はありません。ここではconfirmFormという値にしておきます。  </p>
+
+<p>プラグインのインスタンスを初期化するには、$("入力フォームのセレクタ").confirmForm("確認画面用のセレクタ", オプション) を使います。</p>
+
+<pre><code>$(document).ready(function(){
+  ...
+  $("#inputForm").confirmForm("#confirmForm", {});
+  ...
+}
+</code></pre>
+
+<p>ひとまず、このようにシンプルな宣言で動作します。実際に利用する場面では、入力フォームでselectボックスやcheckbox,radioボタンなどを利用していると思います。デフォルトの挙動では値をinputのvalueから取り出して表示するだけなので、コード値を名前に変換する必要があるかもしれません。このあたりのカスタマイズは、オプション節で解説します。</p>
+
+<h3 id="section-7">確認画面を表示する</h3>
+
+<p>このプラグインでは確認画面は自分で表示する必要があります。たとえばバリデーションプラグインの成功時コールバックで呼び出すようなイメージです。</p>
+
+<pre><code>$("#inputForm").confirmShow();
+</code></pre>
+
+<p>これはとてもシンプルで、confirmShow関数を呼び出すだけです。</p>
+
+<h3 id="ok">OKが押されたかどうかチェックする</h3>
+
+<p>このプラグインでは、確認画面でOKが選択されたらもう一度入力フォームでSubmitを実行します。そのため入力チェックが再実行されて、コールバックが呼び出されるかもしれません。そのためにOKが既に選択されていたらそのままreturnするような実装にすることになると思います。</p>
+
+<pre><code>validCallback:function() {
+  if($("#inputForm").isConfirmed()) {
+    return;
+  }
+  $("#inputForm").confirmShow();
+}
+</code></pre>
+
+<p>確認済みかどうかはisConfirmed関数を呼び出すだけです。入力内容が問題ないときのコールバックがvalidCallbackだったとすると、上記のような実装になります。</p>
+
+<h3 id="section-8">オプション</h3>
+
+<p>実際に利用する場面では、必ずしもinputのvalue値が確認画面に出れば良い訳ではありません。また、タイトルを変更したりボタンのラベルを変更したりもしたいでしょう。そのためにプラグイン初期化時にオプションを指定できるようにしてあります。  </p>
+
+<p>オプション一覧：</p>
+
+<p>名前意味デフォルト値概要</p>
+
+<p>title
+タイトル
+Are you sure?
+確認画面上部に表示されるタイトルを文字列で指定</p>
+
+<p>yes
+はいボタンのラベル
+Yes
+文字列で指定</p>
+
+<p>no
+いいえボタンのラベル
+no
+文字列で指定</p>
+
+<p>findLavel
+ラベルを探索して文字列を返すためのコールバック
+1つ前の要素のtext部分(一般的なフォームのtextボックスではlabelになる)
+radioやcheckboxのようにラベルがfieldsetの外側にあるようなケースで独自にコールバック関数を実装する</p>
+
+<p>formatValue
+値をカスタマイズするためのコールバック
+inputやselectのvalue値
+value値がコードだが、確認画面では値（名前）で出したい場合に独自にコールバック関数を実装する</p>
+
+<p>separator
+複数選択値の区切り文字
+,(コンマ）
+同一nameがある場合に、値を区切る文字列</p>
+
+<h4 id="section-9">ラベル文字列のコールバック</h4>
+
+<p>デフォルトの挙動は以下のとおりです。</p>
+
+<pre><code>'findLabel': function(inputField) {
+    return $(inputField).prev().html();
+}
+</code></pre>
+
+<p>textボックスは直前の要素がlabelであることを想定しているので、すべてが一般的なフォームのレイアウトで、textボックスしか利用していなければ、オプションの指定は必要ありません。しかし実際はlabelが右だったり１つ親の要素だったりすることがあります。
+このような場面ではコールバックを実装してください。  </p>
+
+<p>例えばデモページでは以下のようなコードになっています。</p>
+
+<pre><code>'findLabel': function(field) {
+    switch(field.name) {
+    case 'sex':
+        return 'Sex';
+    case 'news':
+        return 'Receive News Mail';
+    default :
+        str = $(field).prev().html();
+        return str.substring(0, str.length-1);
+    }
+}
+</code></pre>
+
+<p>findLabelに関してはformatValurのように項目別ではなく、functionで受け取って独自にカスタマイズする方式を取っています。これは項目名は一括ルールで変換できる場合が想定できるためです。  </p>
+
+<p>※このオプションに関しては、将来formatValueのようにhashでも指定できる（併用）方式に変更する予定です。</p>
+
+<h4 id="section-10">値をカスタマイズするためのコールバック</h4>
+
+<p>inputやselectのvalue値は必ずしも確認表示用には向いていないこともある（例えばコード値になっているなど）ので、このようなケースではコールバック関数を実装してください。  </p>
+
+<p>例えばデモページでは以下のようなコードになっています。</p>
+
+<pre><code>'formatValue':{
+  'sex':function(field) {
+    return {1:"Male", 2:"Female"}[$(field).val()];
+  },
+  'lang':function(field) {
+    return {'jp':"Japanese", 'en':"English"}[$(field).val()];
+  },
+  'news':function(field) {
+    return {1:"Sports", 2:"Music", 3:"Computer"}[$(field).val()];
+  }
+}
+</code></pre>
+
+<p>formatValue自体は各入力項目のname属性をキーにしたhashで定義します。</p>
+
+<h3 id="section-11">さいごに</h3>
+
+<p>今後以下の機能について、バージョンアップを予定しています。</p>
+
+<ul>
+  <li>yes,noボタンの左右を逆に指定できるようにする</li>
+  <li>selectやcheckbox、radioなどタイプごとに推奨フォームを想定してラベル値を取得する</li>
+  <li>findLabelをhashでもオプション指定できるようにする</li>
+</ul>
+
+<p>その他カスタマイズ要望などあれば、機能追加していきたいな、と思っています。</p>
+
+
+  </div>
+  <h2 class="title"><a href="/2010/10/05/phpmatsuri.html">PHPmatsuri was greatest event for PHP developer.</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2010/10/05.html">Tuesday, October 05, 2010 02:10:28 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/bdd.html">BDD</a>
+    
+      <a rel="tag" href="/tags/behat.html">Behat</a>
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>I went <a href="http://2010.phpmatsuri.net/">PHPmatsuri</a> on last weekend. PHPmatsuri was great-full Hackathon style event about PHP in Japan. I had prepared about the event as staff.</p>
+
+<blockquote>
+  <p>私は先週末PHP祭りに行ってきました。PHP祭りは、日本のPHP界隈では最大のハッカソン形式のイベントです。私はスタッフとして準備に携わってきました。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_1.jpg" /> </p>
+
+<p>In 10/2 morning(8:00 am), staffs meets up hall of the event(Harumi Grand Hotel).
+We were setting some desks, chairs, electronics line, audios and reception space.</p>
+
+<blockquote>
+  <p>スタッフは10/2の朝8:00に晴海グランドホテルに集合して、会場のセッティングを行います。</p>
+</blockquote>
+
+<p>I wait participants of the event at front of the hotel, and I showed them to the room.
+I could look for them easily, because any participants had iPhone and navigated by google-map.</p>
+
+<blockquote>
+  <p>受付が始まる直前にホテルのフロント前に移動し、参加者を会場へ案内します。皆さんiPhoneを片手に地図を見ながら来るので、すぐに参加者とわかりました。</p>
+</blockquote>
+
+<p>At first, I started ice break for strained participants.
+And I introduce to them Mr. Hiro Yoshioka, then started first session.
+The session has be very important for Japanese developer.
+Should check <a href="http://d.hatena.ne.jp/hyoshiok/20101003">his blog &amp; slides</a>.</p>
+
+<blockquote>
+  <p>まず最初はアイスブレークから。皆さんの緊張を解きほぐします。会場が暖まったところで、よしおかさんに基調講演をしていただきました。このセッションはPHPに限らずに日本の開発者にとってぜひ聞いて欲しかったセッションとなりました。ぜひよしおかさんのブログをチェックしてください。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_2.jpg" /> 
+The important thing is "English or die" for us.
+Almost Japanese developer have satisfaction with only Japanese information.
+Because some Japanese hacker translate English to Japanese with his effort.
+But Yoshioka san says, "should dispatch some information with English to world-wide".
+I know it is very important.So, I wrote this post in English.
+Some guys same thinks, time line on twitter about phpmatsuri filled with his impressive words.</p>
+
+<blockquote>
+  <p>注目すべきキーワードは"English or Die"でした。日本ではみんな日本語訳のドキュメントを作るのが好きで、著名なブロガーやハッカーがやってくれていますね。でもそうではなくて各自が英語を使って海外に発信していくのが重要だと。僕もそう思うし（だから英語で書いてみた）、よしおかさんの講演中のtwitter TLを見ればみんな共感していたのがわかります。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_3.png" /> 
+The second session was Practical PHP5.3 by Mr. Nate Abele.
+He is developing lithium now. Before, he was CakePHP lead developer.
+In 9/25, Mr. Rasmus Lerdorf talk about same keywords at PHP-conference.
+Nate talked about some details more than Rasmus with using sample codes.For example PSR-0, closure…</p>
+
+<blockquote>
+  <p>次のセッションはNateによる実践PHP5.3。１週間前のPHPカンファレンスでRasmusが講演した内容と似ていたけど、より詳細に踏み込んだ感じだった。特にPSR-0とかクロージャとかlithiumの例も交えて解説していました。</p>
+</blockquote>
+
+<p>Since afternoon, the room was separated to 2 space between conference and Hackathon.
+On the conference space, talked about CakePHP2.0 by Graham Weldon, Lithium by Nate Abele &amp; Joel Perras and some sponsor's session.
+On the Hackathon space, opened workshop about Symfony2, CakePHP and Lithium by the core developer.
+I presided on conference space, but had very interesting to Hackathos space.</p>
+
+<blockquote>
+  <p>午後からは会場を講演スペースと開発スペースに分割しました。講演スペースでは、コアデベロッパーから各フレームワークのセッションあり、スポンサーセッションあり。開発スペースではコアデベロッパーと一緒にワークショップができたり、各々のテーマで開発したりしていました。僕は司会進行だったので講演スペースに付きっきりでしたが、開発スペースがすごく気になっていました。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_4.jpg" /> 
+After dinner, Mr. Kris Wallsmith talked about Symfony2 at confernce space.
+Same time, Redbull's girls came to Hackathon space.</p>
+
+<blockquote>
+  <p>夕食が終わると、KrisによるSymfony2のセッションが開始。ちょうどその頃レッドブルガールがキャンペーンにやってきてくれました。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_5.jpg" /> 
+In that time, I was not able to be heard while preparing next surprise present.
+I was waiting for 3 cakes.
+When Symfony2 session ended, the cakes carried into the room.
+Everybody crowded around cakes and take many photos.
+So, the nice idea(real cake) was started by Japanese CakePHP community on 2 years ago. 
+In this time, it added Lithium and symfony.
+The cakes made by <a href="http://www.papermoon.cc/">Paper Moon</a>. I know the shop is very nice cafe. I recommend for you.</p>
+
+<blockquote>
+  <p>僕はちょうど次のサプライズに向けて準備中でSymfony2のセッションはほとんど聞けませんでした。それは日本のCakePHPイベントでは恒例のリアルケーキです。今回は僕が担当だったのと、とにかくLithiumの出来映えがどうなのか心配だったのです。Symfony2セッションが終わるころホテルの人にケーキが運び入れてもらいました。みんな群がって来て写真を取りまくっていました。ケーキは南麻布のPaper Moonさんにお願いしました。良い店なのでお勧めです。</p>
+</blockquote>
+
+<p><img alt="" src="/images/blog/phpmatsuri_6.png" /> 
+And sounds of StarWars heard, JIREI master entered. He look like Jedi master!
+JIREI means the use-case.
+2 teams of CakePHP and symfony competed presentation to get a degree of JIREI master.
+So, @HIROCAST won competition and became JIREI master. He talked about Agile development by symfony.</p>
+
+<blockquote>
+  <p>スターウォーズの曲と共にJIREI masterが入場。ここから事例紹介セッション「JIREI night」が始まります。CakePHPとsymfonyに別れ交互に事例発表を行い、勝ったのは@HIROCASTさんの「アジャイルな開発をチームでやってみた」(symfony)に決定しました。</p>
+</blockquote>
+
+<p>Time is over 23:00. But everyone continue to develop about themself theme.
+I started myself theme too.
+I tried OpenpearPEG for develop parser of Cucumber feature.</p>
+
+<blockquote>
+  <p>事例紹介が終了したのが23時過ぎ。ここからようやく自分の開発時間です。OpenpearPEGでCucumberのパーサーを作ろうと思っていました。</p>
+</blockquote>
+
+<p>About 2 hours later, I saw some problem.
+But file of feature don’t match PEG because it isn’t structured.
+I started giving it up.
+I was looking for difference theme.
+So, I got destiny project.
+It's <a href="http://everzet.com/Behat/">Behat</a>.
+I had feeled very interesting about this project.
+I decided this to be my theme.</p>
+
+<p>Time is over 5:00. My challenge finished. I go back to my room.
+What my room-mates was developing his theme in the room !</p>
+
+<blockquote>
+  <p>2時間ぐらい頑張ったのですが、自然言語はPEGと相性が悪いように思い、諦めかけて違うテーマを探していたら、運命の出会いが待っていました。それが「Behat」です。これで行くぞ、と決めたのです。そして5時頃なんとか日本語フィーチャが通るようにハックして部屋に戻りました。合部屋の人はすっかり寝ているのかと思ったら、なんと部屋で開発していました！みんな頑張ってるなー</p>
+</blockquote>
+
+<p>I got up 7:00 on 10/3. After breakfast, I wrote presentation for demonstration on event room.
+Everybody get up, but they were maybe very tired.
+Afternoon 10/3,  demonstration about every theme started. The entries are 33.
+Each presentation is 4 minutes, and the style is Japanese LT having "Dora-Musume".
+Whenever demonstration finished , the auditor posts the score from Google-Form.</p>
+
+<blockquote>
+  <p>1時間半ぐらい寝て、7:00から朝食を取りイベント会場でデモ大会用のプレゼンを作成。みんな会場入りするけど、お疲れの様子です。どうも結構な人数が徹夜でやっていたようで。。10/3午後からデモ大会の開始です。発表は1人4分、日本のLT形式（もちろんドラ娘付き）です。なんと33人のエントリーがありました。各プレゼンが終わると事例発表と同じGoogleフォームから投票できるようになっています。そういえばドラ娘の写真がありません。どなたかプリーズ。</p>
+</blockquote>
+
+<p>My position is 8th in sector-1. But I started on 7th by few accidents.
+Since sector-2, I presided.
+All demonstration was finished 3 hour later. The talker and auditor was very tired. long long time LT had been first time for us.</p>
+
+<blockquote>
+  <p>僕は最初の8番目の予定だったのですが、並び順を間違えて7番手でプレゼンとなりました。その後セクター2からは司会にバトンタッチ。全部のLTが終わったのが3時間後（1時間おきに休憩はありましたよ）。こんなに長いLTは初めてで、すごく疲れました。</p>
+</blockquote>
+
+<div style="width:425px" id="__ss_5362886">
+<strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/kishida4slideshare/phpmatsuri2010" title="Phpmatsuri2010" rel="nofollow">Phpmatsuri2010</a></strong><object id="__sse5362886" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpmatsuri2010-101005095236-phpapp02&amp;stripped_title=phpmatsuri2010&amp;userName=kishida4slideshare" />
+<param name="allowFullScreen" value="true" />
+<param name="allowScriptAccess" value="never" />
+<embed name="__sse5362886" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpmatsuri2010-101005095236-phpapp02&amp;stripped_title=phpmatsuri2010&amp;userName=kishida4slideshare" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never" /></object><div style="padding:5px 0 12px">View more <a href="http://www.slideshare.net/" rel="nofollow">presentations</a> from <a href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
+</div>
+
+<p><img alt="" src="/images/blog/phpmatsuri_7.png" /> 
+And……. I won Hacker Prize. It means best performance into these demonstrations.
+I got new iPod-touch of prize. I'm very happy !</p>
+
+<blockquote>
+  <p>そして運命の結果発表。僕はハッカー賞に選ばれました。これは最高得点の賞なんです。賞品は新しいiPod Touchです！</p>
+</blockquote>
+
+<p>Long long time was spent, phpmatsuri finished.
+I think almost participants and staffs were satisfaction.
+And for Japanese PHP developer, it will become to trigger to publish some information positively. I think so.</p>
+
+<p>At last, thanks for 2 days. @yando and staffs, everybody.</p>
+
+<blockquote>
+  <p>長い時間が過ぎ、PHP祭りは終了しました。参加者／スタッフともに満足できる内容だったと思っています。また日本のPHP開発者にとって積極的に情報発信をするきっかけになるイベントになったんじゃないかと思いました。最後に、２日間ありがとうございました。特に@yandoさん、そしてスタッフ・参加者の皆様に感謝です。</p>
+</blockquote>
+
+  </div>
+  <h2 class="title"><a href="/2010/02/22/50-php.html">第50回PHP勉強会@関東に参加してきた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2010/02/22.html">Monday, February 22, 2010 03:02:04 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>第50回PHP勉強会@関東に参加してきました。  </p>
+
+<p>とても豪華なメンバーが集まっていて、さすが５０回！！<br />
+ネタも旬な内容でしたが、ustムリなセッションもあったりして、細かい内容のレポートは避けておきます。  </p>
+
+<p>会場を貸していただいた<a href="http://www.contents-one.co.jp/">コンテンツワン</a>様ありがとうございました。<br />
+広いしキレイだし言う事なしです。  </p>
+
+<p>んで、その後最寄りの日比谷バーに移動したのですが、乾杯がいきなりオリジナルカクテル。<br />
+@gusagiさんすごいよ！<br />
+<img alt="" src="/images/blog/ST330049.JPG" />   </p>
+
+<p>完全貸し切りのスペースで、立食パーティ。懇親会LTもあり（発表しました）、楽しい時間はあっという間に過ぎました。<br />
+次の区切りはハードルが上がりますね。１００回はあと何年後？ですかね。<br />
+最後には記念デザートもあり、記念尽くしな懇親会でした。<br />
+<img alt="" src="/images/blog/ST330051.JPG" />   </p>
+
+<p>LTでも言いましたが、永和システムマネジメントは「PHP x Agile も応援します」ので、お仕事ありましたら、連絡ください www。  </p>
+
+<p>参加した皆様、発表者の皆様お疲れさまでしたー<br />
+幹事の@gusagiさんに感謝です。</p>
+
+  </div>
+  <h2 class="title"><a href="/2009/11/02/cakematsuri-2009-tokyo.html">CakeMatsuri 2009 TOKYO ふりかえり</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/11/02.html">Monday, November 02, 2009 02:11:31 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>昨年のCakePHPカンファレンスでは、一講演者としての参加だったのですが、今回は中の人として参加しました。<br />
+Blogを書くまでがイベントです、ということで、一息ついたところでの思いをKPTでまとめてみました。<br />
+イベント全般に関しては、スタッフで「ふりかえり」をしたので、当日の担当範囲中心に。  </p>
+
+<p>Keep:<br />
+二日間にわたり、かなり多くのかたと交流できたのが、今回のテーマ「交流」にマッチしていて、よかったのではないかと思います:yes: <br />
+特にこれまで勉強会などで会ったことのない初対面のかたと、いろいろな話ができたので楽しかったです。<br />
+コア開発者とも仲良くなれた気がしました！！:up: <br />
+また１日目の懇親会でJoelに先日のPHP勉強会で発表した「WebTestCaseでfixtureを使う」について、プレゼンできたことが良かったです。後で英語に翻訳してBakelyにアップするぜ！と宣言した（自分を追い込んだ）ので、頑張ります。:star:   </p>
+
+<p>Problem:<br />
+ワークショップ（実務者編）のユニットテスト基礎・実践は、実質基礎しかできませんでした:ko: 。イベントごとという意味ではオブジェクト倶楽部などの経験もあったので大丈夫かな？と思っていたのですが、ちょっと上級内容だったのかな？と。。。ただ資料としては、後で十分振り返ってできる内容になっているので、持ち帰ってゆっくり確認してもらえると、理解が深まるかな？と思います。<br />
+２日目の２次会は、grahamの向かいの席でがっつり英語談義だったのですが、途中から疲労:faint: とアルコール:beer: から頭の回転がおかしくなってきて、だんだんと聞き取りもできなくなってきてしまいました。  </p>
+
+<p>Try:<br />
+PHPerにはコマンドラインは難しい？というのもあったので、別の方式が良いのかな？とも思ったのですが、実務ではconsoleのテストを使ったりすることの方が多いので、やはりコマンドラインは捨てがたいのですよね。なので次回以降は、オブラブの合宿前にもやった「環境構築前夜祭」をできれば良いなと思います。地方からの参加で必ずしも前夜祭に参加できない（当日移動など）の方もいるので、資料は事前公開ということで。<br />
+そういったことも含め、実務者コースのハンズオンの感触は、今回かなり掴めたので、進め方などもっと良い形でできるようにしたいと思っています。<br />
+後は英会話ですなー、毎日仕事で使っていたときより明らかに落ちてるし（とは言っても元々たいしたこともないけど）。。。何か解決策を見つけて英会話力をアップしたいと思うのでした:) 。  </p>
+
+<hr />
+
+<p>最後に。<br />
+参加者の皆様の温かい声援や、Blogでの感想に助けられました。ありがとうございます。<br />
+ワークショップの持ち出し企画はやりたいなーと思いますが、ちょっとしばらくイベントは・・・と思ったりしてます:pが、来年には実施したいですね。 <br />
+また皆様にお会いできるのを楽しみにしています。  </p>
+
+
+  </div>
+  <h2 class="title"><a href="/2009/10/19/cakephp.html">わたしとCakePHP</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/10/19.html">Monday, October 19, 2009 01:10:23 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>CakeMatsuriを迎えるにあたってのリレー形式ブログ第２弾です。<a href="http://blog.candycane.jp/archives/87">yandoさんの記事</a>の後で恐縮ですが、これまでCakePHPと過ごしてきた日々を振り返ってみます。</p>
+
+<h3 id="cakephp">CakePHPとの出会い</h3>
+
+<p>はじめてCakePHPという名前を聞いたのは、「10分で作るCakePHPアプリ」というRuby on Railsでも有名だった最速開発のスクリーンキャストをPHPでもやってみた、というものでした。  </p>
+
+<p>PHPは2000年頃に興味を持ってやっていたのですが、その後仕事はJavaやRubyが中心となり、疎遠となっていました。そのためPHPでもこんな事ができるのか！！と衝撃を受けました。  </p>
+
+<p>早速CakePHPをダウンロードし、動かしてみると、その導入のしやすさは（エラーメッセージの親切さも相まって）、これまでに体験したことのないものでした。早速blogチュートリアルを作って、アレコレいじっていた記憶があります。PHP熱が再発した瞬間でした。</p>
+
+<h3 id="section">ミニ案件との出会い</h3>
+
+<p>その直後、たまたま小さい案件で、言語は何でも良いという仕事に偶然と出会い、CakePHPの採用を決めました。当時のバージョンは1.0でした。当時は日本語の情報も少なく、Cake本体のコードを読みながら進めていたものでした。</p>
+
+<h3 id="section-1">書籍執筆のきっかけ</h3>
+
+<p>ちょうどその頃、同僚が「Web2.0ビギナーズバイブル」の共著を持ちかけてきました。この本はWeb2.0開発を始める人向けの本で、言語部分はそのものの入門とフレームワークの入門をペアにした企画でした。書籍としては（雑誌は既出でした）始めてCakePHPを取り上げることになりましたが、実は企画を依頼された段階ではsymfonyだったのです。CakePHPを使った後で比較のためにSymfonyも使ってみたことはあったのですが、どうしてもCakePHPでやりたいということを言って変更してもらった経緯がありました。そのときsymfonyで書いていたら今はどうしていたのかな？と思うことがあります。  </p>
+
+<p>これまで雑誌やメルマガの経験はあったのですが、初めての書籍はとても困難でしたが、ここから学ぶことも大変多く、その後「Webアプリケーションテスト手法」「CakePHPによる実践Webアプリケーション開発」の計３冊も共著させていただくことになったのは感謝でいっぱいです。</p>
+
+<h3 id="cakephp-1">CakePHPコミュニティとの出会い</h3>
+
+<p>その後、yandoさん主催で始まったCakePHP勉強会に参加・発表したり、CakePHPカンファレンスで講演させていただいたり、様々なところでCakePHPユーザとの出会いを繰り返してきて新しい輪が構築できました。新しい輪は、仕事面でも指名でCakePHP案件をいただくこともありました。  </p>
+
+<p>直近では「CakePHP1.2ガイドブック」のトークショーを池袋ジュンク堂でやったのですが、これも楽しいイベントになりました。</p>
+
+<h3 id="cakematsuri">そしてCakeMatsuriへ</h3>
+
+<p>今月末、10/30、10/31にCakePHPコミュニティの活動として、国内最大のイベントなるCakeMatsuri（昨年はCakePHPカンファレンス）が開催されます。  </p>
+
+<p>今年は２日間で、30日はこれまで何回か実施したハンズオンの延長線上になるワークショップ（すみませんもう定員に達しました）、31日は海外からコア開発者を招待しての講演や、CakePHPを使った事例発表などがあるカンファレンス（まだ参加者募集中です）から構成されています。  </p>
+
+<p>コミュニティの輪に身を投じてみて、私は様々な出会いやきっかけを得ることができました。皆様もCakeMatsuriに参加して新しい輪を広げてみてはどうでしょうか？  </p>
+
+<p>聴講者として参加するも、LTなど短い時間からでも、苦労したことを事例発表するなど、様々な参加スタイルがありますので、皆様の参加をお待ちしております。
+<a href="http://matsuri.cakephp.jp/"><img alt="" src="/images/blog/banner_matsuri.PNG" /></a></p>
+
+
+  </div>
+
+  <p class="pagenav">
+    
+      <a href="/page/5/">« Prev</a>
+    
+    
+      
+        
+        <a href="/page/2/">2</a>
+      
+    
+      
+        
+        <a href="/page/3/">3</a>
+      
+    
+      
+        
+        <a href="/page/4/">4</a>
+      
+    
+      
+        
+        <a href="/page/5/">5</a>
+      
+    
+      
+        <b>6</b>
+      
+    
+      
+        
+        <a href="/page/7/">7</a>
+      
+    
+      
+        
+        <a href="/page/8/">8</a>
+      
+    
+      
+        
+        <a href="/page/9/">9</a>
+      
+    
+      
+        
+        <a href="/page/10/">10</a>
+      
+    
+    
+      <a href="/page/7/">Next »</a>
+    
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
+                
+                  <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
+                
+                  <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
+                
+                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
+                
+                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
+                
+                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
+                
+                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
+                
+                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/backstage.html">Backstage</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/lt.html">LT</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/opera.html">Opera</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                  </li>
+                  
+                
+                  <li class="size26">
+                    <a rel="tag" href="/tags/flex.html">Flex</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/crossdomain-xml.html">crossdomain.xml</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/1-2.html">1.2</a>
+                  </li>
+                  
+                
+                  <li class="size50">
+                    <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/find.html">find</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/rc1.html">RC1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/create.html">create</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/drop.html">drop</a>
+                  </li>
+                  
+                
+                  <li class="size13">
+                    <a rel="tag" href="/tags/fixture.html">fixture</a>
+                  </li>
+                  
+                
+                  <li class="size37">
+                    <a rel="tag" href="/tags/php.html">PHP</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakecon.html">cakecon</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/behavior.html">Behavior</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/bdd.html">BDD</a>
+                  </li>
+                  
+                
+                  <li class="size24">
+                    <a rel="tag" href="/tags/behat.html">Behat</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/confirm.html">confirm</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/form.html">form</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/jquery.html">jQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/plugin.html">plugin</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/osaka.html">osaka</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/titanium.html">Titanium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/selenium.html">Selenium</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/html.html">HTML</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/querypath.html">QueryPath</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpkansai.html">phpkansai</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/xspec.html">xSpec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/spec-for-php.html">Spec for PHP</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                  </li>
+                  
+                
+                  <li class="size5">
+                    <a rel="tag" href="/tags/spec.html">Spec</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/controller.html">Controller</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
+                  </li>
+                  
+                
+                  <li class="size9">
+                    <a rel="tag" href="/tags/test.html">Test</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+                  </li>
+                  
+                
+                  <li class="size0">
+                    <a rel="tag" href="/tags/2013.html">2013</a>
+                  </li>
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (1)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>
