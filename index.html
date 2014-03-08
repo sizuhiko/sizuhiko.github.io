@@ -56,7 +56,382 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h2>
+            <h2 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 08:04:00 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。</p>
+
+<h3 id="section">動的にプレフィックスルーティングを追加するには</h3>
+
+<p>公式ドキュメントの解説のとおり、</p>
+
+<pre><code>// routes.php
+Router::connect(
+    "/site-proxy/:controller",
+    array('action' =&gt; 'index', 'prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true)
+);
+
+// core.phpなど
+Configure::write('Routing.prefixes', array('site-proxy'));
+</code></pre>
+
+<p>のように記述します。</p>
+
+<p>RouterTest.phpのテストコードを見たら</p>
+
+<pre><code>$request = new CakeRequest();
+$request-&gt;addParams(array(
+    'controller' =&gt; 'registrations', 'action' =&gt; 'admin_index',
+    'plugin' =&gt; null, 'prefix' =&gt; 'admin', 'admin' =&gt; true,
+    'ext' =&gt; 'html'
+));
+</code></pre>
+
+<p>みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。</p>
+
+<p>実際コントローラで</p>
+
+<pre><code>$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
+</code></pre>
+
+<p>みたいに書くと、View上で $this-&gt;html-&gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。</p>
+
+<h3 id="section-1">ハマりポイント</h3>
+
+<p>View上でフォームを作成するときに</p>
+
+<pre><code>echo $this-&gt;Form-&gt;create('Post');
+</code></pre>
+
+<p>のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと</p>
+
+<pre><code>// FormHelper::create() L367付近
+if ($options['action'] === null &amp;&amp; $options['url'] === null) {
+    $options['action'] = $this-&gt;request-&gt;here(false);
+} elseif (empty($options['url']) || is_array($options['url'])) {
+</code></pre>
+
+<p>URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。</p>
+
+<p>で、CakeRequest::here() とはどんなコードか見てみると</p>
+
+<pre><code>public function here($base = true) {
+    $url = $this-&gt;here;
+    if (!empty($this-&gt;query)) {
+        $url .= '?' . http_build_query($this-&gt;query, null, '&amp;');
+    }
+    if (!$base) {
+        $url = preg_replace('/^' . preg_quote($this-&gt;base, '/') . '/', '', $url, 1);
+    }
+    return $url;
+}
+</code></pre>
+
+<p>のようになっていて、要は現在のURL（$this-&gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。</p>
+
+<h3 id="section-2">まとめ</h3>
+
+<p>解決方法としては</p>
+
+<ul>
+  <li>Form::create() で <code>url</code> オプションを追加する</li>
+  <li>
+    <p>addParams するときに here を変更する</p>
+
+    <pre><code>  // 例）
+  $request-&gt;addParams(array(
+      'admin' =&gt; true,
+      'prefix' =&gt; 'admin',
+  ))-&gt;addPaths(array(
+      'here' =&gt; '/admin/this/interesting/index',
+  ))
+</code></pre>
+  </li>
+</ul>
+
+<p>あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば…    </p>
+
+
+  </div>
+  <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 07:12:00 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/composer.html">composer</a>
+    
+      <a rel="tag" href="/tags/phpunit.html">phpunit</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>現在以下のような環境を設置して開発をしています。</p>
+
+<ul>
+  <li>ホストOS: Windows7 </li>
+  <li>仮想環境: Vagrant + VirtualBox</li>
+  <li>ゲストOS: CentOS 6.4</li>
+  <li>開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  …</li>
+</ul>
+
+<h3 id="bdd">事件その1: Bddプラグインがインストールできなくなった</h3>
+
+<p>ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど…」
+という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。</p>
+
+<p>それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
+で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
+現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに</p>
+
+<pre><code>"pear-phpunit/Object_Freezer": "*"
+</code></pre>
+
+<p>のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。</p>
+
+<h3 id="phpunit">事件その2: PHPUnitがインストールできない!</h3>
+
+<p>で、Vagrant環境で更新してみたら….</p>
+
+<pre><code>composer update sizuhiko/Bdd
+</code></pre>
+
+<p>失敗….</p>
+
+<p>しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
+ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。</p>
+
+<p>でcomposer.jsonにはPHPUnitの記述が</p>
+
+<pre><code>"phpunit/phpunit": "3.7.*"
+</code></pre>
+
+<p>のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 <code>composer install</code> を実行すると</p>
+
+<pre><code>.....
+  - Installing phpunit/php-token-stream (dev-master 292f4d5)
+    Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
+
+  - Installing phpunit/php-file-iterator (dev-master acd6903)
+    Cloning acd690379117b042d1c8af1fafd61bde001bf6bb
+
+  - Installing phpunit/php-code-coverage (1.2.x-dev 3a60a66)
+    Cloning 3a60a660998e8d41d5ea81ff8d96ead546bce150
+
+[RuntimeException]
+Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;
+&amp; git reset -- hard '3a60a660998e8d41d5ea81ff8d96ead546bce150'
+
+error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
+would be overwritten by merge.
+</code></pre>
+
+<p>のようにエラーになります。</p>
+
+<h3 id="issue">事件その3: Issueが光の速さで取り消される</h3>
+
+<p>ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。</p>
+
+<p><a href="https://github.com/sebastianbergmann/phpunit/issues/1144">Can't install 3.7.x to Linux environment by composer</a></p>
+
+<p>ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。</p>
+
+<h3 id="section">原因を調べてみた</h3>
+
+<p>まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。</p>
+
+<p>ここで composer がどのようにライブラリを取得するか考えてみたところ、</p>
+
+<ul>
+  <li>packagist からリポジトリ情報をダウンロード</li>
+  <li>phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）</li>
+  <li><code>git clone git@github.com:sebastianbergmann/phpunit.git</code> が実行される</li>
+  <li>リリースを指定しているので一致するタグがチェックアウトされる <code>git checkout ....</code></li>
+</ul>
+
+<p>この最後のステップで「Untracked working tree file」になり失敗するのです。</p>
+
+<p>PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。</p>
+
+<p>自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功…. えぇぇー！</p>
+
+<p>その環境は Vagrant上のCentOSでなく、素のWindowsでした。
+何かがおかしい….</p>
+
+<p>そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。</p>
+
+<p>composer update （この日は何度実行したろう….）  …… 成功した！！！！でも、なんで？！</p>
+
+<h3 id="section-1">違いに悩むと…</h3>
+
+<p>成功したところ：</p>
+
+<ul>
+  <li>素のWindows</li>
+  <li>Vagrant仮想環境内の /tmp/work/app</li>
+</ul>
+
+<p>失敗したところ：</p>
+
+<ul>
+  <li>Vagrantのsync_folderである /var/www/html/your_app/app (CentOSから見えるディレクトリ)
+  windows上だと c:¥develop¥your_app¥app みたいなところ</li>
+</ul>
+
+<p>もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！</p>
+
+<p>という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。</p>
+
+<h3 id="section-2">まとめ</h3>
+
+<p>ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
+その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。</p>
+
+<p>上記のような <code>Failed to execute git checkout ... </code> エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。</p>
+
+<p>まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした…</p>
+
+
+  </div>
+  <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 02:13:26 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/middleman.html">middleman</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
+
+<h3 id="section">参考になったサイト</h3>
+
+<p>以下のサイトを参照しながら、作業を実施しました。</p>
+
+<ul>
+  <li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
+  <li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
+  <li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
+  <li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
+</ul>
+
+<h3 id="html">HTMLジェネレータは何を使うの？</h3>
+
+<p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
+
+<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ….</p>
+
+<p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
+
+<h3 id="middleman-">Middleman インストール</h3>
+
+<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない….
+もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
+
+<pre><code>gem install middleman
+</code></pre>
+
+<p>でインストールも楽々完了です。</p>
+
+<p>ブログモジュールを使うので、middleman の Gemfile に</p>
+
+<pre><code>gem "middleman-blog", "~&gt; 3.5.1"
+</code></pre>
+
+<p>を追加して</p>
+
+<pre><code>bundle install
+middleman init blog --template=blog
+</code></pre>
+
+<p>と実行すると blog ディレクトリに環境が生成されます。</p>
+
+<h3 id="workpress-">WorkPress からのインポート</h3>
+
+<p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
+いよいよ先程の変換ツールで実行…. エラーだよ！！（泣）</p>
+
+<p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
+イロイロ調べたところ、</p>
+
+<ul>
+  <li>wp2middleman</li>
+  <li>wordpress-to-jekyll</li>
+  <li>ruby-wpdb</li>
+  <li>wp_conversion</li>
+</ul>
+
+<p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
+どれもうまくいかない….</p>
+
+<p>python系のライブラリもあるらしく</p>
+
+<ul>
+  <li>wp2md</li>
+  <li>prlican-import</li>
+  <li>exitwp</li>
+</ul>
+
+<p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
+しかしいくつか失敗する… なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」…..
+もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
+
+<h3 id="wordpress-">WordPress インストール</h3>
+
+<p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
+これを先程一番うまく変換できた exitwp にかけると…….</p>
+
+<p>あらー全部奇麗に変換できるじゃないですかー</p>
+
+<h3 id="section-1">デザイン</h3>
+
+<p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
+
+<pre><code>middleman server
+</code></pre>
+
+<p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
+
+<p>GitHub Pages へデプロイするために Gemfile に</p>
+
+<pre><code>gem "middleman-deploy"
+</code></pre>
+
+<p>モジュールを追加して bundle install。</p>
+
+<p>config.rg に</p>
+
+<pre><code>activate :deploy do |deploy|
+  deploy.build_before = true # default: false
+  deploy.method = :git
+  deploy.branch   = "master" # default: gh-pages
+end
+</code></pre>
+
+<p>な感じで設定したら </p>
+
+<pre><code>middleman deproy
+</code></pre>
+
+<p>でビルドした内容をgithubへ連携してくれます。</p>
+
+<h3 id="section-2">今後</h3>
+
+<p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
+
+
+  </div>
+  <h2 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/02/22.html">Saturday, February 22, 2014 11:13:26 AM</a></p>
   <p class="tags">
     
@@ -64,7 +439,8 @@
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <p>my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら <a href="https://github.com/sizuhiko/sizuhiko.github.io/issues">github の issue ページ</a> にてお知らせいただければ幸いです。</p>
+    <!-- more -->
+<p>my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら <a href="https://github.com/sizuhiko/sizuhiko.github.io/issues">github の issue ページ</a> にてお知らせいただければ幸いです。</p>
 
 <p>このブログは <a href="http://middlemanapp.com/">Middleman</a> にて構築しています。Middlemanの導入に関する記事もアップしたいと思っていますので、興味ある方はしばらくお待ちください。</p>
 
@@ -208,341 +584,6 @@ HTML5カルタとは</p>
 
 
   </div>
-  <h2 class="title"><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/11/04.html">Monday, November 04, 2013 09:11:42 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/fabricate.html">fabricate</a>
-    
-      <a rel="tag" href="/tags/fixture.html">fixture</a>
-    
-      <a rel="tag" href="/tags/test.html">Test</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  </p>
-
-<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
-
-<h3 id="section">変更概要</h3>
-
-<ul>
-  <li>closure だけでなく、array 形式での属性値変更が可能に</li>
-  <li>初期連番をconfigで指定可能に</li>
-  <li>sequenceメソッドで柔軟な採番が可能に</li>
-</ul>
-
-<h3 id="array">array形式での属性値変更</h3>
-
-<p>これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。<br />
-これを直接引数でarrayを指定できるようにしました。  </p>
-
-<p>従来の記述方法：  </p>
-
-<pre><code>Fabricate::create('Post', 10, function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-</code></pre>
-
-<p>新しくサポートした記述方法：  </p>
-
-<pre><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
-});
-</code></pre>
-
-<p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
-
-<p>$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  </p>
-
-<h3 id="config">初期連番をconfigで指定</h3>
-
-<p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
-
-<pre><code>Fabricate::config(function($config) {
-    $config-&gt;sequence_start = 100;
-});
-</code></pre>
-
-<p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br />
-config関数を使わない場合は、従来通り1から開始されます。  </p>
-
-<h3 id="sequence">sequenceメソッドで柔軟な採番</h3>
-
-<p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br />
-この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
-
-<pre><code>Fabricate::attributes_for('Post', 10, function($data, $world){
-    return [
-        'id'=&gt; $world-&gt;sequence('id'),
-        'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
-    ];
-});
-</code></pre>
-
-<p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br />
-$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
-
-<p>sequenceメソッドは、3つの利用方法に対応しています。  </p>
-
-<ul>
-  <li>
-    <p>configで設定された開始値(または1)から開始する連番にする：   </p>
-
-    <p>$world-&gt;sequence('id')</p>
-  </li>
-  <li>
-    <p>開始番号を指定して連番にする：  </p>
-
-    <p>$world-&gt;sequence('id', 10) // この例では10から開始する</p>
-  </li>
-  <li>
-    <p>独自形式のユニーク文字列を作成する：  </p>
-
-    <p>$world-&gt;sequence('title', function($i){ return "Title {$i}"; }
-// または開始番号を指定して
-$world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; }</p>
-  </li>
-</ul>
-
-<p>一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  </p>
-
-<p>本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。<br />
-つまり呼び出し毎に開始番号から採番されます。  </p>
-
-<p>もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。<br />
-おそらく対応としては config で定義でできるようにすると思います…（併用でなく、プロセスか生成毎かを選択するイメージ）  </p>
-
-
-  </div>
-  <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/10/12.html">Saturday, October 12, 2013 11:10:45 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
-    
-      <a rel="tag" href="/tags/fixture.html">fixture</a>
-    
-      <a rel="tag" href="/tags/test.html">Test</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>Fabricate は Ruby の Fabricator に影響を受けたもので、データを簡単にすばやく生成する CakePHP2 用のプラグインです。  </p>
-
-<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
-
-<p>動作確認しているバージョンはCakePHP2.3.10, CakePHP2.4.1ですが、他のバージョンでもCakePHP2系なら動くと思います。  </p>
-
-<h3 id="section">インストール方法</h3>
-
-<p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
-
-<pre><code>    "extra": {
-        "installer-paths": {
-            "Plugin/Fabricate": ["sizuhiko/fabricate"]
-        }
-    },
-    "require": {
-        "composer/installers": "*",
-        "sizuhiko/fabricate": "*"
-    }
-</code></pre>
-
-<p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
-
-<p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
-
-<pre><code>CakePlugin::load('Fabricate');
-</code></pre>
-
-<h3 id="section-1">概要</h3>
-
-<p>Fabricateプラグインには3つのメソッドがあります。  </p>
-
-<ul>
-  <li>Fabricate::attributes_for(:model_name, :number_of_generation, :callback) : CakePHPの属性配列をデータ付きで返します（複数件生成可能）</li>
-  <li>Fabricate::build(:model_name, :callback) : CakePHPのモデルインスタンスを返します（1件のみ生成可能）</li>
-  <li>Fabricate::create(:model_name, :number_of_generation, :callback) : 指定された件数分データベースに生成する</li>
-</ul>
-
-<h3 id="section-2">用途</h3>
-
-<p>このプラグインは以下のような用途にとても向いています。  </p>
-
-<ul>
-  <li>ページングのテストをするのに大量にデータを生成したい</li>
-  <li>fixture だと各テストケースで同じデータが生成されてしまうけど、各テストケース毎に違うデータを生成したい。かつテスト対象のカラム以外は適当な値が自動的に入って欲しい</li>
-  <li>Bddプラグイン（CakePHPのBehatインテグレーションプラグイン）のステップで「Postモデルに100件のデータが登録されていること」みたいなのを書きたいのに、簡単に記述できないなぁと思ったとき</li>
-</ul>
-
-<h3 id="section-3">使い方＆サンプル</h3>
-
-<h4 id="attributesfor">attributes_for</h4>
-
-<pre><code>$results = Fabricate::attributes_for('Post', 10, function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-
-// $results is followings :
-array (
-  0 =&gt; 
-  array (
-    'id' =&gt; 1,
-    'title' =&gt; 'Lorem ipsum dolor sit amet',
-    'body' =&gt; 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
-    'created' =&gt; '2013-10-09 12:40:28',
-    'updated' =&gt; '2013-10-09 12:40:28',
-  ),
-  1 =&gt; 
-  array (
-  ....
-</code></pre>
-
-<p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br />
-第二引数に生成するレコード件数を指定します。<br />
-ただ、全部自動的だと困るという場合があるので、3つ目の引数にコールバック関数を指定可能になっています。このコールバック関数は、10件のデータを生成する場合、都度計10回呼び出されます。<br />
-戻り値として、属性名をキーに値を持つ連想配列を指定すると、都度array_mergeが実行されます（recursiveではありません）。<br />
-データの自動生成処理は、CakePHPのコアにあった FixtureTask の _generateRecords() というメソッドを拝借してきて、そのまま利用しています。<br />
-CakePHPでfixtureを生成したときrecordsに入っている内容と同じ物になります。  </p>
-
-<p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
-
-<p>また、第二引数、第三引数は省略可能ですので、  </p>
-
-<pre><code>// 1件だけ生成
-Fabricate::attributes_for('Post');
-// 1件だけコールバックを指定して生成
-Fabricate::attributes_for('Post', function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-// 10件生成
-Fabricate::attributes_for('Post', 10);
-</code></pre>
-
-<p>というバリエーションでも利用可能です。  </p>
-
-<h4 id="build">build</h4>
-
-<p>とりあえず本家のFabricatorに近づけたたくて作ったメソッドですが、CakePHPではモデルのインスタンスを複数同時に持てないので、正直使い勝手としては微妙です（作者が言うなという話ですが）。  </p>
-
-<h4 id="create">create</h4>
-
-<p>最も簡単にデータをデータベースに保存するなら、このメソッドで十分です。<br />
-attributes_forで作ったレコードをすべてデータベースに保存します。<br />
-引数の使い方はattributes_forと同一になっています。  </p>
-
-<h3 id="section-4">きっかけと今後</h3>
-
-<p>ページングのテストを書こうとして、とにかく面倒になってきて「<strong>何でCakePHPにはFabricatorがないんだー</strong>」というノリで、カッとなって作った系ですので、機能的には最低限になっています。<br />
-かつたぶん最新のFabricatorのクローンとも言い難い状況です。  </p>
-
-<p>またカッとなったら、最新のFabricatorの機能に近づけようかな〜、どなかた使っていただける方がいればご要望、機能追加は GitHubのIssue、Pull Requestでお願いします。  </p>
-
-
-  </div>
-  <h2 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/09/13.html">Friday, September 13, 2013 05:09:19 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/controller.html">Controller</a>
-    
-      <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
-    
-      <a rel="tag" href="/tags/test.html">Test</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3 id="section">コントローラのテストは難解である</h3>
-
-<p>とは言え、テストを書かないというのも何なのでテストを書くわけですが。  </p>
-
-<p>CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  </p>
-
-<pre><code>class PostsTestController extends PostsController {
-// モックしたい処理
-....
-}
-class PostsControllerTest extends ControllerTestCase {
-
-    public function testアクションをテストする() {
-        $this-&gt;testAction('url', array('controller'=&gt;'PostsTestController'));
-    }
-}
-</code></pre>
-
-<p>ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  </p>
-
-<h3 id="section-1">なぜモックが必要？</h3>
-
-<p>もしこの記事を読んでいる方で、testActionがブラウザからも、コンソールからも成功するよ、という場合は依存関係が少ないか、たまたまなのかもしれません。  </p>
-
-<p>Webアプリケーションのコントローラは様々な依存関係があり、簡単にテストを通過させることができません。特にSessionComponentを使ったactionをテストする場合、問題が発生します。<br />
-Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  </p>
-
-<p>しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  </p>
-
-<pre><code>// 実際のコントローラ
-    $components = ['Session', 'Auth'];
-
-    public function index() {
-        $hoge = $this-&gt;Session-&gt;read('hoge');
-        .....
-    }
-
-// テストケース
-    public function testIndex() {
-        CakeSession::write('hoge', 'fuga');
-        $this-&gt;testAction('/posts/index');
-        ......
-    }
-</code></pre>
-
-<p>みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  </p>
-
-<h3 id="section-2">どうやってモックを使うのか</h3>
-
-<p>で、調べてみたら意外と解説してある部分がない。こういうときはCakePHPのコアテストコードを見るのが一番です。<br />
-具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/…でないところがミソ）。  </p>
-
-<p>で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  </p>
-
-<pre><code>    public function testIndex() {
-        $this-&gt;controller = $this-&gt;generate("Posts", ['components' =&gt; ['Session']]);
-        $this-&gt;controller-&gt;Session-&gt;expects($this-&gt;any())
-             -&gt;method('read')
-             -&gt;will($this-&gt;returnValueMap([['hoge', 'fuga']]));
-        $this-&gt;testAction('/posts/index');
-</code></pre>
-
-<p>$this-&gt;generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。<br />
-このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  </p>
-
-<p>generate()の戻り値はコントローラのモックオブジェクトになっています。さらにSessionもモックしているので、 $this-&gt;controller-&gt;Session に対して、read('hoge')はいつでも'fuga'を返すという記述をすることが可能です。<br />
-モック自体はPHPUnitのモックオブジェクトなので、詳しい記法はPHPUnitのマニュアルからモックオブジェクトの章を参照してください。  </p>
-
-<p><a href="http://phpunit.de/manual/3.7/ja/test-doubles.html#test-doubles.mock-objects">PHPUnit3.7のモックオブジェクト解説</a>  </p>
-
-<h3 id="section-3">最後に</h3>
-
-<p>コントローラのテストは本当に難解です。ただコアのテストコードを見るだけでもだいぶ理解が深まります。一度自分のアプリでテストを書く前に、その親クラス(ModelとかControllerなど)やテストケースのテストコードを見ると、これまでにテストの書き方がわからなかったところも、腑に落ちることがあるはずです。  </p>
-
-
-  </div>
 
   <p class="pagenav">
     
@@ -588,6 +629,12 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
+                
                   <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
                 
                   <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
@@ -601,12 +648,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
                 
                   <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
-                
-                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
-                
-                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
-                
-                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
                 
               </ul>
             </div>
@@ -890,6 +931,18 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -898,7 +951,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (1)</li>
+                  <li><a href="/2014.html">2014</a> (4)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

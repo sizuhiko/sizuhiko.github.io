@@ -56,7 +56,252 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2011/09/13/cakefest2011.html">CakeFest2011に参加してきました</a></h2>
+            <h2 class="title"><a href="/2011/10/09/phpsh-cake.html">phpshでCakeを試食する</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/10/09.html">Sunday, October 09, 2011 08:10:48 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/phpsh.html">phpsh</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p><img alt="" src="/images/blog/taste-cake.png" /> </p>
+
+<p>普段 Rails でプログラミングをしていて、便利だなぁと思う機能の１つに</p>
+
+<pre><code>rails c
+</code></pre>
+
+<p>があります。</p>
+
+<p>コマンドラインからRailsアプリケーションのコードを実行できるコンソールで、コードをファイルに書かなくてもすぐ試せるので「あれっ、こんな書き方で良いのだっけ？」という事をお手軽に試すことができます。  </p>
+
+<p>Rubyにはirbといった対話型ツールもあります。PHPではこれに相当するものは php -q などが標準で使えるのですが、イマイチな使い勝手です。  </p>
+
+<p>そんな中、facebookから公開されている「phpsh」を知りました。これはPHPの対話型ツールで、いわゆるPHP版のirbみたいなものです。</p>
+
+<p>phpshは<a href="http://www.phpsh.org/">http://www.phpsh.org/</a>で、コードはgithubで公開されています。</p>
+
+<p>今回はphpsh自体のコードをハックすることなく、オートローダー用のphpファイルを作成して、CakePHPのコードを動かせるようにしてみました。</p>
+
+<h3 id="taste">Taste</h3>
+
+<p>この対話型ツールでできることは、実際の製品コードを試す、ケーキで言えば"試食"ということで「Taste」と名付けました。  </p>
+
+<p><a href="https://github.com/sizuhiko/Taste">https://github.com/sizuhiko/Taste</a></p>
+
+<h3 id="section">インストール</h3>
+
+<p>事前にphpshをインストールしておいてください。インストール方法はgithubのREADMEに書かれているので簡単にできると思います。ちなみに私の環境ではphpshのzipをダウンロードして、以下のコマンドを実行しました。</p>
+
+<pre><code>python setup.py install --prefix=/usr/local
+</code></pre>
+
+<p>.bashrcに以下の行を追加</p>
+
+<pre><code>export PYTHONPATH=/usr/local/lib/python2.6/site-packages 
+</code></pre>
+
+<p>後はTasteをインストールします。これはgithubで公開している taste.php を CakePHP のルートディレクトリにコピーするだけです。</p>
+
+<h3 id="section-1">実行</h3>
+
+<p>phpshは –prefixを付けたディレクトリ/bin にインストールされます。仮にそのディレクトリにパスが通っているとして、以下のコマンドを実行します。</p>
+
+<pre><code>phpsh taste.php
+</code></pre>
+
+<p><img alt="" src="/images/blog/taste-cake-2.png" /></p>
+
+<ol>
+  <li>私の環境では pcntl をインストールしていないので赤字で出ますが、phpshとしては必須ではないので気にしなくていいです。</li>
+  <li>ログディレクトリのワーニングが出ますが、コンソールのブートストラップを参考していて出ています。こちらも試食には問題ないのでスルーします。</li>
+</ol>
+
+<h3 id="section-2">できること</h3>
+
+<p>CakePHPのコアクラスや、appに配置されたアプリケーションのコードを試すことができます。それは普通に.phpのコードに書いているのと同じ感覚でできます。
+では、おなじみのBlogチュートリアルを作った場合、どんな結果が得られるのか見てみましょう。</p>
+
+<h4 id="section-3">モデルクラスを使ってみる</h4>
+
+<p>phpshのコンソールでClassRegistryを使ってモデルを取得し、findしてみます。</p>
+
+<pre><code>php&gt; $post = ClassRegistry::init('Post');
+php&gt; $data = $post-&gt;find('all');
+</code></pre>
+
+<p>以下のように、色付きで表示することができます。<img alt="" src="/images/blog/taste-cake-3.png" />   </p>
+
+<h4 id="url">URLを実行してみる</h4>
+
+<p>通常のブラウザから実行したときのように Dispatcher クラスを使ってみると、アクションから出力されるhtmlコードを表示してみることができます。</p>
+
+<pre><code>php&gt; $Dispatcher = new Dispatcher('/posts');
+</code></pre>
+
+<p><img alt="" src="/images/blog/taste-cake-4.png" /> </p>
+
+<h4 id="routerurl">Routerを使って、URLルーティングを試す</h4>
+
+<pre><code>php&gt; echo Router::url(array('controller'=&gt;'posts', 'action'=&gt;'index'), false);
+/posts
+</code></pre>
+
+<h3 id="section-4">さいごに</h3>
+
+<p>このようにphpshからCakePHPを使ってみれば、製品コード上でvar_dumpして確認する必要もありません（ここ重要）。  </p>
+
+<p>また、ここで紹介した使い方はほんの一片なので、実際にはもっと便利に使えるんじゃないかなぁと思っています。  </p>
+
+<p>現在は、アプリケーションはapp限定です。もしapp以外のアプリケーションディレクトリを使っているひとは、taste.php の 39行目 'app' =&gt; 'app' の値を変更してください。  </p>
+
+<p>CakePHP2.0対応は、そのうちやりたいなぁと思っています….</p>
+
+  </div>
+  <h2 class="title"><a href="/2011/09/28/phpmatsuri-2.html">PHPMatsuriに参加するとできること</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/09/28.html">Wednesday, September 28, 2011 12:09:00 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p><a href="http://2011.phpmatsuri.net/"><img alt="" src="http://2010.phpmatsuri.net/uploads/phpmatsuri_logo.jpg" /></a></p>
+
+<p>昨日の <a href="http://twitter.com/#!/hidenorigoto">@hidenorigoto</a> さん「<a href="http://d.hatena.ne.jp/innx_hidenori/20110927/1317049929">10/15・16［大阪］TDDやBDDも学べるよ！PHP Matsuriに参加しよう！</a> 」からのリレーブログです。  </p>
+
+<p>PHPMatsuriは国内外からPHPerを中心にWeb系のエンジニアが集まるハッカソンを中心としたイベントです。今年は大阪で10/15から10/16までの宿泊イベントとして開催されます。<br />
+同様のイベントが少なかったり、Matsuriって何っ？みたいな不信感 :ko: を持っている人や、参加を迷っている人もいると思うので、具体的に「<strong>何ができるのか</strong>」という視点で紹介したいと思います。</p>
+
+<h3 id="section">大事なことは最初に</h3>
+
+<p>今年も多くのスポンサー企業様に支えられ開催することができました。ありがとうございます。  </p>
+
+<p>PHPMatsuri 2011 in Osaka はチケット発売中です。まだチケット購入していないかたは、<a href="http://2011.phpmatsuri.net/phpmatsuri/paypal">こちら</a>から購入することができます。</p>
+
+<h3 id="section-1">とにかく聴いてみる</h3>
+
+<p><img alt="" src="/images/blog/phpmatsuri_2.jpg" />
+PHPMatsuriでは、何か開発するという目的でなく、講演を聴くという参加スタイルでも有意義な2日間を過ごす事ができます。
+初日は豪華ゲストとスポンサー殿によるカンファレンス形式の講演が夜まで続きます。これだけ多様なメンバーが揃うのもPHPMatsuriならではです。もちろん海外ゲストのセッションには（同時ではありませんが随時）翻訳が付くので安心です。通訳の方はPHPカンファレンスでもおなじみのケイワイトレード殿です。  </p>
+
+<p>もし講演で興味を持つ事ができたら、並行して行われているワークショップですぐ体験することができます。当日は公式にアナウンスされているもの以外にも、野良ワークショップが行われるのもPHPMatsuriの特徴です。参加者のみんながやりたいと思う事を、できる人と一緒にやってみる、昨年もこのようなスタイルでいくつかのワークショップが行われました。夜には闇PHPMatsuriが行われるとか….  </p>
+
+<p>2日目には参加者が発表を行う大LT大会。ネタあり :lol: 、真面目な発表あり :idea:  、24時間を共に過ごした参加者の発表が続きます。  </p>
+
+<p>ただ聴いてみるだけでは、もったいないので「1つ質問をする」という目標を持ってみてはどうでしょうか？海外の憧れプログラマーへの質問も講演のQA時間なら通訳の方が、それ以外の時間も会場にいる仲間が助けてくれることでしょう。</p>
+
+<h3 id="section-2">何か作ってみたい</h3>
+
+<p><img alt="" src="http://farm5.static.flickr.com/4085/5058830692_a2f61e0295.jpg" />
+「<strong>何か作ってみたいけど、ちょっと</strong>」という人は、ワークショップに参加してみてはどうでしょうか？人気の次世代フレームワークや、スマートフォン向けアプリの作成は講演とセットで習得することができるまたとない機会です。また夜にはPHPUnitやBehatについてのワークショップもあります。<br />
+もしフレームワークについて困った事がおきてもそこには、そのフレームワークの開発者や、百戦錬磨のPHPerがいます。思い切って疑問や要望をぶつけられる、こちらもまたとない機会です。  </p>
+
+<p>せっかくですので、このワークショップで習得したことをベースに何か作ってみたり、習得したこと自体でも良いので2日目の大LT大会で発表してみましょう。  </p>
+
+<p>発表はスライドがなくてもデモを行うだけでも大丈夫です。一人の体験、経験は他の人にも共感を得る事ができると思います。</p>
+
+<h3 id="section-3">他の人と一緒に作ってみたい</h3>
+
+<p>ハッカソンや開発合宿というスタイルで何か成果を残したい！という人は、参加者ポジションペーパーを有効活用してもらえればと思います。  </p>
+
+<p>昨年は入り口のホワイトボードに各自やりたい事を付箋紙に書いて貼り出して、協力者を募るというスタイルだったのですが、事前の準備などあまりうまく機能しませんでした。
+今年はその反省を活かし、事前に参加者同士どういった事がやってみたいのかなどの交流ができるように、ポジションペーパーを記入できるようにしました。積極的に開発をしたいという人はポジションペーパーの記入にご協力ください。それをみた他の参加者の方は、「私でもこんなことならできる」ということで協力を申し出てみるのも良い交流のスタイルだと思います。もちろん1人で黙々と作りたい！という人は、その旨ポジションペーパーに書いてもらっても良いかもしれません。</p>
+
+<h3 id="section-4">長い夜の過ごし方</h3>
+
+<p><img alt="" src="http://c0013504.cdn1.cloudfiles.rackspacecloud.com/x2_2e1b554" />
+開発スペースは24時間オープンしているので、仮眠をした後でも、貫徹でもいつでも自由に利用することが可能です。  </p>
+
+<p>昨年は夜にサプライズイベントがあったり、JIREIマスターが登場したり、Redbullガールが翼を授けてくれたりしました。  </p>
+
+<p>今年は何がおきるのかな？深夜には講演のスクリーンを使ってゲーム大会が行われていたり（写真はCakePHPのコアデベロッパーGraham とゲームを楽しむ様子）と、本当に自由な過ごし方ができるイベント。ハッカソン、開発合宿、修学旅行(?)、カンファレンスなど特定の枠にハマらないイベント、それがPHPMatsuriの良いところですね。</p>
+
+<h3 id="section-5">何でも良いので発表してみよう</h3>
+
+<p><img alt="" src="http://farm5.static.flickr.com/4132/5058223713_b8323377e9.jpg" />
+PHPMatsuriの2日目の午後は大発表会です。  </p>
+
+<p>発表時間は長くても5分です（発表希望者の人数で短くなる可能性があります。昨年は4分でした）。発表はちょっと、と思っている人も大丈夫です。もし失敗しても、それについてそれほど覚えている人はいないものです。もちろん良い発表をすれば覚えてくれる人もいるでしょうが、さすがに40人近い人数が発表しますので、インパクトを残す発表の方が難しいかもしれません。 :eyes:   </p>
+
+<p>せっかくの機会です。発表する内容も講演を聴いて良いなと思った事、作ったもののデモなど様々で大丈夫です。  </p>
+
+<p>発表すると参加者投票によって順位が付き、賞品が出ます。現時点でどういった賞があるかということが申し上げられないのですが、例えば各フレームワークの賞だったり、クラウド賞だったり、あえて他の参加者が狙わないジャンルに絞って賞品稼ぎに出るのも良いかもしれません :p    </p>
+
+<p>また昨年はお一人にドラ娘をお願いしたのですが、さすがに3時間ドラを叩き続けるのは大変です。今年は交代もしたほうがいいのかなぁと思っています。そこで、私やりたい！という人がいましたら、ポジションペーパーに「ドラ娘やりたい！」と表明していただければ、スタッフから声をかけられるかもしれませんよ！</p>
+
+<h3 id="section-6">最後に</h3>
+
+<p>昨年、私はBehatというBDDフレームワークに注目し、日本語化することでベストハッカー賞をいただきました（スタッフなのに空気を読まずすみません…）。それからBehatを追い続け、最近公開したCakeBehatにまでつながっています。  </p>
+
+<p>参加者の人にも、今後オープンソース活動をするきっかけになったり、多くの勉強会やイベントに出るきっかけになるようなイベントにして欲しいなと思っています。  </p>
+
+<p>これだけ様々な楽しみ方ができるイベントに参加しない理由はないですね。まだチケット購入していないかたは、<a href="http://2011.phpmatsuri.net/phpmatsuri/paypal">こちら</a>から購入することができます。  </p>
+
+<p>なおちょっと目立たないところに、<a href="http://2011.phpmatsuri.net/page/timetable">タイムテーブル</a>、<a href="http://2011.phpmatsuri.net/phpmatsuri/twitter/lists">参加者一覧</a>もありますので参考にしてください。</p>
+
+<p>明日は <a href="http://twitter.com/#!/koyhoge">@koyhoge</a> さんです！</p>
+
+  </div>
+  <h2 class="title"><a href="/2011/09/14/php-2011.html">PHPカンファレンス2011に参加しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/09/14.html">Wednesday, September 14, 2011 04:09:56 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+<p>今回のPHPカンファレンスは、久々の1日開催と、マルチトラックということで楽しみにしていました。  </p>
+
+<p>が、前日朝方までBarから帰してもらえない状況 :ko: で、数分遅刻した上にかなり眠い状態…  </p>
+
+<p>カンファレンスのメイントラックでは5.3, 5.4の話題が多く、若干のネタかぶり？という雰囲気もありましたが、PHPも便利になっていくねという確認ができました。
+マルチトラックはかなりのチャレンジだったと思うのですが、オブラブなどでの経験からすると、事前にどのセッションに参加希望かだけでも聞いておくと違ったかなぁと。そのセッションに必ず参加しないといけない、という訳ではないのですが、そのセッションをどの会場でやるか、といった目安にはなるかなぁと。ただメイン会場に通訳さんがいたので、それほど柔軟にはできない事情もあったとは思いますが。  </p>
+
+<p>私は3つの目的でカンファレンスに参加しました。</p>
+
+<ol>
+  <li>カンファレンスのセッションを聴きに</li>
+  <li>LTでCakeBehatを紹介するために</li>
+  <li>PHP Matsuri青年団として、Matsuriの宣伝を！</li>
+</ol>
+
+<h3 id="section">カンファレンスの感想</h3>
+
+<p><a href="http://phpcon.php.gr.jp/2011/"><img alt="" src="http://phpcon.php.gr.jp/2011/images/phpcon2011-logo.png" /></a></p>
+
+<p>カンファレンスに関してはアジャイルやTDDのセッションがあったので参加してみようと思ったのですが、どうも「参考にならない人」条件に入っているようだったし、かなりの満員御礼状態で会場に入れないということで、ずっとメイン会場にいました。あ、フレームワークアップデートだけは6Fに移動して見ていました。フレームワークアップデートではLithiumやEthena（こちらはLTでsotarokがやっていましたが）がなくちょっと残念でした。あと昨年のフレームワークアップデートはもうちょっとバリエーション豊かだった気が（気のせいかもしれませんが）。<br />
+あと興味を持ったのはHadoopをPHPから操作できるHadooPHPかなぁ。プロトタイプ用ということだったけど、ちょっと試してみたいと思いました。  </p>
+
+<h3 id="cakebehatlt">CakeBehatの紹介LT</h3>
+
+<p><a href="http://twl.sh/q1ULvr"><img alt="" src="/images/blog/CakeBehatAtPhpcon2011.png" /></a></p>
+
+<p>スライドをアップしました。
+Behat自体の認知度はだいぶ上がって来たと思うので、後はPHPMatsuriで背中を押せば使う人が増えるんじゃないかなぁ？LTの後でSymfony,Cake以外のフレームワークからも使いたいという書き込みがあったので、Matsuriで誰かチャレンジしないかな？と期待しています。  </p>
+
+<h3 id="phpmatsuri">PHPMatsuriの宣伝</h3>
+
+<p><a href="http://2011.phpmatsuri.net/"><img alt="" src="http://2010.phpmatsuri.net/uploads/phpmatsuri_logo.jpg" /></a></p>
+
+<p>LTを5分ちょうどで終えて、3回の紹介、懇親会LTでくどいくらい宣伝させていただきました。  </p>
+
+<p>PHPcon当日はまだ申込ができなかったのですが、すでに<a href="http://2011.phpmatsuri.net/">PHPMatsuriサイト</a>では参加申込が可能となっています。海外から豪華ゲストもやってきますし、開発するも講演を聴くも、いろんな方向から楽しいイベントにしたいと思っていますのでぜひ参加の検討をお願いします。</p>
+
+
+  </div>
+  <h2 class="title"><a href="/2011/09/13/cakefest2011.html">CakeFest2011に参加してきました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2011/09/13.html">Tuesday, September 13, 2011 05:09:19 PM</a></p>
   <p class="tags">
     
@@ -331,519 +576,6 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
 <p>このネタで、CakeFestに応募しようと思うのですが、後9日か。。。</p>
 
   </div>
-  <h2 class="title"><a href="/2011/04/03/phpkansai2011.html">PHPカンファレンス関西に参加してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/04/03.html">Sunday, April 03, 2011 11:04:07 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/bdd.html">BDD</a>
-    
-      <a rel="tag" href="/tags/behat.html">Behat</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>4/2に開催された<a href="http://phpcon.php.gr.jp/kansai/">PHPカンファレンス関西</a>に参加してきました。  </p>
-
-<p>実行委員の皆様お疲れさまでした。ものすごい楽しいイベントでした。  </p>
-
-<p>僕はLTでBehatの話をしたのですが、他のプレゼンテーションがとてもバラエティにとんでいて、とても勉強になったし、交流もできて良かったです。  </p>
-
-<p>プログラムの内容や、それぞれの内容は他の参加者の方が詳しく書いていたりするので、簡単にKPT形式で振り返っておきます。  </p>
-
-<p>※アンケート書いたけど、やっぱり落ち着いたところで考えると違いますね。</p>
-
-<h3 id="keep">KEEP</h3>
-
-<ol>
-  <li>前日入りは楽</li>
-  <li>会場がキレイ（税金がふんだんに投入されている感のある・・・以降自粛）</li>
-  <li>関西での大規模イベント（東京からの参加でしたが。。。）</li>
-  <li>スムーズな進行、時間通りに進んでいて感動した</li>
-  <li>懇親会LTも大スクリーンで見やすい</li>
-  <li>懇親会の食事が美味しい</li>
-  <li><a href="http://www.flickr.com/photos/omoon/5581023387/">ドラ娘</a>がかわいい</li>
-</ol>
-
-<h3 id="problem">Problem</h3>
-
-<ol>
-  <li>電源が少ない。自分はAirだし、Wifiルータも10時間持つURoad-9000だったので大丈夫でしたが、全体的に困っていた人が多かった印象</li>
-  <li>欲を言えば2トラックぐらいあると良かったかも（もっとコード的な欲望がある人向けセッションみたいな）</li>
-  <li>16Fのレストランはテンパっていた w （本編に関係ないですが）</li>
-  <li>懇親会同一会場は待ち時間が微妙</li>
-  <li>（本編LTで）ドラ娘の仕事が少なかった（懇親会では大変そうでした。お疲れさまでした）</li>
-  <li>LT発表者が東方面だった</li>
-</ol>
-
-<h3 id="try">Try</h3>
-
-<ol>
-  <li>次はハッカソン？ （ザワっ</li>
-  <li>青年団も何か告知できるようにしておきたかった　（謎</li>
-  <li>また来年もあれば参加したい</li>
-</ol>
-
-<p>で、スライドなんですが、いつものslideshareにアップしてたんですが、何度やっても失敗するようになったので、おさらばすることにしました（過去のファイルはそのまま置いておきますが）。取り急ぎ、MyOperaのストレージに置いたので、こちらをダウンロードして見てください。  </p>
-
-<p><a href="/phpkansai/phpkansai2011.pdf"><img alt="" src="/phpkansai/phpkansai2011.png" /></a></p>
-
-<p>また、懇親会のジャンケン大会で本をもらいました。</p>
-
-<p><img alt="" src="http://ecx.images-amazon.com/images/I/51zHPNnSqWL._SL160_.jpg" /></p>
-
-<p>最後に、東京に帰る新幹線で、WiMAXルータURoad-9000がどのくらい使えるか検証してみました。</p>
-
-<ol>
-  <li>トンネル以外は概ね問題なく接続でき、とても快適</li>
-  <li>トンネル以外での不調エリアは、米原、浜名湖近辺だけ</li>
-  <li>上記いずれも体感です（ご了承ください）</li>
-</ol>
-
-<p>ということで、N700系であればWifi使えるけど、それ以外どうする？といった場合、WiMAXも十分行けますよ、あなた。（宣伝）  </p>
-
-
-  </div>
-  <h2 class="title"><a href="/2011/03/26/behat.html">Behatのインストールについての注意事項</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/03/26.html">Saturday, March 26, 2011 09:03:31 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/bdd.html">BDD</a>
-    
-      <a rel="tag" href="/tags/behat.html">Behat</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>4/2 に行われる<a href="http://phpcon.php.gr.jp/kansai/">PHPカンファレンス関西</a>にて、BehatについてLTをすることになりました。  </p>
-
-<p>そこで最近Behatをダウンロードしてみたのですが、git submoduleでのSymfonyコンポーネントのインストールで問題がありますので、解決策を書いておきます。  </p>
-
-<ol>
-  <li>
-    <p>Behat 本体のインストール  </p>
-
-    <p>git clone git://github.com/Behat/Behat.git</p>
-  </li>
-  <li>
-    <p>サブモジュールのインストール  </p>
-
-    <p>cd Behat
- git submodule update –init</p>
-  </li>
-</ol>
-
-<p>とくに問題がなければ、しばらくして終了しますが、本稿執筆次点では以下のようなエラーで中断してしまいます。  </p>
-
-<pre><code>Initialized empty Git repository in /Behat/vendor/Symfony/Component/Translation/.git/
-remote: Counting objects: 220, done.
-remote: Compressing objects: 100% (124/124), done.
-remote: Total 220 (delta 147), reused 141 (delta 94)
-Receiving objects: 100% (220/220), 52.61 KiB, done.
-Resolving deltas: 100% (147/147), done.
-fatal: reference is not a tree: d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
-Unable to checkout 'd5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c' in submodule path 'vendor/Symfony/Component/Translation'
-</code></pre>
-
-<p>そこで、エラーになったサブモジュールの変更ログを確認します。  </p>
-
-<pre><code>git log --oneline -p -- vendor/Symfony/Component/Translation
-</code></pre>
-
-<p>上記コマンドを実行すると、以下のように表示されます。  </p>
-
-<pre><code>85d8dac updated vendors
-diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
-index f70e0ba..d5cdaba 160000
---- a/vendor/Symfony/Component/Translation
-+++ b/vendor/Symfony/Component/Translation
-@@ -1 +1 @@
--Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
-+Subproject commit d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
-da2503a updated submodules
-diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
-new file mode 160000
-index 0000000..f70e0ba
---- /dev/null
-+++ b/vendor/Symfony/Component/Translation
-@@ -0,0 +1 @@
-+Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
-</code></pre>
-
-<p>ここで表示されたログの１行目「85d8dac updated vendors」の85d8dacを使ってチェックアウトします。  </p>
-
-<pre><code>git checkout 85d8dac~ -- vendor/Symfony/Component/Translation
-git submodule update
-</code></pre>
-
-<p>こうすることで、サブモジュールのインストールが継続できます。  </p>
-
-<ol>
-  <li>
-    <p>実行する  </p>
-
-    <p>bash-3.2$ ./bin/behat.php 
- …………………………………………………………….
- …………………………………………………………….
- ……………………………………………………………………….</p>
-
-    <p>36 scenarios (36 passed)
- 222 steps (222 passed)
- 0m7.045s</p>
-  </li>
-</ol>
-
-<p>成功したら、インストールは完了です。  </p>
-
-
-  </div>
-  <h2 class="title"><a href="/2011/02/13/php-bdd-behat.html">PHPのBDDフレームワーク Behat について発表してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/02/13.html">Sunday, February 13, 2011 02:02:18 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/bdd.html">BDD</a>
-    
-      <a rel="tag" href="/tags/behat.html">Behat</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3 id="php">第55回PHP勉強会＠関東で発表してきました</h3>
-
-<p>2011/2/10にPHP勉強会が約半年ぶりに開催されました。以前、発表するぜーと公言していたので、今回は万全を期してと思いきや最近の多忙に負けそうになりました。が、前日（というか当日朝４時）までバタバタしながら準備してました。。。  </p>
-
-<p>今回は昨年のPHP祭りで日本語ハックしたBehatの入門編です。あのときはLTという形であまり詳細に触れられなかったので、30分という時間ですが実際に１からやってみました。
-ここでは実際に「やってみよう」で実践した手順について解説します。  </p>
-
-<h3 id="section">はじめに</h3>
-
-<p>スライドの「1. インストール」でも書いていますが、まずBehat本体をインストールしてください。私がforkした日本語対応版をcloneすると「3. 日本語環境」の部分をスキップできます。
-「2. テスト環境」に関しては、今回behat_webstepsを流用しました。それ以外にもGoutte-for-Behat（<a href="https://github.com/ThePixelDeveloper/Goutte-for-Behat">https://github.com/ThePixelDeveloper/Goutte-for-Behat</a>）というものもあります。どちらもHTMLクライアントのエンジンとして「Goutte」を使っています。前者はgoutte.pharが含まれていますが、後者は含まれていないので別途Goutteをcloneする必要があります。ただ後者の方がstepsのコードは流用しやすいかもしれません。  </p>
-
-<h3 id="section-1">準備しよう</h3>
-
-<p>まず初期状態のディレクトリを以下のようにしました。</p>
-
-<pre><code>|-- Behat Behat本体のclone
-|-- behat_websteps behat_webstepsのclone
-</code></pre>
-
-<h3 id="section-2">練習環境を作る</h3>
-
-<p>behat_webstepsを土台にして、テスト環境を作ります。といっても、まずは単にコピーするだけです。</p>
-
-<pre><code>cp -R behat_websteps sandbox
-</code></pre>
-
-<h3 id="section-3">フィーチャーファイルを作成する</h3>
-
-<p>スライドでも引用したgihyo.jpでのcucumberについてとてもわかりやすい連載「<a href="http://gihyo.jp/dev/serial/01/ruby/0022">第22回　Railsアプリの受け入れテストをCucumberで書こう</a>」のフィーチャーを使用します。  </p>
-
-<pre><code>vi sandbox/features/sample.feature
-</code></pre>
-
-<p>実際のコードは以下のとおりです。</p>
-
-<pre><code># language: ja
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録
-    前提 "ユーザ登録"ページを表示している
-    もし "email"に"example@example.com"と入力する
-    かつ "name"に"赤松 祐希"と入力する
-    かつ "age"に"22"と入力する
-    かつ "Create"ボタンをクリックする
-    ならば "User was successfully created."と表示されていること
-    かつ "example@example.com"と表示されていること
-    かつ "赤松 祐希"と表示されていること
-    かつ "22"と表示されていること
-</code></pre>
-
-<p>ここでcucumberと違うのは1行目（フェーチャの前）に言語指定をするところです。現時点のBehatではこれを書く事でja.xmlを利用してくれます。</p>
-
-<h3 id="section-4">実行してみる</h3>
-
-<p>フィーチャーはbin/behatコマンドでテストします。</p>
-
-<pre><code>bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-</code></pre>
-
-<p>画面には、以下のように出力されます。</p>
-
-<pre><code>&lt;code&gt;
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録                                     # features/sample.feature:4
-
-&lt;span style="color: goldenrod"&gt;
-    前提 "ユーザ登録"ページを表示している
-    もし "email"に"example@example.com"と入力する
-    かつ "name"に"赤松 祐希"と入力する
-    かつ "age"に"22"と入力する
-    かつ "Create"ボタンをクリックする
-    ならば "User was successfully created."と表示されていること
-    かつ "example@example.com"と表示されていること
-    かつ "赤松 祐希"と表示されていること
-    かつ "22"と表示されていること
-&lt;/span&gt;
-1 scenario (&lt;span style="color: goldenrod"&gt;1 undefined&lt;/span&gt;)
-9 steps (&lt;span style="color: goldenrod"&gt;9 undefined&lt;/span&gt;)
-0.123s
-&lt;span style="color: goldenrod"&gt;
-You can implement step definitions for undefined steps with these snippets:
-
-$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $arg1, $arg2) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-&lt;/span&gt;
-&lt;/code&gt;
-</code></pre>
-
-<p>ステップ（テストの定義）が記述されていないので、9つの未定義エラーが表示されています。その下にはスケルトンが表示されているので、まずこれをコピペしてstepファイルを作成します。</p>
-
-<h3 id="section-5">ステップファイルの作成</h3>
-
-<p>stepファイル「web_test_step.php」に前節のスケルトンを貼付けます。以下のようになるでしょう。</p>
-
-<pre><code>&lt;?php
-
-$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $arg1, $arg2) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-
-$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $arg1) {
-    throw new EverzetBehatExceptionPending();
-});
-</code></pre>
-
-<p>また実行してみましょう。</p>
-
-<pre><code>&lt;code&gt;
-bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録                                     # features/sample.feature:4
-
-&lt;span style="color: goldenrod"&gt;
-    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:5
-      TODO: write pending definition
-&lt;/span&gt;&lt;span style="color: skyblue"&gt;
-    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:9
-    ...（** 省略 **）
-&lt;/span&gt;
-
-1 scenario (&lt;span style="color: goldenrod"&gt;1 pending&lt;/span&gt;)
-9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;, &lt;span style="color: goldenrod"&gt;1 pending&lt;/span&gt;)
-0.089s
-&lt;/code&gt;
-</code></pre>
-
-<p>未定義（undefined）から、ペンディングに変わりましたね。これは貼付けたコードが現時点でPending例外を投げているためです。</p>
-
-<h3 id="section-6">ステップを記述する</h3>
-
-<p>ステップの中身はbehat_webstepsのcommon.phpを流用しました。</p>
-
-<pre><code>&lt;?php
-
-$steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $page) {
-  $page = $world-&gt;__getPath($page);
-
-  $world-&gt;client-&gt;request('GET', $page);
-  $world-&gt;__getClientProperties();
-});
-
-$steps-&gt;もし('/^"([^"]*)"に"([^"]*)"と入力する$/', function($world, $field, $value) {
-  assertNotNull($world-&gt;page,"No webpage loaded");
-  $form = $world-&gt;__getForm('Create');
-  $form[$field]-&gt;setValue($value);
-});
-
-$steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world, $button) {
-  assertNotNull($world-&gt;page,"No webpage loaded");
-  $form = $world-&gt;__getForm('Create');
-  $world-&gt;client-&gt;submit($form);
-  $world-&gt;__getClientProperties();
-});
-
-$steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $text) {
-  assertNotNull($world-&gt;page,"No webpage loaded");
-  assertContains($text,$world-&gt;output);
-});
-</code></pre>
-
-<p>実行してみましょう。</p>
-
-<pre><code>&lt;code&gt;
-bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録                                     # features/sample.feature:4
-
-&lt;span style="color: firebrick"&gt;    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8
-      Unknown path 'ユーザ登録'. You can define it in [features_folder]/support/paths.php
-      Failed asserting that an array has the key &lt;string:ユーザ登録&gt;.
-&lt;/span&gt;&lt;span style="color: skyblue"&gt;    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
-    ...（** 省略 **）
-&lt;/span&gt;
-
-1 scenario (&lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
-9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;), &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
-0.355s
-&lt;/code&gt;
-</code></pre>
-
-<p>すると「ユーザ登録」なんてURLは見つからないというエラーになります。まぁそうですね。URLに関しては画面名と実際のhttpリクエストするURLを関連づけておく必要があります。これはgoutte以外のHTTPクライアントを使っても同じことです。ベースとしたbehat_webstepsではsupport/paths.phpにそのマッピングを書くようにしていますので、追加します。</p>
-
-<pre><code>&lt;?php
-$world-&gt;paths = array();
-$world-&gt;paths['ユーザ登録'] = "http://localhost/user_regist.php";
-</code></pre>
-
-<h3 id="section-7">テストを失敗させる</h3>
-
-<p>ここまでで、初期段階の準備は完了です。ではまたテストを実行してみましょう。</p>
-
-<pre><code>&lt;code&gt;
-bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録                                     # features/sample.feature:4
-
-    &lt;span style="color: green"&gt;前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8&lt;/span&gt;
-    &lt;span style="color: firebrick"&gt;もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
-      The current node list is empty.&lt;/span&gt;
-    &lt;span style="color: skyblue"&gt;...（** 省略 **）&lt;/span&gt;
-
-1 scenario (&lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
-9 steps (&lt;span style="color: green"&gt;1 passed&lt;/span&gt;, &lt;span style="color: skyblue"&gt;7 skipped&lt;/span&gt;, &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
-0.114s
-&lt;/code&gt;
-</code></pre>
-
-<p>テストを実行してみると、最初に入力フォームに値をセットしようとするところで失敗します。まだユーザ登録画面を表示するプログラムはありません。  </p>
-
-<p>それでは実際に動作するコードを書いてみましょう。  </p>
-
-<h3 id="section-8">実装する</h3>
-
-<p>ここではあくまでテストを通過させる簡単なコードを書いてみます。画面の入力フォームから入力された値を表示するuser_regist.phpを書いてみましょう。</p>
-
-<pre><code>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-    &lt;head&gt;
-      &lt;title&gt;ユーザ登録&lt;/title&gt;
-    &lt;/head&gt;
-    &lt;body&gt;
-        &lt;div&gt;&lt;?
-            if ($_POST["submit"]) {
-                echo "User was successfully created.". "&lt;br /&gt;";
-                echo "name = "     . $_POST['name']  . "&lt;br /&gt;";
-                echo "e-mail = "   . $_POST['email'] . "&lt;br /&gt;";
-                echo "age = "      . $_POST['age']   . "&lt;br /&gt;";
-            }
-        ?&gt;&lt;/div&gt;
-        &lt;form method="post" action="user_regist.php"&gt;
-            &lt;div&gt;
-                &lt;label&gt;名前:&lt;/label&gt;&lt;input type="text" name="name" value=""&gt;
-            &lt;/div&gt;
-            &lt;div&gt;
-                &lt;label&gt;e-mail:&lt;/label&gt;&lt;input type="text" name="email" value=""&gt;
-            &lt;/div&gt;
-            &lt;div&gt;
-                &lt;label&gt;年齢:&lt;/label&gt;&lt;input type="text" name="age" value=""&gt;
-            &lt;/div&gt;
-            &lt;div&gt;
-                &lt;input type="submit" name="submit" value="Create"&gt;
-            &lt;/div&gt;
-        &lt;/form&gt;
-    &lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<p>※まぁなんとも安直なコードですが、ご勘弁を・・・</p>
-
-<p>作成したファイルをドキュメントルートに設置してテストを実行しましょう。</p>
-
-<pre><code>&lt;code&gt;
-bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-フィーチャ: ユーザを管理したい
-
-  シナリオ: ユーザの登録                                     # features/sample.feature:4
-
-&lt;span style="color: green"&gt;    前提 "ユーザ登録"ページを表示している                           # features/steps/web_test_step.php:8
-    もし "email"に"example@example.com"と入力する          # features/steps/web_test_step.php:14
-    かつ "name"に"赤松 祐希"と入力する                         # features/steps/web_test_step.php:14
-    かつ "age"に"22"と入力する                             # features/steps/web_test_step.php:14
-    かつ "Create"ボタンをクリックする                          # features/steps/web_test_step.php:21
-    ならば "User was successfully created."と表示されていること # features/steps/web_test_step.php:26
-    かつ "example@example.com"と表示されていること             # features/steps/web_test_step.php:26
-    かつ "赤松 祐希"と表示されていること                           # features/steps/web_test_step.php:26
-    かつ "22"と表示されていること                              # features/steps/web_test_step.php:26
-&lt;/span&gt;
-1 scenario (&lt;span style="color: green"&gt;1 passed&lt;/span&gt;)
-9 steps (&lt;span style="color: green"&gt;9 passed&lt;/span&gt;)
-0.389s
-&lt;/code&gt;
-</code></pre>
-
-<p>やったー、グリーンでテスト成功です。  </p>
-
-<h3 id="section-9">さいごに</h3>
-
-<p>今回はbehat_webstepsをベースにしましたが、HTTPクライアントは何でも大丈夫です。今回goutteでしたが、BehatはPHPUnitを使うのでPHPUnitのPHPUnit_Extensions_SeleniumTestCaseを使うのも１つでしょう。Javascriptが使われているサイトなどでは、こちらの選択になりますね。  </p>
-
-<p>大事なことはアジャイルでドキュメントを書く事と、無駄なドキュメントでなく実行可能なドキュメントである、ということですね。プレーンテキストなのでプログラマじゃなくても、お客さんでも読めるし、書いてもらう事も可能かもしれません。打ち合わせでフィーチャファイルを議事録的に書きながら進めることもできると思います。  </p>
-
-<p>今後の展開としては、一般的なwebstepに関してはgoutteを使った日本語版を、私のgithubアカウントで公開予定です。4/2のPHPカンファレンス関西までには公開して何かしゃべりたいなーと思っていますが、ちょっとテーマと違うか。。LT狙いで何か。。  </p>
-
-<p>Behat RC1も期待して待ちましょう！！  </p>
-
-<div style="width:425px" id="__ss_6907127">
-<strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/kishida4slideshare/behat" title="Behat入門" rel="nofollow">Behat入門</a></strong><object id="__sse6907127" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy201102-110212212213-phpapp02&amp;stripped_title=behat&amp;userName=kishida4slideshare" />
-<param name="allowFullScreen" value="true" />
-<param name="allowScriptAccess" value="never" />
-<embed name="__sse6907127" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy201102-110212212213-phpapp02&amp;stripped_title=behat&amp;userName=kishida4slideshare" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never" /></object><div style="padding:5px 0 12px">View more <a href="http://www.slideshare.net/" rel="nofollow">presentations</a> from <a href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
-</div>
-
-<p>懇親会でも話題になったのですが、PHPSpecはどこへ行ってしまったのか・・・  </p>
-
-<p>それと、pharファイルが使えないよ！という方（当日朝3時までのオレ）、は<a href="http://d.hatena.ne.jp/brtRiver/20101029/1288342181">こちらの「Pharは便利だけど <code>--enalbe-zend-multibyte</code>が有効だと文字化けしてしまう」</a>を参考にしてください！！</p>
-
-
-  </div>
 
   <p class="pagenav">
     
@@ -911,6 +643,12 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
+                
                   <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
                 
                   <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
@@ -924,12 +662,6 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
                 
                   <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
-                
-                  <li><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a> <span>2012/11/08</span></li>
-                
-                  <li><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a> <span>2012/09/22</span></li>
-                
-                  <li><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a> <span>2012/09/02</span></li>
                 
               </ul>
             </div>
@@ -1213,6 +945,18 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1221,7 +965,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (1)</li>
+                  <li><a href="/2014.html">2014</a> (4)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
