@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>CakePHP BddPlugin updates</h2>
-            <p class="postdate"><a title="Permanent link" href="/2013/02/06.html">Wednesday, February 06, 2013 08:02:04 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2013/02/06.html">Wednesday, February 06, 2013 05:02:04 PM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
@@ -80,38 +293,36 @@
 
           <!-- more -->
 
-<h3 id="v092">v0.9.2リリース</h3>
+<h3>v0.9.2リリース</h3>
 
 <p>CakePHPのBddプラグインも少しずつ浸透し、国内外より利用者様の声が届いて、いくつか不具合＆機能改善などを取り込んできました。  </p>
 
 <p>本日リリースしたv0.9.2としては、数回にわたり<a href="http://twitter.com/kaz_29">@kaz_29</a>さんと、もくもく会を重ねた結果が入っています。  </p>
 
 <ul>
-  <li>selenium2 webdriver対応（これは0.9.1.xで対応済みでしたが）</li>
-  <li>spec(単体テスト)でコードカバレッジを出力できるようにした</li>
-  <li>story(Behat)のステップ翻訳ファイルを置き換えられるようにした</li>
-  <li>プラグイン内のコードインデントを4tabに統一</li>
+<li>selenium2 webdriver対応（これは0.9.1.xで対応済みでしたが）</li>
+<li>spec(単体テスト)でコードカバレッジを出力できるようにした</li>
+<li>story(Behat)のステップ翻訳ファイルを置き換えられるようにした</li>
+<li>プラグイン内のコードインデントを4tabに統一</li>
 </ul>
 
-<h4 id="section">0.9.2よりちょっと前の改修について</h4>
+<h4>0.9.2よりちょっと前の改修について</h4>
 
 <p>v0.9.1においては、Authコンポーネントを利用した場合にうまく動作しないというポレートを海外から受けました。  </p>
 
 <p>これはAuthの問題というよりも、Authでログインした結果リダイレクトが動くので、リダイレクト先が正しいか検証したい、ということでした。  </p>
 
 <p>これはBehat&amp;Mink側の問題だけど、使ってくれているのでMLとか漁ったところ、goutte&amp;guzzleではパラメータを指定しろ、という変更が入っていることがわかり、behat.yml.defaultに以下の設定を追加しました。</p>
-
-<pre><code>      goutte:
+<pre class="highlight plaintext">      goutte:
         guzzle_parameters:
           request.params:
             redirect.disable: true
-</code></pre>
+</pre>
 
 <p>その上で、サンプルアプリにAuthのケースを追加し、動作検証後にリリース。質問者に返信を打ってIssueをCloseしました。  </p>
 
 <p>リダイレクトURLを検証する方法としては、以下のサンプルシナリオのようになります。</p>
-
-<pre><code>  シナリオ: 記事を追加できること
+<pre class="highlight plaintext">  シナリオ: 記事を追加できること
     前提 "トップページ" を表示している
     もし "追加" のリンク先へ移動する
     かつ "bob"、"obo"でログインする
@@ -123,47 +334,45 @@
     かつ "投稿" ボタンをクリックする
     もし I should be redirected to "/posts"
     ならば "今日は歓送迎会" と表示されていること
-</code></pre>
+</pre>
 
 <ul>
-  <li>I do not follow redirects と宣言することで、リダイレクトがHTTPヘッダに入っていても自動ではリダクレクとしなくなります（redirect.disable: trueが有効になる）。</li>
-  <li>「"投稿" ボタンをクリックする」の後で一覧画面にリダイレクトされるので、I should be redirected to "/posts" のように指定したURLにリダイレクトしようとしているか検証します。検証結果が正しければ、そのURLに遷移してテストが継続します。</li>
+<li>I do not follow redirects と宣言することで、リダイレクトがHTTPヘッダに入っていても自動ではリダクレクとしなくなります（redirect.disable: trueが有効になる）。</li>
+<li>「&quot;投稿&ldquo; ボタンをクリックする」の後で一覧画面にリダイレクトされるので、I should be redirected to &rdquo;/posts&quot; のように指定したURLにリダイレクトしようとしているか検証します。検証結果が正しければ、そのURLに遷移してテストが継続します。</li>
 </ul>
 
-<p>つまり自動リダイレクトをOFFにして、検証が成功したら遷移して継続という流れです。<br />
+<p>つまり自動リダイレクトをOFFにして、検証が成功したら遷移して継続という流れです。<br>
 日本語のステップにはなっていませんが、必要であれば独自のステップ定義を作っていただき、そこから英語ステップを呼び出すという方式でもできると思います。ただ、ここまでテクニカルというか内部動作をシナリオに書くのはユーザーストーリーとしては微妙だと思うので、ステップ定義内で使えるステップぐらいの認識で利用していただければと思います。サンプルアプリのストーリーは、問い合わせのあった形式に合わせているので、そこはあまり意識されていません。</p>
 
-<h4 id="section-1">0.9.2ハイライト</h4>
+<h4>0.9.2ハイライト</h4>
 
-<h5 id="section-2">コードカバレッジ</h5>
+<h5>コードカバレッジ</h5>
 
 <p>みんな大好きJenkinsなどでCI環境を作ってコードカバレッジなどを計測している現場では、PHPUnitではカバレッジレポートが出せるのに、BddPluginでは出ないのはアレだよね、ということで対応しました。</p>
-
-<pre><code>lib/Cake/Console/cake Bdd.spec --coverage-html report
-</code></pre>
+<pre class="highlight plaintext">lib/Cake/Console/cake Bdd.spec --coverage-html report
+</pre>
 
 <p>でコードカバレッジを出力できるようになっています。</p>
 
 <ul>
-  <li>出力できるレポートはPHPUnitがサポートしている coverage-html, coverage-clover, coverage-php, coverage-textの4つです。</li>
-  <li>カバレッジ対象のディレクトリは app 以下です（ただしapp/Pluginおよびapp/Vendor, app/Testは対象外です）。</li>
+<li>出力できるレポートはPHPUnitがサポートしている coverage-html, coverage-clover, coverage-php, coverage-textの4つです。</li>
+<li>カバレッジ対象のディレクトリは app 以下です（ただしapp/Pluginおよびapp/Vendor, app/Testは対象外です）。</li>
 </ul>
 
 <p>Bdd.story側はseleniumとの兼ね合いがあって単純ではないので、shin1x1さんの「<a href="http://www.1x1.jp/blog/2011/06/php_codecoverage_cakephp.html">コードカバレッジ測定ツールPHP_CodeCoverageをCakePHPで使ってみた</a>」を参照にすると良いかなと思います。細かいコードの利用方法などはPHPUnitのバージョンによって微妙に異なるのでPHPUnitの公式ドキュメントを一度確認した方が良いと思います。  </p>
 
 <p>CakePHP2.3からはPHP5.4のサーバ機能が動くのでそれを絡めるとカバレッジレポートが取りやすくなるのかな？などと思ったりしておりますが。。。</p>
 
-<h5 id="mink-extensioni18n">mink-extensionのi18nステップファイルの置き換えを可能に</h5>
+<h5>mink-extensionのi18nステップファイルの置き換えを可能に</h5>
 
-<p>Behat&amp;MinkをBddPluginから利用する場合、シナリオに「前提 "トップページ" を表示している」のように書けたりするわけですが、これらはすべてmink-extensionのi18n機構で翻訳されています。例えばこのステップは</p>
-
-<pre><code>        &lt;trans-unit id="i-go-to-page"&gt;
+<p>Behat&amp;MinkをBddPluginから利用する場合、シナリオに「前提 &ldquo;トップページ&rdquo; を表示している」のように書けたりするわけですが、これらはすべてmink-extensionのi18n機構で翻訳されています。例えばこのステップは</p>
+<pre class="highlight plaintext">        &lt;trans-unit id="i-go-to-page"&gt;
             &lt;source&gt;&lt;![CDATA[/^(?:|I )go to "(?P&lt;page&gt;[^"]+)"$/]]&gt;&lt;/source&gt;
             &lt;target&gt;&lt;![CDATA[/^(?:|ユーザーが )"(?P&lt;page&gt;[^s]+)" へ移動する$/]]&gt;&lt;/target&gt;
         &lt;/trans-unit&gt;
-</code></pre>
+</pre>
 
-<p>というxmlで変換定義されているのですが、見て分かる通り正規表現です。PHPで正規表現、それに日本語というと、まぁ考慮しないといけませんね。preg_match にUTF-8オプションを付けないと「s」が変なところでマッチして期待どおりに動きません。@kaz_29さんから指摘を受けたのは「"管理者画面"へ移動する」みたいに「者」が入っているとステップが認識されないというものでした。  </p>
+<p>というxmlで変換定義されているのですが、見て分かる通り正規表現です。PHPで正規表現、それに日本語というと、まぁ考慮しないといけませんね。preg<em>match にUTF-8オプションを付けないと「s」が変なところでマッチして期待どおりに動きません。@kaz</em>29さんから指摘を受けたのは「&quot;管理者画面&ldquo;へ移動する」みたいに「者」が入っているとステップが認識されないというものでした。  </p>
 
 <p>現時点 mink-extension へ <a href="https://github.com/Behat/MinkExtension/pull/66">Pull Request </a>しているので、そのうち新しいmink-extensionのバージョンで有効になると思います。  </p>
 
@@ -173,7 +382,7 @@
 
 <p>上記の問題で対応版のxliffを入れたい場合、必要なファイル（例えば <a href="https://github.com/Behat/MinkExtension/blob/master/i18n/ja.xliff">ja.xliff</a> )を features/steps/i18n/ja.xliff といったパスになるように入れておいてください。これは差分インストールではなく置き換えになりますので、必要な言語ファイルはすべて配置する必要があります。</p>
 
-<h4 id="section-3">さいごに</h4>
+<h4>さいごに</h4>
 
 <p>このように、地道に修正も行っていますので、たまにGithubのリポジトリを訪れてもらえればと思います。  </p>
 
@@ -184,7 +393,6 @@
 <p>これBehatやSpec4PHPの問題っぽいよね、と思ってもOKです。どしどしご意見＆ご感想をください。  </p>
 
 <p>ボクは連携部分を作っただけですが、BddPluginのまとまりとしては中々良いものだと思いますので（手前味噌ですが）、少しでも多くの方にご体験いただければと思っています。</p>
-
 
 
           
@@ -217,6 +425,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -234,8 +444,6 @@
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -531,6 +739,14 @@
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -539,7 +755,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

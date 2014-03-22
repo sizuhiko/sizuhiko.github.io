@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>Flex2でCoverFlowクローンを作る (1) ～環境を整える </h2>
-            <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 03:04:15 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 12:04:15 PM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -72,24 +285,23 @@
             </p>
           
 
-          <!-- more -->
-<p>現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+          <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>今回は第一回として、FlexでFlashコンポーネントを開発するための環境を整える手順を整理します。  </p>
 
-<h3 id="flex">■Flexとは</h3>
+<h3>■Flexとは</h3>
 
 <p>Flexは、プログラミング言語を使ってFlashアプリケーションを作るための製品群を表すもので、Flex製品ラインナップには、以下のようなものがあります。  </p>
 
 <ul>
-  <li>Adobe Flex SDK (ソフトウェア開発キット)</li>
-  <li>Adobe Flex Builder</li>
-  <li>Adobe Flex Data Services</li>
-  <li>Adobe Flex Charting
-メルマガ執筆時点の正式版はFlex 2でしたので、このシリーズはFlex2でテストされたコードで記述されていますが、現在Flex 3がAirとして正式公開されています。おそらくFlex3でも動きます。  </li>
+<li>Adobe Flex SDK (ソフトウェア開発キット)</li>
+<li>Adobe Flex Builder</li>
+<li>Adobe Flex Data Services</li>
+<li>Adobe Flex Charting
+メルマガ執筆時点の正式版はFlex 2でしたので、このシリーズはFlex2でテストされたコードで記述されていますが、現在Flex 3がAirとして正式公開されています。おそらくFlex3でも動きます。<br></li>
 </ul>
 
-<h3 id="section">■ダウンロードする</h3>
+<h3>■ダウンロードする</h3>
 
 <p>早速Flexで開発する環境を作っていきましょう。本シリーズではWindows XP Proを使った手順を説明をしていきます。  </p>
 
@@ -98,27 +310,27 @@
 <p>Flex2の頃、ダウンロードページには</p>
 
 <ul>
-  <li>Flex Builderを30日間無償で試用（SDK込み）</li>
-  <li>Flex 2 SDKを利用して、無償でFlexアプリケーションの開発・実装をスタート</li>
-  <li>Flex Data Services 2 Expressエディションをダウンロード（無償）
-の3つのコンテンツがあったのですが、現在は、以下のようなページに変わっています。  </li>
+<li>Flex Builderを30日間無償で試用（SDK込み）</li>
+<li>Flex 2 SDKを利用して、無償でFlexアプリケーションの開発・実装をスタート</li>
+<li>Flex Data Services 2 Expressエディションをダウンロード（無償）
+の3つのコンテンツがあったのですが、現在は、以下のようなページに変わっています。<br></li>
 </ul>
 
-<p><img alt="" src="/images/blog/download_page.jpg" /> 
+<p><img src="/images/blog/download_page.jpg" /> 
 なお、ダウンロードページへ行くには、Adobe IDでログインを求められます。Adobe ID自体の登録は無料ですので、まだな人は登録をしてからログインしてください。仕方がないので、日本語 | Windows | 425.0MB を選択して、ダウンロードします。またSDKだけダウンロードできるようになってほしいですね。。。  </p>
 
-<h3 id="section-1">■インストールする</h3>
+<h3>■インストールする</h3>
 
-<p>おそろしく大きいファイルFB3_WWEJ.exeのダウンロードが終了したら、ファイルを実行します。<img alt="" src="/images/blog/download_page3.jpg" /> 
-インストールプログラムの実行にしばらく時間がかかります。。。。。。<br />
-<img alt="" src="/images/blog/download_page4.jpg" /> 
-日本語を選択してインストールを開始します。その後、ライセンスに同意とか、インストールする場所とか聞いてくるので、お好みで進んでいきます。インストールを開始すると、以下のような画面になります。<br />
-<img alt="" src="/images/blog/download_page5.jpg" /> 
-ボクのマシンは結構スペックが良いと思っているのですが、それでも20分近く時間がかかりました。気長に待ちましょう。。。。<br />
-<img alt="" src="/images/blog/flexdir.jpg" /> インストールが完了すると、自動的にインストールしたディレクトリ（デフォルトだとC:Program FilesAdobeFlex Builder 3）が開きます。よくみると、ディレクトリ名にsdksというフォルダがあるのに気が付きます。ディレクトリを移動すると、<br />
-<img alt="" src="/images/blog/flexdir2.jpg" /> のようになっていて、なんだFlex2もあるじゃないですか。それぞれのバージョンディレクトリの下、たとえば2.0.1frameworkslocaleには日本語のファイルも入っているようで、コンパイルメッセージも無事日本語で表示できそうです。しかしそうなると、やっぱり個別にインストールさせてほしい。。。。とにかくダウンロードとインストールは辛抱です・・・  </p>
+<p>おそろしく大きいファイルFB3_WWEJ.exeのダウンロードが終了したら、ファイルを実行します。<img src="/images/blog/download_page3.jpg" /> 
+インストールプログラムの実行にしばらく時間がかかります。。。。。。<br>
+<img src="/images/blog/download_page4.jpg" /> 
+日本語を選択してインストールを開始します。その後、ライセンスに同意とか、インストールする場所とか聞いてくるので、お好みで進んでいきます。インストールを開始すると、以下のような画面になります。<br>
+<img src="/images/blog/download_page5.jpg" /> 
+ボクのマシンは結構スペックが良いと思っているのですが、それでも20分近く時間がかかりました。気長に待ちましょう。。。。<br>
+<img src="/images/blog/flexdir.jpg" /> インストールが完了すると、自動的にインストールしたディレクトリ（デフォルトだとC:Program FilesAdobeFlex Builder 3）が開きます。よくみると、ディレクトリ名にsdksというフォルダがあるのに気が付きます。ディレクトリを移動すると、<br>
+<img src="/images/blog/flexdir2.jpg" /> のようになっていて、なんだFlex2もあるじゃないですか。それぞれのバージョンディレクトリの下、たとえば2.0.1frameworkslocaleには日本語のファイルも入っているようで、コンパイルメッセージも無事日本語で表示できそうです。しかしそうなると、やっぱり個別にインストールさせてほしい。。。。とにかくダウンロードとインストールは辛抱です・・・  </p>
 
-<h3 id="section-2">■次回は</h3>
+<h3>■次回は</h3>
 
 <p>Flex Builderは便利だし使いやすいのですが、有償なので仕事以外では使うのをためらいます。そんなときはフリーの開発環境FlashDevelopを使うと良いと思います。次回はこのFlashDevelopのインストール方法を紹介したいと思います。</p>
 
@@ -153,6 +365,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -170,8 +384,6 @@
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -467,6 +679,14 @@
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -475,7 +695,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

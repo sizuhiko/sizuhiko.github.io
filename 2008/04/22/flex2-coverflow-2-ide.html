@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</h2>
-            <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 07:04:25 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 04:04:25 PM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -74,36 +287,35 @@
             </p>
           
 
-          <!-- more -->
-<p>現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+          <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第二回は、FlexでFlashコンポーネントを開発するのに便利なIDEを導入する手順を整理します。  </p>
 
-<h3 id="flashdevelop">■FlashDevelopとは</h3>
+<h3>■FlashDevelopとは</h3>
 
 <p>FlashDevelopは、フリーで利用可能なFlashの統合開発環境です。Flex Builderは有償版なので、タダで開発したいという人は、このツールを使うのがオススメです。Flex2,Flex3に必要なmxmlやActionScriptのコード補完機能などプログラミングをするには十分な機能を持っています。メニューなどすべて英語表記ですが、Eclipse IDEと操作性は似ているので、大きな問題はないでしょう。  </p>
 
-<h3 id="section">■ダウンロードする</h3>
+<h3>■ダウンロードする</h3>
 
 <p><a href="http://www.flashdevelop.org/">FlashDevelopのサイト</a>へアクセスします。
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download1.jpg" /> 最新版を入手するには、Releasesを選択します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download2.jpg" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download3.jpg" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
+<img src="/images/blog/images/flex2_coverflow_2/download1.jpg" /> 最新版を入手するには、Releasesを選択します。<br>
+<img src="/images/blog/images/flex2_coverflow_2/download2.jpg" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br>
+<img src="/images/blog/images/flex2_coverflow_2/download3.jpg" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
 
-<h3 id="section-1">■インストールする</h3>
+<h3>■インストールする</h3>
 
-<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/install1.jpg" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/install2.jpg" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
+<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br>
+<img src="/images/blog/images/flex2_coverflow_2/install1.jpg" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br>
+<img src="/images/blog/images/flex2_coverflow_2/install2.jpg" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
 
-<h3 id="section-2">■はじめにすること</h3>
+<h3>■はじめにすること</h3>
 
-<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev1.jpg" /> まずインストールしたFlashDevelopを実行します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev2.jpg" /> Tools - Program Settings… （もしくはF10）を選択します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev4.jpg" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
+<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br>
+<img src="/images/blog/images/flex2_coverflow_2/dev1.jpg" /> まずインストールしたFlashDevelopを実行します。<br>
+<img src="/images/blog/images/flex2_coverflow_2/dev2.jpg" /> Tools - Program Settings&hellip; （もしくはF10）を選択します。<br>
+<img src="/images/blog/images/flex2_coverflow_2/dev4.jpg" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
 
-<h3 id="section-3">■次回</h3>
+<h3>■次回</h3>
 
 <p>Flex2を使って画像を表示する簡単なサンプルからスタートしていきます。</p>
 
@@ -138,6 +350,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -155,8 +369,6 @@
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -452,6 +664,14 @@
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -460,7 +680,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

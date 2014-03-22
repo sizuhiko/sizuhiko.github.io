@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,8 +275,49 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2009/02/04.html">Wednesday, February 04, 2009 01:02:22 AM</a></p>
+            <h2 class="title"><a href="/2009/03/07/cakephp-tokyo.html">CakePHPハンズオン＠Tokyo#2が実施されました。</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/03/07.html">Saturday, March 07, 2009 11:03:25 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://events.php.gr.jp/events/show/70">CakePHPハンズオン＠Tokyo#2</a>にサポーターとして参加してきました。  </p>
+
+<p>えーXAMPP方面でいくらかヘルプできたかな？と。  </p>
+
+<p>後は皆さん以外とスムーズに進んでいたようで、感心が高く事前に予習している感がありました。すごーい。  </p>
+
+<p>反省としては、あんまり本のCMができなかったことでしょうか:ko:   </p>
+
+<p>来週九州でCakePHP勉強会があるので、共著の皆様に宣伝をお願いする事にします・・・</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPハンズオン＠Tokyo#2が実施されました。" data-url="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html&t=CakePHP%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%EF%BC%A0Tokyo%232%E3%81%8C%E5%AE%9F%E6%96%BD%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/02/04.html">Wednesday, February 04, 2009 10:02:22 AM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
@@ -76,29 +330,26 @@
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>先日セキュリティアップデートとして、1.2.0から1.2.1に更新されたのは、皆さんご存知のことと思います。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;先日セキュリティアップデートとして、1.2.0から1.2.1に更新されたのは、皆さんご存知のことと思います。  </p>
 
 <p>で、昨日やっとこさ1.2.1を使い始めたら、なんとAuthでログインしてなくてもscaffoldのアクションが動いちゃうじゃないですか！！。これはまずい。。  </p>
 
 <p>なお肝心のセキュリティアップデートは、<a href="http://cakephp.jp/modules/newbb/viewtopic.php?topic_id=1696&amp;amp;forum=1&amp;amp;post_id=4032#forumpost4032">CakePHP 1.2.1.8004へアップデート推奨</a>からリンクされている「<a href="https://trac.cakephp.org/changeset/7979">Changeset 7979</a>」の差分のようなので、今回の回避策を使っても、問題なさそうだと判断しています。まぁscaffold使ってなければ関係ないのですけどね。  </p>
 
 <p>で、問題の箇所はAuthComponent::startup()で</p>
-
-<pre><code>$isErrorOrTests = (
-	strtolower($controller-&gt;name) == 'cakeerror' ||
-	(strtolower($controller-&gt;name) == 'tests' &amp;&amp; Configure::read() &gt; 0) ||
-	!in_array($controller-&gt;params['action'], $controller-&gt;methods)
+<pre class="highlight plaintext">$isErrorOrTests = (
+    strtolower($controller-&gt;name) == 'cakeerror' ||
+    (strtolower($controller-&gt;name) == 'tests' &amp;&amp; Configure::read() &gt; 0) ||
+    !in_array($controller-&gt;params['action'], $controller-&gt;methods)
 );
 if ($isErrorOrTests) {
-	return true;
+    return true;
 }
-</code></pre>
+</pre>
 
 <p>という箇所があるのですが、</p>
-
-<pre><code>!in_array($controller-&gt;params['action'], $controller-&gt;methods)
-</code></pre>
+<pre class="highlight plaintext">!in_array($controller-&gt;params['action'], $controller-&gt;methods)
+</pre>
 
 <p>というコードの「$controller-&gt;methods」にはscaffoldのアクションが含まれていないんですよね。なんでコントローラにそんなメソッドないよエラーページに遷移しようとして、ログイン画面には遷移しないんですが、ほんとのところはscaffoldに遷移して、一覧・追加・変更・削除ができちゃうというトホホな感じです。  </p>
 
@@ -109,7 +360,6 @@ if ($isErrorOrTests) {
 <p>その後、あっさり本家から「Bakeしてね」とやんわり修正を断られてしまったので、Auth使う人はscaffold使わないか、$controller-&gt;methodsにbeforeFilterでscaffoldAction追加するとか（たぶんこれは良くないけど）、Authを継承して変えちゃう（startupの前でscaffoldActionをarray_mergeして、戻ってきたら元の値に戻せば・・・まぁ、どうか？というのもありますけど）とか、まぁいろいろ策はあるかな？と思います。  </p>
 
 <p>PS: この、$controller-&gt;methodsですが、どこで使ってんの？と調べてみたら、dispatcherとauthだけでした。dispatcherは当然として、なんでauthが！？？という不思議な感は否めないのですが、こればっかりは仕方ないですね。今後使うところ増えるかもしれないし。</p>
-
 
 
 
@@ -133,7 +383,7 @@ if ($isErrorOrTests) {
 
   </div>
   <h2 class="title"><a href="/2008/11/11/flex2-coverflow-8-amazon.html">Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/11/11.html">Tuesday, November 11, 2008 02:11:39 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/11/11.html">Tuesday, November 11, 2008 11:11:39 AM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -144,36 +394,35 @@ if ($isErrorOrTests) {
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第九回の今回は最終回となります。AmazonWebserviceと連携してタイトルや著者名を表示する手法を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように動作します。  </p>
 
 <p>前回は画像を重ね合わせることで、写真部分の見栄えは「ほぼ」CoverFlowに近くなりました。今回はAmazonWebserviceと連携して、asinIdのタイトルや著者を表示します。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_9/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。  </p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
-  <li>CoverFlowLayout.as</li>
-  <li>RepeaterHBox.as</li>
-  <li>AmazonWebservice.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+<li>CoverFlowLayout.as</li>
+<li>RepeaterHBox.as</li>
+<li>AmazonWebservice.as</li>
 </ul>
 
 <p>新しいファイルAmazonWebservice.asが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="amazonweb">■AmazonWebサービスに登録する</h3>
+<h3>■AmazonWebサービスに登録する</h3>
 
 <p>AmazonWebサービスを使うと、今回やろうとしているような、asinIdの商品情報を取得することができます。  </p>
 
@@ -190,19 +439,17 @@ if ($isErrorOrTests) {
 <p>登録すると、登録ID(Subscription ID)が取得できます。  </p>
 
 <p>そのIDをAmazonWebservice.asのAWSAccessKeyId変数に入れてください。  </p>
-
-<pre><code>public class AmazonWebservice {
+<pre class="highlight plaintext">public class AmazonWebservice {
     private const AWSAccessKeyId:String = "***** あなたの登録ID ******";
     private const AmazonRegionCode:String = "09"; // 日本は09
-</code></pre>
+</pre>
 
-<h3 id="amazon">■Amazonから商品情報を取得する</h3>
+<h3>■Amazonから商品情報を取得する</h3>
 
 <p>Amazonとのデータのやりとりは、FlashからGETパラメータで必要な情報を送り込み、戻りとしてXMLを受け取るシンプルなRESTインターフェースです。  </p>
 
 <p>AmazonへリクエストするURLをgetAmazonRestUrl関数で作っています。  </p>
-
-<pre><code>private function getAmazonRestUrl(asin:String):String 
+<pre class="highlight plaintext">private function getAmazonRestUrl(asin:String):String 
 {
     var url:String = "http://webservices.amazon.co.jp/onca/xml?"
                + "Service=AWSECommerceService&amp;"
@@ -212,7 +459,7 @@ if ($isErrorOrTests) {
                + "ResponseGroup=Request,ItemIds,ItemAttributes,Tracks,EditorialReview";
     return url; 
 }
-</code></pre>
+</pre>
 
 <p>パラメータごとの詳細な解説は、上記ドキュメントを参照して欲しいのですが、ここでは
 IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </p>
@@ -220,167 +467,158 @@ IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </
 <p>レスポンスはすべて取得することもできますが、ここではResponseGroupに書いた内容に絞り込んで
 取得します。  </p>
 
-<h3 id="amazon-1">■Amazonからの戻り値を取得する</h3>
+<h3>■Amazonからの戻り値を取得する</h3>
 
 <p>URLを呼び出して、結果を取得するのは、AmazonからCoverFlow用の写真を取得するインターフェースと同じです。  </p>
-
-<pre><code>_amazonLoader = new URLLoader();
+<pre class="highlight plaintext">_amazonLoader = new URLLoader();
 _amazonLoader.addEventListener(Event.COMPLETE, completeAmazonRequest);
 _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
-</code></pre>
+</pre>
 
 <p>のようにして、URLから取得できたらcompleteAmazonRequest関数が呼ばれます。  </p>
 
 <p>受信部分のコードは  </p>
-
-<pre><code>private function completeAmazonRequest(event:Event):void
+<pre class="highlight plaintext">private function completeAmazonRequest(event:Event):void
 {
     namespace ns = 'http://webservices.amazon.com/AWSECommerceService/2005-10-05';
     use namespace ns;
     _xml = new XML(_amazonLoader.data);
 }
-</code></pre>
+</pre>
 
 <p>と、たったこれだけです。Amazon Webサービスで指定されたネーミングスペースを指定して、XMLオブジェクトを作ります。  </p>
 
 <p>戻ってきたデータはXML形式なので、これでActionScriptから参照しやすい形式となります。  </p>
 
-<h3 id="xml">■XML内のデータを解析する</h3>
+<h3>■XML内のデータを解析する</h3>
 
 <p>取得したXMLを解析するのはとても簡単です。  </p>
 
 <p>たとえばWeb2.0ビギナーズバイブルのasinIdを指定して戻ってくるXMLは以下のとおりです。  </p>
-
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;ItemLookupResponse xmlns="http://webservices.amazon.com/AWSECommerceService/2005-10-05"&gt;
-  &lt;OperationRequest&gt;
-    &lt;HTTPHeaders&gt;
-      &lt;Header Name="UserAgent" Value="Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"&gt;
-      &lt;/Header&gt;
-    &lt;/HTTPHeaders&gt;
-    &lt;RequestId&gt;53c87848-02e3-4317-8136-b49b1d2a0108&lt;/RequestId&gt;
-    &lt;Arguments&gt;
-      &lt;Argument Name="Operation" Value="ItemLookup"&gt;&lt;/Argument&gt;
-      &lt;Argument Name="Service" Value="AWSECommerceService"&gt;&lt;/Argument&gt;
-      &lt;Argument Name="ItemId" Value="4839923221"&gt;&lt;/Argument&gt;
-      &lt;Argument Name="IdType" Value="ASIN"&gt;&lt;/Argument&gt;
-      &lt;Argument Name="AWSAccessKeyId" Value="********************"&gt;&lt;/Argument&gt;
-      &lt;Argument Name="ResponseGroup" Value="Request,ItemIds,ItemAttributes,Tracks,EditorialReview"&gt;&lt;/Argument&gt;
-    &lt;/Arguments&gt;
-    &lt;RequestProcessingTime&gt;0.1317150000000000&lt;/RequestProcessingTime&gt;
-  &lt;/OperationRequest&gt;
-  &lt;Items&gt;
-    &lt;Request&gt;
-      &lt;IsValid&gt;True&lt;/IsValid&gt;
-      &lt;ItemLookupRequest&gt;
-        &lt;Condition&gt;New&lt;/Condition&gt;
-        &lt;DeliveryMethod&gt;Ship&lt;/DeliveryMethod&gt;
-        &lt;IdType&gt;ASIN&lt;/IdType&gt;
-        &lt;MerchantId&gt;Amazon&lt;/MerchantId&gt;
-        &lt;OfferPage&gt;1&lt;/OfferPage&gt;
-        &lt;ItemId&gt;4839923221&lt;/ItemId&gt;
-        &lt;ResponseGroup&gt;Request&lt;/ResponseGroup&gt;
-        &lt;ResponseGroup&gt;ItemIds&lt;/ResponseGroup&gt;
-        &lt;ResponseGroup&gt;ItemAttributes&lt;/ResponseGroup&gt;
-        &lt;ResponseGroup&gt;Tracks&lt;/ResponseGroup&gt;
-        &lt;ResponseGroup&gt;EditorialReview&lt;/ResponseGroup&gt;
-        &lt;ReviewPage&gt;1&lt;/ReviewPage&gt;
-      &lt;/ItemLookupRequest&gt;
-    &lt;/Request&gt;
-    &lt;Item&gt;
-      &lt;ASIN&gt;4839923221&lt;/ASIN&gt;
-      &lt;DetailPageURL&gt;http://www.amazon.co.jp/Web2-0%E3%83%93%E3%82%AE%E3%83%8A%E3%83%BC%E3%82%BA%E3%83%90%E3%82%A4%E3%83%96%E3%83%AB-%E4%BC%8A%E8%97%A4-%E6%B5%A9%E4%B8%80/dp/4839923221%3FSubscriptionId%3D*******************%26tag%3Dws%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839923221&lt;/DetailPageURL&gt;
-      &lt;ItemAttributes&gt;
-        &lt;Author&gt;伊藤 浩一&lt;/Author&gt;
-        &lt;Author&gt;大津 真&lt;/Author&gt;
-        &lt;Author&gt;岸田 健一郎&lt;/Author&gt;
-        &lt;Author&gt;まえだ ひさこ&lt;/Author&gt;
-        &lt;Author&gt;安井 力&lt;/Author&gt;
-        &lt;Binding&gt;単行本&lt;/Binding&gt;
-        &lt;EAN&gt;9784839923228&lt;/EAN&gt;
-        &lt;ISBN&gt;4839923221&lt;/ISBN&gt;
-        &lt;Label&gt;毎日コミュニケーションズ&lt;/Label&gt;
-        &lt;ListPrice&gt;
-          &lt;Amount&gt;3990&lt;/Amount&gt;
-          &lt;CurrencyCode&gt;JPY&lt;/CurrencyCode&gt;
-          &lt;FormattedPrice&gt;￥ 3,990&lt;/FormattedPrice&gt;
-        &lt;/ListPrice&gt;
-        &lt;Manufacturer&gt;毎日コミュニケーションズ&lt;/Manufacturer&gt;
-        &lt;NumberOfPages&gt;927&lt;/NumberOfPages&gt;
-        &lt;PackageDimensions&gt;
-          &lt;Height Units="hundredths-inches"&gt;205&lt;/Height&gt;
-          &lt;Length Units="hundredths-inches"&gt;921&lt;/Length&gt;
-          &lt;Weight Units="hundredths-pounds"&gt;340&lt;/Weight&gt;
-          &lt;Width Units="hundredths-inches"&gt;724&lt;/Width&gt;
-        &lt;/PackageDimensions&gt;
-        &lt;ProductGroup&gt;Book&lt;/ProductGroup&gt;
-        &lt;PublicationDate&gt;2007-04&lt;/PublicationDate&gt;
-        &lt;Publisher&gt;毎日コミュニケーションズ&lt;/Publisher&gt;
-        &lt;Studio&gt;毎日コミュニケーションズ&lt;/Studio&gt;
-        &lt;Title&gt;Web2.0ビギナーズバイブル&lt;/Title&gt;
-      &lt;/ItemAttributes&gt;
-    &lt;/Item&gt;
-  &lt;/Items&gt;
-&lt;/ItemLookupResponse&gt;
-</code></pre>
+<pre class="highlight xml"><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
+<span class="nt">&lt;ItemLookupResponse</span> <span class="na">xmlns=</span><span class="s">"http://webservices.amazon.com/AWSECommerceService/2005-10-05"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;OperationRequest&gt;</span>
+    <span class="nt">&lt;HTTPHeaders&gt;</span>
+      <span class="nt">&lt;Header</span> <span class="na">Name=</span><span class="s">"UserAgent"</span> <span class="na">Value=</span><span class="s">"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;/Header&gt;</span>
+    <span class="nt">&lt;/HTTPHeaders&gt;</span>
+    <span class="nt">&lt;RequestId&gt;</span>53c87848-02e3-4317-8136-b49b1d2a0108<span class="nt">&lt;/RequestId&gt;</span>
+    <span class="nt">&lt;Arguments&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Operation"</span> <span class="na">Value=</span><span class="s">"ItemLookup"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Service"</span> <span class="na">Value=</span><span class="s">"AWSECommerceService"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ItemId"</span> <span class="na">Value=</span><span class="s">"4839923221"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"IdType"</span> <span class="na">Value=</span><span class="s">"ASIN"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"AWSAccessKeyId"</span> <span class="na">Value=</span><span class="s">"********************"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ResponseGroup"</span> <span class="na">Value=</span><span class="s">"Request,ItemIds,ItemAttributes,Tracks,EditorialReview"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+    <span class="nt">&lt;/Arguments&gt;</span>
+    <span class="nt">&lt;RequestProcessingTime&gt;</span>0.1317150000000000<span class="nt">&lt;/RequestProcessingTime&gt;</span>
+  <span class="nt">&lt;/OperationRequest&gt;</span>
+  <span class="nt">&lt;Items&gt;</span>
+    <span class="nt">&lt;Request&gt;</span>
+      <span class="nt">&lt;IsValid&gt;</span>True<span class="nt">&lt;/IsValid&gt;</span>
+      <span class="nt">&lt;ItemLookupRequest&gt;</span>
+        <span class="nt">&lt;Condition&gt;</span>New<span class="nt">&lt;/Condition&gt;</span>
+        <span class="nt">&lt;DeliveryMethod&gt;</span>Ship<span class="nt">&lt;/DeliveryMethod&gt;</span>
+        <span class="nt">&lt;IdType&gt;</span>ASIN<span class="nt">&lt;/IdType&gt;</span>
+        <span class="nt">&lt;MerchantId&gt;</span>Amazon<span class="nt">&lt;/MerchantId&gt;</span>
+        <span class="nt">&lt;OfferPage&gt;</span>1<span class="nt">&lt;/OfferPage&gt;</span>
+        <span class="nt">&lt;ItemId&gt;</span>4839923221<span class="nt">&lt;/ItemId&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>Request<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>ItemIds<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>ItemAttributes<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>Tracks<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>EditorialReview<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ReviewPage&gt;</span>1<span class="nt">&lt;/ReviewPage&gt;</span>
+      <span class="nt">&lt;/ItemLookupRequest&gt;</span>
+    <span class="nt">&lt;/Request&gt;</span>
+    <span class="nt">&lt;Item&gt;</span>
+      <span class="nt">&lt;ASIN&gt;</span>4839923221<span class="nt">&lt;/ASIN&gt;</span>
+      <span class="nt">&lt;DetailPageURL&gt;</span>http://www.amazon.co.jp/Web2-0%E3%83%93%E3%82%AE%E3%83%8A%E3%83%BC%E3%82%BA%E3%83%90%E3%82%A4%E3%83%96%E3%83%AB-%E4%BC%8A%E8%97%A4-%E6%B5%A9%E4%B8%80/dp/4839923221%3FSubscriptionId%3D*******************%26tag%3Dws%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839923221<span class="nt">&lt;/DetailPageURL&gt;</span>
+      <span class="nt">&lt;ItemAttributes&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>伊藤 浩一<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>大津 真<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>岸田 健一郎<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>まえだ ひさこ<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>安井 力<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Binding&gt;</span>単行本<span class="nt">&lt;/Binding&gt;</span>
+        <span class="nt">&lt;EAN&gt;</span>9784839923228<span class="nt">&lt;/EAN&gt;</span>
+        <span class="nt">&lt;ISBN&gt;</span>4839923221<span class="nt">&lt;/ISBN&gt;</span>
+        <span class="nt">&lt;Label&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Label&gt;</span>
+        <span class="nt">&lt;ListPrice&gt;</span>
+          <span class="nt">&lt;Amount&gt;</span>3990<span class="nt">&lt;/Amount&gt;</span>
+          <span class="nt">&lt;CurrencyCode&gt;</span>JPY<span class="nt">&lt;/CurrencyCode&gt;</span>
+          <span class="nt">&lt;FormattedPrice&gt;</span>￥ 3,990<span class="nt">&lt;/FormattedPrice&gt;</span>
+        <span class="nt">&lt;/ListPrice&gt;</span>
+        <span class="nt">&lt;Manufacturer&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Manufacturer&gt;</span>
+        <span class="nt">&lt;NumberOfPages&gt;</span>927<span class="nt">&lt;/NumberOfPages&gt;</span>
+        <span class="nt">&lt;PackageDimensions&gt;</span>
+          <span class="nt">&lt;Height</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>205<span class="nt">&lt;/Height&gt;</span>
+          <span class="nt">&lt;Length</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>921<span class="nt">&lt;/Length&gt;</span>
+          <span class="nt">&lt;Weight</span> <span class="na">Units=</span><span class="s">"hundredths-pounds"</span><span class="nt">&gt;</span>340<span class="nt">&lt;/Weight&gt;</span>
+          <span class="nt">&lt;Width</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>724<span class="nt">&lt;/Width&gt;</span>
+        <span class="nt">&lt;/PackageDimensions&gt;</span>
+        <span class="nt">&lt;ProductGroup&gt;</span>Book<span class="nt">&lt;/ProductGroup&gt;</span>
+        <span class="nt">&lt;PublicationDate&gt;</span>2007-04<span class="nt">&lt;/PublicationDate&gt;</span>
+        <span class="nt">&lt;Publisher&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Publisher&gt;</span>
+        <span class="nt">&lt;Studio&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Studio&gt;</span>
+        <span class="nt">&lt;Title&gt;</span>Web2.0ビギナーズバイブル<span class="nt">&lt;/Title&gt;</span>
+      <span class="nt">&lt;/ItemAttributes&gt;</span>
+    <span class="nt">&lt;/Item&gt;</span>
+  <span class="nt">&lt;/Items&gt;</span>
+<span class="nt">&lt;/ItemLookupResponse&gt;</span>
+</pre>
 
 <p>で、本のタイトルは、  </p>
-
-<pre><code>ItemLookupResponse
+<pre class="highlight plaintext">ItemLookupResponse
  +-- Item
       +-- ItemAttributes
            +-- Title
-</code></pre>
+</pre>
 
 <p>という階層にあります。これを取得するにはXMLオブジェクトから  </p>
-
-<pre><code>_xml.Items.Item.ItemAttributes.child('Title');
-</code></pre>
+<pre class="highlight plaintext">_xml.Items.Item.ItemAttributes.child('Title');
+</pre>
 
 <p>と書くだけで取得できます。_xmlオブジェクトからXMLの階層をたどるようにタグ名を.(ドット)で区切っていくだけです。簡単ですね。  </p>
 
-<h3 id="imagereflector">■ImageReflectorから使う</h3>
+<h3>■ImageReflectorから使う</h3>
 
 <p>AmazonWebserviceの実装ができたら、ImageReflectorから呼び出します。  </p>
 
 <p>initLoader()の末尾に、  </p>
-
-<pre><code>_amazonInfo.callAmazon(asinId);
-</code></pre>
+<pre class="highlight plaintext">_amazonInfo.callAmazon(asinId);
+</pre>
 
 <p>を追加し、asinIdの商品情報を取得します。情報が取得できたか判断して、描画終了という判断にするために、isCompleted関数を  </p>
-
-<pre><code>public function isCompleted():Boolean {
+<pre class="highlight plaintext">public function isCompleted():Boolean {
     if (!_invalidatedReflection) return false
     if (_amazonInfo == null) return false
     if (!_amazonInfo.isLoaded()) return false;
 
     return true;
 }
-</code></pre>
+</pre>
 
 <p>のように修正して、Amazon Webサービスからのロードが終了していることも判断材料とします。</p>
 
-<h3 id="section-2">■画面に描画する</h3>
+<h3>■画面に描画する</h3>
 
 <p>最後に画面に描画領域を作成します。  </p>
 
 <p>mxmlにラベルとして、タイトルと著者名を表示する欄を作ります。  </p>
-
-<pre><code>&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
+<pre class="highlight plaintext">&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
 &lt;Label id="subtitle" text="著者" color="0xFFFFFF" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
-</code></pre>
+</pre>
 
 <p>この表示は、特定の本を選択したときに変更したいので、選択が変更されたときのイベントselectedIndex関数で、値を代入します。  </p>
-
-<pre><code>// 選択された項目のタイトルを表示
+<pre class="highlight plaintext">// 選択された項目のタイトルを表示
 title.text = imageReflector[value].titleText;
 subtitle.text = imageReflector[value].authorText;
-</code></pre>
+</pre>
 
 <p>お約束ですが、ImageReflector側では、titleTextとauthorTextはBindableにしておく必要があります。  </p>
 
-<h3 id="section-3">■クロスドメインの注意事項</h3>
+<h3>■クロスドメインの注意事項</h3>
 
 <p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
@@ -388,11 +626,10 @@ subtitle.text = imageReflector[value].authorText;
 
 <p>まずPHPのコードは過去記事を参考にしてください。  </p>
 
-<h3 id="section-4">■さいごに</h3>
+<h3>■さいごに</h3>
 
 <p>これまで読んでくださった皆様、ありがとうございました。こんな機能もFlex版CoverFlowに欲しいぞ！という場合は、ぜひコメントください。
 よろしくお願いします。</p>
-
 
 
 
@@ -416,7 +653,7 @@ subtitle.text = imageReflector[value].authorText;
 
   </div>
   <h2 class="title"><a href="/2008/10/26/cakephp-2008.html">CakePHPカンファレンス東京 2008</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/10/26.html">Sunday, October 26, 2008 06:10:28 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/10/26.html">Sunday, October 26, 2008 03:10:28 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/cakecon.html">cakecon</a>
@@ -427,18 +664,17 @@ subtitle.text = imageReflector[value].authorText;
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p><a href="http://conference.cakephp.jp/">CakePHPカンファレンス東京</a>が10/25(土)に行われました。:)   </p>
+    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://conference.cakephp.jp/">CakePHPカンファレンス東京</a>が10/25(土)に行われました。:)   </p>
 
 <p>私も発表者として、「Agileな開発現場での実践例」というお題で、テスト駆動開発の実例を紹介してきました。;)   </p>
 
 <p>駆動？！、まぁ駆動はしてなかったのですが。。。。。。（詳しくは資料を参照ください）:ko:   </p>
 
 <div style="width:425px;text-align:left" id="__ss_691845">
-<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/agile-presentation-691845?type=powerpoint" title="Agileな開発現場での実践例" rel="nofollow">Agileな開発現場での実践例</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephpconftokyo-1225001682873269-8&amp;stripped_title=agile-presentation-691845" />
-<param name="allowFullScreen" value="true" />
-<param name="allowScriptAccess" value="never" />
-<embed src="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephpconftokyo-1225001682873269-8&amp;stripped_title=agile-presentation-691845" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never" /></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View SlideShare <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/agile-presentation-691845?type=powerpoint" title="View Agileな開発現場での実践例 on SlideShare" rel="nofollow">presentation</a> or <a style="text-decoration:underline;" href="http://www.slideshare.net/upload?type=powerpoint" rel="nofollow">Upload</a> your own. (tags: <a style="text-decoration:underline;" href="http://slideshare.net/tag/cakephp" rel="nofollow">cakephp</a> <a style="text-decoration:underline;" href="http://slideshare.net/tag/testing" rel="nofollow">testing</a>)</div>
+<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/agile-presentation-691845?type=powerpoint" title="Agileな開発現場での実践例" rel="nofollow">Agileな開発現場での実践例</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephpconftokyo-1225001682873269-8&amp;stripped_title=agile-presentation-691845">
+<param name="allowFullScreen" value="true">
+<param name="allowScriptAccess" value="never">
+<embed src="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephpconftokyo-1225001682873269-8&amp;stripped_title=agile-presentation-691845" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View SlideShare <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/agile-presentation-691845?type=powerpoint" title="View Agileな開発現場での実践例 on SlideShare" rel="nofollow">presentation</a> or <a style="text-decoration:underline;" href="http://www.slideshare.net/upload?type=powerpoint" rel="nofollow">Upload</a> your own. (tags: <a style="text-decoration:underline;" href="http://slideshare.net/tag/cakephp" rel="nofollow">cakephp</a> <a style="text-decoration:underline;" href="http://slideshare.net/tag/testing" rel="nofollow">testing</a>)</div>
 </div>
 
 <p>とにかく、あっという間の申し込み締め切りという盛り上がりが、当日も続いており非常に楽しい＆有意義な時間を過ごすことができました。  </p>
@@ -471,7 +707,7 @@ subtitle.text = imageReflector[value].authorText;
 
   </div>
   <h2 class="title"><a href="/2008/09/13/flex2-coverflow-8.html">Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/09/13.html">Saturday, September 13, 2008 05:09:10 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/09/13.html">Saturday, September 13, 2008 02:09:10 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -482,61 +718,58 @@ subtitle.text = imageReflector[value].authorText;
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第八回は、画像を重ね合わせる手法を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
 
 <p>前回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して実装してみました。今回は、画像を重ね合わせていきます。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_8/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
-  <li>CoverFlowLayout.as</li>
-  <li>RepeaterHBox.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+<li>CoverFlowLayout.as</li>
+<li>RepeaterHBox.as</li>
 </ul>
 
 <p>新しいファイルCoverFlowLayoutとRepeaterBoxの2つが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="section-2">■選択している画像以外の表示幅を狭くする</h3>
+<h3>■選択している画像以外の表示幅を狭くする</h3>
 
 <p>画像を重ね合わせるときに、まずはじめに考える方法は、標記のとおりだと思います。そこで、今回はoverrlapWidthをいう変数を使って、重ね合わせの幅を定義してみました。実際に適用する箇所は、</p>
 
 <ul>
-  <li>measure() – 実際に描画する縦横サイズを返す処理</li>
-  <li>transformImage() – 画像を斜めに描画する処理</li>
-  <li>animateTransform() – アニメーション描画を開始する処理</li>
+<li>measure() &ndash; 実際に描画する縦横サイズを返す処理</li>
+<li>transformImage() &ndash; 画像を斜めに描画する処理</li>
+<li>animateTransform() &ndash; アニメーション描画を開始する処理</li>
 </ul>
 
 <p>です。画像は左右の両側から重なるイメージなので、重なり幅が20とすると、実際の画像幅は倍の40必要となりますので、画像の幅として*2をしています。  </p>
-
-<pre><code>measuredWidth = overrlapWidth*2;
-</code></pre>
+<pre class="highlight plaintext">measuredWidth = overrlapWidth*2;
+</pre>
 
 <p>このように修正してプレビューしてみるとどうなるでしょうか？
-<img alt="" src="/images/blog/images/flex2_coverflow_8/example1.jpg" /> </p>
+<img src="/images/blog/images/flex2_coverflow_8/example1.jpg" /> </p>
 
 <p>残念ながら赤丸で囲ったように、選択画像より右側の並びが変になってしまいます。</p>
 
-<h3 id="z">■要素のZ順序を入れ替える</h3>
+<h3>■要素のZ順序を入れ替える</h3>
 
 <p>Window操作のプログラミングをした経験のある人なら、この状況を標記のとおり解決できる、と推測するでしょう。そしてもちろんFlexでも同様の機能を持っています。  </p>
 
 <p>そこで以下のようにmxmlのonCreationComplete()を変更してみました。</p>
-
-<pre><code>private function onCreationComplete(event:FlexEvent):void {
+<pre class="highlight plaintext">private function onCreationComplete(event:FlexEvent):void {
     if(event.currentTarget.repeaterIndex &gt;= (dp.length - 1)){
         // 最初の重なりは一番右の項目が下になるよう（逆順）にする。
         for(var i:int = 0; i &lt; (dp.length/2); i++) {
@@ -547,30 +780,28 @@ subtitle.text = imageReflector[value].authorText;
         initScroll();
     }
 }
-</code></pre>
+</pre>
 
-<p>このように修正してプレビューしてみるとどうなるでしょうか？<img alt="" src="/images/blog/images/flex2_coverflow_8/example2.jpg" /> </p>
+<p>このように修正してプレビューしてみるとどうなるでしょうか？<img src="/images/blog/images/flex2_coverflow_8/example2.jpg" /> </p>
 
 <p>うわぁーーーーーー、なぜか表示する順番が変になってしまいました。なぜこうなるのでしょうか？</p>
 
-<h3 id="flex">■Flexはオープンソースだから、ソースを読めばいいじゃないか</h3>
+<h3>■Flexはオープンソースだから、ソースを読めばいいじゃないか</h3>
 
 <p>Flexの各クラスはcoreでない限りソースが提供されています。ともかくh_frameのクラスであるHBOXの描画について調べてみましょう。  </p>
 
 <p>frameworks/source/mx/containers/HBox.asにはほとんど処理はないので、親クラスであるBoxのコードを見ます。</p>
-
-<pre><code>override protected function updateDisplayList(unscaledWidth:Number,
+<pre class="highlight plaintext">override protected function updateDisplayList(unscaledWidth:Number,
                                                   unscaledHeight:Number):void
 {
     super.updateDisplayList(unscaledWidth, unscaledHeight);
 
     layoutObject.updateDisplayList(unscaledWidth, unscaledHeight);
 }
-</code></pre>
+</pre>
 
 <p>描画のコードはこのようになっていて、実際の描画はどうもlayoutObjectがやっているようです。そこでmx.containers.utilityClasses.BoxLayoutのupdateDisplayListを見てみると、</p>
-
-<pre><code>for (i = 0; i &lt; n; i++)
+<pre class="highlight plaintext">for (i = 0; i &lt; n; i++)
 {
     obj = IUIComponent(target.getChildAt(i));
     top = (h - obj.height) * verticalAlign + paddingTop;
@@ -578,27 +809,25 @@ subtitle.text = imageReflector[value].authorText;
     if (obj.includeInLayout)
         left += obj.width + gap;
 }
-</code></pre>
+</pre>
 
 <p>のように、getChildAtを使って、子要素の順番（=Z順）に表示位置の計算をしているのがわかります。swapChildrenは子要素の順番を変更することで描画の重なりを変更しようとしているので、2番目のプレビューのようになるのはやもえません。ではどのようにHBoxに定義された順番（レイアウト計算順序）とZ順（表示順序）を別々に管理し、描画したら良いのでしょうか？</p>
 
-<h3 id="repeaterhboxrepeaterhbox">■Repeaterを使うHBox、RepeaterHBoxを作る</h3>
+<h3>■Repeaterを使うHBox、RepeaterHBoxを作る</h3>
 
 <p>つまりこういうことです。HBox内に要素を並べるとき、通常は要素の並びを持っている訳ではありませんが、HBox内でRepeaterを使っているなら、要素の順番はRepeater自信が保持しています。  </p>
 
-<p>そこでRepeaterHBoxを作ることにします。今回は簡単に要素の並びを取得できるように、mxml上のパラメータrepeaterArray="{imageReflector}"でクラス変数に配列を渡すことにしました。</p>
-
-<pre><code>&lt;local:RepeaterHBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)" mouseOut="onMouseOut(event)"  initialize="onInitialize()" repeaterArray="{imageReflector}" &gt;
+<p>そこでRepeaterHBoxを作ることにします。今回は簡単に要素の並びを取得できるように、mxml上のパラメータrepeaterArray=&ldquo;{imageReflector}&quot;でクラス変数に配列を渡すことにしました。</p>
+<pre class="highlight plaintext">&lt;local:RepeaterHBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)" mouseOut="onMouseOut(event)"  initialize="onInitialize()" repeaterArray="{imageReflector}" &gt;
     &lt;Repeater id="rp" dataProvider="{dp}"&gt;
         &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)" click="changeSelect(event)" /&gt;
     &lt;/Repeater&gt;
 &lt;/local:RepeaterHBox&gt;
-</code></pre>
+</pre>
 
 <p>RepeaterHBoxの特徴は、HBoxを継承しHBoxである機能はもちろん、前節で問題となっていた、BoxLayoutを変更することです。RepeaterHBoxでは独自のレイアウト処理CoverFlowLayoutを使っています。CoverFlowLayoutはBoxLayoutの一部を変更したいだけなので、BoxLayoutのソースコードを丸ごとコピーしてきて、前記のコードを下記
 のように修正します。</p>
-
-<pre><code>for (i = 0; i &lt; n; i++)
+<pre class="highlight plaintext">for (i = 0; i &lt; n; i++)
 {
     obj = IUIComponent(target.repeaterArray[i]);
     top = (h - obj.height) * verticalAlign + paddingTop;
@@ -606,28 +835,26 @@ subtitle.text = imageReflector[value].authorText;
     if (obj.includeInLayout)
         left += obj.width + gap;
 }
-</code></pre>
+</pre>
 
 <p>表示順を変更しても、リピーターの定義（target.repeaterArray）順に要素の表示位置（レイアウト）を計算すれば問題は解決します。</p>
 
-<h3 id="mxinternal">■mx_internal::で内部要素にアクセスする</h3>
+<h3>■mx_internal::で内部要素にアクセスする</h3>
 
 <p>RepeaterHBoxクラスでは見慣れない記述mx_internalがあると思います。</p>
-
-<pre><code>mx_internal::layoutObject = new CoverFlowLayout();
-</code></pre>
+<pre class="highlight plaintext">mx_internal::layoutObject = new CoverFlowLayout();
+</pre>
 
 <p>実はこのmx_internalは、Flexの内部クラスに直接アクセスするために、重要な記述です。今回のように標準コンポーネントをカスタマイズする場合、通常のメソッドオーバーライドだけでは、どうしてもうまくカスタマイズできない場合があります。例えば、coreの中の変数だったり、以下のように内部名前空間に変数が定義されている場合です。</p>
-
-<pre><code>/**
+<pre class="highlight plaintext">/**
  *  @private
  */
 mx_internal var layoutObject:BoxLayout = new BoxLayout();
-</code></pre>
+</pre>
 
 <p>これはBoxクラスで、レイアウトオブジェクトを定義している例ですが、要はprivate変数として扱っているものなのです。ただこれだと独自レイアウトによる描画ができないので、上記のようにmx_internal::layoutObjectと書くことで、内部スコープの変数値を上書きできるのです。</p>
 
-<h3 id="section-3">■クロスドメインの注意事項</h3>
+<h3>■クロスドメインの注意事項</h3>
 
 <p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
@@ -635,10 +862,9 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
 
 <p>まずPHPのコードは過去記事を参考にしてください。  </p>
 
-<h3 id="section-4">■次回予告</h3>
+<h3>■次回予告</h3>
 
 <p>次回で最終回、最後にamazonからタイトル、著者を取り出して表示する機能を実装してみます。</p>
-
 
 
 
@@ -654,136 +880,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
           </li>
           <li>
             <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%98)%20%EF%BD%9E%E7%94%BB%E5%83%8F%E3%82%92%E9%87%8D%E3%81%AD%E5%90%88%E3%82%8F%E3%81%9B%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/08/25.html">Monday, August 25, 2008 02:08:41 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
-    
-      <a rel="tag" href="/tags/flex.html">Flex</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第七回は、マウスイベントを取得する手順を整理します。  </p>
-
-<h3 id="section">■今回サンプルの完成イメージ</h3>
-
-<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
-
-<p>前回はスクロール処理とアニメーション効果を付けてみました。今回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して変更していきます。今回は、mxmlファイルのみ修正していきます。  </p>
-
-<h3 id="section-1">■ファイルの準備</h3>
-
-<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_7/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
-
-<ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
-</ul>
-
-<p>前回から修正したのは、reflector.mxmlだけです。  </p>
-
-<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
-
-<h3 id="section-2">■マウスの基本動作はクリックと移動</h3>
-
-<p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
-
-<pre><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
-      paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
-      mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
-      mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
-</code></pre>
-
-<p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
-
-<ol>
-  <li>
-    <p>mouseUp : マウスのボタンが押された後、放されたときに発生する  </p>
-  </li>
-  <li>
-    <p>mouseDown : マウスとボタンが押されたときに発生する  </p>
-  </li>
-  <li>
-    <p>mouseMove : マウスポインターが動いたときに発生する  </p>
-  </li>
-  <li>
-    <p>mouseOut : マウスポインターがHBOXから出たときに発生する  </p>
-  </li>
-</ol>
-
-<p>のような意味を持っています。</p>
-
-<h3 id="section-3">■マウスがどこで操作されたのか調べる</h3>
-
-<p>マウスイベントは表示領域で取得しますが、対象のHBOXには様々な子コントロールが含まれています。本サンプルで使っているのは</p>
-
-<ul>
-  <li>カバー写真</li>
-  <li>横スクロールバー</li>
-</ul>
-
-<p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
-料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
-
-<pre><code>if(event.target.parent is HScrollBar)
-</code></pre>
-
-<p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
-
-<h3 id="section-4">■マウスが領域外に出たときを考慮する</h3>
-
-<p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
-
-<p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
-
-<pre><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
-</code></pre>
-
-<p>のように、記述します。  </p>
-
-<p>似たイベントで、MouseEvent.ROLL_OUTがありますが、これはHTMLの:hoverのような実装をする際に使うイベントです。つまり対象のコントロールの上に来た・離れたというのを制御します。</p>
-
-<h3 id="section-5">■クロスドメインの注意事項</h3>
-
-<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
-
-<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
-
-<p>まずPHPのコードは過去記事を参考にしてください。  </p>
-
-<h3 id="section-6">■次回予告</h3>
-
-<p>画像間の隙間をなくして、ホンモノのように画像が重なって表示されている効果を実装してみます。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する" data-url="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%97)%20%EF%BD%9E%E3%83%9E%E3%82%A6%E3%82%B9%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
           </li>
         </ul>
       </div>
@@ -855,6 +951,8 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -872,8 +970,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -1169,6 +1265,14 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1177,7 +1281,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

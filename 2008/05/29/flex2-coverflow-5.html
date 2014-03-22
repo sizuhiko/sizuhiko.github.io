@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる</h2>
-            <p class="postdate"><a title="Permanent link" href="/2008/05/29.html">Thursday, May 29, 2008 06:05:21 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2008/05/29.html">Thursday, May 29, 2008 03:05:21 PM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -72,122 +285,114 @@
             </p>
           
 
-          <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+          <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第五回は、画像を横に並べて、中央の画像以外は台形表示する手順を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>前回は画像を鏡面効果表示するサンプルを紹介しました。今回はその画像いくつか並べて中央以外は台形加工して表示します。今回は、カスタムコントロール(ImageReflector.as)とmxmlファイルを修正していきます。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_5/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
 </ul>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="section-2">■要素を並べて、繰り返し表示するには</h3>
+<h3>■要素を並べて、繰り返し表示するには</h3>
 
 <p>Flashでは、Boxを使うとBox内に要素を並べることができます。BoxにはHBox（横並び）とVBox（縦並び）の実装があり、CoverFlowでは横並びを利用します。  </p>
 
 <p>HBoxを使って以下のようなコードを書けばよいのですが、</p>
-
-<pre><code>&lt;HBox&gt;
+<pre class="highlight plaintext">&lt;HBox&gt;
   &lt;local:ImageReflector id="imageReflector0" /&gt;
   &lt;local:ImageReflector id="imageReflector1" /&gt;
   &lt;local:ImageReflector id="imageReflector2" /&gt;
   &lt;local:ImageReflector id="imageReflector3" /&gt;
 &lt;/HBox&gt;
-</code></pre>
+</pre>
 
 <p>これだとImageReflectorを必要な分、記述しなければいけないのでかなり面倒です。そこで、繰り返しを便利にしてくれるRepeaterという要素があります。今回のmxmlでは以下のように記述しています。</p>
-
-<pre><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
-	&lt;Repeater id="rp" dataProvider="{dp}"&gt;
-		&lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
-	&lt;/Repeater&gt;
+<pre class="highlight plaintext">&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
+    &lt;Repeater id="rp" dataProvider="{dp}"&gt;
+        &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
+    &lt;/Repeater&gt;
 &lt;/HBox&gt;
-</code></pre>
+</pre>
 
 <p>Repeaterで繰り返したい要素はdataProviderというパラメータで指定することができます。dpは同じmxmlのスクリプト部分に記述しています。</p>
-
-<pre><code>[Bindable]
+<pre class="highlight plaintext">[Bindable]
 private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655", "4274066940", "4822283143", "4839923221", "4873113202", "4797333502", "4822282295"]);
-</code></pre>
+</pre>
 
 <p>配列要素（ArrayCollection）に、amazonのasinidを指定していけば、値が変更になった場合も簡単です。後々XMLファイルに外だしにする場合もそれほど変更が必要になりません。  </p>
 
-<h3 id="actionscript">■画面とActionScriptで情報を交換する</h3>
+<h3>■画面とActionScriptで情報を交換する</h3>
 
 <p>dataProviderで指定した、asinidをActionScriptに引き渡すには、[Bindable]を宣言すれば良いだけです。この宣言は変数でも関数でも、直前に記述すれば、MXMLとActionScriptの間で情報を交換することができます。本サンプルでは、asinIdと、選択表示（今回は中央）のIndexをMXMLからActionScriptに対して引き渡しています。引渡し方法は、タグの中で指定する方法や、MXMLのScriptからID指定で渡す方法があります。  </p>
 
 <p>タグの中で指定するには、</p>
-
-<pre><code>&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
-</code></pre>
+<pre class="highlight plaintext">&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
+</pre>
 
 <p>と書くことで、ImageReflectorクラスのasinId変数の初期値として、rp.currentItemの値がセットされます。rp.currentItemはRepeater(idがrp)の現在のdataProvider配列の値です。繰り返している現在の値を引き渡しています。  </p>
 
 <p>スクリプトの中で指定するには、</p>
-
-<pre><code>imageReflector[0].selectedIndex = dp.length / 2;
-</code></pre>
+<pre class="highlight plaintext">imageReflector[0].selectedIndex = dp.length / 2;
+</pre>
 
 <p>と書くことで、idがimageReflectorの要素の0番目のselectedIndex変数に値をセットすることができます。imageReflectorはRepeaterで繰り返しているImageReflector要素のidで同じIDが複数出現すると、自動的に配列要素となってくれます。  </p>
 
-<h3 id="measure">■measureを修正して、個々の横幅を指定する</h3>
+<h3>■measureを修正して、個々の横幅を指定する</h3>
 
 <p>Flashが個々の要素の幅を決定するときに呼ぶmeasure関数で、選択要素は等幅、それ以外は台形変形したときに横幅を指定するようにします。</p>
-
-<pre><code>if(selectedIndex == repeaterIndex) {
-	measuredWidth = _content.getExplicitOrMeasuredWidth();
+<pre class="highlight plaintext">if(selectedIndex == repeaterIndex) {
+    measuredWidth = _content.getExplicitOrMeasuredWidth();
 }
 else {
-	measuredWidth = tiltingWidth;
+    measuredWidth = tiltingWidth;
 }
-</code></pre>
+</pre>
 
 <p>selectedIndexはMXMLとバインディングしている変数ですが、repeaterIndexはどこにも出てきません。これは自分のコントロールがRepeaterの中にある場合に有効な変数で、自分がRepeaterの何番目かを知ることができるのです。ですからMXMLから指定された選択Indexである場合は、画像の幅を指定し、それ以外の場合はtiltingWidthを指定します。このtiltingWidthも変数宣言していませんが、今回追加したコードに関数が記述されています。</p>
-
-<pre><code>public function set tiltingWidth(value:Number):void
+<pre class="highlight plaintext">public function set tiltingWidth(value:Number):void
 {
-	// no set
+    // no set
 }
 public function get tiltingWidth():Number
 {
-	var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
-	var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
-	var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
-	var rotation:Number = radians * 180 / Math.PI;
-	var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
-	return Math.min(maxTiltingWidth, w);
+    var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
+    var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
+    var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
+    var rotation:Number = radians * 180 / Math.PI;
+    var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
+    return Math.min(maxTiltingWidth, w);
 }
-</code></pre>
+</pre>
 
 <p>functionの後にset,getと書くとプロパティ値のsetter,getterの意味を持つことができ、あたかもtiltingWidthというメンバ変数があるように見せかけることができます。  </p>
 
-<p><img alt="" src="/images/blog/1image01.gif" /> 
+<p><img src="/images/blog/1image01.gif" /> 
 台形変形したときの横幅は、前回も出たMathの三角関数を使って出しています。図のように台形に変形したときに切り落とされる三角形の底辺となる幅を想定すればよいでしょう。最初に上のように高さがtiltingMarginで、幅がmaxTiltingWidthの三角形で斜辺への角度を求めます。  </p>
 
 <p>同じ角度で斜辺の長さが実際の画像幅になった場合に、底辺がどのくらいの幅になるかを求めます。そこで小さいほうの幅を採用すると幅の異なる様々な画像でもうまく幅を指定することができます。  </p>
 
-<h3 id="section-3">■実際に描画する</h3>
+<h3>■実際に描画する</h3>
 
 <p>updateDisplayListを修正して、ビットマップを台形変形するなどの描画を行います。  </p>
 
-<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br />
-<img alt="" src="/images/blog/image02.gif" /> 
+<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br>
+<img src="/images/blog/image02.gif" /> 
 transformImage関数では、図のように６つの点を計算しています。位置が計算できたら、drawImageShape関数でTransformUtilを呼び出して、描画領域へ表示するようにします。  </p>
 
-<h3 id="section-4">■クロスドメインの注意事項</h3>
+<h3>■クロスドメインの注意事項</h3>
 
 <p>前回も書いたのですが、amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
@@ -195,7 +400,7 @@ transformImage関数では、図のように６つの点を計算しています
 
 <p>まずPHPのコードは前回記事を参考にしてください。  </p>
 
-<h3 id="section-5">■次回予告</h3>
+<h3>■次回予告</h3>
 
 <p>アニメーション表示に取り掛かりたいと思います。</p>
 
@@ -230,6 +435,8 @@ transformImage関数では、図のように６つの点を計算しています
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -247,8 +454,6 @@ transformImage関数では、図のように６つの点を計算しています
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -544,6 +749,14 @@ transformImage関数では、図のように６つの点を計算しています
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -552,7 +765,7 @@ transformImage関数では、図のように６つの点を計算しています
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

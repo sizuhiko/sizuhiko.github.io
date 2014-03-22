@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,59 +275,59 @@
         <div id="main">
           
 
-          <h1 id="html5-boilerplatehttphtml5boilerplatecom"><a href="http://html5boilerplate.com">HTML5 Boilerplate</a></h1>
+          <h1><a href="http://html5boilerplate.com">HTML5 Boilerplate</a></h1>
 
 <p>HTML5 Boilerplate is a professional front-end template for building fast,
 robust, and adaptable web apps or sites.</p>
 
 <p>This project is the product of many years of iterative development and combined
 community knowledge. It does not impose a specific development philosophy or
-framework, so you're free to architect your code in the way that you want.</p>
+framework, so you&rsquo;re free to architect your code in the way that you want.</p>
 
 <ul>
-  <li>Source: <a href="https://github.com/h5bp/html5-boilerplate">https://github.com/h5bp/html5-boilerplate</a></li>
-  <li>Homepage: <a href="http://html5boilerplate.com">http://html5boilerplate.com</a></li>
-  <li>Twitter: <a href="http://twitter.com/h5bp">@h5bp</a></li>
+<li>Source: <a href="https://github.com/h5bp/html5-boilerplate">https://github.com/h5bp/html5-boilerplate</a></li>
+<li>Homepage: <a href="http://html5boilerplate.com">http://html5boilerplate.com</a></li>
+<li>Twitter: <a href="http://twitter.com/h5bp">@h5bp</a></li>
 </ul>
 
-<h2 id="quick-start">Quick start</h2>
+<h2>Quick start</h2>
 
 <p>Choose one of the following options:</p>
 
 <ol>
-  <li>Download the latest stable release from
+<li>Download the latest stable release from
 <a href="http://html5boilerplate.com/">html5boilerplate.com</a> or a custom build from
 <a href="http://www.initializr.com">Initializr</a>.</li>
-  <li>Clone the git repo — <code>git clone
+<li>Clone the git repo — <code>git clone
 https://github.com/h5bp/html5-boilerplate.git</code> - and checkout the tagged
-release you'd like to use.</li>
+release you&rsquo;d like to use.</li>
 </ol>
 
-<h2 id="features">Features</h2>
+<h2>Features</h2>
 
 <ul>
-  <li>HTML5 ready. Use the new elements with confidence.</li>
-  <li>Cross-browser compatible (Chrome, Opera, Safari, Firefox 3.6+, IE6+).</li>
-  <li>Designed with progressive enhancement in mind.</li>
-  <li>Includes <a href="http://necolas.github.com/normalize.css/">Normalize.css</a> for CSS
+<li>HTML5 ready. Use the new elements with confidence.</li>
+<li>Cross-browser compatible (Chrome, Opera, Safari, Firefox 3.6+, IE6+).</li>
+<li>Designed with progressive enhancement in mind.</li>
+<li>Includes <a href="http://necolas.github.com/normalize.css/">Normalize.css</a> for CSS
 normalizations and common bug fixes.</li>
-  <li>The latest <a href="http://jquery.com/">jQuery</a> via CDN, with a local fallback.</li>
-  <li>The latest <a href="http://modernizr.com/">Modernizr</a> build for feature detection.</li>
-  <li>IE-specific classes for easier cross-browser control.</li>
-  <li>Placeholder CSS Media Queries.</li>
-  <li>Useful CSS helpers.</li>
-  <li>Default print CSS, performance optimized.</li>
-  <li>Protection against any stray <code>console.log</code> causing JavaScript errors in
+<li>The latest <a href="http://jquery.com/">jQuery</a> via CDN, with a local fallback.</li>
+<li>The latest <a href="http://modernizr.com/">Modernizr</a> build for feature detection.</li>
+<li>IE-specific classes for easier cross-browser control.</li>
+<li>Placeholder CSS Media Queries.</li>
+<li>Useful CSS helpers.</li>
+<li>Default print CSS, performance optimized.</li>
+<li>Protection against any stray <code>console.log</code> causing JavaScript errors in
 IE6/7.</li>
-  <li>An optimized Google Analytics snippet.</li>
-  <li>Apache server caching, compression, and other configuration defaults for
+<li>An optimized Google Analytics snippet.</li>
+<li>Apache server caching, compression, and other configuration defaults for
 Grade-A performance.</li>
-  <li>Cross-domain Ajax and Flash.</li>
-  <li>"Delete-key friendly." Easy to strip out parts you don't need.</li>
-  <li>Extensive inline and accompanying documentation.</li>
+<li>Cross-domain Ajax and Flash.</li>
+<li>&ldquo;Delete-key friendly.&rdquo; Easy to strip out parts you don&rsquo;t need.</li>
+<li>Extensive inline and accompanying documentation.</li>
 </ul>
 
-<h2 id="documentation">Documentation</h2>
+<h2>Documentation</h2>
 
 <p>Take a look at the <a href="/h5bp/html5-boilerplate/blob/master/doc/README.md">documentation table of
 contents</a>. This
@@ -122,7 +335,7 @@ documentation is bundled with the project, which makes it readily available for
 offline reading and provides a useful starting point for any documentation
 you want to write about your project.</p>
 
-<h2 id="contributing">Contributing</h2>
+<h2>Contributing</h2>
 
 <p>Anyone and everyone is welcome to
 <a href="/h5bp/html5-boilerplate/blob/master/doc/contribute.md">contribute</a>. Hundreds
@@ -141,6 +354,8 @@ of developers have helped make the HTML5 Boilerplate what it is today.</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -158,8 +373,6 @@ of developers have helped make the HTML5 Boilerplate what it is today.</p>
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -455,6 +668,14 @@ of developers have helped make the HTML5 Boilerplate what it is today.</p>
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -463,7 +684,7 @@ of developers have helped make the HTML5 Boilerplate what it is today.</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

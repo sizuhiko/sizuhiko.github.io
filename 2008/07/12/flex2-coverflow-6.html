@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>Flex2でCoverFlowクローンを作る (６) ～アニメーション効果を付ける</h2>
-            <p class="postdate"><a title="Permanent link" href="/2008/07/12.html">Saturday, July 12, 2008 08:07:32 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2008/07/12.html">Saturday, July 12, 2008 05:07:32 PM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -72,37 +285,35 @@
             </p>
           
 
-          <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+          <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第六回は、アニメーション効果を付けて表示する手順を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>画像をクリックしたり、スクロールバーを動かすと、CoverFlowのようにアニメーションで動きます。</p>
 
 <p>前回は画像を台形加工して表示するサンプルを紹介しました。今回はその画像を左右にスクロールさせながら、アニメーションで選択・非選択の表示を変更していきます。今回も、カスタムコントロール(ImageReflector.as)とmxmlファイルの両方を修正していきます。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_6/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
 </ul>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="animateproperty">■アニメーション効果を簡単にするAnimateProperty</h3>
+<h3>■アニメーション効果を簡単にするAnimateProperty</h3>
 
 <p>Flashでは、AnimatePropertyを使うと簡単にアニメーション効果を実現することができます。AnimatePropertyには、指定したプロパティの値を開始値から終了値まで変化させる機能があります。つまり位置を移動させたり、定型的に図形を変形したい場合など、特定のプロパティを非同期に操作することができるのです。  </p>
 
 <p>refrector.mxmlでは以下のように記述しています。</p>
-
-<pre><code>// アニメーションを開始する
+<pre class="highlight plaintext">// アニメーションを開始する
 private function startAnimation(to:int):void
 {
     if(_animation != null &amp;&amp; _animation.isPlaying) {
@@ -116,20 +327,19 @@ private function startAnimation(to:int):void
     _animation.easingFunction = mx.effects.easing.Quadratic.easeOut;
     _animation.play();
 }
-</code></pre>
+</pre>
 
 <p>_animation.propertyに指定したhorizontalScrollPositionという変数を、toの値まで変化させると記述することができます。しかもアニメーションはhorizontalScrollPositionが１ずつ加算されていくといった単純なものでなく、easingFunctionに値を指定することで増減する値をコントロールできます。easingFunctionにはFlexが用意してくれているものがあり、イーズアウト・イーズインと呼ばれています。これは変数の変化が加速なのか減速なのかといった指定ができ、イーズアウトはtoValueに近づくと値の変化が少なくなり減速感を与え、イーズインは変化が大きくなっていくことで加速感を与えることができます。AnimatePropertyクラスの値を設定したら、play()関数を呼ぶだけで勝手にhorizontalScrollPositionの値が変化していきます。  </p>
 
 <p>このアニメーション効果は、表示領域を滑らかにスクロールするために使用しています。具体的には、</p>
 
 <ul>
-  <li>最初に中央の画像を選択状態にして、センターに表示する</li>
-  <li>画像がクリックされたら、その位置を選択状態にして、センターに表示する</li>
+<li>最初に中央の画像を選択状態にして、センターに表示する</li>
+<li>画像がクリックされたら、その位置を選択状態にして、センターに表示する</li>
 </ul>
 
 <p>という機能で使っています。</p>
-
-<pre><code>// 表示領域をスクロールする
+<pre class="highlight plaintext">// 表示領域をスクロールする
 private function scrollItem(pos:int):int
 {
     var scrollValue:int = 0;
@@ -138,38 +348,35 @@ private function scrollItem(pos:int):int
     startAnimation(scrollValue);
     return pos;
 }
-</code></pre>
+</pre>
 
-<h3 id="section-2">■最初に中央の画像を選択状態にして、センターに表示する</h3>
+<h3>■最初に中央の画像を選択状態にして、センターに表示する</h3>
 
 <p>各ImageReflectorが描画されたときに呼ばれるonCreationCompleteでは、これまで最後のImageReflectorが描画されたときに、中央の選択画像を決定していました。今度のサンプルでは、initScroll()関数を呼ぶように変更しています。initScroll()関数は、中央の画像を選択状態にして、そこまでスクロールさせる役割があるのですが、中央までスクロールさせるのには、そこまでの位置が確定していなければなりません。つまり、画像の横幅が固定であれば良いのですが、CoverFlowの中で縦横サイズがバラバラな写真に対応しようと思うと、描画が完了していなければ、位置を取得することができません。そこで、</p>
-
-<pre><code>for(var i:int = 0; i &lt; dp.length; i++) {
+<pre class="highlight plaintext">for(var i:int = 0; i &lt; dp.length; i++) {
     if(!imageReflector[i].isCompleted()) {
         return callLater(initScroll); // まだ描画が終わってないので、遅延呼び出しする。
     }
 }
 selectedIndex = scrollItem(dp.length / 2);
-</code></pre>
+</pre>
 
 <p>と書くことで、全てのImageReflectorが描画完了するまで、待つことができます。callLaterはイベントキューの最後に、再度関数呼び出しを入れることで後で処理をさせることができます。そして、すべて描画できていたらscrollItemを呼んで、中央までスクロールしてやれば良いのです。  </p>
 
 <p>ImageReflectorの中でisCompleted関数は、</p>
-
-<pre><code>public function isCompleted():Boolean {
+<pre class="highlight plaintext">public function isCompleted():Boolean {
     if (!_invalidatedReflection) return false
-	
+
     return true;
 }
-</code></pre>
+</pre>
 
-<p>と書くことで、_invalidatedReflectionフラグがonになるまで待ってくれます。_invalidatedReflectionフラグは、amazonより画像を呼び出して、実際の描画が開始されたときにonとなるので、この時点で画像サイズなどが決定しています。  </p>
+<p>と書くことで、<em>invalidatedReflectionフラグがonになるまで待ってくれます。</em>invalidatedReflectionフラグは、amazonより画像を呼び出して、実際の描画が開始されたときにonとなるので、この時点で画像サイズなどが決定しています。  </p>
 
-<h3 id="section-3">■選択画像が変わったら、パラパラ漫画のように</h3>
+<h3>■選択画像が変わったら、パラパラ漫画のように</h3>
 
 <p>選択画像がカーソルで前後にしか変化しないのであれば、中央位置と左右の画像だけを変化させれば良いのですが、マウスで２つ先、３つ先が選択されるケースを想定すると、現在位置から選択位置までパラパラ漫画のように画像をめくっていく必要があります。まず移動先が右なのか、左なのか判断して、どちら方向へスクロールを展開するか決めてやります。</p>
-
-<pre><code>public function set selectedIndex(value:Number):void
+<pre class="highlight plaintext">public function set selectedIndex(value:Number):void
 {
     if(!initFlag) {
         if(_selectedIndex &gt; value) {
@@ -180,11 +387,10 @@ selectedIndex = scrollItem(dp.length / 2);
         }
     }
 }
-</code></pre>
+</pre>
 
 <p>後は実際にleftScrollやrightScroll関数で処理させます。例えば、右方法へアニメーションするには、</p>
-
-<pre><code>// 右方向へアニメーションスクロールする
+<pre class="highlight plaintext">// 右方向へアニメーションスクロールする
 private function rightScroll(from:int, to:int):void
 {
     var oldSelectIndex:int = from;
@@ -196,16 +402,15 @@ private function rightScroll(from:int, to:int):void
         oldSelectIndex = i;
     }
 }
-</code></pre>
+</pre>
 
 <p>のように記述し、選択位置を変更（imageReflector[0].selectedIndex = i;）し、１つ前の選択画像（oldSelectIndex）を台形へ変形させ、新しい選択画像を台形から正面表示画像へ変形させます。変形させるときもアニメーション効果を付けるため、ImageReflectorクラスにdoAnimate()関数を用意しました。  </p>
 
 <p>doAnimate()関数では、mxmlの横スクロールと同じように、AnimatePropertyを使っています。ただし台形を正面表示に変更したりといった、ある変数の値を単純に変更するだけではうまくいかないケースは多々あります。そこで、ここでのギミックは、animateTransformというプロパティのsetter/getterをfunctionで定義してしまうというものです。これは前回（第５回）でもふれましたが、クラスのメンバ変数を直接操作させないための手段である一方で、トゥーイングで変化する値を受け取って処理させることもできるのです。具体的に、animateTransformの値が変化するときには、以下の関数が呼ばれます。</p>
-
-<pre><code>public function set animateTransform(value:Number):void
+<pre class="highlight plaintext">public function set animateTransform(value:Number):void
 {
     _animateTransform = value;
-	
+
     if (repeaterIndex == selectedIndex) {
         measuredWidth = value;
     }
@@ -214,26 +419,24 @@ private function rightScroll(from:int, to:int):void
     }
     invalidateSize();
     transformImage(value);
-	
+
 }
-</code></pre>
+</pre>
 
 <p>選択画像なら、横幅をアニメーション値にし、そうでなければ台形変化後の幅にしてしまいます。後は、前回作成したtransformImage()関数へ値をアニメーション変化値を渡します。  </p>
 
-<h3 id="section-4">■実際に描画する</h3>
+<h3>■実際に描画する</h3>
 
 <p>transformImage関数を修正して、アニメーション描画を行います。  </p>
 
 <p>前回までと違うこところは、</p>
-
-<pre><code>var percent:Number = (contentWidth - value) / (contentWidth - tiltingWidth);
-</code></pre>
+<pre class="highlight plaintext">var percent:Number = (contentWidth - value) / (contentWidth - tiltingWidth);
+</pre>
 
 <p>のように、どのくらいの割合で値が変化しているか%値であらわし、それをtiltingMarginにかけて変化させています。  </p>
 
 <p>実際、個別の描画シーンで、</p>
-
-<pre><code>x1 = xm;
+<pre class="highlight plaintext">x1 = xm;
 x2 = value;
 y1 = (maxImageSize - contentHeight) + tiltingMargin * percent;
 y2 = (maxImageSize - contentHeight) + tiltingMargin * 2 * percent;
@@ -241,12 +444,12 @@ y3 = (maxImageSize - contentHeight) + contentHeight - tiltingMargin * 2 * percen
 y4 = (maxImageSize - contentHeight) + contentHeight - tiltingMargin * percent;
 y5 = y3 + _reflectionShapeBitmap.height - tiltingMargin * 2 * percent;
 y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
-</code></pre>
+</pre>
 
 <p>のように、%値をかけてy1からy6までの高さを制御しています。横幅は関数の引数（アニメーション値）をそのまま使用します。
 選択画像の場合は、どちらからめくったかという効果を出すために、前回の選択画像位置を_prevSelectに覚えておき、左から中央、右から中央といった分岐をします。</p>
 
-<h3 id="section-5">■クロスドメインの注意事項</h3>
+<h3>■クロスドメインの注意事項</h3>
 
 <p>前回も書いたのですが、amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
@@ -254,7 +457,7 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
 
 <p>まずPHPのコードは過去記事を参考にしてください。  </p>
 
-<h3 id="section-6">■次回予告</h3>
+<h3>■次回予告</h3>
 
 <p>マウスイベントを取得して、画像をめくる方法を増やしてみたいと思います。</p>
 
@@ -289,6 +492,8 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -306,8 +511,6 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -603,6 +806,14 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -611,7 +822,7 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

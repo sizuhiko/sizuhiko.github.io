@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,7 +275,7 @@
         <div id="main">
           
             <h2>Middleman インストールメモ</h2>
-            <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 02:13:26 AM</a></p>
+            <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 11:13:26 AM</a></p>
             <p class="tags">
               
                 <a rel="tag" href="/tags/middleman.html">middleman</a>
@@ -71,123 +284,116 @@
           
 
           <!-- more -->
+
 <p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
 
-<h3 id="section">参考になったサイト</h3>
+<h3>参考になったサイト</h3>
 
 <p>以下のサイトを参照しながら、作業を実施しました。</p>
 
 <ul>
-  <li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
-  <li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
-  <li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
-  <li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
+<li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
+<li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
+<li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
+<li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
 </ul>
 
-<h3 id="html">HTMLジェネレータは何を使うの？</h3>
+<h3>HTMLジェネレータは何を使うの？</h3>
 
 <p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
 
-<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ….</p>
+<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&hellip;.</p>
 
 <p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
 
-<h3 id="middleman-">Middleman インストール</h3>
+<h3>Middleman インストール</h3>
 
-<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない….
+<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
 もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
-
-<pre><code>gem install middleman
-</code></pre>
+<pre class="highlight plaintext">gem install middleman
+</pre>
 
 <p>でインストールも楽々完了です。</p>
 
 <p>ブログモジュールを使うので、middleman の Gemfile に</p>
-
-<pre><code>gem "middleman-blog", "~&gt; 3.5.1"
-</code></pre>
+<pre class="highlight plaintext">gem "middleman-blog", "~&gt; 3.5.1"
+</pre>
 
 <p>を追加して</p>
-
-<pre><code>bundle install
+<pre class="highlight plaintext">bundle install
 middleman init blog --template=blog
-</code></pre>
+</pre>
 
 <p>と実行すると blog ディレクトリに環境が生成されます。</p>
 
-<h3 id="workpress-">WorkPress からのインポート</h3>
+<h3>WorkPress からのインポート</h3>
 
 <p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
-いよいよ先程の変換ツールで実行…. エラーだよ！！（泣）</p>
+いよいよ先程の変換ツールで実行&hellip;. エラーだよ！！（泣）</p>
 
 <p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
 イロイロ調べたところ、</p>
 
 <ul>
-  <li>wp2middleman</li>
-  <li>wordpress-to-jekyll</li>
-  <li>ruby-wpdb</li>
-  <li>wp_conversion</li>
+<li>wp2middleman</li>
+<li>wordpress-to-jekyll</li>
+<li>ruby-wpdb</li>
+<li>wp_conversion</li>
 </ul>
 
 <p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
-どれもうまくいかない….</p>
+どれもうまくいかない&hellip;.</p>
 
 <p>python系のライブラリもあるらしく</p>
 
 <ul>
-  <li>wp2md</li>
-  <li>prlican-import</li>
-  <li>exitwp</li>
+<li>wp2md</li>
+<li>prlican-import</li>
+<li>exitwp</li>
 </ul>
 
 <p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
-しかしいくつか失敗する… なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」…..
+しかしいくつか失敗する&hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」&hellip;..
 もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
 
-<h3 id="wordpress-">WordPress インストール</h3>
+<h3>WordPress インストール</h3>
 
 <p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
-これを先程一番うまく変換できた exitwp にかけると…….</p>
+これを先程一番うまく変換できた exitwp にかけると&hellip;&hellip;.</p>
 
 <p>あらー全部奇麗に変換できるじゃないですかー</p>
 
-<h3 id="section-1">デザイン</h3>
+<h3>デザイン</h3>
 
 <p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
-
-<pre><code>middleman server
-</code></pre>
+<pre class="highlight plaintext">middleman server
+</pre>
 
 <p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
 
 <p>GitHub Pages へデプロイするために Gemfile に</p>
-
-<pre><code>gem "middleman-deploy"
-</code></pre>
+<pre class="highlight plaintext">gem "middleman-deploy"
+</pre>
 
 <p>モジュールを追加して bundle install。</p>
 
 <p>config.rg に</p>
-
-<pre><code>activate :deploy do |deploy|
+<pre class="highlight plaintext">activate :deploy do |deploy|
   deploy.build_before = true # default: false
   deploy.method = :git
   deploy.branch   = "master" # default: gh-pages
 end
-</code></pre>
+</pre>
 
 <p>な感じで設定したら </p>
-
-<pre><code>middleman deproy
-</code></pre>
+<pre class="highlight plaintext">middleman deproy
+</pre>
 
 <p>でビルドした内容をgithubへ連携してくれます。</p>
 
-<h3 id="section-2">今後</h3>
+<h3>今後</h3>
 
 <p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
-
 
 
           
@@ -220,6 +426,8 @@ end
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -237,8 +445,6 @@ end
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -534,6 +740,14 @@ end
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -542,7 +756,7 @@ end
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

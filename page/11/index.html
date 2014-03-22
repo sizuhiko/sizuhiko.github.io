@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
   <head>
+    
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
     <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
 
     <!--[if lte IE 8]>
@@ -35,6 +37,217 @@
         #postform b { display:block; }
         #sharing { float:none; padding-top:3px; }
         }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
     </style>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -62,8 +275,67 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/06/09.html">Monday, June 09, 2008 09:06:17 AM</a></p>
+            <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-treebehavior.html">CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/06/09.html">Monday, June 09, 2008 06:06:49 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/1-2.html">1.2</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/rc1.html">RC1</a>
+    
+      <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;TreeBehavior自体1.2から追加された機能なのに、変更になるなんて。。。  </p>
+
+<p>1.2βでは</p>
+<pre class="highlight plaintext">$this-&gt;Category-&gt;setScope(array('company_id'=&gt;'1'));
+$categories = $this-&gt;Category-&gt;children();
+</pre>
+
+<p>のように書くと、company_idが1のカテゴリだけ階層構造で取得できていたのだが、RC1ではsetScopeがDeprecatedになってしまった。で、上記方法を使っている画面を表示すると、「(TreeBehavior::setScope) Deprecated - Use BehaviorCollection::attach() to re-attach with new settings」というエラーメッセージが出るが、お世辞にもどう変更していいかわかるメッセージじゃないし、ドキュメントにも書いてない。  </p>
+
+<p>なので、ソースを読み込むことに。まぁソース読めばわかります。結果としては、</p>
+<pre class="highlight plaintext">$this-&gt;Category-&gt;$this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;array('company_id'=&gt;'1')));
+$categories = $this-&gt;Category-&gt;children();
+</pre>
+
+<p>のように記述するのですが、これを使用箇所で全部変更するのは大変ですね。そこで、Categoryのモデルクラスに以下のようなメソッドを追加してあげました。</p>
+<pre class="highlight plaintext">function setScope($scope = array()) {
+    return $this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;$scope));
+}
+</pre>
+
+<p>ま、AppModelに追加しても良かったんですが、全部がTreeBehavior使っている訳ではないと思うので、その場合は、setTreeScopeのような名前に変更した方が良いかな？と思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html&t=CakePHP%201.2%20RC1%E3%81%A7TreeBehavior%E3%81%AE%E7%B5%9E%E8%BE%BC%E3%81%BF%E7%AF%84%E5%9B%B2%E6%8C%87%E5%AE%9A%E3%81%8C%E5%A4%89%E6%9B%B4%E3%81%A8%E3%81%AA%E3%81%A3%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/06/09.html">Monday, June 09, 2008 06:06:17 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/1-2.html">1.2</a>
@@ -78,81 +350,71 @@
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>CakePHP1.2 も RC1 となり、現在開発中のプロジェクトでβからRC1に変更したところ、様々なトラブルが。。。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;CakePHP1.2 も RC1 となり、現在開発中のプロジェクトでβからRC1に変更したところ、様々なトラブルが。。。  </p>
 
 <p>1.2βでは1.1の検索方法を踏襲しており、以下のように記述できる。</p>
-
-<pre><code>$conditions = array("Post.title" =&gt; "This is a post");
+<pre class="highlight plaintext">$conditions = array("Post.title" =&gt; "This is a post");
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
 
 <p>この例は完全一致（=）なので問題はなかったのだが、それ以外の<や>、LIKEやBETWEENなど記述方法が変更となっている。
-なおINの場合は、</や></p>
-
-<pre><code>$conditions = array("Post.id" =&gt; array(1,2,3,4,5));
+なおINの場合は、</p>
+<pre class="highlight plaintext">$conditions = array("Post.id" =&gt; array(1,2,3,4,5));
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
 
 <p>のように記述でき、1.1などからの変更はない。
 ではLIKEについてこれまでの記法をおさらいすると、</p>
-
-<pre><code>$conditions = array("Post.title" =&gt; "LIKE %post%");
-
-//Example usage with a model:
-$this-&gt;Post-&gt;find($conditions);
-</code></pre>
-
-<p>となっていた。しかしこれを1.2 RC1で実行すると、WHERE句は「'Post.title' = 'LIKE %post%'」のようになってしまう。そこで、dbo_source.phpを見て解析してみた。結果、LIKEなどの記法は</p>
-
-<pre><code>$conditions = array("Post.title LIKE" =&gt; "%post%");
+<pre class="highlight plaintext">$conditions = array("Post.title" =&gt; "LIKE %post%");
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
+
+<p>となっていた。しかしこれを1.2 RC1で実行すると、WHERE句は「&#39;Post.title&#39; = &lsquo;LIKE %post%&#39;」のようになってしまう。そこで、dbo_source.phpを見て解析してみた。結果、LIKEなどの記法は</p>
+<pre class="highlight plaintext">$conditions = array("Post.title LIKE" =&gt; "%post%");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</pre>
 
 <p>のように変更となっていた。この変更はかなり驚きだが、カラム名の方にLIKEや&lt;=などの条件を移動することで、様々なSQLインジェクションを考えると、従来のようにvalue側を正規表現で切り分けるより安全な気がする。  </p>
 
 <p>値が１つの場合は良さそうだ。ではBETWEENの場合はどうだろう？従来は、</p>
-
-<pre><code>$conditions = array("Post.date" =&gt; "BETWEEN 2008-1-1 AND 2009-1-1");
-
-//Example usage with a model:
-$this-&gt;Post-&gt;find($conditions);
-</code></pre>
-
-<p>のように記述していたが、これもそのままだとWHERE句は「'Post.data' = 'BETWEEN 2008-1-1 AND 2009-1-1'」のようになってしまう。ではLIKEと同じようにしてみると、</p>
-
-<pre><code>$conditions = array("Post.date BETWEEN" =&gt; "2008-1-1 AND 2009-1-1");
+<pre class="highlight plaintext">$conditions = array("Post.date" =&gt; "BETWEEN 2008-1-1 AND 2009-1-1");
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
 
-<p>WHERE句は「'Post.data' BETWEEN '2008-1-1 AND 2009-1-1'」のようになってしまう。これも正しくない。このようなケースはさらに変更されており、以下のようになる。</p>
-
-<pre><code>$conditions = array("Post.date BETWEEN ? AND ?" =&gt; array("2008-1-1", "2009-1-1"));
+<p>のように記述していたが、これもそのままだとWHERE句は「&#39;Post.data&rsquo; = &lsquo;BETWEEN 2008-1-1 AND 2009-1-1&#39;」のようになってしまう。ではLIKEと同じようにしてみると、</p>
+<pre class="highlight plaintext">$conditions = array("Post.date BETWEEN" =&gt; "2008-1-1 AND 2009-1-1");
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
 
-<p>BETWEENなど値が複数ある場合は、カラム名上で?を使うと配列の値を順番にセットしてくれる。WHERE句は「'Post.data' BETWEEN '2008-1-1' AND '2009-1-1'」のように期待通りの結果となる。  </p>
+<p>WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1 AND 2009-1-1&#39;」のようになってしまう。これも正しくない。このようなケースはさらに変更されており、以下のようになる。</p>
+<pre class="highlight plaintext">$conditions = array("Post.date BETWEEN ? AND ?" =&gt; array("2008-1-1", "2009-1-1"));
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</pre>
+
+<p>BETWEENなど値が複数ある場合は、カラム名上で?を使うと配列の値を順番にセットしてくれる。WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1&rsquo; AND &lsquo;2009-1-1&#39;」のように期待通りの結果となる。  </p>
 
 <p>なおLIKEなどでも</p>
-
-<pre><code>$conditions = array("Post.title LIKE ?" =&gt; array("%post%"));
+<pre class="highlight plaintext">$conditions = array("Post.title LIKE ?" =&gt; array("%post%"));
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
-</code></pre>
+</pre>
 
 <p>と書くことが可能だが、そこまで見栄えに統一感を持たせなくても良いかな？と思う。</p>
-
 
 
 
@@ -176,7 +438,7 @@ $this-&gt;Post-&gt;find($conditions);
 
   </div>
   <h2 class="title"><a href="/2008/05/29/flex2-coverflow-5.html">Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/05/29.html">Thursday, May 29, 2008 06:05:21 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/05/29.html">Thursday, May 29, 2008 03:05:21 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -187,122 +449,114 @@ $this-&gt;Post-&gt;find($conditions);
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第五回は、画像を横に並べて、中央の画像以外は台形表示する手順を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>前回は画像を鏡面効果表示するサンプルを紹介しました。今回はその画像いくつか並べて中央以外は台形加工して表示します。今回は、カスタムコントロール(ImageReflector.as)とmxmlファイルを修正していきます。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_5/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
-  <li>TransformUtil.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
 </ul>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="section-2">■要素を並べて、繰り返し表示するには</h3>
+<h3>■要素を並べて、繰り返し表示するには</h3>
 
 <p>Flashでは、Boxを使うとBox内に要素を並べることができます。BoxにはHBox（横並び）とVBox（縦並び）の実装があり、CoverFlowでは横並びを利用します。  </p>
 
 <p>HBoxを使って以下のようなコードを書けばよいのですが、</p>
-
-<pre><code>&lt;HBox&gt;
+<pre class="highlight plaintext">&lt;HBox&gt;
   &lt;local:ImageReflector id="imageReflector0" /&gt;
   &lt;local:ImageReflector id="imageReflector1" /&gt;
   &lt;local:ImageReflector id="imageReflector2" /&gt;
   &lt;local:ImageReflector id="imageReflector3" /&gt;
 &lt;/HBox&gt;
-</code></pre>
+</pre>
 
 <p>これだとImageReflectorを必要な分、記述しなければいけないのでかなり面倒です。そこで、繰り返しを便利にしてくれるRepeaterという要素があります。今回のmxmlでは以下のように記述しています。</p>
-
-<pre><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
-	&lt;Repeater id="rp" dataProvider="{dp}"&gt;
-		&lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
-	&lt;/Repeater&gt;
+<pre class="highlight plaintext">&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
+    &lt;Repeater id="rp" dataProvider="{dp}"&gt;
+        &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
+    &lt;/Repeater&gt;
 &lt;/HBox&gt;
-</code></pre>
+</pre>
 
 <p>Repeaterで繰り返したい要素はdataProviderというパラメータで指定することができます。dpは同じmxmlのスクリプト部分に記述しています。</p>
-
-<pre><code>[Bindable]
+<pre class="highlight plaintext">[Bindable]
 private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655", "4274066940", "4822283143", "4839923221", "4873113202", "4797333502", "4822282295"]);
-</code></pre>
+</pre>
 
 <p>配列要素（ArrayCollection）に、amazonのasinidを指定していけば、値が変更になった場合も簡単です。後々XMLファイルに外だしにする場合もそれほど変更が必要になりません。  </p>
 
-<h3 id="actionscript">■画面とActionScriptで情報を交換する</h3>
+<h3>■画面とActionScriptで情報を交換する</h3>
 
 <p>dataProviderで指定した、asinidをActionScriptに引き渡すには、[Bindable]を宣言すれば良いだけです。この宣言は変数でも関数でも、直前に記述すれば、MXMLとActionScriptの間で情報を交換することができます。本サンプルでは、asinIdと、選択表示（今回は中央）のIndexをMXMLからActionScriptに対して引き渡しています。引渡し方法は、タグの中で指定する方法や、MXMLのScriptからID指定で渡す方法があります。  </p>
 
 <p>タグの中で指定するには、</p>
-
-<pre><code>&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
-</code></pre>
+<pre class="highlight plaintext">&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
+</pre>
 
 <p>と書くことで、ImageReflectorクラスのasinId変数の初期値として、rp.currentItemの値がセットされます。rp.currentItemはRepeater(idがrp)の現在のdataProvider配列の値です。繰り返している現在の値を引き渡しています。  </p>
 
 <p>スクリプトの中で指定するには、</p>
-
-<pre><code>imageReflector[0].selectedIndex = dp.length / 2;
-</code></pre>
+<pre class="highlight plaintext">imageReflector[0].selectedIndex = dp.length / 2;
+</pre>
 
 <p>と書くことで、idがimageReflectorの要素の0番目のselectedIndex変数に値をセットすることができます。imageReflectorはRepeaterで繰り返しているImageReflector要素のidで同じIDが複数出現すると、自動的に配列要素となってくれます。  </p>
 
-<h3 id="measure">■measureを修正して、個々の横幅を指定する</h3>
+<h3>■measureを修正して、個々の横幅を指定する</h3>
 
 <p>Flashが個々の要素の幅を決定するときに呼ぶmeasure関数で、選択要素は等幅、それ以外は台形変形したときに横幅を指定するようにします。</p>
-
-<pre><code>if(selectedIndex == repeaterIndex) {
-	measuredWidth = _content.getExplicitOrMeasuredWidth();
+<pre class="highlight plaintext">if(selectedIndex == repeaterIndex) {
+    measuredWidth = _content.getExplicitOrMeasuredWidth();
 }
 else {
-	measuredWidth = tiltingWidth;
+    measuredWidth = tiltingWidth;
 }
-</code></pre>
+</pre>
 
 <p>selectedIndexはMXMLとバインディングしている変数ですが、repeaterIndexはどこにも出てきません。これは自分のコントロールがRepeaterの中にある場合に有効な変数で、自分がRepeaterの何番目かを知ることができるのです。ですからMXMLから指定された選択Indexである場合は、画像の幅を指定し、それ以外の場合はtiltingWidthを指定します。このtiltingWidthも変数宣言していませんが、今回追加したコードに関数が記述されています。</p>
-
-<pre><code>public function set tiltingWidth(value:Number):void
+<pre class="highlight plaintext">public function set tiltingWidth(value:Number):void
 {
-	// no set
+    // no set
 }
 public function get tiltingWidth():Number
 {
-	var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
-	var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
-	var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
-	var rotation:Number = radians * 180 / Math.PI;
-	var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
-	return Math.min(maxTiltingWidth, w);
+    var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
+    var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
+    var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
+    var rotation:Number = radians * 180 / Math.PI;
+    var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
+    return Math.min(maxTiltingWidth, w);
 }
-</code></pre>
+</pre>
 
 <p>functionの後にset,getと書くとプロパティ値のsetter,getterの意味を持つことができ、あたかもtiltingWidthというメンバ変数があるように見せかけることができます。  </p>
 
-<p><img alt="" src="/images/blog/1image01.gif" /> 
+<p><img src="/images/blog/1image01.gif" /> 
 台形変形したときの横幅は、前回も出たMathの三角関数を使って出しています。図のように台形に変形したときに切り落とされる三角形の底辺となる幅を想定すればよいでしょう。最初に上のように高さがtiltingMarginで、幅がmaxTiltingWidthの三角形で斜辺への角度を求めます。  </p>
 
 <p>同じ角度で斜辺の長さが実際の画像幅になった場合に、底辺がどのくらいの幅になるかを求めます。そこで小さいほうの幅を採用すると幅の異なる様々な画像でもうまく幅を指定することができます。  </p>
 
-<h3 id="section-3">■実際に描画する</h3>
+<h3>■実際に描画する</h3>
 
 <p>updateDisplayListを修正して、ビットマップを台形変形するなどの描画を行います。  </p>
 
-<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br />
-<img alt="" src="/images/blog/image02.gif" /> 
+<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br>
+<img src="/images/blog/image02.gif" /> 
 transformImage関数では、図のように６つの点を計算しています。位置が計算できたら、drawImageShape関数でTransformUtilを呼び出して、描画領域へ表示するようにします。  </p>
 
-<h3 id="section-4">■クロスドメインの注意事項</h3>
+<h3>■クロスドメインの注意事項</h3>
 
 <p>前回も書いたのですが、amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
@@ -310,7 +564,7 @@ transformImage関数では、図のように６つの点を計算しています
 
 <p>まずPHPのコードは前回記事を参考にしてください。  </p>
 
-<h3 id="section-5">■次回予告</h3>
+<h3>■次回予告</h3>
 
 <p>アニメーション表示に取り掛かりたいと思います。</p>
 
@@ -336,7 +590,7 @@ transformImage関数では、図のように６つの点を計算しています
 
   </div>
   <h2 class="title"><a href="/2008/04/28/flex2-coverflow-4.html">Flex2でCoverFlowクローンを作る (４) ～鏡面加工する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/04/28.html">Monday, April 28, 2008 08:04:40 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/28.html">Monday, April 28, 2008 05:04:40 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -349,86 +603,77 @@ transformImage関数では、図のように６つの点を計算しています
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第四回は、画像を鏡面加工して表示する手順を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>前回はカスタムコントロールを使って、画像を表示するサンプルを紹介しました。今回はその画像を加工して表示します。画像の加工はいろいろありますが、Macユーザとしては外せない鏡面効果を付けてみましょう。今回は、カスタムコントロール(ImageReflector.as)を修正してい
 きます。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_4/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
 </ul>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="commitproperties">■commitProperties()の修正</h3>
+<h3>■commitProperties()の修正</h3>
 
 <p>以下のようなコードに修正となります。</p>
-
-<pre><code>override protected function commitProperties():void
+<pre class="highlight plaintext">override protected function commitProperties():void
 {
     if (_imageLoader == null) {
         initLoader();
     }
     invalidateDisplayList();
 }
-</code></pre>
+</pre>
 
 <p>具体的な変更イメージが掴めないと思うので、initLoader関数の処理も見てみましょう。  </p>
 
 <p>前回のサンプルでは、</p>
-
-<pre><code>_content = UIComponent(new Image());
-</code></pre>
+<pre class="highlight plaintext">_content = UIComponent(new Image());
+</pre>
 
 <p>の部分で、Image.dataに値をセットすることで画像を出していましたが、今回はかなり異なります。これはオリジナルの画像を鏡面加工するには、元の画像の読み込みが完了していなければならないためです。Imageを使って画像を表示する方法は便利なのですが、読み込み状況まで制御することができません。このような場合は、Loaderクラスを使って画像を読み込むことができます。</p>
-
-<pre><code>_imageLoader.load(new URLRequest("http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"));
-</code></pre>
+<pre class="highlight plaintext">_imageLoader.load(new URLRequest("http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"));
+</pre>
 
 <p>で画像の読み込みを命令すると、完了イベント(Event.COMPLETE)を受け取れます。イベントを受け取ると、addEventListenerに記述された内容を実行します。</p>
-
-<pre><code>_imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function():void {
+<pre class="highlight plaintext">_imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function():void {
      // ここに記述された内容を実行
 }
-</code></pre>
+</pre>
 
 <p>次に、</p>
-
-<pre><code>_imageShape = new Shape();
+<pre class="highlight plaintext">_imageShape = new Shape();
 _content.addChild(_imageShape);
-</code></pre>
+</pre>
 
 <p>のようにして描画領域を作成します。描画領域はShapeと呼ばれる単純な描画コンポーネントを使います。Flex本ではSpriteを使うケースも多いのですが、使い分けとしては、さらに子供の要素を追加する場合はSprite。単純な描画枠ならShapeという理解でよいでしょう。Shapeの方がSpriteよりも使用メモリが少ないという利点もあります。  </p>
 
 <p>取得した画像をビットマップデータに変換しておきます。</p>
-
-<pre><code>_imageShapeBitmap = new BitmapData(_imageLoader.width, _imageLoader.height, true, 0x000000);
+<pre class="highlight plaintext">_imageShapeBitmap = new BitmapData(_imageLoader.width, _imageLoader.height, true, 0x000000);
 _imageShapeBitmap.draw(_imageLoader);
-</code></pre>
+</pre>
 
 <p>のように書くと、ロードした画像を簡単にビットマップとして扱えるようになります。  </p>
-
-<pre><code>var reflectionBitmap:Bitmap = createReflectionBitmap(_imageShapeBitmap);
-</code></pre>
+<pre class="highlight plaintext">var reflectionBitmap:Bitmap = createReflectionBitmap(_imageShapeBitmap);
+</pre>
 
 <p>で鏡面画像を作成して、_contentの子オブジェクトの更新イベントでinvalidateReflection()が呼ばれるようにしておきます。</p>
 
-<h3 id="createreflectionbitmap">■鏡面画像を作成する createReflectionBitmap()</h3>
+<h3>■鏡面画像を作成する createReflectionBitmap()</h3>
 
 <p>この関数のポイントはグラデーションパターンを作成するところです。</p>
-
-<pre><code>var alphaGradientBitmap:BitmapData = new BitmapData(tw, th, true, 0x00000000);
+<pre class="highlight plaintext">var alphaGradientBitmap:BitmapData = new BitmapData(tw, th, true, 0x00000000);
 var gradientMatrix: Matrix = new Matrix();
 var gradientShape: Shape = new Shape();
 gradientMatrix.createGradientBox(tw, th * kFalloff, Math.PI/2, 0, th * (1.0 - kFalloff));
@@ -436,102 +681,93 @@ gradientShape.graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0xFFFFF
 gradientShape.graphics.drawRect(0, th * (1.0 - kFalloff), tw, th * kFalloff);
 gradientShape.graphics.endFill();
 alphaGradientBitmap.draw(gradientShape, new Matrix());
-</code></pre>
+</pre>
 
 <p>Math.PIとは、円周率を表していて、Math.PI/2は90度を意味します。通常の座標軸は、左から右にむかうので、Math.PI/2を適用した場合は、時計回りに90度つまり上から下に向かって描画するように制御できます。またグラデーションには、線状(LINEAR)と放射線状(RADIAL)があり、段々薄くなっていく鏡面効果の場合は、線状を使います。</p>
-
-<pre><code>var reflectionData:BitmapData = new BitmapData(tw, th, false, 0x00000000);
+<pre class="highlight plaintext">var reflectionData:BitmapData = new BitmapData(tw, th, false, 0x00000000);
 reflectionData.fillRect(rect, 0x00000000);
 reflectionData.copyPixels(target, rect, new Point(), alphaGradientBitmap);
-</code></pre>
+</pre>
 
 <p>のように引数で渡されたオリジナル画像と、グラデーションパターンの画像を重ね合わせますが、copyPixelsを使うと、重ね合わせる透過ビットマップを指定できるので、便利です。
 最後に</p>
-
-<pre><code>reflectionBitmap = new Bitmap(reflectionData);
+<pre class="highlight plaintext">reflectionBitmap = new Bitmap(reflectionData);
 reflectionBitmap.alpha = .85;
-</code></pre>
+</pre>
 
 <p>で使いやすいようにBitmapDataに変換し、透過度を指定しておきます。背景を白に変更した場合など、透過度を調整すると、お好みの鏡面効果にすることができます。 </p>
 
-<h3 id="section-2">■鏡面効果を開始する</h3>
+<h3>■鏡面効果を開始する</h3>
 
 <p>initLoaderで設定した、Imageの描画が完了したときに呼ばれるメソッドを以下のように定義します。</p>
-
-<pre><code>private function invalidateReflection(event:Event):void
+<pre class="highlight plaintext">private function invalidateReflection(event:Event):void
 {
     _invalidatedReflection = true;
     invalidateSize();
     invalidateDisplayList();
 }
-</code></pre>
+</pre>
 
 <p>このタイミングでようやく鏡面画像を書いてよし、というタイミングになるので_invalidatedReflectionフラグをオン(true)に設定します。
 その後、画面の再描画を即すために、invalidateDisplayList()を呼び出します。</p>
 
-<h3 id="section-3">■実際に描画する</h3>
+<h3>■実際に描画する</h3>
 
 <p>updateDisplayListを修正して、ビットマップの描画を行います。  </p>
 
 <p>ビットマップを描画領域に書き出すには、graphicsオブジェクトを使用します。</p>
-
-<pre><code>_imageShape.graphics
-</code></pre>
+<pre class="highlight plaintext">_imageShape.graphics
+</pre>
 
 <p>graphicsオブジェクトはShape上にベクター描画するためのプロパティです。beginBitmapFillはビットマップで塗りつぶしを開始する、という宣言で、描画範囲をdrawRectで決定します。graphicsオブジェクトで描画を終了する場合は、描画の種類に関係なくendFillで終了します。  </p>
 
 <p>鏡面画像はそのままだと、オリジナル画像にグラデーションが重なっているだけの画像です。実際に鏡面効果に見せるためには、反転させて、位置を下げる必要があります。</p>
-
-<pre><code>var m:Matrix = new Matrix();
+<pre class="highlight plaintext">var m:Matrix = new Matrix();
 m.scale(1.0, -1.0);
 m.ty = 2 * _imageShapeBitmap.height;
 _imageShape.graphics.beginBitmapFill(_reflectionShapeBitmap, m);
 _imageShape.graphics.drawRect(0, _imageShapeBitmap.height, _reflectionShapeBitmap.width, _reflectionShapeBitmap.height);
 _imageShape.graphics.endFill();
-</code></pre>
+</pre>
 
 <p>本サンプルではMatrixクラスを使って反転させています。画像の反転など3D効果を出すのには、行列計算を行う必要があります。Matrixは表示オブジェクトの回転、拡大縮小、平行移動を行列を使って計算することができます。今回のケースは単純に反転するだけなので、拡大縮小(scale)メソッドを使います。なぜ反転するのに拡大縮小？という疑問があるかもしれません。なぜなら鏡面効果を考えてください。画像を180度回転させると左右が逆になります。するとその後左右反転を呼ばなければなりません。これでは二度手間ですね。  </p>
 
 <p>つまり単純に反転させる効果はscaleメソッドを使い実施します。上下反転はscale(1.0, -1.0)、左右反転は scale(-1.0, 1.0)で実現できます。行列計算というと難しいイメージしかありませんが、100x200画像を拡大縮小させる場合は、四点[(0,0)(200,0)(0,100)(200,100)]で、x,yそれぞれをscaleで指定された値でかけるだけです。つまりscale(1.0,-1.0)の結果は[(0,0)(200,0)(0,-100)(200,-100)]となるので、y軸0の値を中心に画像が上方向
 に向いていることがわかると思います。結果として上下反転したように見えるのです。</p>
 
-<h3 id="section-4">■クロスドメインの罠</h3>
+<h3>■クロスドメインの罠</h3>
 
 <p>amazonではAPI用にFlashから接続可能なcrossdomain.xmlが定義されています。例えば<a href="http://xml.amazon.com/">http://xml.amazon.com/</a>などのルートにはcrossdomain.xmlが設置されています。ところが、画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
 
 <p>そこで、PHPスクリプトなどを使って回避することができます。なお本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
 
 <p>まずPHPのコードは以下のようになります。例えば、crossdomain.phpとしておきましょう。</p>
-
-<pre><code>&lt;?php
+<pre class="highlight plaintext">&lt;?php
 if($_GET["file"]){
     header("Content-Type:image/jpeg;");
     readfile($_GET["file"]);
 }
 ?&gt;
-</code></pre>
+</pre>
 
 <p>次にcrossdomain.xmlをドキュメントルートに配置します。</p>
-
-<pre><code>&lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE cross-domain-policy SYSTEM "http://www.adobe.com/xml/dtds/cross-domain-policy.dtd"&gt;
-&lt;cross-domain-policy&gt;
-    &lt;allow-access-from domain="*"/&gt;
-&lt;/cross-domain-policy&gt;
-</code></pre>
+<pre class="highlight xml"><span class="cp">&lt;?xml version="1.0"?&gt;</span>
+<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM "http://www.adobe.com/xml/dtds/cross-domain-policy.dtd"&gt;</span>
+<span class="nt">&lt;cross-domain-policy&gt;</span>
+    <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">"*"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/cross-domain-policy&gt;</span>
+</pre>
 
 <p>後は、ImageReflector.asのload部分を以下のように書き換えます。</p>
-
-<pre><code>var context:LoaderContext = new LoaderContext(true);
+<pre class="highlight plaintext">var context:LoaderContext = new LoaderContext(true);
 _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://images.amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"), context);
-</code></pre>
+</pre>
 
 <p>すると、PHPサイトがプロキシとなってくれ、PHPサイトのcrossdomain.xmlをFlashは解釈して、SWFから画像が表示できるようになります。  </p>
 
 <p>クロスドメイン対応の記述は、添付のプロジェクトに含まれないので注意してください。  </p>
 
 <p>※なおローカルで試す分には、クロスドメインの対策を入れなくても動作します。</p>
-
 
 
 
@@ -555,7 +791,7 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
 
   </div>
   <h2 class="title"><a href="/2008/04/22/flex2%e3%81%a7coverflow%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%82%92%e4%bd%9c%e3%82%8b-3-%ef%bd%9e%e7%94%bb%e5%83%8f%e3%82%92%e8%a1%a8%e7%a4%ba%e3%81%99%e3%82%8b.html">Flex2でCoverFlowクローンを作る (3) ～画像を表示する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 08:04:50 AM</a></p>
+  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 05:04:50 PM</a></p>
   <p class="tags">
     
       <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
@@ -566,97 +802,90 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
   <div class="content">
     <!-- use article.summary(250) if you have Nokogiri available to show just
        the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
 
 <p>第三回は、Flashコンポーネント内に画像を表示する手順を整理します。  </p>
 
-<h3 id="section">■今回サンプルの完成イメージ</h3>
+<h3>■今回サンプルの完成イメージ</h3>
 
 <p>単純に画像が表示されるだけですが、まずはじめの一歩として取り組んでみましょう。  </p>
 
-<h3 id="section-1">■ファイルの準備</h3>
+<h3>■ファイルの準備</h3>
 
 <p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_3/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
 
 <ul>
-  <li>reflector.as3proj</li>
-  <li>reflector.mxml</li>
-  <li>ImageReflector.as</li>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
 </ul>
 
 <p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
 
-<h3 id="section-2">■動かしてみよう！</h3>
+<h3>■動かしてみよう！</h3>
 
-<p><img alt="" src="/images/blog/images/flex2_coverflow_3/test.jpg" /> 
+<p><img src="/images/blog/images/flex2_coverflow_3/test.jpg" /> 
 細かい解説は後にして、ひとまずソースコードを記述したら、コンパイルです。
 ツールバーの再生ボタンをクリックするとコンパイルが始まり、下ペインにコンパイルメッセージが出力されます。
-「reflector.swf」ができあがると、自動的に再生がはじまり、<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_3/run.jpg" /> 
+「reflector.swf」ができあがると、自動的に再生がはじまり、<br>
+<img src="/images/blog/images/flex2_coverflow_3/run.jpg" /> 
 amazon.comから取得したWeb2.0ビギナーズバイブル[*1]の書籍画像が表示できましたね。  </p>
 
-<h3 id="uicomponent">■カスタムコントロールを作るなら、UIComponent</h3>
+<h3>■カスタムコントロールを作るなら、UIComponent</h3>
 
 <p>Flex2でカスタムコントロールを作るには、いくつか方法がありますが、本サンプルのように、UIComponentクラスを継承するのが最も簡単です。UIComponentはPlayerからのイベントを制御してくれるので、カスタムコントロールを作る場合、特定のメソッドのみオーバライドすれば良い事になります。また、表示する画像自体は、_contentという属性に持たせることにします。UIComponentは表示要素のスーパークラスです。</p>
 
-<h3 id="commitproperties">■コントロールの値を変更する、commitProperties</h3>
+<h3>■コントロールの値を変更する、commitProperties</h3>
 
 <p>commitProperties()メソッドをオーバライドして、このカスタムコントロールが持つ値を設定します。FlashPlayerがmxml上の</p>
-
-<pre><code>&lt;local:ImageReflector /&gt;
-</code></pre>
+<pre class="highlight plaintext">&lt;local:ImageReflector /&gt;
+</pre>
 
 <p>を解析すると、内部的にはaddChild() メソッドを使用してコンポーネントが追加されまず。するとFlexはinvalidateProperties()を自動的に呼び出します。  </p>
 
 <p>つまり、必ず１度は最初にcommitProperties()が呼び出されるのです。カスタムコントロールの場合、コンストラクタでなく、ここで描画情報を初期化します。  </p>
 
 <p>まず、画像(Imageクラス)を実体として、UIComponentを作成します。</p>
-
-<pre><code>_content = UIComponent(new Image());
-</code></pre>
+<pre class="highlight plaintext">_content = UIComponent(new Image());
+</pre>
 
 <p>Amazonの画像を指定します。IDataRenderer.dataに画像のパスを指定すると、実際の描画はImageクラスが担当してくれます。</p>
-
-<pre><code>IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
-</code></pre>
+<pre class="highlight plaintext">IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
+</pre>
 
 <p>カスタムコントロールの要素として、自身の子エレメントとして追加します。</p>
-
-<pre><code>addChild(_content);
-</code></pre>
+<pre class="highlight plaintext">addChild(_content);
+</pre>
 
 <p>つまり、mxml上では、</p>
-
-<pre><code>      &lt;local:ImageReflector &gt;
+<pre class="highlight plaintext">      &lt;local:ImageReflector &gt;
         &lt;Image /&gt;
       &lt;/local:ImageReflector &gt;
-</code></pre>
+</pre>
 
 <p>と書いたのと同じような状態となります。  </p>
 
 <p>最後に、invalidateDisplayList()メソッドを呼びます。
 invalidateDisplayList()を呼び出すと、画像の描画サイズを調整するため、updateDisplayList()が呼ばれる仕組みとなっています。  </p>
 
-<h3 id="measure">■コントロールのサイズを指定する、measure</h3>
+<h3>■コントロールのサイズを指定する、measure</h3>
 
 <p>invalidateProperties()では、commitProperties()の後にmeasure()メソッドの呼び出されます。このメソッドではFlashPlayer上に表示するサイズを設定する必要があるので、_contentから実際の画像サイズを取得して、measuredHeightとmeasuredWidthのプロパティに値を設定します。  </p>
 
-<h3 id="updatedisplaylist">■画像サイズを調整する、updateDisplayList</h3>
+<h3>■画像サイズを調整する、updateDisplayList</h3>
 
 <p>commitProperties()の最後で、子要素の描画を行うためにinvalidateDisplayList()を呼び出しています。ここでは主に子要素の表示サイズ、位置を調整します。  </p>
 
 <p>親要素のどの辺に、どのくらいの大きさで表示するか指定するのです。今回は画像を表示するだけなので、画像サイズを取得して、UIComponentのサイ
 ズに設定します。</p>
+<pre class="highlight plaintext">_content.setActualSize(contentWidth,contentHeight);
+</pre>
 
-<pre><code>_content.setActualSize(contentWidth,contentHeight);
-</code></pre>
-
-<h3 id="section-3">■まとめ</h3>
+<h3>■まとめ</h3>
 
 <p>今回は画像を表示するだけだったので、これほどコードを記述しなくても、もっと簡単な方法もあったのですが、この過程は鏡面効果画像を表示するまでに重要なものです。いよいよ次回は画像を鏡面加工しますので、楽しみに待っていてください。  </p>
 
-<h4 id="web20">[1]:Web2.0ビギナーズバイブル</h4>
+<h4>[1]:Web2.0ビギナーズバイブル</h4>
 
 <p>著者名：伊藤 浩一、大津 真、岸田 健一郎、まえだ ひさこ、安井 力  </p>
 
@@ -678,74 +907,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
           </li>
           <li>
             <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/04/22/flex2%e3%81%a7coverflow%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%82%92%e4%bd%9c%e3%82%8b-3-%ef%bd%9e%e7%94%bb%e5%83%8f%e3%82%92%e8%a1%a8%e7%a4%ba%e3%81%99%e3%82%8b.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(3)%20%EF%BD%9E%E7%94%BB%E5%83%8F%E3%82%92%E8%A1%A8%E7%A4%BA%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/04/22/flex2%e3%81%a7coverflow%e3%82%af%e3%83%ad%e3%83%bc%e3%83%b3%e3%82%92%e4%bd%9c%e3%82%8b-3-%ef%bd%9e%e7%94%bb%e5%83%8f%e3%82%92%e8%a1%a8%e7%a4%ba%e3%81%99%e3%82%8b.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/04/22.html">Tuesday, April 22, 2008 07:04:25 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
-    
-      <a rel="tag" href="/tags/flashdevelop.html">FlashDevelop</a>
-    
-      <a rel="tag" href="/tags/flex.html">Flex</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-<p>現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第二回は、FlexでFlashコンポーネントを開発するのに便利なIDEを導入する手順を整理します。  </p>
-
-<h3 id="flashdevelop">■FlashDevelopとは</h3>
-
-<p>FlashDevelopは、フリーで利用可能なFlashの統合開発環境です。Flex Builderは有償版なので、タダで開発したいという人は、このツールを使うのがオススメです。Flex2,Flex3に必要なmxmlやActionScriptのコード補完機能などプログラミングをするには十分な機能を持っています。メニューなどすべて英語表記ですが、Eclipse IDEと操作性は似ているので、大きな問題はないでしょう。  </p>
-
-<h3 id="section">■ダウンロードする</h3>
-
-<p><a href="http://www.flashdevelop.org/">FlashDevelopのサイト</a>へアクセスします。
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download1.jpg" /> 最新版を入手するには、Releasesを選択します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download2.jpg" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/download3.jpg" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
-
-<h3 id="section-1">■インストールする</h3>
-
-<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/install1.jpg" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/install2.jpg" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
-
-<h3 id="section-2">■はじめにすること</h3>
-
-<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev1.jpg" /> まずインストールしたFlashDevelopを実行します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev2.jpg" /> Tools - Program Settings… （もしくはF10）を選択します。<br />
-<img alt="" src="/images/blog/images/flex2_coverflow_2/dev4.jpg" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
-
-<h3 id="section-3">■次回</h3>
-
-<p>Flex2を使って画像を表示する簡単なサンプルからスタートしていきます。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (2) ～IDEを導入する" data-url="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(2)%20%EF%BD%9EIDE%E3%82%92%E5%B0%8E%E5%85%A5%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
           </li>
         </ul>
       </div>
@@ -807,6 +968,8 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
@@ -824,8 +987,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
                 
                   <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
-                
-                  <li><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a> <span>2013/02/06</span></li>
                 
               </ul>
             </div>
@@ -1121,6 +1282,14 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1129,7 +1298,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (4)</li>
+                  <li><a href="/2014.html">2014</a> (5)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 

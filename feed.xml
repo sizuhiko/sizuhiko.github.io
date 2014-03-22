@@ -5,10 +5,125 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-03-08T08:04:00Z</updated>
+  <updated>2014-03-22T06:24:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>テスト駆動web開発勉強会 Vol.1で発表しました</title>
+    <link rel="alternate" href="http://blog.url.com/2014/03/22/web-testing-2014.html"/>
+    <id>http://blog.url.com/2014/03/22/web-testing-2014.html</id>
+    <published>2014-03-22T06:24:00Z</published>
+    <updated>2014-03-22T16:17:20+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2014/3/18に&lt;a href="http://blog.coworking.tokyo.jp/"&gt;コワーキングスペース茅場町Co-Edo&lt;/a&gt;で開催された「&lt;a href="http://tdd-web.doorkeeper.jp/events/9439"&gt;テスト駆動web開発勉強会 Vol.1&lt;/a&gt;」で「Webアプリケーションテスト手法2014」の発表をしました。&lt;/p&gt;
+
+&lt;p&gt;第一回目ということと、1時間枠と限られた時間の中でCakePHPとJavaScriptについてのテストの話をしたので、ざっくりした内容となっています。&lt;/p&gt;
+
+&lt;p&gt;今後ハンズオンなども計画しているようなので、DoorKeeperのページをチェックしておくと良いかなーと思います。
+また当日は「&lt;a href="https://japheego.jp/"&gt;Java,PHPエンジニアの派遣、求人を探すならJapheego（ジャフィーゴ）&lt;/a&gt;」さんに懇親会スポンサーになっていただき、美味いビールとSUBWAYのサンドイッチをいただきました。感謝!
+勉強会の懇親会はピザが多いのですが、連続すると飽きるのでたまには&lt;a href="http://demae-can.com/shop/menu/3007411/"&gt;SUBWAYのデリバリー&lt;/a&gt;とか良いと思いますよ！（SUBWAY大好きです）&lt;/p&gt;
+
+&lt;div id="file_embed"&gt;
+    &lt;div id="embedded_doc"&gt;&lt;p class="no_javascript"&gt;To see files inline you need to enable JavaScript.&lt;br /&gt;Yahoo has some &lt;a href="http://help.yahoo.com/l/us/yahoo/help/faq/browsers/browsers-63474.html" target="_blank"&gt;instructions for enabling JavaScript&lt;/a&gt; if you&amp;rsquo;re unsure how to do it.&lt;/p&gt;&lt;/div&gt;
+
+    &lt;script type="text/javascript"&gt;
+    var scribd_doc = scribd.Document.getDoc(213088053, 'key-c8og2igawuh9o7wx4j7');
+
+    var onDocReady = function(e){
+        // scribd_doc.api.setPage(3);
+    }
+
+    scribd_doc.addParam('jsapi_version', 2);
+    scribd_doc.addEventListener('docReady', onDocReady);
+    scribd_doc.addParam('height', 494);
+    scribd_doc.addParam('width', 600);
+    scribd_doc.write('embedded_doc');
+    &lt;/script&gt;
+
+    &lt;p class="download"&gt;&lt;a href="http://twileshare.com/uploads/WebTest201403_pub.pdf" class="big_green_button_link" title="Filename: WebTest201403_pub.pdf"&gt;Download this file&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;p&gt;最後に、当日紹介したサンプルのCakePHPテストコードを掲載しておきます。&lt;/p&gt;
+
+&lt;h5&gt;モデルのテスト例：&lt;/h5&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;PostTest&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;CakeTestCase&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nv"&gt;$fixture&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'app.Post'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'app.Comment'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;setUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;model&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;ClassRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;init&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Post'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;model&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;getMockForModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Post'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;model&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;getMockForModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Post'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'save'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;タイトルがない場合はバリデーションエラーになること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;データベースへの保存に失敗した場合は&lt;/span&gt;&lt;span class="nx"&gt;false&lt;/span&gt;&lt;span class="err"&gt;が戻ること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;データベースへの保存に成功した場合は&lt;/span&gt;&lt;span class="nx"&gt;true&lt;/span&gt;&lt;span class="err"&gt;が戻ること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;データベースに新規登録できること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;モデルの初期化方法には3つのやり方があり、通常は&lt;code&gt;ClassRegistry::init()&lt;/code&gt;で良いのですが、モデルをモックしたい場合は&lt;code&gt;getMockForModel()&lt;/code&gt;というCakeTestCaseが用意してくれているモデル専用のモックジェネレータを使います。第二引数にメソッドの配列を指定するとパーシャルモックとなり、特定のメソッドのみモックします。&lt;/p&gt;
+
+&lt;h5&gt;コントローラのテスト例:&lt;/h5&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;PostsControllerTest&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;ControllerTestCase&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;setUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;controller&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;generate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Posts'&lt;/span&gt;&lt;span class="p"&gt;,[&lt;/span&gt;
+            &lt;span class="s1"&gt;'components'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="s1"&gt;'Session'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'RequestHandler'&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'isPost'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+            &lt;span class="s1"&gt;'models'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="s1"&gt;'Post'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'findById'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;'delete'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+            &lt;span class="s1"&gt;'methods'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="s1"&gt;'redirect'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'render'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="p"&gt;]);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="sd"&gt;/**
+     * @expectedException NotFoundException
+     */&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;存在しない記事を表示すると&lt;/span&gt;&lt;span class="nx"&gt;NotFound&lt;/span&gt;&lt;span class="err"&gt;例外になること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;testAction&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/posts/view/999'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="sd"&gt;/**
+     * @expectedException BadRequestException
+     */&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;保存が&lt;/span&gt;&lt;span class="nx"&gt;POST&lt;/span&gt;&lt;span class="err"&gt;以外で呼び出されたら&lt;/span&gt;&lt;span class="nx"&gt;BadResuest&lt;/span&gt;&lt;span class="err"&gt;例外になること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;testAction&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/posts/save/1'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'method'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'get'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;削除が成功したら&lt;/span&gt;&lt;span class="nx"&gt;index&lt;/span&gt;&lt;span class="err"&gt;にリダイレクトする&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;controller&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;Post&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;expects&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;once&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'delete'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;equalTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;will&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;returnValue&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;controller&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;expects&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;once&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;method&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'redirect'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;equalTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'index'&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;testAction&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/posts/delete/1'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'method'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'delete'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;test&lt;/span&gt;&lt;span class="err"&gt;新しいトピックを追加できたら画面にメッセージが戻ること&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには&lt;code&gt;ControllerTestCase&lt;/code&gt;が用意してくれているコントローラ専用のモックジェネレータである&lt;code&gt;generate()&lt;/code&gt;を利用します。generateで作成したインスタンスをテストケースクラスの&lt;code&gt;controller&lt;/code&gt;メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。&lt;/p&gt;
+
+&lt;p&gt;コントローラから依存関係にある、コンポーネント、モデルについてそれぞれサンプルのようにモックでき、コントローラ自体のメソッドも&lt;code&gt;methods&lt;/code&gt;に列挙することでモックできます。例えば&lt;code&gt;redirect()&lt;/code&gt;や&lt;code&gt;render()&lt;/code&gt;などがよく使われると思います。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</title>
     <link rel="alternate" href="http://blog.url.com/2014/03/08/cakephp-addprefix-here-problem.html"/>
@@ -19,13 +134,13 @@
       <name>Article Author</name>
     </author>
     <content type="html">&lt;!-- more --&gt;
+
 &lt;p&gt;あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。&lt;/p&gt;
 
-&lt;h3 id="section"&gt;動的にプレフィックスルーティングを追加するには&lt;/h3&gt;
+&lt;h3&gt;動的にプレフィックスルーティングを追加するには&lt;/h3&gt;
 
 &lt;p&gt;公式ドキュメントの解説のとおり、&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;// routes.php
+&lt;pre class="highlight plaintext"&gt;// routes.php
 Router::connect(
     "/site-proxy/:controller",
     array('action' =&amp;gt; 'index', 'prefix' =&amp;gt; 'site-proxy', 'site-proxy' =&amp;gt; true)
@@ -33,49 +148,44 @@ Router::connect(
 
 // core.phpなど
 Configure::write('Routing.prefixes', array('site-proxy'));
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;のように記述します。&lt;/p&gt;
 
 &lt;p&gt;RouterTest.phpのテストコードを見たら&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$request = new CakeRequest();
+&lt;pre class="highlight plaintext"&gt;$request = new CakeRequest();
 $request-&amp;gt;addParams(array(
     'controller' =&amp;gt; 'registrations', 'action' =&amp;gt; 'admin_index',
     'plugin' =&amp;gt; null, 'prefix' =&amp;gt; 'admin', 'admin' =&amp;gt; true,
     'ext' =&amp;gt; 'html'
 ));
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。&lt;/p&gt;
 
 &lt;p&gt;実際コントローラで&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$this-&amp;gt;request-&amp;gt;addParams(['prefix' =&amp;gt; 'site-proxy', 'site-proxy' =&amp;gt; true]);
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;$this-&amp;gt;request-&amp;gt;addParams(['prefix' =&amp;gt; 'site-proxy', 'site-proxy' =&amp;gt; true]);
+&lt;/pre&gt;
 
 &lt;p&gt;みたいに書くと、View上で $this-&amp;gt;html-&amp;gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。&lt;/p&gt;
 
-&lt;h3 id="section-1"&gt;ハマりポイント&lt;/h3&gt;
+&lt;h3&gt;ハマりポイント&lt;/h3&gt;
 
 &lt;p&gt;View上でフォームを作成するときに&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;echo $this-&amp;gt;Form-&amp;gt;create('Post');
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;echo $this-&amp;gt;Form-&amp;gt;create('Post');
+&lt;/pre&gt;
 
 &lt;p&gt;のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;// FormHelper::create() L367付近
+&lt;pre class="highlight plaintext"&gt;// FormHelper::create() L367付近
 if ($options['action'] === null &amp;amp;&amp;amp; $options['url'] === null) {
     $options['action'] = $this-&amp;gt;request-&amp;gt;here(false);
 } elseif (empty($options['url']) || is_array($options['url'])) {
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。&lt;/p&gt;
 
 &lt;p&gt;で、CakeRequest::here() とはどんなコードか見てみると&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;public function here($base = true) {
+&lt;pre class="highlight plaintext"&gt;public function here($base = true) {
     $url = $this-&amp;gt;here;
     if (!empty($this-&amp;gt;query)) {
         $url .= '?' . http_build_query($this-&amp;gt;query, null, '&amp;amp;');
@@ -85,32 +195,28 @@ if ($options['action'] === null &amp;amp;&amp;amp; $options['url'] === null) {
     }
     return $url;
 }
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;のようになっていて、要は現在のURL（$this-&amp;gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。&lt;/p&gt;
 
-&lt;h3 id="section-2"&gt;まとめ&lt;/h3&gt;
+&lt;h3&gt;まとめ&lt;/h3&gt;
 
 &lt;p&gt;解決方法としては&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;Form::create() で &lt;code&gt;url&lt;/code&gt; オプションを追加する&lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;addParams するときに here を変更する&lt;/p&gt;
-
-    &lt;pre&gt;&lt;code&gt;  // 例）
-  $request-&amp;gt;addParams(array(
-      'admin' =&amp;gt; true,
-      'prefix' =&amp;gt; 'admin',
-  ))-&amp;gt;addPaths(array(
-      'here' =&amp;gt; '/admin/this/interesting/index',
-  ))
-&lt;/code&gt;&lt;/pre&gt;
-  &lt;/li&gt;
+&lt;li&gt;Form::create() で &lt;code&gt;url&lt;/code&gt; オプションを追加する&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;addParams するときに here を変更する&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;// 例）
+$request-&amp;gt;addParams(array(
+    'admin' =&amp;gt; true,
+    'prefix' =&amp;gt; 'admin',
+))-&amp;gt;addPaths(array(
+    'here' =&amp;gt; '/admin/this/interesting/index',
+))
+&lt;/pre&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば…    &lt;/p&gt;
-
+&lt;p&gt;あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&amp;hellip;    &lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -123,49 +229,46 @@ if ($options['action'] === null &amp;amp;&amp;amp; $options['url'] === null) {
       <name>Article Author</name>
     </author>
     <content type="html">&lt;!-- more --&gt;
+
 &lt;p&gt;現在以下のような環境を設置して開発をしています。&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;ホストOS: Windows7 &lt;/li&gt;
-  &lt;li&gt;仮想環境: Vagrant + VirtualBox&lt;/li&gt;
-  &lt;li&gt;ゲストOS: CentOS 6.4&lt;/li&gt;
-  &lt;li&gt;開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  …&lt;/li&gt;
+&lt;li&gt;ホストOS: Windows7 &lt;/li&gt;
+&lt;li&gt;仮想環境: Vagrant + VirtualBox&lt;/li&gt;
+&lt;li&gt;ゲストOS: CentOS 6.4&lt;/li&gt;
+&lt;li&gt;開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  &amp;hellip;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id="bdd"&gt;事件その1: Bddプラグインがインストールできなくなった&lt;/h3&gt;
+&lt;h3&gt;事件その1: Bddプラグインがインストールできなくなった&lt;/h3&gt;
 
-&lt;p&gt;ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど…」
+&lt;p&gt;ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど&amp;hellip;」
 という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。&lt;/p&gt;
 
 &lt;p&gt;それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
 で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
 現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;"pear-phpunit/Object_Freezer": "*"
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;"pear-phpunit/Object_Freezer": "*"
+&lt;/pre&gt;
 
 &lt;p&gt;のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。&lt;/p&gt;
 
-&lt;h3 id="phpunit"&gt;事件その2: PHPUnitがインストールできない!&lt;/h3&gt;
+&lt;h3&gt;事件その2: PHPUnitがインストールできない!&lt;/h3&gt;
 
-&lt;p&gt;で、Vagrant環境で更新してみたら….&lt;/p&gt;
+&lt;p&gt;で、Vagrant環境で更新してみたら&amp;hellip;.&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;composer update sizuhiko/Bdd
+&lt;/pre&gt;
 
-&lt;pre&gt;&lt;code&gt;composer update sizuhiko/Bdd
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;失敗….&lt;/p&gt;
+&lt;p&gt;失敗&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
 ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。&lt;/p&gt;
 
 &lt;p&gt;でcomposer.jsonにはPHPUnitの記述が&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;"phpunit/phpunit": "3.7.*"
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;"phpunit/phpunit": "3.7.*"
+&lt;/pre&gt;
 
 &lt;p&gt;のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 &lt;code&gt;composer install&lt;/code&gt; を実行すると&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;.....
+&lt;pre class="highlight plaintext"&gt;.....
   - Installing phpunit/php-token-stream (dev-master 292f4d5)
     Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
 
@@ -181,73 +284,72 @@ Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;a
 
 error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
 would be overwritten by merge.
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;のようにエラーになります。&lt;/p&gt;
 
-&lt;h3 id="issue"&gt;事件その3: Issueが光の速さで取り消される&lt;/h3&gt;
+&lt;h3&gt;事件その3: Issueが光の速さで取り消される&lt;/h3&gt;
 
 &lt;p&gt;ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。&lt;/p&gt;
 
-&lt;p&gt;&lt;a href="https://github.com/sebastianbergmann/phpunit/issues/1144"&gt;Can't install 3.7.x to Linux environment by composer&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/sebastianbergmann/phpunit/issues/1144"&gt;Can&amp;rsquo;t install 3.7.x to Linux environment by composer&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。&lt;/p&gt;
 
-&lt;h3 id="section"&gt;原因を調べてみた&lt;/h3&gt;
+&lt;h3&gt;原因を調べてみた&lt;/h3&gt;
 
 &lt;p&gt;まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。&lt;/p&gt;
 
 &lt;p&gt;ここで composer がどのようにライブラリを取得するか考えてみたところ、&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;packagist からリポジトリ情報をダウンロード&lt;/li&gt;
-  &lt;li&gt;phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）&lt;/li&gt;
-  &lt;li&gt;&lt;code&gt;git clone git@github.com:sebastianbergmann/phpunit.git&lt;/code&gt; が実行される&lt;/li&gt;
-  &lt;li&gt;リリースを指定しているので一致するタグがチェックアウトされる &lt;code&gt;git checkout ....&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;packagist からリポジトリ情報をダウンロード&lt;/li&gt;
+&lt;li&gt;phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git clone git@github.com:sebastianbergmann/phpunit.git&lt;/code&gt; が実行される&lt;/li&gt;
+&lt;li&gt;リリースを指定しているので一致するタグがチェックアウトされる &lt;code&gt;git checkout ....&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;この最後のステップで「Untracked working tree file」になり失敗するのです。&lt;/p&gt;
 
 &lt;p&gt;PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。&lt;/p&gt;
 
-&lt;p&gt;自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功…. えぇぇー！&lt;/p&gt;
+&lt;p&gt;自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功&amp;hellip;. えぇぇー！&lt;/p&gt;
 
 &lt;p&gt;その環境は Vagrant上のCentOSでなく、素のWindowsでした。
-何かがおかしい….&lt;/p&gt;
+何かがおかしい&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。&lt;/p&gt;
 
-&lt;p&gt;composer update （この日は何度実行したろう….）  …… 成功した！！！！でも、なんで？！&lt;/p&gt;
+&lt;p&gt;composer update （この日は何度実行したろう&amp;hellip;.）  &amp;hellip;&amp;hellip; 成功した！！！！でも、なんで？！&lt;/p&gt;
 
-&lt;h3 id="section-1"&gt;違いに悩むと…&lt;/h3&gt;
+&lt;h3&gt;違いに悩むと&amp;hellip;&lt;/h3&gt;
 
 &lt;p&gt;成功したところ：&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;素のWindows&lt;/li&gt;
-  &lt;li&gt;Vagrant仮想環境内の /tmp/work/app&lt;/li&gt;
+&lt;li&gt;素のWindows&lt;/li&gt;
+&lt;li&gt;Vagrant仮想環境内の /tmp/work/app&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;失敗したところ：&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;Vagrantのsync_folderである /var/www/html/your_app/app (CentOSから見えるディレクトリ)
-  windows上だと c:¥develop¥your_app¥app みたいなところ&lt;/li&gt;
+&lt;li&gt;Vagrantのsync&lt;em&gt;folderである /var/www/html/your&lt;/em&gt;app/app (CentOSから見えるディレクトリ)
+windows上だと c:¥develop¥your_app¥app みたいなところ&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！&lt;/p&gt;
 
 &lt;p&gt;という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。&lt;/p&gt;
 
-&lt;h3 id="section-2"&gt;まとめ&lt;/h3&gt;
+&lt;h3&gt;まとめ&lt;/h3&gt;
 
 &lt;p&gt;ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
 その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。&lt;/p&gt;
 
-&lt;p&gt;上記のような &lt;code&gt;Failed to execute git checkout ... &lt;/code&gt; エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。&lt;/p&gt;
+&lt;p&gt;上記のような &lt;code&gt;Failed to execute git checkout ...&lt;/code&gt; エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。&lt;/p&gt;
 
-&lt;p&gt;まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした…&lt;/p&gt;
-
+&lt;p&gt;まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&amp;hellip;&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -260,123 +362,116 @@ would be overwritten by merge.
       <name>Article Author</name>
     </author>
     <content type="html">&lt;!-- more --&gt;
+
 &lt;p&gt;ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。&lt;/p&gt;
 
-&lt;h3 id="section"&gt;参考になったサイト&lt;/h3&gt;
+&lt;h3&gt;参考になったサイト&lt;/h3&gt;
 
 &lt;p&gt;以下のサイトを参照しながら、作業を実施しました。&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;a href="http://middlemanapp.com/jp/"&gt;Middleman公式&lt;/a&gt; &lt;/li&gt;
-  &lt;li&gt;&lt;a href="http://risin.jp/blog/2013/10/16/middleman/"&gt;middlemanの設定&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/"&gt;GitHub Pagesで独自ドメインを使う方法&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8"&gt;rbenv を使って ruby をインストールする(CentOS編)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://middlemanapp.com/jp/"&gt;Middleman公式&lt;/a&gt; &lt;/li&gt;
+&lt;li&gt;&lt;a href="http://risin.jp/blog/2013/10/16/middleman/"&gt;middlemanの設定&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/"&gt;GitHub Pagesで独自ドメインを使う方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8"&gt;rbenv を使って ruby をインストールする(CentOS編)&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id="html"&gt;HTMLジェネレータは何を使うの？&lt;/h3&gt;
+&lt;h3&gt;HTMLジェネレータは何を使うの？&lt;/h3&gt;
 
 &lt;p&gt;ブログを移行するにあたり、利用可能なフォーマットは WordPress&lt;code&gt;互換&lt;/code&gt;フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。&lt;/p&gt;
 
-&lt;p&gt;最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ….&lt;/p&gt;
+&lt;p&gt;最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;で、&lt;code&gt;GitHub Pages ブログ&lt;/code&gt; なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン &lt;a href="https://github.com/salmansqadeer/wordpress-to-middleman"&gt;Wordpress to Middleman Exporter&lt;/a&gt; があるということ。&lt;/p&gt;
 
-&lt;h3 id="middleman-"&gt;Middleman インストール&lt;/h3&gt;
+&lt;h3&gt;Middleman インストール&lt;/h3&gt;
 
-&lt;p&gt;しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して &lt;code&gt;bundle install&lt;/code&gt;を実行したところ、うんともすんともならずインストールできない….
+&lt;p&gt;しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して &lt;code&gt;bundle install&lt;/code&gt;を実行したところ、うんともすんともならずインストールできない&amp;hellip;.
 もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;gem install middleman
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;gem install middleman
+&lt;/pre&gt;
 
 &lt;p&gt;でインストールも楽々完了です。&lt;/p&gt;
 
 &lt;p&gt;ブログモジュールを使うので、middleman の Gemfile に&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;gem "middleman-blog", "~&amp;gt; 3.5.1"
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;gem "middleman-blog", "~&amp;gt; 3.5.1"
+&lt;/pre&gt;
 
 &lt;p&gt;を追加して&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;bundle install
+&lt;pre class="highlight plaintext"&gt;bundle install
 middleman init blog --template=blog
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;と実行すると blog ディレクトリに環境が生成されます。&lt;/p&gt;
 
-&lt;h3 id="workpress-"&gt;WorkPress からのインポート&lt;/h3&gt;
+&lt;h3&gt;WorkPress からのインポート&lt;/h3&gt;
 
 &lt;p&gt;my.opera から WordPress &lt;code&gt;互換&lt;/code&gt; フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
-いよいよ先程の変換ツールで実行…. エラーだよ！！（泣）&lt;/p&gt;
+いよいよ先程の変換ツールで実行&amp;hellip;. エラーだよ！！（泣）&lt;/p&gt;
 
 &lt;p&gt;rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
 イロイロ調べたところ、&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;wp2middleman&lt;/li&gt;
-  &lt;li&gt;wordpress-to-jekyll&lt;/li&gt;
-  &lt;li&gt;ruby-wpdb&lt;/li&gt;
-  &lt;li&gt;wp_conversion&lt;/li&gt;
+&lt;li&gt;wp2middleman&lt;/li&gt;
+&lt;li&gt;wordpress-to-jekyll&lt;/li&gt;
+&lt;li&gt;ruby-wpdb&lt;/li&gt;
+&lt;li&gt;wp_conversion&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
-どれもうまくいかない….&lt;/p&gt;
+どれもうまくいかない&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;python系のライブラリもあるらしく&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;wp2md&lt;/li&gt;
-  &lt;li&gt;prlican-import&lt;/li&gt;
-  &lt;li&gt;exitwp&lt;/li&gt;
+&lt;li&gt;wp2md&lt;/li&gt;
+&lt;li&gt;prlican-import&lt;/li&gt;
+&lt;li&gt;exitwp&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;順番に試して行くと、&lt;code&gt;exitwp&lt;/code&gt; がいくつか失敗するものの良い感じに変換できることがわかった。
-しかしいくつか失敗する… なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress &lt;code&gt;互換&lt;/code&gt; フォーマットなんですよ。「互換」…..
+しかしいくつか失敗する&amp;hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress &lt;code&gt;互換&lt;/code&gt; フォーマットなんですよ。「互換」&amp;hellip;..
 もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と&lt;/p&gt;
 
-&lt;h3 id="wordpress-"&gt;WordPress インストール&lt;/h3&gt;
+&lt;h3&gt;WordPress インストール&lt;/h3&gt;
 
 &lt;p&gt;ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
-これを先程一番うまく変換できた exitwp にかけると…….&lt;/p&gt;
+これを先程一番うまく変換できた exitwp にかけると&amp;hellip;&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;あらー全部奇麗に変換できるじゃないですかー&lt;/p&gt;
 
-&lt;h3 id="section-1"&gt;デザイン&lt;/h3&gt;
+&lt;h3&gt;デザイン&lt;/h3&gt;
 
 &lt;p&gt;ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;middleman server
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;middleman server
+&lt;/pre&gt;
 
 &lt;p&gt;で見た目を確認しながら調整して CNAME ファイルも設置。&lt;/p&gt;
 
 &lt;p&gt;GitHub Pages へデプロイするために Gemfile に&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;gem "middleman-deploy"
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;gem "middleman-deploy"
+&lt;/pre&gt;
 
 &lt;p&gt;モジュールを追加して bundle install。&lt;/p&gt;
 
 &lt;p&gt;config.rg に&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;activate :deploy do |deploy|
+&lt;pre class="highlight plaintext"&gt;activate :deploy do |deploy|
   deploy.build_before = true # default: false
   deploy.method = :git
   deploy.branch   = "master" # default: gh-pages
 end
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/pre&gt;
 
 &lt;p&gt;な感じで設定したら &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;middleman deproy
-&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;middleman deproy
+&lt;/pre&gt;
 
 &lt;p&gt;でビルドした内容をgithubへ連携してくれます。&lt;/p&gt;
 
-&lt;h3 id="section-2"&gt;今後&lt;/h3&gt;
+&lt;h3&gt;今後&lt;/h3&gt;
 
 &lt;p&gt;ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。&lt;/p&gt;
-
 </content>
   </entry>
   <entry>
@@ -389,10 +484,10 @@ end
       <name>Article Author</name>
     </author>
     <content type="html">&lt;!-- more --&gt;
+
 &lt;p&gt;my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら &lt;a href="https://github.com/sizuhiko/sizuhiko.github.io/issues"&gt;github の issue ページ&lt;/a&gt; にてお知らせいただければ幸いです。&lt;/p&gt;
 
 &lt;p&gt;このブログは &lt;a href="http://middlemanapp.com/"&gt;Middleman&lt;/a&gt; にて構築しています。Middlemanの導入に関する記事もアップしたいと思っていますので、興味ある方はしばらくお待ちください。&lt;/p&gt;
-
 </content>
   </entry>
   <entry>
@@ -404,16 +499,15 @@ end
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;!-- more --&gt;
-&lt;p&gt;この投稿は今年参加／発表したり、運営に携わったイベント、やっていた仕事の内容などについてふりかえるポストです。&lt;/p&gt;
+    <content type="html">&lt;p&gt;&amp;lt;!&amp;ndash; more &amp;ndash;&amp;gt;この投稿は今年参加／発表したり、運営に携わったイベント、やっていた仕事の内容などについてふりかえるポストです。&lt;/p&gt;
 
-&lt;h3 id="section"&gt;1月&lt;/h3&gt;
+&lt;h3&gt;1月&lt;/h3&gt;
 
 &lt;p&gt;2013年最初のイベント参加は1/6に開催された「&lt;a href="http://roadstohtml5.com/html5karuta/"&gt;新春!!HTML5KARUTA大会&lt;/a&gt;」。
 HTML5カルタとは&lt;/p&gt;
 
 &lt;blockquote&gt;
-  &lt;p&gt;2012年現在、W3Cで正式に採用されているHTML5のタグは108つあります。HTML5KARUTAは、このHTML5のタグを日本古来から伝わる伝統的な遊戯、カルタとして遊びながら覚えようというものです。&lt;/p&gt;
+&lt;p&gt;2012年現在、W3Cで正式に採用されているHTML5のタグは108つあります。HTML5KARUTAは、このHTML5のタグを日本古来から伝わる伝統的な遊戯、カルタとして遊びながら覚えようというものです。&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;p&gt;というもので、当日はCakePHPユーザの集う茅場町会場（コワーキングスペース茅場町 Co-Edo）に参加しました。
@@ -423,7 +517,7 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;また今年はPHP Matsuriが7月開催だったので、この頃から開催会場の選定などが始まっていました。&lt;/p&gt;
 
-&lt;h3 id="section-1"&gt;2月&lt;/h3&gt;
+&lt;h3&gt;2月&lt;/h3&gt;
 
 &lt;p&gt;2/14に開催された「&lt;a href="http://cake-beer-talk.doorkeeper.jp/events/2736"&gt;第一回CakeBeerTalk&lt;/a&gt;」に参加しました。こちらも茅場町Co-Edo。CakePHP1から2へのマイグレーションの話があったり、CakePHP2.3の新機能の話をしていたんですねー。気付くと年末にはもう3の話をしているというサイクルに驚きます。1月に実施したもくもく会の成果なども含め@kaz_29さんが「&lt;a href="https://speakerdeck.com/kaz29/cakephp2-plus-bdd-pluginwoshi-tutemiyou"&gt;CakePHP2+BDD Plugin&lt;/a&gt;」の発表をしていました。自分が作ったプラグインを他の人が利用して発表してくれるというのはとても嬉しい事です。&lt;/p&gt;
 
@@ -432,7 +526,7 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;PHP Matsuriは会場が札幌全日空ホテルでほぼ確定したところでした。PHP MatusriのページをGitHubページで作り始めたのもこの時期です。&lt;/p&gt;
 
-&lt;h3 id="section-2"&gt;3月&lt;/h3&gt;
+&lt;h3&gt;3月&lt;/h3&gt;
 
 &lt;p&gt;3/9に開催された「&lt;a href="http://blog.coworking.tokyo.jp/2013/03/cakephp-phpunit-jenkins-selenium-xdebug.html"&gt;（CakePHPとか）PHPのテストについての勉強会&lt;/a&gt;」で「&lt;a href="http://twl.sh/ZnP7Vf"&gt;テストの基本からCakePHPでTDD/BDDへ&lt;/a&gt;」講演しました。他の方の発表も大変に興味深く楽しいイベントでした。&lt;/p&gt;
 
@@ -440,23 +534,23 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;PHP Matsuriはスポンサー依頼が本格的に始まったり、Facebookにイベントページが立ったり、先だって作っていた&lt;a href="http://www.phpmatsuri.net/2013/"&gt;公式サイト&lt;/a&gt;も公開したり、いよいよ本格的に動き始めた感じでした。&lt;/p&gt;
 
-&lt;h3 id="section-3"&gt;4月&lt;/h3&gt;
+&lt;h3&gt;4月&lt;/h3&gt;
 
 &lt;p&gt;もちろん4月といえば4q!カンファレンス（＠かもすや酒店）。今年も参加しましたー。ちょうどSakenote（#SakeLover）がリリースされた後ということで@kuranukiさんも含め盛り上がったイベント（飲み会）でした。&lt;/p&gt;
 
-&lt;p&gt;4/27は「&lt;a href="http://atnd.org/events/38500"&gt;CandyCane 開発会 2013春&lt;/a&gt;」に参加。Bddプラグインでテストを書こう！と挑んだのですが、まずモロモロ環境を作っているうちに時間切れとなってしまいました。今思えばこの時にVagrant使っていれば….。その後私が作ったものをベースにComposer対応が完了した模様です。ありがたやー。&lt;/p&gt;
+&lt;p&gt;4/27は「&lt;a href="http://atnd.org/events/38500"&gt;CandyCane 開発会 2013春&lt;/a&gt;」に参加。Bddプラグインでテストを書こう！と挑んだのですが、まずモロモロ環境を作っているうちに時間切れとなってしまいました。今思えばこの時にVagrant使っていれば&amp;hellip;.。その後私が作ったものをベースにComposer対応が完了した模様です。ありがたやー。&lt;/p&gt;
 
 &lt;p&gt;仕事はどんどん忙しくなるし、オレ大丈夫かーというような時期でした。マジで。ちょっとイベントに行ける雰囲気でなくなってきたのがちょうどこの頃かなー。&lt;/p&gt;
 
 &lt;p&gt;PHP Matsuriの基調講演に Vagrant の Hashimoto さんが決まったのも4月でした。個人的には、これがキッカケで Vagrant 熱が盛り上がってきたのですよね。&lt;/p&gt;
 
-&lt;h3 id="section-4"&gt;5月&lt;/h3&gt;
+&lt;h3&gt;5月&lt;/h3&gt;
 
 &lt;p&gt;仕事がテンパっていてそうとうやばい状況で、どこにも行けませんでした。&lt;/p&gt;
 
-&lt;p&gt;5/29にPHP Matsuriのチケット販売を開始したのですが、そのサイト更新だけは気力を振り絞って対応した記憶が….&lt;/p&gt;
+&lt;p&gt;5/29にPHP Matsuriのチケット販売を開始したのですが、そのサイト更新だけは気力を振り絞って対応した記憶が&amp;hellip;.&lt;/p&gt;
 
-&lt;h3 id="section-5"&gt;6月&lt;/h3&gt;
+&lt;h3&gt;6月&lt;/h3&gt;
 
 &lt;p&gt;というのも5/30までで。5/31から前乗りして6/1に開催された&lt;a href="http://conference.kphpug.jp/2013/"&gt;PHPカンファレンス関西&lt;/a&gt;に参加。仕事はちゃんと5/30までに何とかしました。こちらでは「&lt;a href="http://twl.sh/ZkfW0H"&gt;Newtype of Web Application Architecture&lt;/a&gt;」というタイトルでJavaScript MVCのLTをしました。今年2度目のJavaScriptMVC発表でした。仕事から解放されて大阪を満喫したのは言うまでもありません。無限もやしが正式なメニュー名になっていたのを覚えています（それかよw）。&lt;/p&gt;
 
@@ -464,29 +558,29 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;PHP MatsuriはPHPカンファレンス関西のLTでチケット販売やゲストの告知をしたり、ノベルティのデザインが決まったり、LT大会用のシステムが出来上がったり、いよいよ来月の開催に向けて最後の追い込みという感じでした。&lt;/p&gt;
 
-&lt;h3 id="section-6"&gt;7月&lt;/h3&gt;
+&lt;h3&gt;7月&lt;/h3&gt;
 
 &lt;p&gt;いよいよPHP Matsuri2013 Sapporo開催。私は夏休み併用で7/10から移動を開始（Matsuriは14,15日）。初の北海道上陸を自家用車で成し遂げようということで大洗からフェリーで行きました。で、その旅の写真は&lt;a href="https://plus.google.com/u/0/photos/107544322587204222942/albums/5902698620304749185"&gt;こちら&lt;/a&gt;。日焼けして真っ黒な顔で会場入りした私を見て「リゾートを満喫してきた人がいる」と言われました。まぁ確かにMatsuriの写真を見るとサングラス日焼け痕がクッキリとw。&lt;/p&gt;
 
 &lt;p&gt;PHP Matsuriでは司会と最初の講演「&lt;a href="http://twl.sh/10U3rtt"&gt;PHP x Agile 〜プログラマ視点から気にしたい事&lt;/a&gt;」を担当。スライドだけ見るとそれを薦めているように見える箇所もありますが、反対の意味として話した内容もあるので単語だけ一人歩きしないと良いなとおもっています。  &lt;/p&gt;
 
-&lt;p&gt;なおハッカソンでは、JavaScriptMVCとCakePHPで作るプロトタイプ開発（9月のPHPカンファレンスの発表資料を参照してください）という発表をしたのですが、ネタが被りまくりな上、TwitterBootstrapのモーダルボタンがプロジェクタの投影範囲外というトラブルに見舞われ失敗しました….&lt;/p&gt;
+&lt;p&gt;なおハッカソンでは、JavaScriptMVCとCakePHPで作るプロトタイプ開発（9月のPHPカンファレンスの発表資料を参照してください）という発表をしたのですが、ネタが被りまくりな上、TwitterBootstrapのモーダルボタンがプロジェクタの投影範囲外というトラブルに見舞われ失敗しました&amp;hellip;.&lt;/p&gt;
 
 &lt;p&gt;7/22に株式会社 Engine Yardで開催された「&lt;a href="http://atnd.org/events/41277"&gt;第70回 PHP勉強会@東京&lt;/a&gt;」に参加。  &lt;/p&gt;
 
 &lt;p&gt;また、月末の30日には元CakePHPのリードデベロッパだったNateさんが来日したのに合わせたイベント「&lt;a href="http://atnd.org/events/41843"&gt;緊急開催 Lithium Tokyo 〜Nate Abele氏来日イベント〜&lt;/a&gt;」に参加しました（@yandoさんの&lt;a href="http://www.engineyard.co.jp/blog/2013/resource-oriented-webapp/"&gt;イベントレポート&lt;/a&gt;）。@koriymさんとNateの熱いリソース指向の話はとても素晴らしかったです。&lt;/p&gt;
 
-&lt;p&gt;この頃、社内で「&lt;a href="http://www.amazon.co.jp/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%95%E3%82%A7%E3%83%BC%E3%82%B9%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%81%AE%E5%AE%9F%E8%B7%B5%E6%95%99%E5%AE%A4-%E2%80%95%E5%84%AA%E3%82%8C%E3%81%9F%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%82%92%E5%AE%9F%E7%8F%BE%E3%81%99%E3%82%8B%E3%82%A2%E3%82%A4%E3%83%87%E3%82%A2%E3%81%A8%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF-Lukas-Mathis/dp/4873116082"&gt;インターフェースデザインの実践教室&lt;/a&gt;」の読書会を立ち上げました。途中まで進んだところで社外作業になってしまい中断状況。はやく再開したい…&lt;/p&gt;
+&lt;p&gt;この頃、社内で「&lt;a href="http://www.amazon.co.jp/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%95%E3%82%A7%E3%83%BC%E3%82%B9%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%81%AE%E5%AE%9F%E8%B7%B5%E6%95%99%E5%AE%A4-%E2%80%95%E5%84%AA%E3%82%8C%E3%81%9F%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%82%92%E5%AE%9F%E7%8F%BE%E3%81%99%E3%82%8B%E3%82%A2%E3%82%A4%E3%83%87%E3%82%A2%E3%81%A8%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF-Lukas-Mathis/dp/4873116082"&gt;インターフェースデザインの実践教室&lt;/a&gt;」の読書会を立ち上げました。途中まで進んだところで社外作業になってしまい中断状況。はやく再開したい&amp;hellip;&lt;/p&gt;
 
-&lt;h3 id="section-7"&gt;8月&lt;/h3&gt;
+&lt;h3&gt;8月&lt;/h3&gt;
 
 &lt;p&gt;CakeFest2013まであともう少しという頃、CakeFestの発表者にも名前を連ねるRoland氏がオーストリアから来日してBanchaの講演をするというので「&lt;a href="http://atnd.org/events/42527"&gt;CakePHP Tokyo 〜 CakePHPとSenchaTouchによる超高速モバイル開発〜&lt;/a&gt;」に参加しました。昨年はJQueryMobileを使った仕事をしたり、今年はJavaScriptMVCを使ったりと、似たような開発をしてきた中でSenchaTouchとどういう連携をするのかとても興味があったのですが、SenchaTouchというよりもそのSDKを使ったパワフルな開発サポート機能もある点がとても面白かったです。&lt;/p&gt;
 
 &lt;p&gt;そして30日からCakeFestへ〜&lt;/p&gt;
 
-&lt;h3 id="section-8"&gt;9月&lt;/h3&gt;
+&lt;h3&gt;9月&lt;/h3&gt;
 
-&lt;p&gt;5月前後のちょうど多忙な時期にCall For Paperがあったので、結局今年はスピーカー申し込みはできず一般参加です。でも当日LT募集もあるし資料だけは仕込んで参加。今年もくもく会で仕上げたBDDプラグインのアップデート内容などを発表しよう…と思っていたらペチャクチャ枠に移動となって、挙げ句ペチャクチャ枠の申し込み者が少ないからキャンセル扱いにwww。まぁその後行われたくじ引き大会？で&lt;a href="https://twitter.com/sizuhiko/status/374349561117954048"&gt;一等の賞品をもらった&lt;/a&gt;ので、終わりよければ全てよしということで。&lt;/p&gt;
+&lt;p&gt;5月前後のちょうど多忙な時期にCall For Paperがあったので、結局今年はスピーカー申し込みはできず一般参加です。でも当日LT募集もあるし資料だけは仕込んで参加。今年もくもく会で仕上げたBDDプラグインのアップデート内容などを発表しよう&amp;hellip;と思っていたらペチャクチャ枠に移動となって、挙げ句ペチャクチャ枠の申し込み者が少ないからキャンセル扱いにwww。まぁその後行われたくじ引き大会？で&lt;a href="https://twitter.com/sizuhiko/status/374349561117954048"&gt;一等の賞品をもらった&lt;/a&gt;ので、終わりよければ全てよしということで。&lt;/p&gt;
 
 &lt;p&gt;CakeFestでの内容は&lt;a href="http://www.engineyard.co.jp/blog/2013/cakephp3-on-cakefest/"&gt;@yandoさんのレポート&lt;/a&gt;に、私と@yandoさんが現地から放送したCakeRadioGagaの動画がアップされているので、そちらをご覧いただければと思います。（そういえばかなりメモ取ったのに何もまとめ記事にしていなかった）。
 この放送の後は、残っていた他の参加者と焼肉を食べに行ったのでした。&lt;/p&gt;
@@ -495,15 +589,15 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;またこの頃からCakePHP関連のお仕事を手伝うようになったのですが、現場のControllerのテストがあまりにアレな感じでしたので「&lt;a href="http://my.opera.com/sizuhiko/blog/2013/09/13/cakephp"&gt;CakePHPのコントローラテストで注意すること&lt;/a&gt;」という記事にしてまとめました。また仕事で本格的にVagrantを使ったのもこのお手伝いが最初となりました（これまでは個人の開発環境ばかり）。&lt;/p&gt;
 
-&lt;h3 id="section-9"&gt;10月&lt;/h3&gt;
+&lt;h3&gt;10月&lt;/h3&gt;
 
-&lt;p&gt;バッグを&lt;a href="http://t.co/5BTEXGCG8u"&gt;PROTEXのアタッシュケース&lt;/a&gt;に変えました。というかしばらく使っていたトートバッグは個人的に合わず….&lt;/p&gt;
+&lt;p&gt;バッグを&lt;a href="http://t.co/5BTEXGCG8u"&gt;PROTEXのアタッシュケース&lt;/a&gt;に変えました。というかしばらく使っていたトートバッグは個人的に合わず&amp;hellip;.&lt;/p&gt;
 
-&lt;p&gt;新しいCakePHPプラグインとしてRailsではおなじみのFabricatorのクローンを作りました。&lt;a href="https://github.com/sizuhiko/Fabricate"&gt;Github&lt;/a&gt;、&lt;a href="https://twitter.com/sizuhiko/status/387821773359955968"&gt;そのときのTweet&lt;/a&gt;、&lt;a href="http://my.opera.com/sizuhiko/blog/2013/10/12/cakephp-fabricate"&gt;ブログ記事&lt;/a&gt;。Fabricatorというより作ってみたらFactoryGirlの機能も盛り込みたくて、結局二個一みたいな感じになっていますが、まぁそこは….  &lt;/p&gt;
+&lt;p&gt;新しいCakePHPプラグインとしてRailsではおなじみのFabricatorのクローンを作りました。&lt;a href="https://github.com/sizuhiko/Fabricate"&gt;Github&lt;/a&gt;、&lt;a href="https://twitter.com/sizuhiko/status/387821773359955968"&gt;そのときのTweet&lt;/a&gt;、&lt;a href="http://my.opera.com/sizuhiko/blog/2013/10/12/cakephp-fabricate"&gt;ブログ記事&lt;/a&gt;。Fabricatorというより作ってみたらFactoryGirlの機能も盛り込みたくて、結局二個一みたいな感じになっていますが、まぁそこは&amp;hellip;.  &lt;/p&gt;
 
 &lt;p&gt;現場であまりにFixture絡みでテストが失敗するので、そんなんじゃダメだーという訳で（およそ30分ぐらいでお昼食べた後すぐ）作ったのです。&lt;/p&gt;
 
-&lt;h3 id="section-10"&gt;11月&lt;/h3&gt;
+&lt;h3&gt;11月&lt;/h3&gt;
 
 &lt;p&gt;Fabricateにsequence機能などいくつかRuby側にある機能を追加しました。&lt;a href="http://my.opera.com/sizuhiko/blog/2013/11/04/cakephp-fabricate-sequence"&gt;ブログ記事&lt;/a&gt;。&lt;/p&gt;
 
@@ -511,14 +605,14 @@ HTML5カルタとは&lt;/p&gt;
 
 &lt;p&gt;その翌日11/30には「&lt;a href="http://events.html5j.org/conference/2013/11/"&gt;HTML5カンファレンス&lt;/a&gt;」にボランティアスタッフとして参加。昨年に続く参加だったのですが、より規模が大きくなり発表も多様でした。動画がアップされているので、すべてのセッションを閲覧できるようになっています。&lt;/p&gt;
 
-&lt;h3 id="section-11"&gt;12月&lt;/h3&gt;
+&lt;h3&gt;12月&lt;/h3&gt;
 
 &lt;p&gt;クリスマスにケーキを食べながらCakePHPの話をしよう、という事でCakePHPのイベントが開催される事に。運営でお手伝いしてきました。
 「&lt;a href="http://cakephp.doorkeeper.jp/events/7600"&gt;CakePHPクリスマス勉強会&lt;/a&gt;」。LTに空きがあるという事で先月のPHP勉強会と同じネタでしたが「テストデータの作り方」について再演しました。&lt;/p&gt;
 
 &lt;p&gt;お仕事では引き続きCakePHPを使った開発現場の支援をしております。&lt;/p&gt;
 
-&lt;h3 id="section-12"&gt;まとめ&lt;/h3&gt;
+&lt;h3&gt;まとめ&lt;/h3&gt;
 
 &lt;p&gt;ということで、5月危機を除いては月に一度は何かしらの発表、発信はできていたようです。  &lt;/p&gt;
 
@@ -529,111 +623,6 @@ HTML5カルタとは&lt;/p&gt;
 &lt;p&gt;そうそう、3月にはこのブログを書いている My Operaがサービス終了となるので、どこかに移動しなくちゃいけない。実はそれが最優先だったりするのですが（汗  &lt;/p&gt;
 
 &lt;p&gt;ということで何だかバタバタした終わり方ですが、来年も各所で皆様に会えるのを楽しみに。Co-EdoからPOST。&lt;/p&gt;
-
-</content>
-  </entry>
-  <entry>
-    <title>CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</title>
-    <link rel="alternate" href="http://blog.url.com/2013/11/04/cakephp-fabricate-sequence.html"/>
-    <id>http://blog.url.com/2013/11/04/cakephp-fabricate-sequence.html</id>
-    <published>2013-11-04T09:11:42Z</published>
-    <updated>2014-02-22T21:52:33+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;!-- more --&gt;
-&lt;p&gt;先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  &lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/sizuhiko/Fabricate"&gt;GitHub: sizuhiko/Fabricate&lt;/a&gt;  &lt;/p&gt;
-
-&lt;h3 id="section"&gt;変更概要&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;closure だけでなく、array 形式での属性値変更が可能に&lt;/li&gt;
-  &lt;li&gt;初期連番をconfigで指定可能に&lt;/li&gt;
-  &lt;li&gt;sequenceメソッドで柔軟な採番が可能に&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id="array"&gt;array形式での属性値変更&lt;/h3&gt;
-
-&lt;p&gt;これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。&lt;br /&gt;
-これを直接引数でarrayを指定できるようにしました。  &lt;/p&gt;
-
-&lt;p&gt;従来の記述方法：  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Fabricate::create('Post', 10, function($data){
-    return ["created" =&amp;gt; "2013-10-09 12:40:28", "updated" =&amp;gt; "2013-10-09 12:40:28"];
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;新しくサポートした記述方法：  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Fabricate::create('Post', 10, ["created" =&amp;gt; "2013-10-09 12:40:28", "updated" =&amp;gt; "2013-10-09 12:40:28"]);
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  &lt;/p&gt;
-
-&lt;p&gt;$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  &lt;/p&gt;
-
-&lt;h3 id="config"&gt;初期連番をconfigで指定&lt;/h3&gt;
-
-&lt;p&gt;これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Fabricate::config(function($config) {
-    $config-&amp;gt;sequence_start = 100;
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。&lt;br /&gt;
-config関数を使わない場合は、従来通り1から開始されます。  &lt;/p&gt;
-
-&lt;h3 id="sequence"&gt;sequenceメソッドで柔軟な採番&lt;/h3&gt;
-
-&lt;p&gt;これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。&lt;br /&gt;
-この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  &lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Fabricate::attributes_for('Post', 10, function($data, $world){
-    return [
-        'id'=&amp;gt; $world-&amp;gt;sequence('id'),
-        'title'=&amp;gt; $world-&amp;gt;sequence('title', 1, function($i){ return "Title {$i}"; })
-    ];
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。&lt;br /&gt;
-$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  &lt;/p&gt;
-
-&lt;p&gt;sequenceメソッドは、3つの利用方法に対応しています。  &lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;configで設定された開始値(または1)から開始する連番にする：   &lt;/p&gt;
-
-    &lt;p&gt;$world-&amp;gt;sequence('id')&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;開始番号を指定して連番にする：  &lt;/p&gt;
-
-    &lt;p&gt;$world-&amp;gt;sequence('id', 10) // この例では10から開始する&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;独自形式のユニーク文字列を作成する：  &lt;/p&gt;
-
-    &lt;p&gt;$world-&amp;gt;sequence('title', function($i){ return "Title {$i}"; }
-// または開始番号を指定して
-$world-&amp;gt;sequence('title', 1, function($i){ return "Title {$i}"; }&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  &lt;/p&gt;
-
-&lt;p&gt;本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。&lt;br /&gt;
-つまり呼び出し毎に開始番号から採番されます。  &lt;/p&gt;
-
-&lt;p&gt;もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。&lt;br /&gt;
-おそらく対応としては config で定義でできるようにすると思います…（併用でなく、プロセスか生成毎かを選択するイメージ）  &lt;/p&gt;
-
 </content>
   </entry>
 </feed>
