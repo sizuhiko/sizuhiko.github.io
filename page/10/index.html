@@ -275,7 +275,188 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
+            <h2 class="title"><a href="/2008/09/13/flex2-coverflow-8.html">Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/09/13.html">Saturday, September 13, 2008 02:09:10 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第八回は、画像を重ね合わせる手法を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
+
+<p>前回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して実装してみました。今回は、画像を重ね合わせていきます。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_8/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+<li>CoverFlowLayout.as</li>
+<li>RepeaterHBox.as</li>
+</ul>
+
+<p>新しいファイルCoverFlowLayoutとRepeaterBoxの2つが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■選択している画像以外の表示幅を狭くする</h3>
+
+<p>画像を重ね合わせるときに、まずはじめに考える方法は、標記のとおりだと思います。そこで、今回はoverrlapWidthをいう変数を使って、重ね合わせの幅を定義してみました。実際に適用する箇所は、</p>
+
+<ul>
+<li>measure() &ndash; 実際に描画する縦横サイズを返す処理</li>
+<li>transformImage() &ndash; 画像を斜めに描画する処理</li>
+<li>animateTransform() &ndash; アニメーション描画を開始する処理</li>
+</ul>
+
+<p>です。画像は左右の両側から重なるイメージなので、重なり幅が20とすると、実際の画像幅は倍の40必要となりますので、画像の幅として*2をしています。  </p>
+<pre class="highlight plaintext">measuredWidth = overrlapWidth*2;
+</pre>
+
+<p>このように修正してプレビューしてみるとどうなるでしょうか？
+<img src="/images/blog/images/flex2_coverflow_8/example1.jpg" /> </p>
+
+<p>残念ながら赤丸で囲ったように、選択画像より右側の並びが変になってしまいます。</p>
+
+<h3>■要素のZ順序を入れ替える</h3>
+
+<p>Window操作のプログラミングをした経験のある人なら、この状況を標記のとおり解決できる、と推測するでしょう。そしてもちろんFlexでも同様の機能を持っています。  </p>
+
+<p>そこで以下のようにmxmlのonCreationComplete()を変更してみました。</p>
+<pre class="highlight plaintext">private function onCreationComplete(event:FlexEvent):void {
+    if(event.currentTarget.repeaterIndex &gt;= (dp.length - 1)){
+        // 最初の重なりは一番右の項目が下になるよう（逆順）にする。
+        for(var i:int = 0; i &lt; (dp.length/2); i++) {
+            h_frame.swapChildren(imageReflector[i], imageReflector[dp.length-i-1]);
+        }
+        h_frame.invalidateProperties();
+        // 重なりスワップ終了
+        initScroll();
+    }
+}
+</pre>
+
+<p>このように修正してプレビューしてみるとどうなるでしょうか？<img src="/images/blog/images/flex2_coverflow_8/example2.jpg" /> </p>
+
+<p>うわぁーーーーーー、なぜか表示する順番が変になってしまいました。なぜこうなるのでしょうか？</p>
+
+<h3>■Flexはオープンソースだから、ソースを読めばいいじゃないか</h3>
+
+<p>Flexの各クラスはcoreでない限りソースが提供されています。ともかくh_frameのクラスであるHBOXの描画について調べてみましょう。  </p>
+
+<p>frameworks/source/mx/containers/HBox.asにはほとんど処理はないので、親クラスであるBoxのコードを見ます。</p>
+<pre class="highlight plaintext">override protected function updateDisplayList(unscaledWidth:Number,
+                                                  unscaledHeight:Number):void
+{
+    super.updateDisplayList(unscaledWidth, unscaledHeight);
+
+    layoutObject.updateDisplayList(unscaledWidth, unscaledHeight);
+}
+</pre>
+
+<p>描画のコードはこのようになっていて、実際の描画はどうもlayoutObjectがやっているようです。そこでmx.containers.utilityClasses.BoxLayoutのupdateDisplayListを見てみると、</p>
+<pre class="highlight plaintext">for (i = 0; i &lt; n; i++)
+{
+    obj = IUIComponent(target.getChildAt(i));
+    top = (h - obj.height) * verticalAlign + paddingTop;
+    obj.move(Math.floor(left), Math.floor(top));
+    if (obj.includeInLayout)
+        left += obj.width + gap;
+}
+</pre>
+
+<p>のように、getChildAtを使って、子要素の順番（=Z順）に表示位置の計算をしているのがわかります。swapChildrenは子要素の順番を変更することで描画の重なりを変更しようとしているので、2番目のプレビューのようになるのはやもえません。ではどのようにHBoxに定義された順番（レイアウト計算順序）とZ順（表示順序）を別々に管理し、描画したら良いのでしょうか？</p>
+
+<h3>■Repeaterを使うHBox、RepeaterHBoxを作る</h3>
+
+<p>つまりこういうことです。HBox内に要素を並べるとき、通常は要素の並びを持っている訳ではありませんが、HBox内でRepeaterを使っているなら、要素の順番はRepeater自信が保持しています。  </p>
+
+<p>そこでRepeaterHBoxを作ることにします。今回は簡単に要素の並びを取得できるように、mxml上のパラメータrepeaterArray=&ldquo;{imageReflector}&quot;でクラス変数に配列を渡すことにしました。</p>
+<pre class="highlight plaintext">&lt;local:RepeaterHBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)" mouseOut="onMouseOut(event)"  initialize="onInitialize()" repeaterArray="{imageReflector}" &gt;
+    &lt;Repeater id="rp" dataProvider="{dp}"&gt;
+        &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)" click="changeSelect(event)" /&gt;
+    &lt;/Repeater&gt;
+&lt;/local:RepeaterHBox&gt;
+</pre>
+
+<p>RepeaterHBoxの特徴は、HBoxを継承しHBoxである機能はもちろん、前節で問題となっていた、BoxLayoutを変更することです。RepeaterHBoxでは独自のレイアウト処理CoverFlowLayoutを使っています。CoverFlowLayoutはBoxLayoutの一部を変更したいだけなので、BoxLayoutのソースコードを丸ごとコピーしてきて、前記のコードを下記
+のように修正します。</p>
+<pre class="highlight plaintext">for (i = 0; i &lt; n; i++)
+{
+    obj = IUIComponent(target.repeaterArray[i]);
+    top = (h - obj.height) * verticalAlign + paddingTop;
+    obj.move(Math.floor(left), Math.floor(top));
+    if (obj.includeInLayout)
+        left += obj.width + gap;
+}
+</pre>
+
+<p>表示順を変更しても、リピーターの定義（target.repeaterArray）順に要素の表示位置（レイアウト）を計算すれば問題は解決します。</p>
+
+<h3>■mx_internal::で内部要素にアクセスする</h3>
+
+<p>RepeaterHBoxクラスでは見慣れない記述mx_internalがあると思います。</p>
+<pre class="highlight plaintext">mx_internal::layoutObject = new CoverFlowLayout();
+</pre>
+
+<p>実はこのmx_internalは、Flexの内部クラスに直接アクセスするために、重要な記述です。今回のように標準コンポーネントをカスタマイズする場合、通常のメソッドオーバーライドだけでは、どうしてもうまくカスタマイズできない場合があります。例えば、coreの中の変数だったり、以下のように内部名前空間に変数が定義されている場合です。</p>
+<pre class="highlight plaintext">/**
+ *  @private
+ */
+mx_internal var layoutObject:BoxLayout = new BoxLayout();
+</pre>
+
+<p>これはBoxクラスで、レイアウトオブジェクトを定義している例ですが、要はprivate変数として扱っているものなのです。ただこれだと独自レイアウトによる描画ができないので、上記のようにmx_internal::layoutObjectと書くことで、内部スコープの変数値を上書きできるのです。</p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは過去記事を参考にしてください。  </p>
+
+<h3>■次回予告</h3>
+
+<p>次回で最終回、最後にamazonからタイトル、著者を取り出して表示する機能を実装してみます。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる" data-url="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%98)%20%EF%BD%9E%E7%94%BB%E5%83%8F%E3%82%92%E9%87%8D%E3%81%AD%E5%90%88%E3%82%8F%E3%81%9B%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2008/08/25.html">Monday, August 25, 2008 11:08:41 AM</a></p>
   <p class="tags">
     
@@ -700,69 +881,6 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/06/28/cake-test.html">CakeにTestがやってきた</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/06/28.html">Saturday, June 28, 2008 04:06:20 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;というタイトルでLTをしてきました。  </p>
-
-<p><a href="http://events.php.gr.jp/event.php/event_show/45">第３回CakePHP勉強会</a>です。  </p>
-
-<p>第１回には参加できていたのに、前回は既に予定があり、残念ながら参加できず、久々の参加です。  </p>
-
-<p>発表イメージはほぼ完成していたのに、結局スライドが完成したのは当日昼:ko:   </p>
-
-<p>しかも当初枠の10分ギリギリの内容＆進行がおしていたこともあり、超特急でやらせてもらいました。  </p>
-
-<p>聴いている人は速過ぎるかな？と思いながら懇親会では暖かい声をかけていただき、ありがとうございました:cheers:   </p>
-
-<p>もうちょっと時間の枠があれば詳しくテストについて話せそうなので、そういう機会があればまたお邪魔したいと思います。  </p>
-
-<p>他の人の発表もたいへん興味深い内容ばかりで、参考になりました。エディターのプラグインは確かにあったら便利そう。PCのリソースを使いまくってブラウザでもエディタでもファイルを開きっぱなしというのは良くないのですかね？:p   </p>
-
-<p>あっ、SimpleTestなどについて書かれたテストのまとめ本も、もうしばらくで出ると思いますので、よろしくお願いします。:rolleyes:   </p>
-
-<p>それとCake1.2本にご協力いただけるかたがいましたら、こちらもよろしくお願いします。  </p>
-
-<div style="width:425px;text-align:left" id="__ss_489754">
-<object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephp-1214635710862350-8">
-<param name="allowFullScreen" value="true">
-<param name="allowScriptAccess" value="never">
-<embed src="http://static.slideshare.net/swf/ssplayer2.swf?doc=cakephp-1214635710862350-8" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">
-<a href="http://www.slideshare.net/?src=embed" rel="nofollow"><img src="http://static.slideshare.net/swf/logo_embd.png" style="border:0px none;margin-bottom:-5px" alt="SlideShare"></a> | <a href="http://www.slideshare.net/kishida4slideshare/caketest?src=embed" title="View CakeにTestがやってきた on SlideShare" rel="nofollow">View</a> | <a href="http://www.slideshare.net/upload?src=embed" rel="nofollow">Upload your own</a>
-</div>
-
-<p></div></p>
-
-<p>しかしいつもながらにSlideShareにUpすると、ヒラギノ文字がダメダメになりますね。何とかして欲しい・・・・</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeにTestがやってきた" data-url="http://blog.open.tokyo.jp/2008/06/28/cake-test.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/06/28/cake-test.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/06/28/cake-test.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/06/28/cake-test.html&t=Cake%E3%81%ABTest%E3%81%8C%E3%82%84%E3%81%A3%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/06/28/cake-test.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -822,6 +940,8 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a> <span>2014/03/30</span></li>
+                
                   <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
                 
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
@@ -839,8 +959,6 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
                   <li><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a> <span>2013/10/12</span></li>
                 
                   <li><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a> <span>2013/09/13</span></li>
-                
-                  <li><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a> <span>2013/02/19</span></li>
                 
               </ul>
             </div>
@@ -1144,6 +1262,10 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
                   
                   
                 
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1152,7 +1274,7 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (5)</li>
+                  <li><a href="/2014.html">2014</a> (6)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
