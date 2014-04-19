@@ -5,10 +5,268 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-03-30T09:22:00Z</updated>
+  <updated>2014-04-19T05:04:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CakePHP3 もくもく会#3 に参加して Bake してきた</title>
+    <link rel="alternate" href="http://blog.url.com/2014/04/19/cake3_mokumoku_3.html"/>
+    <id>http://blog.url.com/2014/04/19/cake3_mokumoku_3.html</id>
+    <published>2014-04-19T05:04:00Z</published>
+    <updated>2014-04-19T16:34:28+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2013/4/4(金) に &lt;a href="http://www.coworking.tokyo.jp/"&gt;コワーキングスペース茅場町 Co-Edo（コエド）&lt;/a&gt; で行われた「&lt;a href="http://coedo-cakephp.doorkeeper.jp/events/10020"&gt;CakePHP3 もくもく会 #3&lt;/a&gt;」に参加しました。&lt;/p&gt;
+
+&lt;p&gt;CakePHP3もdev preview2、せっかくの機会なので初Cake3を体験しようということです。&lt;/p&gt;
+
+&lt;h3&gt;環境構築する&lt;/h3&gt;
+
+&lt;p&gt;イベントページからリンクされていたCo-Edo謹製Vagrantを使っても良かったのですが、私はCakePHPのコアデベロッパも参加するコミュニティ &lt;a href="http://friendsofcake.com/"&gt;Friends Of Cake&lt;/a&gt; の &lt;a href="https://github.com/FriendsOfCake/vagrant-chef"&gt;Vagrant Chef&lt;/a&gt; を使いました。&lt;/p&gt;
+
+&lt;p&gt;事前に用意するものは&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://www.vagrantup.com/"&gt;Vagrant&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.virtualbox.org/"&gt;Virtual Box&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;です。概ね最新版で大丈夫でしょう。
+ダウンロード＆インストールしたら、任意のディレクトリに先程のVagrant Chefをクローン（またはダウンロード）します。後は&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;cd vagrant-chef
+vagrant up
+&lt;/pre&gt;
+
+&lt;p&gt;を実行してしばらく待ちましょう。Chefでインストールされるものは Vagrant Chef のREADMEに書いてあるので、そちらを参照してください。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;INFO: Chef Run complete in 541.542816 seconds
+INFO: Running report handlers
+INFO: Report handlers complete
+&lt;/pre&gt;
+
+&lt;p&gt;なメッセージが出て、コンソールが戻ってきたらインストールの完了です。
+動作確認として、http://192.168.13.37/ にアクセスしてみてください。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_vagrant_chef.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;デフォルト画面が出たら環境構築の完了です。&lt;/p&gt;
+
+&lt;h3&gt;CakePHP3をインストールする&lt;/h3&gt;
+
+&lt;p&gt;Vagrant ChefにはCakePHPをインストールするレシピも入っているのですが、Friends Of CakeにCakePHPの環境を作るスケルトンコマンドが別途用意されているので、レシピの編集は必要ないです。
+生成したVagrant環境にログインします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;vagrant ssh
+&lt;/pre&gt;
+
+&lt;p&gt;ログイン直後&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;vagrant@precise64:/vagrant$ ls -la
+total 20
+drwxr-xr-x  1 vagrant vagrant  306 Apr 19 05:37 .
+drwxr-xr-x 25 root    root    4096 Apr 19 05:37 ..
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:37 app
+drwxr-xr-x  1 vagrant vagrant  510 Apr 19 05:30 cookbooks
+drwxr-xr-x  1 vagrant vagrant  442 Apr 19 05:30 .git
+-rw-r--r--  1 vagrant vagrant   12 Apr 19 05:30 .gitignore
+-rw-r--r--  1 vagrant vagrant 5489 Apr 19 05:30 README.markdown
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
+-rw-r--r--  1 vagrant vagrant 1179 Apr 19 05:30 Vagrantfile
+&lt;/pre&gt;
+
+&lt;p&gt;のようになっていて、すでにappディレクトリが存在します。ここには先程のデフォルト画面が入っているのですが、今回は新しくアプリを作成するのでappディレクトリは削除します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;rm -rf app
+&lt;/pre&gt;
+
+&lt;p&gt;環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;composer -sdev create-project friendsofcake/app-template app dev-cake3
+&lt;/pre&gt;
+
+&lt;p&gt;app の部分がアプリケーション名です。Vagrant Chefを使った場合はappを指定してください。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
+&lt;/pre&gt;
+
+&lt;p&gt;最後に上記のような確認メッセージが出てくるので、履歴が気にならなければそのままEnterを押して終了します。
+インストールの確認として、http://192.168.13.37/ にアクセスしてみてください。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_installed.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;おなじみのCakePHP画面が表示されます。tmpディレクトリが書き込みできないと警告されます。これはwebサーバのデフォルトuserがvagrantでなくwww-dataであるためですが、開発環境用なの気にせず&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;sudo chmod -R 777 app/tmp
+&lt;/pre&gt;
+
+&lt;p&gt;などのコマンドで権限を書き換えてください。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_tmp_ok.png" /&gt;&lt;/p&gt;
+
+&lt;h3&gt;データベースを設定する&lt;/h3&gt;
+
+&lt;p&gt;vagrant-chefを使うとデフォルトで database&lt;em&gt;name, test&lt;/em&gt;database_name というデータベースが生成されています。
+ただ文字コードの指定などの問題もあると思うので、ここは自分でデータベースを作成します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;mysql -u root -p
+&lt;/pre&gt;
+
+&lt;p&gt;vagrant-chefのMySQL rootパスワードは、vagrant-chefのREADMEを参照ください（現時点ではbananasです）。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;mysql&amp;gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+mysql&amp;gt; CREATE DATABASE test_cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+&lt;/pre&gt;
+
+&lt;p&gt;続けておなじみのpostsテーブルを作成します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;mysql&amp;gt; use cake3_mokumoku;
+mysql&amp;gt; CREATE TABLE `posts` (
+          `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+          `title` varchar(50) DEFAULT NULL,
+          `body` text,
+          `created` datetime DEFAULT NULL,
+          `modified` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+&lt;/pre&gt;
+
+&lt;p&gt;app-templateで作成したCakePHPアプリケーションは、&lt;a href="https://github.com/josegonzalez/php-dotenv"&gt;php-dotenv&lt;/a&gt;というライブラリを使って環境設定できるようになっています。
+&lt;code&gt;app/App/Config/.env.default&lt;/code&gt; ファイルをコピーして &lt;code&gt;app/App/Config/.env&lt;/code&gt;ファイルを作成します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;// app/App/Config/.env
+export DATABASE_URL="mysql://my_app:secret@localhost/my_app?encoding=utf8"
+export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_myapp?encoding=utf8"
+&lt;/pre&gt;
+
+&lt;p&gt;の部分を&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;// mysql://ユーザ名:パスワード@URL/データベース名
+export CAKEDATABASE_URL="mysql://root:bananas@localhost/cake3_mokumoku?encoding=utf8"
+export CAKEDATABASE_TEST_URL="mysql://root:bananas@localhost/test_cake3_mokumoku?encoding=utf8"
+&lt;/pre&gt;
+
+&lt;p&gt;のように書き換えます。データベースの詳しい設定方法は &lt;a href="https://github.com/AD7six/php-dsn"&gt;AD7six/php-dsn&lt;/a&gt;を参照ください。
+exportの名前を変更しているのは、nginxのfastcgiパラメータとしてvagrantインストール時に&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;fastcgi_param DATABASE_URL          "mysql://root:&amp;lt;%= node[:mysql][:server_root_password] %&amp;gt;@localhost/database_name?encoding=utf8";
+fastcgi_param DATABASE_TEST_URL     "mysql://root:&amp;lt;%= node[:mysql][:server_root_password] %&amp;gt;@localhost/test_database_name?encoding=utf8";
+&lt;/pre&gt;
+
+&lt;p&gt;のような指定がされているため、設定値が重複してしまいfastcgi側が優先される仕組みとなっています。
+このため異なる名前に変更しておきます。
+合わせて、app.phpでDATABASE&lt;em&gt;URLを利用している箇所もCAKEDATABASE&lt;/em&gt;URLに変更します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;// app/Config/app.php#L211-
+/**
+ * Connection information used by the ORM to connect
+ * to your application's datastores.
+ */
+    'Datasources' =&amp;gt; [
+        'default' =&amp;gt; DbDsn::parse(env('CAKEDATABASE_URL')),
+
+        /**
+         * The test connection is used during the test suite.
+         */
+        'test' =&amp;gt; DbDsn::parse(env('CAKEDATABASE_TEST_URL'))
+    ],
+&lt;/pre&gt;
+
+&lt;h3&gt;Cakeシェルを利用する&lt;/h3&gt;
+
+&lt;p&gt;コンソールから&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;cd app/App
+Console/cake -h
+&lt;/pre&gt;
+
+&lt;p&gt;とヘルプを表示してみたいのですが、もし&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
+&lt;/pre&gt;
+
+&lt;p&gt;というエラーが表示されたら、app/App/Console/cake を編集して&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
+&lt;/pre&gt;
+
+&lt;p&gt;の行を&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;exec php -q "$CONSOLE"/cake.php "$@"
+&lt;/pre&gt;
+
+&lt;p&gt;のように変更してください。現時点では -working オプションがあるとうまく動作しないためです。
+うまく動作した場合は&lt;/p&gt;
+&lt;pre class="highlight shell"&gt;&lt;span class="gp"&gt;$ &lt;/span&gt;Console/cake -h
+
+Welcome to CakePHP v3.0.0-dev2 Console
+---------------------------------------------------------------
+App : App
+Path: /vagrant/app/App/
+---------------------------------------------------------------
+Current Paths:
+
+&lt;span class="k"&gt;*&lt;/span&gt; app: App
+&lt;span class="k"&gt;*&lt;/span&gt; root: /vagrant/app
+&lt;span class="k"&gt;*&lt;/span&gt; core: /vagrant/app/vendor/cakephp/cakephp
+
+Available Shells:
+
+&lt;span class="o"&gt;[&lt;/span&gt;CORE] bake, i18n, server, &lt;span class="nb"&gt;test&lt;/span&gt;
+
+&lt;span class="o"&gt;[&lt;/span&gt;app] console
+
+To run an app or core &lt;span class="nb"&gt;command&lt;/span&gt;, &lt;span class="nb"&gt;type &lt;/span&gt;cake shell_name &lt;span class="o"&gt;[&lt;/span&gt;args]
+To run a plugin &lt;span class="nb"&gt;command&lt;/span&gt;, &lt;span class="nb"&gt;type &lt;/span&gt;cake Plugin.shell_name &lt;span class="o"&gt;[&lt;/span&gt;args]
+To get &lt;span class="nb"&gt;help &lt;/span&gt;on a specific &lt;span class="nb"&gt;command&lt;/span&gt;, &lt;span class="nb"&gt;type &lt;/span&gt;cake shell_name --help
+&lt;/pre&gt;
+
+&lt;p&gt;のように表示されるはずです。&lt;/p&gt;
+
+&lt;h3&gt;Bakeする&lt;/h3&gt;
+
+&lt;p&gt;では早速Bakeしましょう&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;$ Console/cake bake model Posts
+
+Welcome to CakePHP v3.0.0-dev2 Console
+---------------------------------------------------------------
+App : App
+Path: /vagrant/app/App/
+---------------------------------------------------------------
+One moment while associations are detected.
+
+Baking table class for Posts...
+
+Creating file /vagrant/app/App/Model/Table/PostsTable.php
+Wrote `/vagrant/app/App/Model/Table/PostsTable.php`
+
+Baking entity class for Post...
+
+Creating file /vagrant/app/App/Model/Entity/Post.php
+Wrote `/vagrant/app/App/Model/Entity/Post.php`
+
+Baking test fixture for Posts...
+
+Creating file /vagrant/app/Test/Fixture/PostFixture.php
+Wrote `/vagrant/app/Test/Fixture/PostFixture.php`
+
+Baking test case for App\Model\Table\PostsTable ...
+
+Creating file /vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php
+Wrote `/vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php`
+&lt;/pre&gt;
+
+&lt;p&gt;うまく動きます！！&lt;/p&gt;
+
+&lt;p&gt;続けてコントローラとビューも&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;$ Console/cake bake controller Posts
+$ Console/cake bake view Posts
+&lt;/pre&gt;
+
+&lt;p&gt;で生成します。&lt;/p&gt;
+
+&lt;p&gt;一通りbakeしたら、http://192.168.13.37/posts/ にアクセスしてみます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_baked_posts.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;おなじみのBake画面が表示されます。追加、変更、削除などもうまく動作するようです（執筆時においては）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_baked_saved.png" /&gt;&lt;/p&gt;
+
+&lt;h3&gt;最後に&lt;/h3&gt;
+
+&lt;p&gt;このブログはもくもく会から2週間ぐらい経過してしまいましたが、今回再度新しい環境を作って試しています。
+もくもく会のときも同様の手順で進めていたのですが、いくらかbake周辺でコードの変更があったようで、うまく動いていた箇所が動かなくなっていたり、動かなかった箇所が動いていたりします。
+開発者用のプレビュー2ということで、今後もコードは変わって行くと思いますが、Bakeが動く事で取り急ぎ動作するプログラムのベースは作れるようになっています。
+実際にアプリケーションを作ってみてCakePHP3の新機能について感想を書いてみたり、要望を出してみたりすることも実リリースまでの期間としては大切なことだと思うので、今回簡単ではありますがブログとして公開してみました。&lt;/p&gt;
+
+&lt;p&gt;Co-Edo では今後も CakePHP3もくもく会が開かれると思うので、イベントページをチェックしておくと良いと思います。私も可能な範囲で参加していこうと思っています。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Composerのautoloadを使いこなす</title>
     <link rel="alternate" href="http://blog.url.com/2014/03/30/composer-autoload.html"/>
@@ -532,22 +790,6 @@ end
 &lt;h3&gt;今後&lt;/h3&gt;
 
 &lt;p&gt;ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Hello Middleman!</title>
-    <link rel="alternate" href="http://blog.url.com/2014/02/22/hello-world.html"/>
-    <id>http://blog.url.com/2014/02/22/hello-world.html</id>
-    <published>2014-02-22T11:13:26Z</published>
-    <updated>2014-03-08T18:06:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;!-- more --&gt;
-
-&lt;p&gt;my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら &lt;a href="https://github.com/sizuhiko/sizuhiko.github.io/issues"&gt;github の issue ページ&lt;/a&gt; にてお知らせいただければ幸いです。&lt;/p&gt;
-
-&lt;p&gt;このブログは &lt;a href="http://middlemanapp.com/"&gt;Middleman&lt;/a&gt; にて構築しています。Middlemanの導入に関する記事もアップしたいと思っていますので、興味ある方はしばらくお待ちください。&lt;/p&gt;
 </content>
   </entry>
 </feed>
