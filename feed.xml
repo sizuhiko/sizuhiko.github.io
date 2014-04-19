@@ -5,10 +5,84 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-04-19T05:04:00Z</updated>
+  <updated>2014-04-19T07:38:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</title>
+    <link rel="alternate" href="http://blog.url.com/2014/04/19/twfm_2014_04.html"/>
+    <id>http://blog.url.com/2014/04/19/twfm_2014_04.html</id>
+    <published>2014-04-19T07:38:00Z</published>
+    <updated>2014-04-19T17:31:21+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;html5jテスト部の活動「&lt;a href="http://html5j-testing.doorkeeper.jp/events/10161"&gt;Test the Web Forward Meetup (仮), Tokyo#2&lt;/a&gt;」に参加してきました。&lt;/p&gt;
+
+&lt;p&gt;当日は1回目の反省をふまえて以下の仕様について実施することとなっていました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;HTMLのルビ（のパーサ周り）&lt;/li&gt;
+&lt;li&gt;CSS Text Decoration&lt;/li&gt;
+&lt;li&gt;Shadow DOM&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;私は Shadow DOM を選択しました。理由はGoogle JapanのHayatoさんがSpecを書いているので、テストがマージされやすいんじゃないか？！という不純な動機と、仕様が難しいので参加者が少ないかな？という妄想からでした（ただ実際は一番人気でした！）。&lt;/p&gt;
+
+&lt;p&gt;そもそもこの活動は何なのか？というと、&lt;code&gt;みんなでHTML5やCSS、API仕様のテストケースを書こうというミートアップです&lt;/code&gt;と書いてある通りです。
+私たちWebに関わるデベロッパーであれば必ず利用するHTMLやCSS、ブラウザによって実装がマチマチでとか、IEがぁーとか言ってますよね。&lt;/p&gt;
+
+&lt;p&gt;なぜそうなるのか？&lt;/p&gt;
+
+&lt;p&gt;まずHTMLとかCSSはW3Cの仕様があってそれを各ブラウザベンダが実装するわけです（もちろん先に実装されているケースもあります）。ですが結果としてどのように見えるのか？という部分に関して言うと、特に&lt;code&gt;こうなるべき&lt;/code&gt;という具体的な結果が書いてある訳ではありません。そうなると各ベンダは自分の実装は正しいと思ってリリースするのですが、それぞれバラバラだったという結果が起きるのです。
+そのため、W3Cではテストの充実に力を入れているのですが、現時点ではリソース不足であったり、そもそもスペックの理解不足という自体が起こります。W3Cのスペックを読んだことがあると何となく想像できるかな、と思います。
+そこでTest the Web Forwardという公式イベントや、今回のようなコミュニティ主導のミートアップでテストコードを充実させようという機会が増えてきています。&lt;/p&gt;
+
+&lt;h3&gt;テストの準備をする&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="http://testthewebforward.org/docs/github-101.html"&gt;Test the Web Forwardのドキュメント&lt;/a&gt;を見れば、今時のWebデベロッパーであれば問題なく環境を構築することができます。
+pythonのバージョンが2.7系だったり、&lt;code&gt;pip install html5lib&lt;/code&gt; が必要なのに漏れていた（これについては今回のミートアップでPRが出されてマージされたはずです）り、ちょっと面倒なのですがまぁ問題ないでしょう。GitHub便利。そのうちVagrantファイルでも作ろうかなーと思っています。
+ここまでは事前の準備としてやっておきました。&lt;/p&gt;
+
+&lt;h3&gt;当日やったこと&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="http://w3c.github.io/webcomponents/spec/shadow/"&gt;W3Cのスペック&lt;/a&gt;を見ましょう。
+当日はHayato Itoさんから仕様の説明を受けて進めるという流れだったのですが、それにしても仕様がむずい。
+新しいテストケースはちょっと置いておき、既存のテストを流してみることにしました。すると１つエラーがあって、typoであることがわかったので&lt;a href="https://github.com/w3c/web-platform-tests/pull/861"&gt;Pull Request&lt;/a&gt;。これはすぐ取り込まれました。嬉しい！W3Cへの貢献ですよ！！&lt;/p&gt;
+
+&lt;p&gt;続けて Fail しているテストについて、スペシャリストの方に確認して修正方針を聞いたりして、テストを黙々と書いていきます。
+1日作業でしたが、2つのテスト失敗を修正してタイムアップ。&lt;/p&gt;
+
+&lt;h3&gt;テストのやり方&lt;/h3&gt;
+
+&lt;p&gt;テストには&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;refテスト
+期待値:新しい仕様で書いたものと同じになるように既存の仕様で書いたもの、実際:新しい仕様で書いたもの、をスクリーンショットで比較する&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;domテスト
+testharness.js という xUnit ベースのテスティングフレームワークが使える&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;2通りのやり方があって、Shadow DOMはtestharness.jsでDOMのテストをする段階でした。
+testharness.jsはxUnit系なんですが、equals(:actual, :expected) の記法になっていて、キモい！という話をしたら、開発者がmozilla系の方でfire方面ではそういう記述になっているという話を（FireFoxのcontributorの方から）伺うことができました。
+これもミートアップでこその体験です。&lt;/p&gt;
+
+&lt;p&gt;モダンなテストの書き方という意味では、サーバサイドスクリプトとか今時のJavaScriptのテスティングフレームワークの方がイケてる感じにできますが、これも歴史的な背景（DOMの細かい評価をするのにtestharness.jsが最適であるという理由）ということです。今後についてはわからないけど、各ブラウザベンダなどがテストするときに利用しているということで変更（例えばJasmineに変えるとか）には高い壁があるのかもしれないです。&lt;/p&gt;
+
+&lt;h3&gt;最後に&lt;/h3&gt;
+
+&lt;p&gt;W3Cの活動に貢献する作業は今後も続けて行きたいので、ミートアップなくてもテストコードを書き続けて行きたいとおもいました。
+ただmetaデータの書き方とかちょっと特殊なところもあったので、新しくやる場合は既存のテストコードをいくつか参照して、書き方のテンプレート部分を把握した方が良いと思いました。&lt;/p&gt;
+
+&lt;p&gt;それと今回はW3Cのテストスペシャリストとして Gérard Talbot 氏が初来日ということで基調講演を聴く事ができました。&lt;a href="http://test.csswg.org/suites/css2.1/nightly-unstable/html4/vertical-align-117a.htm"&gt;2年間かかって作ったという最高傑作テストケース&lt;/a&gt;を見てスペックのテストとは！を感じれたのも良かった。早速 Ahem フォントもインストールしました。&lt;/p&gt;
+
+&lt;p&gt;ミートアップ終了後は懇親会もあったのですが、体調不良のため最後までは持たずに帰宅いたしました&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;会場を提供いただいた Adobe さん（ノベルティまでいただき感謝！）、スポンサー各社様の協力でとても楽しいイベント（部活）でした。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CakePHP3 もくもく会#3 に参加して Bake してきた</title>
     <link rel="alternate" href="http://blog.url.com/2014/04/19/cake3_mokumoku_3.html"/>
@@ -668,128 +742,6 @@ windows上だと c:¥develop¥your_app¥app みたいなところ&lt;/li&gt;
 &lt;p&gt;上記のような &lt;code&gt;Failed to execute git checkout ...&lt;/code&gt; エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。&lt;/p&gt;
 
 &lt;p&gt;まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&amp;hellip;&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Middleman インストールメモ</title>
-    <link rel="alternate" href="http://blog.url.com/2014/03/08/middleman-install-memo.html"/>
-    <id>http://blog.url.com/2014/03/08/middleman-install-memo.html</id>
-    <published>2014-03-08T02:13:26Z</published>
-    <updated>2014-03-08T18:10:09+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;!-- more --&gt;
-
-&lt;p&gt;ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。&lt;/p&gt;
-
-&lt;h3&gt;参考になったサイト&lt;/h3&gt;
-
-&lt;p&gt;以下のサイトを参照しながら、作業を実施しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="http://middlemanapp.com/jp/"&gt;Middleman公式&lt;/a&gt; &lt;/li&gt;
-&lt;li&gt;&lt;a href="http://risin.jp/blog/2013/10/16/middleman/"&gt;middlemanの設定&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/"&gt;GitHub Pagesで独自ドメインを使う方法&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8"&gt;rbenv を使って ruby をインストールする(CentOS編)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;HTMLジェネレータは何を使うの？&lt;/h3&gt;
-
-&lt;p&gt;ブログを移行するにあたり、利用可能なフォーマットは WordPress&lt;code&gt;互換&lt;/code&gt;フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。&lt;/p&gt;
-
-&lt;p&gt;最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;で、&lt;code&gt;GitHub Pages ブログ&lt;/code&gt; なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン &lt;a href="https://github.com/salmansqadeer/wordpress-to-middleman"&gt;Wordpress to Middleman Exporter&lt;/a&gt; があるということ。&lt;/p&gt;
-
-&lt;h3&gt;Middleman インストール&lt;/h3&gt;
-
-&lt;p&gt;しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して &lt;code&gt;bundle install&lt;/code&gt;を実行したところ、うんともすんともならずインストールできない&amp;hellip;.
-もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;gem install middleman
-&lt;/pre&gt;
-
-&lt;p&gt;でインストールも楽々完了です。&lt;/p&gt;
-
-&lt;p&gt;ブログモジュールを使うので、middleman の Gemfile に&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;gem "middleman-blog", "~&amp;gt; 3.5.1"
-&lt;/pre&gt;
-
-&lt;p&gt;を追加して&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;bundle install
-middleman init blog --template=blog
-&lt;/pre&gt;
-
-&lt;p&gt;と実行すると blog ディレクトリに環境が生成されます。&lt;/p&gt;
-
-&lt;h3&gt;WorkPress からのインポート&lt;/h3&gt;
-
-&lt;p&gt;my.opera から WordPress &lt;code&gt;互換&lt;/code&gt; フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
-いよいよ先程の変換ツールで実行&amp;hellip;. エラーだよ！！（泣）&lt;/p&gt;
-
-&lt;p&gt;rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
-イロイロ調べたところ、&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;wp2middleman&lt;/li&gt;
-&lt;li&gt;wordpress-to-jekyll&lt;/li&gt;
-&lt;li&gt;ruby-wpdb&lt;/li&gt;
-&lt;li&gt;wp_conversion&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
-どれもうまくいかない&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;python系のライブラリもあるらしく&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;wp2md&lt;/li&gt;
-&lt;li&gt;prlican-import&lt;/li&gt;
-&lt;li&gt;exitwp&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;順番に試して行くと、&lt;code&gt;exitwp&lt;/code&gt; がいくつか失敗するものの良い感じに変換できることがわかった。
-しかしいくつか失敗する&amp;hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress &lt;code&gt;互換&lt;/code&gt; フォーマットなんですよ。「互換」&amp;hellip;..
-もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と&lt;/p&gt;
-
-&lt;h3&gt;WordPress インストール&lt;/h3&gt;
-
-&lt;p&gt;ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
-これを先程一番うまく変換できた exitwp にかけると&amp;hellip;&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;あらー全部奇麗に変換できるじゃないですかー&lt;/p&gt;
-
-&lt;h3&gt;デザイン&lt;/h3&gt;
-
-&lt;p&gt;ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;middleman server
-&lt;/pre&gt;
-
-&lt;p&gt;で見た目を確認しながら調整して CNAME ファイルも設置。&lt;/p&gt;
-
-&lt;p&gt;GitHub Pages へデプロイするために Gemfile に&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;gem "middleman-deploy"
-&lt;/pre&gt;
-
-&lt;p&gt;モジュールを追加して bundle install。&lt;/p&gt;
-
-&lt;p&gt;config.rg に&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;activate :deploy do |deploy|
-  deploy.build_before = true # default: false
-  deploy.method = :git
-  deploy.branch   = "master" # default: gh-pages
-end
-&lt;/pre&gt;
-
-&lt;p&gt;な感じで設定したら &lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;middleman deproy
-&lt;/pre&gt;
-
-&lt;p&gt;でビルドした内容をgithubへ連携してくれます。&lt;/p&gt;
-
-&lt;h3&gt;今後&lt;/h3&gt;
-
-&lt;p&gt;ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。&lt;/p&gt;
 </content>
   </entry>
 </feed>
