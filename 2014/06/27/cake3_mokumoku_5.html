@@ -1,0 +1,978 @@
+<!doctype html>
+<html>
+  <head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          
+            <h2>CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</h2>
+            <p class="postdate"><a title="Permanent link" href="/2014/06/27.html">Friday, June 27, 2014 02:19:00 PM</a></p>
+            <p class="tags">
+              
+                <a rel="tag" href="/tags/php.html">PHP</a>
+              
+                <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+              
+                <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+              
+            </p>
+          
+
+          <p>2013/6/16(月) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/12132">CakePHP3 もくもく会 #5</a>」に参加しました。</p>
+
+<p>前回のイベントではBakeすることに成功したので、今回は大きく変更となったモデル周辺についてテストコードから把握してみる目標をたてました。</p>
+
+<h3>環境構築する（前回との差分）</h3>
+
+<p>3回目に参加した記事では</p>
+
+<blockquote>
+<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
+<pre class="highlight plaintext">composer -sdev create-project friendsofcake/app-template app dev-cake3
+</pre>
+</blockquote>
+
+<p>のように記述したのですが、その後devが上がったところでこちらのスケルトンは最新追従していなかったので、CakePHPの公式スケルトンを使っています。</p>
+<pre class="highlight plaintext">composer create-project -s dev cakephp/app dev-cake3
+</pre>
+
+<h3>CakePHP3におけるモデル</h3>
+
+<p>CakePHP3では従来モデル（Model）と呼んでいたクラスはなくなり、テーブル（Table）とエンティティ（Entity）という2つのクラスに別れます。従来のモデルがテーブルに変更になりfindなどの責務を持っています。find結果は従来arrayで返却されてきたのですが、CakePHP3からはエンティティと呼ばれるオブジェクトで返却されます。
+CakePHP1から2にかけてbasukeさんが作られた<a href="https://github.com/josegonzalez/cakephp-entity">CakeEntity</a>というプラグインがあります。このプラグインはCakePHP3の新しいモデルのベースになったものでもあり、利用したことがあればそれほど違和感なく移行できるのではないかと思います。</p>
+
+<h3>Bakeされた結果を見てみる</h3>
+
+<p>前回bakeコマンドで生成したモデル層のファイルを見てみると</p>
+
+<p>App/Model/Table/PostsTable.php</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Model\Table</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Cake\ORM\Table</span><span class="p">;</span>
+<span class="k">use</span> <span class="nx">Cake\Validation\Validator</span><span class="p">;</span>
+
+<span class="sd">/**
+ * Posts Model
+ */</span>
+<span class="k">class</span> <span class="nc">PostsTable</span> <span class="k">extends</span> <span class="nx">Table</span> <span class="p">{</span>
+
+<span class="sd">/**
+ * Initialize method
+ *
+ * @param array $config The configuration for the Table.
+ * @return void
+ */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">initialize</span><span class="p">(</span><span class="k">array</span> <span class="nv">$config</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">table</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">displayField</span><span class="p">(</span><span class="s1">'title'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">primaryKey</span><span class="p">([</span><span class="s1">'id'</span><span class="p">]);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addBehavior</span><span class="p">(</span><span class="s1">'Timestamp'</span><span class="p">);</span>
+
+    <span class="p">}</span>
+
+<span class="sd">/**
+ * Default validation rules.
+ *
+ * @param \Cake\Validation\Validator $validator
+ * @return \Cake\Validation\Validator
+ */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">validationDefault</span><span class="p">(</span><span class="nx">Validator</span> <span class="nv">$validator</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$validator</span>
+            <span class="o">-&gt;</span><span class="na">add</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'valid'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'rule'</span> <span class="o">=&gt;</span> <span class="s1">'numeric'</span><span class="p">])</span>
+            <span class="o">-&gt;</span><span class="na">allowEmpty</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'create'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">allowEmpty</span><span class="p">(</span><span class="s1">'title'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">allowEmpty</span><span class="p">(</span><span class="s1">'body'</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nv">$validator</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre>
+
+<p>App/Model/Entity/Post.php</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+<span class="k">namespace</span> <span class="nx">App\Model\Entity</span><span class="p">;</span>
+
+<span class="k">use</span> <span class="nx">Cake\ORM\Entity</span><span class="p">;</span>
+
+<span class="sd">/**
+ * Post Entity.
+ */</span>
+<span class="k">class</span> <span class="nc">Post</span> <span class="k">extends</span> <span class="nx">Entity</span> <span class="p">{</span>
+
+<span class="sd">/**
+ * Fields that can be mass assigned using newEntity() or patchEntity().
+ *
+ * @var array
+ */</span>
+    <span class="k">protected</span> <span class="nv">$_accessible</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">];</span>
+
+<span class="p">}</span>
+</pre>
+
+<p>のようになっています。</p>
+
+<p>PostsTable::initialize()は従来publicプロパティとして定義していたテーブル名などの情報です。
+validationDefault()は$validatesで定義していたバリデーション定義です。</p>
+
+<p>Postクラスはエンティティで$<em>accesibleに利用可能なフィールド名を列挙します。これはRailsでattr</em>accessorを定義するとプロパティにアクセス可能になるのと同様の効果を持つようになると推測されますが、現時点では何も実装はされていないようです。</p>
+
+<h3>コアのテストコード見てみる</h3>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">testRewind</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">table</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">all</span><span class="p">();</span>
+        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+</pre>
+
+<p>とてもザックリしたところを切り抜きましたが、まぁそういうことです。
+これを2系のコードで似せて書くと</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">testRewind</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">Model</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
+        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+</pre>
+
+<p>えっ！行数3の方が増えてないか？！とかいうツッコミはいらないですよ！！
+なんか聞いている程変わってないですよね。</p>
+
+<p>ではもう少し複雑な例を</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">testFindAllNoFieldsAndNoHydration</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$table</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Table</span><span class="p">([</span>
+            <span class="s1">'table'</span> <span class="o">=&gt;</span> <span class="s1">'users'</span><span class="p">,</span>
+            <span class="s1">'connection'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">connection</span><span class="p">,</span>
+        <span class="p">]);</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span>
+            <span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">where</span><span class="p">([</span><span class="s1">'id IN'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+            <span class="o">-&gt;</span><span class="na">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">toArray</span><span class="p">();</span>
+        <span class="nv">$expected</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'mariano'</span><span class="p">,</span>
+                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
+                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:16:23'</span><span class="p">),</span>
+                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:18:31'</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="p">[</span>
+                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'nate'</span><span class="p">,</span>
+                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
+                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:18:23'</span><span class="p">),</span>
+                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:20:31'</span><span class="p">),</span>
+            <span class="p">],</span>
+        <span class="p">];</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nv">$expected</span><span class="p">,</span> <span class="nv">$results</span><span class="p">);</span>
+    <span class="p">}</span>
+
+</pre>
+
+<p>どうもテーブルには findやwhere,orderなどのメソッドがあり、それをチェインさせてクエリを組み立てるようです。これも他のActiveRecord系の記述とほぼ変わらない形式になります。
+hydrate(false)を指定するとエンティティでなく従来の配列形式で値を戻すことができるようになっています。
+メソッドチェインの最後のtoArray()はエンティティを配列形式で取得するという意味ではありません。CakePHP3からはfindの戻りがイテレータになります（配列ではないので注意が必要）。なのでイテレータからすべて配列形式で取得するという意味になります。</p>
+
+<p>ではいくつかそれ以外の例を見てみましょう。</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">])</span>
+            <span class="o">-&gt;</span><span class="na">where</span><span class="p">([</span><span class="s1">'created &gt;='</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Carbon</span><span class="p">(</span><span class="s1">'2010-01-22 00:00'</span><span class="p">)])</span>
+            <span class="o">-&gt;</span><span class="na">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+</pre>
+
+<p>たとえば取得するカラムを絞り込むためにはselect()を利用するようです。従来はfieldsで指定していたカラム名の配列です。</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'list'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'fields'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">]])</span>
+            <span class="o">-&gt;</span><span class="na">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+</pre>
+
+<p>とはいえ、従来っぽい書き方もできるようです。</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'threaded'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="na">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'parent_id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">])</span>
+</pre>
+
+<p>！！！！
+findがチェインの中で2回呼ばれています。</p>
+
+<h3>これがCakePHP3のモデルだ！</h3>
+
+<p>findが2回とはどういうことなのか、ソースを調べてみました。
+まずTable::find()とは何者なのか</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">find</span><span class="p">(</span><span class="nv">$type</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">query</span><span class="p">();</span>
+        <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">select</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+    <span class="p">}</span>
+</pre>
+
+<p>どうもクエリオブジェクトを取得して、それにselect()をかけて….. callFinder って何ですか？を返すみたいです。</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="nx">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="k">array</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
+        <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">applyOptions</span><span class="p">(</span><span class="nv">$options</span><span class="p">);</span>
+        <span class="nv">$options</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">getOptions</span><span class="p">();</span>
+        <span class="nv">$finder</span> <span class="o">=</span> <span class="s1">'find'</span> <span class="o">.</span> <span class="nb">ucfirst</span><span class="p">(</span><span class="nv">$type</span><span class="p">);</span>          <span class="c1">// ココ
+</span>        <span class="k">if</span> <span class="p">(</span><span class="nb">method_exists</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span> <span class="nv">$finder</span><span class="p">))</span> <span class="p">{</span>    <span class="c1">// とココに注目
+</span>            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="p">{</span><span class="nv">$finder</span><span class="p">}(</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_behaviors</span> <span class="o">&amp;&amp;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_behaviors</span><span class="o">-&gt;</span><span class="na">hasFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">_behaviors</span><span class="o">-&gt;</span><span class="na">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="p">[</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">throw</span> <span class="k">new</span> <span class="nx">\BadMethodCallException</span><span class="p">(</span>
+            <span class="nb">sprintf</span><span class="p">(</span><span class="s1">'Unknown finder method "%s"'</span><span class="p">,</span> <span class="nv">$type</span><span class="p">)</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+</pre>
+
+<p>find(&lsquo;all&rsquo;) と呼ぶと<code>findAll</code>メソッドがあるかどうか（ビヘイビアも含めて）調べて、なければ例外になる。
+ということはTableにfindAllとかあるの？</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">findAll</span><span class="p">(</span><span class="nx">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="k">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="p">;</span>
+    <span class="p">}</span>
+</pre>
+
+<p>あるよ！</p>
+
+<p>そういうことか、これがCakePHP3のモデルか。</p>
+
+<ul>
+<li>条件やら何やらメソッドチェインである</li>
+<li>旧来の配列形式に変換できる</li>
+<li>findXxxで独自の条件などをメソッドチェインに組み込める（今ココ）</li>
+</ul>
+
+<h3>独自の条件をメソッドチェインに組み込む</h3>
+
+<p>まずPostsテーブルにfindOrderIdDescというIDの降順で検索するメソッドを作成します。</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">findOrderIdDesc</span><span class="p">(</span><span class="nx">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="k">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="na">order</span><span class="p">([</span><span class="s1">'id'</span><span class="o">=&gt;</span><span class="s1">'desc'</span><span class="p">]);</span>
+    <span class="p">}</span>
+</pre>
+
+<p>でそれを使うときは</p>
+<pre class="highlight php"><span class="cp">&lt;?php</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">Posts</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="nv">$config</span><span class="p">);</span> 
+    <span class="nv">$posts</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">Posts</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">find</span><span class="p">(</span><span class="s1">'orderIdDesc'</span><span class="p">)</span><span class="o">-&gt;</span><span class="na">all</span><span class="p">();</span>
+</pre>
+
+<p>みたいに書けるわけです。
+もちろんいくつチェインしても良いです。
+例えば様々なテーブルで利用できるファインダ（findXxxメソッド）をtraitで共通化するもの面白そうです。</p>
+
+<p>このように新しいモデルはかなり期待の持てる作りにもなっています。
+CakePHP3もAlphaになりました。
+Alphaを使ってみての感想などはまた書きたいと思います</p>
+
+
+          
+            
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた" data-url="http://blog.open.tokyo.jp/2014/06/27/cake3_mokumoku_5.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/06/27/cake3_mokumoku_5.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/06/27/cake3_mokumoku_5.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/06/27/cake3_mokumoku_5.html&t=CakePHP3%20%E3%82%82%E3%81%8F%E3%82%82%E3%81%8F%E4%BC%9A%235%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Model%20%E3%81%AE%E6%96%B0%E6%A9%9F%E8%83%BD%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/06/27/cake3_mokumoku_5.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
+                
+                  <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
+                
+                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
+                
+                  <li><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a> <span>2014/03/30</span></li>
+                
+                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
+                
+                  <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
+                
+                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
+                
+                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/flex.html">Flex</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/1-2.html">1.2</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size5">
+                      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/rc1.html">RC1</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/fixture.html">fixture</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size3">
+                      <a rel="tag" href="/tags/php.html">PHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/bdd.html">BDD</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/behat.html">Behat</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/spec.html">Spec</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/test.html">Test</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2014.html">2014</a> (9)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

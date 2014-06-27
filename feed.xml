@@ -5,10 +5,296 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-04-19T07:38:00Z</updated>
+  <updated>2014-06-27T05:19:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</title>
+    <link rel="alternate" href="http://blog.url.com/2014/06/27/cake3_mokumoku_5.html"/>
+    <id>http://blog.url.com/2014/06/27/cake3_mokumoku_5.html</id>
+    <published>2014-06-27T05:19:00Z</published>
+    <updated>2014-06-27T15:34:20+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2013/6/16(月) に &lt;a href="http://www.coworking.tokyo.jp/"&gt;コワーキングスペース茅場町 Co-Edo（コエド）&lt;/a&gt; で行われた「&lt;a href="http://coedo-cakephp.doorkeeper.jp/events/12132"&gt;CakePHP3 もくもく会 #5&lt;/a&gt;」に参加しました。&lt;/p&gt;
+
+&lt;p&gt;前回のイベントではBakeすることに成功したので、今回は大きく変更となったモデル周辺についてテストコードから把握してみる目標をたてました。&lt;/p&gt;
+
+&lt;h3&gt;環境構築する（前回との差分）&lt;/h3&gt;
+
+&lt;p&gt;3回目に参加した記事では&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;composer -sdev create-project friendsofcake/app-template app dev-cake3
+&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;のように記述したのですが、その後devが上がったところでこちらのスケルトンは最新追従していなかったので、CakePHPの公式スケルトンを使っています。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;composer create-project -s dev cakephp/app dev-cake3
+&lt;/pre&gt;
+
+&lt;h3&gt;CakePHP3におけるモデル&lt;/h3&gt;
+
+&lt;p&gt;CakePHP3では従来モデル（Model）と呼んでいたクラスはなくなり、テーブル（Table）とエンティティ（Entity）という2つのクラスに別れます。従来のモデルがテーブルに変更になりfindなどの責務を持っています。find結果は従来arrayで返却されてきたのですが、CakePHP3からはエンティティと呼ばれるオブジェクトで返却されます。
+CakePHP1から2にかけてbasukeさんが作られた&lt;a href="https://github.com/josegonzalez/cakephp-entity"&gt;CakeEntity&lt;/a&gt;というプラグインがあります。このプラグインはCakePHP3の新しいモデルのベースになったものでもあり、利用したことがあればそれほど違和感なく移行できるのではないかと思います。&lt;/p&gt;
+
+&lt;h3&gt;Bakeされた結果を見てみる&lt;/h3&gt;
+
+&lt;p&gt;前回bakeコマンドで生成したモデル層のファイルを見てみると&lt;/p&gt;
+
+&lt;p&gt;App/Model/Table/PostsTable.php&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="nx"&gt;App\Model\Table&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;Cake\ORM\Table&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;Cake\Validation\Validator&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="sd"&gt;/**
+ * Posts Model
+ */&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;PostsTable&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;Table&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+&lt;span class="sd"&gt;/**
+ * Initialize method
+ *
+ * @param array $config The configuration for the Table.
+ * @return void
+ */&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;initialize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$config&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'posts'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;displayField&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'title'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;primaryKey&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addBehavior&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Timestamp'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="sd"&gt;/**
+ * Default validation rules.
+ *
+ * @param \Cake\Validation\Validator $validator
+ * @return \Cake\Validation\Validator
+ */&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;validationDefault&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Validator&lt;/span&gt; &lt;span class="nv"&gt;$validator&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$validator&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'valid'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'rule'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'numeric'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;allowEmpty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'create'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;allowEmpty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'title'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;allowEmpty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'body'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$validator&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;App/Model/Entity/Post.php&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="nx"&gt;App\Model\Entity&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;Cake\ORM\Entity&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="sd"&gt;/**
+ * Post Entity.
+ */&lt;/span&gt;
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Post&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;Entity&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+&lt;span class="sd"&gt;/**
+ * Fields that can be mass assigned using newEntity() or patchEntity().
+ *
+ * @var array
+ */&lt;/span&gt;
+    &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="nv"&gt;$_accessible&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+        &lt;span class="s1"&gt;'title'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;'body'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;];&lt;/span&gt;
+
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;のようになっています。&lt;/p&gt;
+
+&lt;p&gt;PostsTable::initialize()は従来publicプロパティとして定義していたテーブル名などの情報です。
+validationDefault()は$validatesで定義していたバリデーション定義です。&lt;/p&gt;
+
+&lt;p&gt;Postクラスはエンティティで$&lt;em&gt;accesibleに利用可能なフィールド名を列挙します。これはRailsでattr&lt;/em&gt;accessorを定義するとプロパティにアクセス可能になるのと同様の効果を持つようになると推測されますが、現時点では何も実装はされていないようです。&lt;/p&gt;
+
+&lt;h3&gt;コアのテストコード見てみる&lt;/h3&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;testRewind&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;all&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$first&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$second&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[];&lt;/span&gt;
+        &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$first&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$second&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;とてもザックリしたところを切り抜きましたが、まぁそういうことです。
+これを2系のコードで似せて書くと&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;testRewind&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;Model&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$first&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$second&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[];&lt;/span&gt;
+        &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$first&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$second&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$result&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;えっ！行数3の方が増えてないか？！とかいうツッコミはいらないですよ！！
+なんか聞いている程変わってないですよね。&lt;/p&gt;
+
+&lt;p&gt;ではもう少し複雑な例を&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;testFindAllNoFieldsAndNoHydration&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Table&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
+            &lt;span class="s1"&gt;'table'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'users'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="s1"&gt;'connection'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;connection&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="p"&gt;]);&lt;/span&gt;
+        &lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;where&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'id IN'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]])&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;order&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hydrate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;toArray&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$expected&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+            &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="s1"&gt;'id'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'username'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'mariano'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'password'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'created'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Carbon&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'2007-03-17 01:16:23'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+                &lt;span class="s1"&gt;'updated'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Carbon&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'2007-03-17 01:18:31'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+            &lt;span class="p"&gt;[&lt;/span&gt;
+                &lt;span class="s1"&gt;'id'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'username'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'nate'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'password'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="s1"&gt;'created'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Carbon&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'2008-03-17 01:18:23'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+                &lt;span class="s1"&gt;'updated'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Carbon&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'2008-03-17 01:20:31'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+            &lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="p"&gt;];&lt;/span&gt;
+        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;assertEquals&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$expected&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$results&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;どうもテーブルには findやwhere,orderなどのメソッドがあり、それをチェインさせてクエリを組み立てるようです。これも他のActiveRecord系の記述とほぼ変わらない形式になります。
+hydrate(false)を指定するとエンティティでなく従来の配列形式で値を戻すことができるようになっています。
+メソッドチェインの最後のtoArray()はエンティティを配列形式で取得するという意味ではありません。CakePHP3からはfindの戻りがイテレータになります（配列ではないので注意が必要）。なのでイテレータからすべて配列形式で取得するという意味になります。&lt;/p&gt;
+
+&lt;p&gt;ではいくつかそれ以外の例を見てみましょう。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;select&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;where&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'created &amp;gt;='&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Carbon&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'2010-01-22 00:00'&lt;/span&gt;&lt;span class="p"&gt;)])&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hydrate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;order&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;たとえば取得するカラムを絞り込むためにはselect()を利用するようです。従来はfieldsで指定していたカラム名の配列です。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'list'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'fields'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;]])&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hydrate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;order&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;とはいえ、従来っぽい書き方もできるようです。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+        &lt;span class="nv"&gt;$results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'threaded'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;select&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'parent_id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'name'&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;！！！！
+findがチェインの中で2回呼ばれています。&lt;/p&gt;
+
+&lt;h3&gt;これがCakePHP3のモデルだ！&lt;/h3&gt;
+
+&lt;p&gt;findが2回とはどういうことなのか、ソースを調べてみました。
+まずTable::find()とは何者なのか&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[])&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;query&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;select&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;callFinder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;どうもクエリオブジェクトを取得して、それにselect()をかけて….. callFinder って何ですか？を返すみたいです。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;callFinder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;Query&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[])&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;applyOptions&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$options&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;getOptions&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$finder&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'find'&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="nb"&gt;ucfirst&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;          &lt;span class="c1"&gt;// ココ
+&lt;/span&gt;        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;method_exists&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$finder&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;    &lt;span class="c1"&gt;// とココに注目
+&lt;/span&gt;            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;$finder&lt;/span&gt;&lt;span class="p"&gt;}(&lt;/span&gt;&lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;_behaviors&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;_behaviors&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hasFinder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;_behaviors&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;callFinder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+
+        &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;\BadMethodCallException&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+            &lt;span class="nb"&gt;sprintf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Unknown finder method "%s"'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$type&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;find(&amp;lsquo;all&amp;rsquo;) と呼ぶと&lt;code&gt;findAll&lt;/code&gt;メソッドがあるかどうか（ビヘイビアも含めて）調べて、なければ例外になる。
+ということはTableにfindAllとかあるの？&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;findAll&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Query&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;あるよ！&lt;/p&gt;
+
+&lt;p&gt;そういうことか、これがCakePHP3のモデルか。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;条件やら何やらメソッドチェインである&lt;/li&gt;
+&lt;li&gt;旧来の配列形式に変換できる&lt;/li&gt;
+&lt;li&gt;findXxxで独自の条件などをメソッドチェインに組み込める（今ココ）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;独自の条件をメソッドチェインに組み込む&lt;/h3&gt;
+
+&lt;p&gt;まずPostsテーブルにfindOrderIdDescというIDの降順で検索するメソッドを作成します。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;findOrderIdDesc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Query&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$query&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;order&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="o"&gt;=&amp;gt;&lt;/span&gt;&lt;span class="s1"&gt;'desc'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;でそれを使うときは&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+    &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;Posts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;TableRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Posts'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$config&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; 
+    &lt;span class="nv"&gt;$posts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;Posts&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'all'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'orderIdDesc'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;all&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;みたいに書けるわけです。
+もちろんいくつチェインしても良いです。
+例えば様々なテーブルで利用できるファインダ（findXxxメソッド）をtraitで共通化するもの面白そうです。&lt;/p&gt;
+
+&lt;p&gt;このように新しいモデルはかなり期待の持てる作りにもなっています。
+CakePHP3もAlphaになりました。
+Alphaを使ってみての感想などはまた書きたいと思います&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</title>
     <link rel="alternate" href="http://blog.url.com/2014/04/19/twfm_2014_04.html"/>
@@ -609,139 +895,6 @@ $request-&amp;gt;addParams(array(
 &lt;/ul&gt;
 
 &lt;p&gt;あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&amp;hellip;    &lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>VagrantでComposerからPHPUnitをインストールするときに注意したいこと</title>
-    <link rel="alternate" href="http://blog.url.com/2014/03/08/composer-phpunit-windows-vagrant.html"/>
-    <id>http://blog.url.com/2014/03/08/composer-phpunit-windows-vagrant.html</id>
-    <published>2014-03-08T07:12:00Z</published>
-    <updated>2014-03-08T18:10:40+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;!-- more --&gt;
-
-&lt;p&gt;現在以下のような環境を設置して開発をしています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;ホストOS: Windows7 &lt;/li&gt;
-&lt;li&gt;仮想環境: Vagrant + VirtualBox&lt;/li&gt;
-&lt;li&gt;ゲストOS: CentOS 6.4&lt;/li&gt;
-&lt;li&gt;開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  &amp;hellip;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;事件その1: Bddプラグインがインストールできなくなった&lt;/h3&gt;
-
-&lt;p&gt;ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど&amp;hellip;」
-という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。&lt;/p&gt;
-
-&lt;p&gt;それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
-で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
-現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;"pear-phpunit/Object_Freezer": "*"
-&lt;/pre&gt;
-
-&lt;p&gt;のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。&lt;/p&gt;
-
-&lt;h3&gt;事件その2: PHPUnitがインストールできない!&lt;/h3&gt;
-
-&lt;p&gt;で、Vagrant環境で更新してみたら&amp;hellip;.&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;composer update sizuhiko/Bdd
-&lt;/pre&gt;
-
-&lt;p&gt;失敗&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
-ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。&lt;/p&gt;
-
-&lt;p&gt;でcomposer.jsonにはPHPUnitの記述が&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;"phpunit/phpunit": "3.7.*"
-&lt;/pre&gt;
-
-&lt;p&gt;のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 &lt;code&gt;composer install&lt;/code&gt; を実行すると&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;.....
-  - Installing phpunit/php-token-stream (dev-master 292f4d5)
-    Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
-
-  - Installing phpunit/php-file-iterator (dev-master acd6903)
-    Cloning acd690379117b042d1c8af1fafd61bde001bf6bb
-
-  - Installing phpunit/php-code-coverage (1.2.x-dev 3a60a66)
-    Cloning 3a60a660998e8d41d5ea81ff8d96ead546bce150
-
-[RuntimeException]
-Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;amp;
-&amp;amp; git reset -- hard '3a60a660998e8d41d5ea81ff8d96ead546bce150'
-
-error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
-would be overwritten by merge.
-&lt;/pre&gt;
-
-&lt;p&gt;のようにエラーになります。&lt;/p&gt;
-
-&lt;h3&gt;事件その3: Issueが光の速さで取り消される&lt;/h3&gt;
-
-&lt;p&gt;ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/sebastianbergmann/phpunit/issues/1144"&gt;Can&amp;rsquo;t install 3.7.x to Linux environment by composer&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。&lt;/p&gt;
-
-&lt;h3&gt;原因を調べてみた&lt;/h3&gt;
-
-&lt;p&gt;まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。&lt;/p&gt;
-
-&lt;p&gt;ここで composer がどのようにライブラリを取得するか考えてみたところ、&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;packagist からリポジトリ情報をダウンロード&lt;/li&gt;
-&lt;li&gt;phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;git clone git@github.com:sebastianbergmann/phpunit.git&lt;/code&gt; が実行される&lt;/li&gt;
-&lt;li&gt;リリースを指定しているので一致するタグがチェックアウトされる &lt;code&gt;git checkout ....&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;この最後のステップで「Untracked working tree file」になり失敗するのです。&lt;/p&gt;
-
-&lt;p&gt;PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。&lt;/p&gt;
-
-&lt;p&gt;自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功&amp;hellip;. えぇぇー！&lt;/p&gt;
-
-&lt;p&gt;その環境は Vagrant上のCentOSでなく、素のWindowsでした。
-何かがおかしい&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。&lt;/p&gt;
-
-&lt;p&gt;composer update （この日は何度実行したろう&amp;hellip;.）  &amp;hellip;&amp;hellip; 成功した！！！！でも、なんで？！&lt;/p&gt;
-
-&lt;h3&gt;違いに悩むと&amp;hellip;&lt;/h3&gt;
-
-&lt;p&gt;成功したところ：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;素のWindows&lt;/li&gt;
-&lt;li&gt;Vagrant仮想環境内の /tmp/work/app&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;失敗したところ：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Vagrantのsync&lt;em&gt;folderである /var/www/html/your&lt;/em&gt;app/app (CentOSから見えるディレクトリ)
-windows上だと c:¥develop¥your_app¥app みたいなところ&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！&lt;/p&gt;
-
-&lt;p&gt;という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
-その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。&lt;/p&gt;
-
-&lt;p&gt;上記のような &lt;code&gt;Failed to execute git checkout ...&lt;/code&gt; エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。&lt;/p&gt;
-
-&lt;p&gt;まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&amp;hellip;&lt;/p&gt;
 </content>
   </entry>
 </feed>

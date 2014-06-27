@@ -275,7 +275,126 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
+            <h2 class="title"><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2013/11/04.html">Monday, November 04, 2013 06:11:42 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/fabricate.html">fabricate</a>
+    
+      <a rel="tag" href="/tags/fixture.html">fixture</a>
+    
+      <a rel="tag" href="/tags/test.html">Test</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  </p>
+
+<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
+
+<h3>変更概要</h3>
+
+<ul>
+<li>closure だけでなく、array 形式での属性値変更が可能に</li>
+<li>初期連番をconfigで指定可能に</li>
+<li>sequenceメソッドで柔軟な採番が可能に</li>
+</ul>
+
+<h3>array形式での属性値変更</h3>
+
+<p>これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。<br>
+これを直接引数でarrayを指定できるようにしました。  </p>
+
+<p>従来の記述方法：  </p>
+<pre class="highlight plaintext">Fabricate::create('Post', 10, function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+</pre>
+
+<p>新しくサポートした記述方法：  </p>
+<pre class="highlight plaintext">Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
+});
+</pre>
+
+<p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
+
+<p>$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  </p>
+
+<h3>初期連番をconfigで指定</h3>
+
+<p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
+<pre class="highlight plaintext">Fabricate::config(function($config) {
+    $config-&gt;sequence_start = 100;
+});
+</pre>
+
+<p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
+config関数を使わない場合は、従来通り1から開始されます。  </p>
+
+<h3>sequenceメソッドで柔軟な採番</h3>
+
+<p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
+この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
+<pre class="highlight plaintext">Fabricate::attributes_for('Post', 10, function($data, $world){
+    return [
+        'id'=&gt; $world-&gt;sequence('id'),
+        'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
+    ];
+});
+</pre>
+
+<p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
+$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
+
+<p>sequenceメソッドは、3つの利用方法に対応しています。  </p>
+
+<ul>
+<li><p>configで設定された開始値(または1)から開始する連番にする：   </p>
+
+<p>$world-&gt;sequence(&lsquo;id&rsquo;)</p></li>
+<li><p>開始番号を指定して連番にする：  </p>
+
+<p>$world-&gt;sequence(&lsquo;id&rsquo;, 10) // この例では10から開始する</p></li>
+<li><p>独自形式のユニーク文字列を作成する：  </p>
+
+<p>$world-&gt;sequence(&lsquo;title&rsquo;, function($i){ return &ldquo;Title {$i}&rdquo;; }
+// または開始番号を指定して
+$world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$i}&rdquo;; }</p></li>
+</ul>
+
+<p>一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  </p>
+
+<p>本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。<br>
+つまり呼び出し毎に開始番号から採番されます。  </p>
+
+<p>もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。<br>
+おそらく対応としては config で定義でできるようにすると思います&hellip;（併用でなく、プロセスか生成毎かを選択するイメージ）  </p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました" data-url="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BFFabricate%E3%81%ABsequence%E3%81%AA%E3%81%A9%E3%81%AE%E6%A9%9F%E8%83%BD%E3%82%92%E8%BF%BD%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2013/10/12.html">Saturday, October 12, 2013 08:10:45 PM</a></p>
   <p class="tags">
     
@@ -802,162 +921,6 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
     </div>
 
   </div>
-  <h2 class="title"><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2012/11/08.html">Thursday, November 08, 2012 11:11:53 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/2012_matsuri_02.jpg" /><br>
-On this year, PHP Matsuri had convened of 3rd time around.<br>
-The participant who first timer and the repeater are split 50:50.<br>
-It become common composition of the participant in the event of 100 person scale.   </p>
-
-<p>As a motive of participation are followings:<br>
-1. Repeater brings the friend of the first participation.<br>
-2. Participant in the vicinity who saw last year&rsquo;s article<br>
-3. Enthusiastic fan  </p>
-
-<p>I think that PHP Matsuri has become a annual event at late autumn.  </p>
-
-<p>As the PHP Matsuri staff, this maybe first post. So I stop it only in an easy summary.<br>
-To be continues and the details are posted by DANCHO.   </p>
-
-<blockquote>
-<p>PHP Matsuriも3回目の開催となりました。<br>
-参加者は、始めての人が半分ぐらい、リピーターが半分ぐらいで、100人規模のイベントでは良くある人数構成になってきました。<br>
-参加の動機としては、<br>
-1. リピーターの人が初参加の友人を連れてくる<br>
-2. 去年の記事を見た、近隣の参加者<br>
-3. 熱狂的ファン<br>
-があると思っています。  </p>
-</blockquote>
-
-<p>そういう意味でPHP Matsuriは晩秋の恒例行事となってきたのではないかと思います。  </p>
-
-<p>PHP Matsuri 青年団の最初をきって書くので、簡単なまとめだけに留めたいと思います。詳しくは団長が&hellip;..  </p>
-
-<h3>Thanks:</h3>
-
-<p><img src="/images/blog/2012_matsuri_03.jpg" /><br>
-It had been offered by many sponsors from the enterprise to the individual.<br>
-As a result, a very gorgeous prize was able to be prepared. And, it became a very happy event.<br>
-I&rsquo;m really thankful.  </p>
-
-<blockquote>
-<p>感謝：<br>
-今年は、企業から個人まで多くのスポンサー様にご提供いただき、大変豪華な賞品を用意でき、とても楽しいイベントになりました。本当に感謝しております。  </p>
-</blockquote>
-
-<h3>This year&rsquo;s challenge:</h3>
-
-<p>The 1st time and the 2nd times were the same hotel groups.<br>
-It is easy to have done arrangements and the preparation about the hall.<br>
-However, this year of the third times was a hall of &ldquo;Fukuoka Prefecture Ruby and contents industry promotion center&rdquo; that a public organization manages .<br>
-(The hotel prepared it until last year. )Because the task had increased, the staff became busy.<br>
-However, the registration fee became low price, and the prize of LT became gorgeous.   </p>
-
-<blockquote>
-<p>今年のチャレンジ：<br>
-1回目、2回目とも同じ系列のホテルだったこともあり、会場に関する手配や準備はとてもやりやすかったです。3回目の今年は「福岡県Ruby・コンテンツ産業振興センター」という公的な機関が運営する会場でした。ホテルの人が担当してくれていた雑務をスタッフ主導でやることは大変でしたが、その分参加費が安くなったりLTの賞品が豪華になったことで参加者へ還元できたのではないかと思っています。  </p>
-</blockquote>
-
-<h3>This is good:</h3>
-
-<p><img src="/images/blog/2012_matsuri_04.jpg" /><br>
-It is some the improved points that it is a few problem until last year<br>
-1. The wifi doesn&rsquo;t disconnect. We think that we solved the problem of the network because we have controlled the connection with 3 access point.<br>
-2. Just good temperature.<br>
-There were some comments that it was cold, too. However, I think the improvement to have been done since last year (Because the hall is too wide and air-conditioning was not effective).<br>
-3. Neither the conference nor the workshop get entangled. it became a concentrating workshop by using another conference room.   </p>
-
-<blockquote>
-<p>特に良かった事：<br>
-昨年までちょっと課題だと思っていた部分で、いくつか改善された点ですが<br>
-1. 無線が切れない。うまく分散することで、ネットワークの問題はなかったと思います<br>
-2. ちょうど良い温度。若干寒いというご意見もありましたが、昨年は会場が広すぎて空調が効かなかったりしたので、改善はされていたと思います<br>
-3. 講演とワークショップが混線しない。会議室が別だったこともあり、ワークショップを集中して開催できたと思います  </p>
-</blockquote>
-
-<h3>Important things :</h3>
-
-<p><img src="/images/blog/2012_matsuri_05.jpg" /><br>
-These are important thing in the event. I think that I was able to do this this year.<br>
-1. We are nice smile<br>
-2. It doesn&rsquo;t become loneliness. If first timer that there was not a friend either, then I think that they were able to exchange it at the ice break and break-time.<br>
-3. Meal is delicious.<br>
-4. Wanna become repeater. I think this to be feelings that each one was able to take home.   </p>
-
-<blockquote>
-<p>イベントで大事な事：<br>
-私がイベント大事だと思っていることで、今年も実践できていたと思います<br>
-1. みんな笑顔<br>
-2. ボッチを作らない。もちろん始めての参加で友人もいなかったという人もいると思いますが、アイスブレークや食事時間に交流できたと思います<br>
-3. 食事が美味しい<br>
-4. また参加したくなる。これは参加者皆さんが持ち帰っていただけた気持ちと期待しています  </p>
-</blockquote>
-
-<h3>At last, My presentation:</h3>
-
-<p><img src="/images/blog/2012_matsuri_01.jpg" /><br>
-In this year, I had plan to make demonstrate application look like the micro framework with using followings component:  </p>
-
-<ul>
-<li>Respect<br>
-<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
-<li>Rails Router DSL for PHP<br>
-<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
-</ul>
-
-<p>The demonstration was not complete.<br>
-When the sample application program became runnable a little more well, I want to announce in Blog or the PHP study meet up.   </p>
-
-<blockquote>
-<p>最後に私事：<br>
-今年は以下のどちらかを使って、マイクロフレームワーク的なコードが書けるところをデモする予定でした。  </p>
-</blockquote>
-
-<ul>
-<li>Respect。まだ dev-beta （一部α）なのですが、コンセプトおもしろい<br>
-<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
-<li>Rails Router DSL for PHP。Rails3のroutesをかなり再現できていておもしろい<br>
-<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
-</ul>
-
-<p>で、結局 Respectのバグっぽい箇所をふんでしまって、朝方6時ぐらいに Rails Routerに切り替えたけど、こっちはこっちでうまく動作しなくて、8時ぐらいに元鞘に。うまく動いている箇所だけで発表しました。<br>
-これらは、もうちょっとうまく動くサンプルアプリが作れたら、BlogやPHP勉強会などで発表したいと思います。  </p>
-
-<p>See you PHP Matsuri 2013 (maybe HOKKAIDO) !!  </p>
-
-<blockquote>
-<p>また来年のPHP Matsuri（たぶん北海道）で会いましょう  </p>
-</blockquote>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka" data-url="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html&t=PHP%20Matsuri2012%E3%82%92%E7%B5%82%E3%81%88%E3%81%A6%20%E3%80%9C%20Retrospective%20of%20PHP%20Matsuri%202012%20in%20Fukuoka" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1017,6 +980,8 @@ When the sample application program became runnable a little more well, I want t
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
+                
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
                 
                   <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
@@ -1034,8 +999,6 @@ When the sample application program became runnable a little more well, I want t
                   <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
                 
                   <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
-                
-                  <li><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a> <span>2013/11/04</span></li>
                 
               </ul>
             </div>
@@ -1345,6 +1308,10 @@ When the sample application program became runnable a little more well, I want t
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+                    </li>
+                  
                   
                 
                   
@@ -1363,7 +1330,7 @@ When the sample application program became runnable a little more well, I want t
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (8)</li>
+                  <li><a href="/2014.html">2014</a> (9)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
