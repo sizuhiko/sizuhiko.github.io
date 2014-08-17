@@ -5,10 +5,289 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-06-27T05:19:00Z</updated>
+  <updated>2014-08-17T07:00:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</title>
+    <link rel="alternate" href="http://blog.url.com/2014/08/17/cakephp2_plugin_travis.html"/>
+    <id>http://blog.url.com/2014/08/17/cakephp2_plugin_travis.html</id>
+    <published>2014-08-17T07:00:00Z</published>
+    <updated>2014-08-17T17:54:13+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;春先ぐらいからBlogの更新が滞っていましたが、その要因となったアレが大分落ち着いてきたので、たまっていたネタを順番に書き出します。&lt;/p&gt;
+
+&lt;p&gt;CakePHP2のプラグインを作成／公開していて、継続的インテグレーションってどうするの？と思っていました。
+もちろんユニットテスト書いてあるし、素晴らしい協力者の方がPull Requestを送ってくれれば、developブランチに取り込んでテストしたりします。&lt;/p&gt;
+
+&lt;p&gt;Githubを徘徊していると、よく見る&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_1.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;これを表示したいと思ったのです。&lt;/p&gt;
+
+&lt;p&gt;ただCakePHP2のプラグインは当然それだけではユニットテストを実行できません。CakePHPのアプリケーションがあって、テスト用データベースとその設定があって…、ぬーん。
+早い話、テスト用のアプリケーション作って、そこからテスト実行すれば良いの？ということをずっと思っていました。&lt;/p&gt;
+
+&lt;h3&gt;CakePHPの有名プラグインはどうしているのだろう？&lt;/h3&gt;
+
+&lt;p&gt;と思い、最初にチェックしたのはCakeDC/searchプラグイン。
+大抵のアプリケーションで使う、もっともメジャーなプラグインではないかと思います。
+Searchプラグインにも、あのビルド成功やダウンロード数、バージョン番号の画像が表示されています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_2.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;.travis.yml&lt;/code&gt; ファイルがあるので、内容を確認してみます。
+すると、&lt;/p&gt;
+&lt;pre class="highlight yaml"&gt;&lt;span class="s"&gt;before_script&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;git clone https://github.com/burzum/travis.git --depth 1 ../travis&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;../travis/before_script.sh&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;if [ "$PHPCS" != 1 ]; then&lt;/span&gt;
+            &lt;span class="s"&gt;echo "&lt;/span&gt;
+                &lt;span class="s"&gt;require_once APP . DS . 'vendor' . DS . 'phpunit' . DS . 'phpunit' . DS . 'PHPUnit' . DS . 'Autoload.php';&lt;/span&gt;
+            &lt;span class="s"&gt;" &amp;gt;&amp;gt; ../cakephp/app/Config/bootstrap.php;&lt;/span&gt;
+    &lt;span class="s"&gt;fi&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;git clone https://github.com/burzum/travis.git&lt;/code&gt;をcloneしてきて、何かやっているようです。&lt;/p&gt;
+
+&lt;h3&gt;CakePHPプラグインを簡単にTravis.ciで継続的インテグレーションできる&lt;/h3&gt;
+
+&lt;p&gt;早速、ページにアクセスしてみると、どうもそれはあの&lt;code&gt;FriendsOfCake&lt;/code&gt;からForkされたもののようです。
+&lt;code&gt;FriendsOfCake&lt;/code&gt;の&lt;a href="https://github.com/FriendsOfCake/travis"&gt;元リポジトリ&lt;/a&gt;を確認します。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Easy travis setup for CakePHP plugins
+This repository helps easy travis integration for CakePHP plugins, primarily focused on FriendsOfCake projects, but can be used within any plugin when satisfying the requirements.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;おぉ、正に私の求めていたもの。&lt;/p&gt;
+
+&lt;h4&gt;Fabricateに導入してみた&lt;/h4&gt;
+
+&lt;p&gt;最近作った中で、最も思い入れのあるCakePHPプラグイン&lt;code&gt;Fabricate&lt;/code&gt;を継続的インテグレーションするため、上記の&lt;code&gt;FriendsOfCake/travis&lt;/code&gt;を導入してみます。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Quick Install&lt;/code&gt;に書いてるとおり、以下の手順で進めます。&lt;/p&gt;
+&lt;pre class="highlight shell"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; ~/develop/fabricate
+
+git clone https://github.com/FriendsOfCake/travis.git
+
+&lt;span class="nb"&gt;export &lt;/span&gt;&lt;span class="nv"&gt;PLUGIN_NAME&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;"Fabricate"&lt;/span&gt;
+
+travis/setup.sh
+
+rm -rf travis
+&lt;/pre&gt;
+
+&lt;p&gt;私がやったときはこの手順ではなかったのですが、最近変わったみたいです…
+まぁ細かい事は気にせずですね。&lt;/p&gt;
+
+&lt;p&gt;実行すると、以下のファイルが自動生成されます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;.travis.yml : Travis.ciで継続的インテグレーションを実行するための設定ファイル&lt;/li&gt;
+&lt;li&gt;Test/Case/AllFabricateTest.php : プラグインのユニットテストをすべて実行するテストスイート。すでにこの命名規則で生成されていれば作られません。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以前のバージョンでは&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;.editorconfig&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;.semver&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;.travis.yml&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;.AllPluginNameTest.php&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;composer.json&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CONTRIBUTING.markdown&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LICENSE.txt&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;README.markdown&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;が生成されていましたが、継続的インテグレーションには必要がないファイルも混在していたので、整理されたものと思います。&lt;/p&gt;
+
+&lt;p&gt;後はTravis.ciにサインアップして、リポジトリを追加するだけです。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_3.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;実は、これが最初のビルド。&lt;code&gt;PLUGIN_NAME&lt;/code&gt;をexportしていなかったので、正しくテストの実行が動いていませんでした。{PLUGIN&lt;em&gt;NAME&lt;code&gt;はちゃんとexportするようにした方が良いです。
+.travis.ymlの&lt;/code&gt;PLUGIN&lt;/em&gt;NAME&lt;code&gt;を&lt;/code&gt;Fabricate`に設定して実行した結果が以下の画面です。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_4.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;現在のtravis.gitではPHP5.4以上のようなので、問題ないのですが、当時（と言っても数ヶ月前）はPHP5.3もテスト対象になっていたので、ショートArrayシンタックスを使っている私のコードはテストが失敗していました。.travis,ymlのPHP部分を以下のように変更して&lt;/p&gt;
+&lt;pre class="highlight yaml"&gt;&lt;span class="s"&gt;php&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;5.4&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;5.5&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;pushすると、ビルド結果は以下のようになります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_5.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;PHPCS以外は成功しています。&lt;/p&gt;
+
+&lt;p&gt;PHPCSではCakePHPのコード標準がチェックされます。
+CakePHPの標準コードチェックだと厳しい部分だったり、パラメータを変更してチェックさせたくないディレクトリがあったりすると思うので、&lt;code&gt;PHPCS_ARGS&lt;/code&gt;でphpcsを実行するときのパラメータを上書きできるようになっています。&lt;/p&gt;
+&lt;pre class="highlight yaml"&gt;&lt;span class="s"&gt;matrix&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="s"&gt;include&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;php&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;5.4&lt;/span&gt;
+      &lt;span class="s"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+        &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;COVERALLS=1&lt;/span&gt;
+    &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;php&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;5.4&lt;/span&gt;
+      &lt;span class="s"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+        &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;PHPCS=1&lt;/span&gt;
+        &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;PHPCS_ARGS="-p -s --extensions=php --standard=ruleset.xml --ignore='*/Test/*,*/Vendor/*' ."&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;拡張子phpのファイルを対象とし、TestやVendorのディレクトリを対象外として実行します。
+ruleset.xmlは以下のようにしました。&lt;/p&gt;
+&lt;pre class="highlight xml"&gt;&lt;span class="nt"&gt;&amp;lt;ruleset&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"Custom Standard"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;rule&lt;/span&gt; &lt;span class="na"&gt;ref=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidVariableName.PrivateNoUnderscore"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidFunctionName.PrivateNoUnderscore"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidVariableName.ProtectedNoUnderscore"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidFunctionName.ProtectedNoUnderscore"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidFunctionName.ScopeNotCamelCaps"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.NamingConventions.ValidVariableName.MemberVarNotCamelCaps"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;exclude&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"CakePHP.WhiteSpace.TabAndSpace"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/rule&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/ruleset&amp;gt;&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;CakePHPのコード標準ではprivateやprotectedの変数、関数の先頭にアンダースコアが求められるので、それを無効にしたのと、キャメルケースではない変数や関数名を使いたい箇所があったので、それを無効にしています。
+最後の&lt;code&gt;CakePHP.WhiteSpace.TabAndSpace&lt;/code&gt;では、以下のように&lt;code&gt;=&lt;/code&gt;のインデント位置を合わせたコードがエラーになってしまうので、無効にしています（わかりづらいですが、=の位置が揃っています）。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;public function __construct($name) {
+    $this-&amp;gt;name  = $name;
+    $this-&amp;gt;items = [];
+}
+&lt;/pre&gt;
+
+&lt;h3&gt;どうなっているのか？&lt;/h3&gt;
+
+&lt;p&gt;プラグインのリポジトリには&lt;code&gt;.travis.yml&lt;/code&gt;が追加されるぐらいです。
+この設定内で、FriendsOfCakeのtravisリポジトリがcloneされ、以下に記述されている手順が実行されます。&lt;/p&gt;
+&lt;pre class="highlight yaml"&gt;&lt;span class="s"&gt;before_script&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;git clone -b master https://github.com/FriendsOfCake/travis.git --depth 1 ../travis&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;../travis/before_script.sh&lt;/span&gt;
+
+&lt;span class="s"&gt;script&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;../travis/script.sh&lt;/span&gt;
+
+&lt;span class="s"&gt;after_success&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;../travis/after_success.sh&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;実行されるパターンは.travis.ymlに記述されている&lt;code&gt;php&lt;/code&gt;と&lt;code&gt;env-matrix&lt;/code&gt;の組み合わせと、&lt;code&gt;matrix&lt;/code&gt;のパターンになります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PHP5.4, DB=mysql CAKE_VERSION=2.4&lt;/li&gt;
+&lt;li&gt;PHP5,4, DB=mysql CAKE_VERSION=2.5&lt;/li&gt;
+&lt;li&gt;PHP5.5, DB=mysql CAKE_VERSION=2.4&lt;/li&gt;
+&lt;li&gt;PHP5,5, DB=mysql CAKE_VERSION=2.5&lt;/li&gt;
+&lt;li&gt;PHP5.4, COVERALLS=1&lt;/li&gt;
+&lt;li&gt;PHP5.4, PHPCS=1&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;この6パターン毎に、&lt;code&gt;before_script&lt;/code&gt;、&lt;code&gt;script&lt;/code&gt;、&lt;code&gt;after_success&lt;/code&gt;が呼び出されます。&lt;/p&gt;
+
+&lt;h4&gt;事前準備&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;before_script.sh&lt;/code&gt;は実行準備のためのスクリプトで、PHPCSが1にセットされている場合は、以下のとおりpearチャンネルからCakePHPのコード標準とphpcsが依存関係としてインストールされます。&lt;/p&gt;
+&lt;pre class="highlight shell"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="nv"&gt;$PHPCS&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;'1'&lt;/span&gt; &lt;span class="o"&gt;]&lt;/span&gt;; &lt;span class="k"&gt;then
+    &lt;/span&gt;pear channel-discover pear.cakephp.org
+    pear install --alldeps cakephp/CakePHP_CodeSniffer
+    phpenv rehash
+    &lt;span class="nb"&gt;exit &lt;/span&gt;0
+&lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;続いて、CakePHP本体が1つ親のディレクトリにインストールされます。Travis.ciではプラグインのリポジトリが最初にcloneされるのですが、結果として以下のようなディレクトリ構成となります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;$HOME/sizuhiko/Fabricate : プラグイン本体&lt;/li&gt;
+&lt;li&gt;$HOME/sizuhiko/travis : FriendsOfCakeのtravis.gitクローン先&lt;/li&gt;
+&lt;li&gt;$HOME/sizuhiko/cakephp : CakePHP本体&lt;/li&gt;
+&lt;li&gt;$HOME/sizuhiko/cakephp/app/Plugin/$PLUGIN_NAME : プラグイン本体がコピーされる先&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;上記ディレクトリ構成ができた後で、composer で依存関係を解決します。COVERALL用のカバレッジレポートも生成されるようにファイルが準備されます。&lt;/p&gt;
+
+&lt;h4&gt;実行&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;script.sh&lt;/code&gt;がPHPCSが1の場合はphpcsを、それ以外の場合はユニットテストを実行します。&lt;/p&gt;
+
+&lt;h4&gt;実行が成功したら&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;after_success.sh&lt;/code&gt;がCOVERALLのカバレッジレポートを生成します。&lt;/p&gt;
+
+&lt;h3&gt;そして現在&lt;/h3&gt;
+
+&lt;p&gt;最初のスクリーンショットがFabricateの現在の状態です。すべて成功しています。&lt;/p&gt;
+
+&lt;p&gt;最後にREADMEにバッジを表示させる方法を紹介します。&lt;/p&gt;
+
+&lt;h4&gt;Travis.ciのバッジを表示する&lt;/h4&gt;
+
+&lt;p&gt;Travis.ciの画面にアクセスして&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_6.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;build:failing&lt;/code&gt;のように表示されている画像をクリックします。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_7.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;ブランチを選択して、表示形式からマークダウンを選択したら、表示内容をREADME.mdに貼り付けます。&lt;/p&gt;
+
+&lt;h4&gt;カバレッジのバッジを表示する&lt;/h4&gt;
+
+&lt;p&gt;カバレッジは&lt;a href="https://coveralls.io/"&gt;COVERALL&lt;/a&gt;というサービスを使って表示します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_8.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;サイトにアクセスして、サインアップはGithubのアカウントでできるの簡単です。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_9.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;サインアップ後に、上部のメニュー表示から&lt;code&gt;REPOS&lt;/code&gt;を選択して、&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_10.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ADD REPO&lt;/code&gt;をクリックしてリポジトリを追加します。
+その後、追加したリポジトリのページを表示します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_11.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;今度は表示される画像ではなく、&lt;code&gt;GET BADGE URL&lt;/code&gt;というボタンをクリックします。このあたりのUIは統一されると嬉しいですね&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_12.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;いろいろな記述形式のコードが表示されるのでマークダウンのコードを選択してREADME.mdに貼り付けます。&lt;/p&gt;
+
+&lt;h4&gt;ダウンロード数、バージョンを表示する&lt;/h4&gt;
+
+&lt;p&gt;ここからはCIとは関係ないのですが、よく見るバッジであるダウンロード数とバージョン番号も表示してみたいと思います。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://poser.pugx.org"&gt;Badge Poser&lt;/a&gt;というサイトにアクセスします。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_13.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;ダウンロード数やバージョン番号は、Packagistで表示されている情報を画像に変換するので、リポジトリがPackagistに登録されていることが条件となります。
+&lt;code&gt;Show the markdown for your Badges&lt;/code&gt;にダウンロード数を表示したいPackagistのパッケージ名を入力します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp2_plugin_ci_14.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;表示形式からマークダウンを選択して、コードをREADME.mdに貼り付けます。&lt;/p&gt;
+
+&lt;h3&gt;最後に&lt;/h3&gt;
+
+&lt;p&gt;CakePHPのプラグインを継続的インテグレーションする方法は、実はとても簡単でした。
+これを機に、まだプラグインを継続的インテグレーションしていない&lt;code&gt;そこのあなた&lt;/code&gt;も、Travis.ciとCOVERALLを使って継続的インテグレーションをしてみましょう。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</title>
     <link rel="alternate" href="http://blog.url.com/2014/06/27/cake3_mokumoku_5.html"/>
@@ -800,101 +1079,6 @@ $ Console/cake bake view Posts
 &lt;p&gt;コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには&lt;code&gt;ControllerTestCase&lt;/code&gt;が用意してくれているコントローラ専用のモックジェネレータである&lt;code&gt;generate()&lt;/code&gt;を利用します。generateで作成したインスタンスをテストケースクラスの&lt;code&gt;controller&lt;/code&gt;メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。&lt;/p&gt;
 
 &lt;p&gt;コントローラから依存関係にある、コンポーネント、モデルについてそれぞれサンプルのようにモックでき、コントローラ自体のメソッドも&lt;code&gt;methods&lt;/code&gt;に列挙することでモックできます。例えば&lt;code&gt;redirect()&lt;/code&gt;や&lt;code&gt;render()&lt;/code&gt;などがよく使われると思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</title>
-    <link rel="alternate" href="http://blog.url.com/2014/03/08/cakephp-addprefix-here-problem.html"/>
-    <id>http://blog.url.com/2014/03/08/cakephp-addprefix-here-problem.html</id>
-    <published>2014-03-08T08:04:00Z</published>
-    <updated>2014-03-08T18:10:44+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;!-- more --&gt;
-
-&lt;p&gt;あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。&lt;/p&gt;
-
-&lt;h3&gt;動的にプレフィックスルーティングを追加するには&lt;/h3&gt;
-
-&lt;p&gt;公式ドキュメントの解説のとおり、&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;// routes.php
-Router::connect(
-    "/site-proxy/:controller",
-    array('action' =&amp;gt; 'index', 'prefix' =&amp;gt; 'site-proxy', 'site-proxy' =&amp;gt; true)
-);
-
-// core.phpなど
-Configure::write('Routing.prefixes', array('site-proxy'));
-&lt;/pre&gt;
-
-&lt;p&gt;のように記述します。&lt;/p&gt;
-
-&lt;p&gt;RouterTest.phpのテストコードを見たら&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;$request = new CakeRequest();
-$request-&amp;gt;addParams(array(
-    'controller' =&amp;gt; 'registrations', 'action' =&amp;gt; 'admin_index',
-    'plugin' =&amp;gt; null, 'prefix' =&amp;gt; 'admin', 'admin' =&amp;gt; true,
-    'ext' =&amp;gt; 'html'
-));
-&lt;/pre&gt;
-
-&lt;p&gt;みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。&lt;/p&gt;
-
-&lt;p&gt;実際コントローラで&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;$this-&amp;gt;request-&amp;gt;addParams(['prefix' =&amp;gt; 'site-proxy', 'site-proxy' =&amp;gt; true]);
-&lt;/pre&gt;
-
-&lt;p&gt;みたいに書くと、View上で $this-&amp;gt;html-&amp;gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。&lt;/p&gt;
-
-&lt;h3&gt;ハマりポイント&lt;/h3&gt;
-
-&lt;p&gt;View上でフォームを作成するときに&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;echo $this-&amp;gt;Form-&amp;gt;create('Post');
-&lt;/pre&gt;
-
-&lt;p&gt;のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;// FormHelper::create() L367付近
-if ($options['action'] === null &amp;amp;&amp;amp; $options['url'] === null) {
-    $options['action'] = $this-&amp;gt;request-&amp;gt;here(false);
-} elseif (empty($options['url']) || is_array($options['url'])) {
-&lt;/pre&gt;
-
-&lt;p&gt;URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。&lt;/p&gt;
-
-&lt;p&gt;で、CakeRequest::here() とはどんなコードか見てみると&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;public function here($base = true) {
-    $url = $this-&amp;gt;here;
-    if (!empty($this-&amp;gt;query)) {
-        $url .= '?' . http_build_query($this-&amp;gt;query, null, '&amp;amp;');
-    }
-    if (!$base) {
-        $url = preg_replace('/^' . preg_quote($this-&amp;gt;base, '/') . '/', '', $url, 1);
-    }
-    return $url;
-}
-&lt;/pre&gt;
-
-&lt;p&gt;のようになっていて、要は現在のURL（$this-&amp;gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;解決方法としては&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Form::create() で &lt;code&gt;url&lt;/code&gt; オプションを追加する&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;addParams するときに here を変更する&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;// 例）
-$request-&amp;gt;addParams(array(
-    'admin' =&amp;gt; true,
-    'prefix' =&amp;gt; 'admin',
-))-&amp;gt;addPaths(array(
-    'here' =&amp;gt; '/admin/this/interesting/index',
-))
-&lt;/pre&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&amp;hellip;    &lt;/p&gt;
 </content>
   </entry>
 </feed>

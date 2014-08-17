@@ -275,7 +275,215 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2011/04/03/phpkansai2011.html">PHPカンファレンス関西に参加してきました</a></h2>
+            <h2 class="title"><a href="/2011/06/20/cakephp-behat.html">CakePHPアプリケーションをBehatでテストする</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/06/21.html">Tuesday, June 21, 2011 01:06:54 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/bdd.html">BDD</a>
+    
+      <a rel="tag" href="/tags/behat.html">Behat</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<h2>はじめに</h2>
+
+<p>Behatとは、Ruby on Railsでは有名なBDDフレームワークcucumberのPHP版クローンです。以前私が発表した資料が過去記事にありますので、詳しくはそちらを参照ください。  </p>
+
+<p>利点は、顧客が理解できるシナリオを自然言語（つまり日本語）で記述し、それ自体がテスト実行可能であるということです。  </p>
+
+<p>今までCakePHPアプリケーションのテストは単体テストではSimpleTest、ブラウザベースのテストはSeleniumを使うことが多かったと思いますが、これからはBehat/Minkによってテストの幅が広がるでしょう。  </p>
+
+<p>しかし、BehatはSymfonyベースで、これまでCakePHPのアプリケーションを実行するためのプラグインなどは準備されてきませんでした。そこで、「rake cucumber」に習い「cake behat」として実行できるシェルタスクを用意しました。  </p>
+
+<p>それが「CakeBehat」シェルです。  </p>
+
+<p><a href="https://github.com/sizuhiko/CakeBehat">https://github.com/sizuhiko/CakeBehat</a></p>
+
+<h2>インストール</h2>
+
+<h3>前提事項</h3>
+
+<ol>
+<li>gitが利用可能なこと</li>
+<li>PHPUnitがインストールされていること</li>
+<li>CakePHPがインストールされていること</li>
+<li>MySQLなどデータベースがインストールされていて、テスト用データベースが準備されていること</li>
+</ol>
+
+<h3>導入</h3>
+
+<p>CakePHPのvendorsディレクトリへ移動して、以下のコマンドを実行してください。</p>
+<pre class="highlight plaintext">git clone git@github.com:sizuhiko/CakeBehat.git
+git clone git://github.com/Behat/Behat.git &amp;&amp; cd Behat
+git submodule update --init
+cd ..
+git clone git://github.com/Behat/Mink.git &amp;&amp; cd Mink
+git submodule update --init
+</pre>
+
+<p>すると、vendors 配下に CakeBehat, Behat, Mink の３つのディレクトリができているはずです。  </p>
+
+<p>次に、CakeBehat/vendors/shells から behat.php と behat.yml.default を CakePHPのvendors直下へコピーします。  </p>
+
+<p>すると、vendors直下には、behat.php, behat.yml.default, CakeBehat, Behat, Minkがあるはずです。  </p>
+
+<p>続いて、CakeBehat/features を CakePHPのappやcakeと同じディレクトリ階層にコピーします。  </p>
+
+<p>初期導入は以上で終了です。</p>
+
+<h2>環境設定</h2>
+
+<h3>Behat/Mink環境設定</h3>
+
+<p>vendors直下にコピーしたbehat.yml.defaultをbehat.ymlにコピーします。  </p>
+
+<p>４行目に</p>
+<pre class="highlight plaintext">      start_url: http://test.localhost:8888/application-name/
+</pre>
+
+<p>という設定があります。これはアプリケーションのルートパスを設定するもので、ホスト名、ポート番号、アプリケーション名などを指定します。ホスト名はできるだけtest環境と識別可能なものにしておく事がオススメです。</p>
+
+<h2>これでおわり？</h2>
+
+<p>基本的な環境設定は、ここまでで、behatは実行可能な状況になっています。では具体的にサンプルアプリケーションのコードを使って解説します。</p>
+
+<h2>サンプルアプリケーション（ブログ）</h2>
+
+<p>CakeBahet/sample の中にCookBookの「<a href="http://book.cakephp.org/ja/view/1528/CakePHP%E3%83%96%E3%83%AD%E3%82%B0%E3%83%81%E3%83%A5%E3%83%BC%E3%83%88%E3%83%AA%E3%82%A2%E3%83%AB">CakePHPブログチュートリアル</a>」の初期状態（Postの一覧と詳細だけ）のコードを準備しました。  </p>
+
+<p><img src="/images/blog/images/cakebehat/index.png" /><img src="/images/blog/images/cakebehat/show.png" /></p>
+
+<h3>データベースの切り替え</h3>
+
+<p>config/database.phpはそのまま生成すると$defaultがあります。UnitTestを実施する場合などは$testを作成していることもあるでしょう。Behat/Minkはブラウザアクセスで実行されるので、工夫が必要になります。またテストデータの投入で$testを参照するので、必ず定義が必要になります。
+そこで Bakery の「Easy peasy database config」にも書いてるように、環境によってデータベース設定が切り替えられるように対応します。  </p>
+
+<p>このサンプルでは、アクセスされたサーバ名を基準に切り替えるようにしており、test.localhost なら test用データベース、それ以外ならdevelopment用データベースを利用するようにしています。  </p>
+
+<p>hostsファイルに 127.0.0.1 localhost, test.localhost としておけば、test.localhostでアクセス可能になるでしょう。簡単ですね。  </p>
+
+<h3>テストシナリオの記述</h3>
+
+<p>Behatのシナリオ記述は基本的にcucumberと同じです。もし基本的な記述方法がわからない場合は、<a href="http://tatsu-zine.com/books/cuke">達人出版社「はじめる！ Cucumber」</a>を読むと良いと思います。  </p>
+
+<p>ブログチュートリアルの一覧表示と、詳細表示のテストとして、以下のようなシナリオを書きました。</p>
+<pre class="highlight plaintext">sample/features/posts.features
+
+# language: ja
+フィーチャ: ブログの記事を閲覧した
+  なぜならブログの記事を閲覧することで、最新の情報を入手したいからだ
+
+  背景:
+    前提 ブログ記事に以下の内容が登録されていること:
+      | タイトル | 本文 |
+      | タイトル | これは、記事の本文です。 |
+      | またタイトル | そこに本文が続きます。 |
+      | Title strikes back | こりゃ本当にわくわくする！うそ。 |
+
+  シナリオ: 記事一覧を閲覧できること
+    前提 トップページ を表示している
+    ならば "タイトル" と表示されていること
+    かつ "またタイトル" と表示されていること
+    かつ "Title strikes back" と表示されていること
+
+  シナリオ: 記事の本文を閲覧できること
+    前提 トップページ を表示している
+    かつ "またタイトル" のリンク先へ移動する
+    ならば "そこに本文が続きます" と表示されていること
+</pre>
+
+<p>どうですか？最低限の決まりがあるように見えますが、普通のドキュメントとして読む事も可能ですよね？少なくともプログラマでなければ読めないSeleniumのようなテストコードとは違うと思います。これがBehatの特徴でもあります。</p>
+
+<h4>Hint</h4>
+
+<p>Behat/Minkでどんなステップ記述が利用可能かどうかは、</p>
+<pre class="highlight plaintext">cake/console/cake behat --steps --lang ja
+</pre>
+
+<p>のように実行すると一覧表示されます。</p>
+
+<h3>テストデータの登録</h3>
+
+<p>サンプルでは「ブログ記事に以下の内容が登録されていること:」のように記述しました。これは最初から用意されているものではなく、独自に定義する必要があるステップです。ステップは features/steps の下に phpファイルを作成すれば自動的に読み込まれ、利用可能になります。</p>
+<pre class="highlight plaintext">sample/features/steps/posts_step.php
+
+$steps-&gt;Given('/^ブログ記事に以下の内容が登録されていること:$/', function($world, $table) {
+  $hash = $table-&gt;getHash();
+  $world-&gt;truncateModel('Post');
+  $post = $world-&gt;getModel('Post');
+  foreach ($hash as $row) {
+    $post-&gt;create(array('Post'=&gt;array('title'=&gt;$row['タイトル'], 'body'=&gt;$row['本文'])));
+    $post-&gt;save();
+  }
+});
+</pre>
+
+<p>ステップの雛形自体は、ステップが存在しないときにBehatを実行すると、以下のように画面表示されるので、そのままコピペして作成すると簡単です。<img src="/images/blog/images/cakebehat/notimplement.png" /></p>
+
+<p>CakeBehatではテストデータを登録するのが容易になるように、Modelを取得できるようにしています。またテストデータを消去するためにtruncateできる仕組みも用意しました。</p>
+
+<ol>
+<li>データの削除：$world-&gt;truncateModel(&lsquo;Post&rsquo;);</li>
+<li>モデルの取得：$post = $world-&gt;getModel(&lsquo;Post&rsquo;);</li>
+</ol>
+
+<p>後は、AAで書いた表をそのまま利用できる（１行目が自動的にタイトル行として解釈されています）ので Model-&gt;createとModel-&gt;saveを利用すれば、いつものCakePHPの感覚でデータを登録できるはずです。
+データベースは自動的に$testで定義された宛先に接続するようになっています。  </p>
+
+<h3>実行してみよう</h3>
+
+<p>cakeやappのディレクトリに移動して、以下のコマンドを実行します。</p>
+<pre class="highlight plaintext">cake/console/cake behat
+</pre>
+
+<p><img src="/images/blog/images/cakebehat/success.png" /></p>
+
+<h2>さいごに</h2>
+
+<p>基本的なアプリケーションであれば、テスト可能な状況になっていると思います。  </p>
+
+<p>何かあれば、CakeBehatをforkしてアップデートに参加してもらえればと思います。  </p>
+
+<p>現時点で気になっているのは、</p>
+
+<ol>
+<li>モデルの初期化を shells/behat.php の _loadModels() で実行しているのですが、App::objects(&lsquo;model&rsquo;)でモデルの一覧を取得しているので、プラグインのModelまで初期化できていません。ここで初期化する理由は、Shell(CakePHP) -&gt; Behat(Symfony) -&gt; CakePHPのように呼び出されると、初期化されていないモデルが利用できないので、事前に全てClassRegistry::initしておくことで、この問題を回避しています。プラグイン内のモデルを使う場合は、この記述を変更して、プラグインのモデルも利用可能にする必要があります。</li>
+<li>テストデータの削除を明示的にtruncateModelしないといけない。本来は features/support/hook.php のフックポイントでtruncateModelを呼び出せるように仕込んでおきたかったのですが、フックポイントから呼び出すとSTRICTエラーが出てしまい、うまく動作しません。ということから、データ投入ステップで一度データを削除するように記述しています。</li>
+<li>GithubのReadmeとWikiがまだ未着手で。。</li>
+</ol>
+
+<p>といったところです。</p>
+
+<p>このネタで、CakeFestに応募しようと思うのですが、後9日か。。。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPアプリケーションをBehatでテストする" data-url="http://blog.open.tokyo.jp/2011/06/20/cakephp-behat.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/06/20/cakephp-behat.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/06/20/cakephp-behat.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/06/20/cakephp-behat.html&t=CakePHP%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92Behat%E3%81%A7%E3%83%86%E3%82%B9%E3%83%88%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/06/20/cakephp-behat.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2011/04/03/phpkansai2011.html">PHPカンファレンス関西に参加してきました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2011/04/03.html">Sunday, April 03, 2011 08:04:07 PM</a></p>
   <p class="tags">
     
@@ -1081,203 +1289,6 @@ value値がコードだが、確認画面では値（名前）で出したい場
     </div>
 
   </div>
-  <h2 class="title"><a href="/2010/10/05/phpmatsuri.html">PHPmatsuri was greatest event for PHP developer.</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2010/10/05.html">Tuesday, October 05, 2010 11:10:28 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/bdd.html">BDD</a>
-    
-      <a rel="tag" href="/tags/behat.html">Behat</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/php-matsuri.html">PHP matsuri</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;I went <a href="http://2010.phpmatsuri.net/">PHPmatsuri</a> on last weekend. PHPmatsuri was great-full Hackathon style event about PHP in Japan. I had prepared about the event as staff.</p>
-
-<blockquote>
-<p>私は先週末PHP祭りに行ってきました。PHP祭りは、日本のPHP界隈では最大のハッカソン形式のイベントです。私はスタッフとして準備に携わってきました。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_1.jpg" /> </p>
-
-<p>In 10/2 morning(8:00 am), staffs meets up hall of the event(Harumi Grand Hotel).
-We were setting some desks, chairs, electronics line, audios and reception space.</p>
-
-<blockquote>
-<p>スタッフは10/2の朝8:00に晴海グランドホテルに集合して、会場のセッティングを行います。</p>
-</blockquote>
-
-<p>I wait participants of the event at front of the hotel, and I showed them to the room.
-I could look for them easily, because any participants had iPhone and navigated by google-map.</p>
-
-<blockquote>
-<p>受付が始まる直前にホテルのフロント前に移動し、参加者を会場へ案内します。皆さんiPhoneを片手に地図を見ながら来るので、すぐに参加者とわかりました。</p>
-</blockquote>
-
-<p>At first, I started ice break for strained participants.
-And I introduce to them Mr. Hiro Yoshioka, then started first session.
-The session has be very important for Japanese developer.
-Should check <a href="http://d.hatena.ne.jp/hyoshiok/20101003">his blog &amp; slides</a>.</p>
-
-<blockquote>
-<p>まず最初はアイスブレークから。皆さんの緊張を解きほぐします。会場が暖まったところで、よしおかさんに基調講演をしていただきました。このセッションはPHPに限らずに日本の開発者にとってぜひ聞いて欲しかったセッションとなりました。ぜひよしおかさんのブログをチェックしてください。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_2.jpg" /> 
-The important thing is &ldquo;English or die&rdquo; for us.
-Almost Japanese developer have satisfaction with only Japanese information.
-Because some Japanese hacker translate English to Japanese with his effort.
-But Yoshioka san says, &ldquo;should dispatch some information with English to world-wide&rdquo;.
-I know it is very important.So, I wrote this post in English.
-Some guys same thinks, time line on twitter about phpmatsuri filled with his impressive words.</p>
-
-<blockquote>
-<p>注目すべきキーワードは&ldquo;English or Die&quot;でした。日本ではみんな日本語訳のドキュメントを作るのが好きで、著名なブロガーやハッカーがやってくれていますね。でもそうではなくて各自が英語を使って海外に発信していくのが重要だと。僕もそう思うし（だから英語で書いてみた）、よしおかさんの講演中のtwitter TLを見ればみんな共感していたのがわかります。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_3.png" /> 
-The second session was Practical PHP5.3 by Mr. Nate Abele.
-He is developing lithium now. Before, he was CakePHP lead developer.
-In 9/25, Mr. Rasmus Lerdorf talk about same keywords at PHP-conference.
-Nate talked about some details more than Rasmus with using sample codes.For example PSR-0, closure&hellip;</p>
-
-<blockquote>
-<p>次のセッションはNateによる実践PHP5.3。１週間前のPHPカンファレンスでRasmusが講演した内容と似ていたけど、より詳細に踏み込んだ感じだった。特にPSR-0とかクロージャとかlithiumの例も交えて解説していました。</p>
-</blockquote>
-
-<p>Since afternoon, the room was separated to 2 space between conference and Hackathon.
-On the conference space, talked about CakePHP2.0 by Graham Weldon, Lithium by Nate Abele &amp; Joel Perras and some sponsor&rsquo;s session.
-On the Hackathon space, opened workshop about Symfony2, CakePHP and Lithium by the core developer.
-I presided on conference space, but had very interesting to Hackathos space.</p>
-
-<blockquote>
-<p>午後からは会場を講演スペースと開発スペースに分割しました。講演スペースでは、コアデベロッパーから各フレームワークのセッションあり、スポンサーセッションあり。開発スペースではコアデベロッパーと一緒にワークショップができたり、各々のテーマで開発したりしていました。僕は司会進行だったので講演スペースに付きっきりでしたが、開発スペースがすごく気になっていました。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_4.jpg" /> 
-After dinner, Mr. Kris Wallsmith talked about Symfony2 at confernce space.
-Same time, Redbull&rsquo;s girls came to Hackathon space.</p>
-
-<blockquote>
-<p>夕食が終わると、KrisによるSymfony2のセッションが開始。ちょうどその頃レッドブルガールがキャンペーンにやってきてくれました。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_5.jpg" /> 
-In that time, I was not able to be heard while preparing next surprise present.
-I was waiting for 3 cakes.
-When Symfony2 session ended, the cakes carried into the room.
-Everybody crowded around cakes and take many photos.
-So, the nice idea(real cake) was started by Japanese CakePHP community on 2 years ago. 
-In this time, it added Lithium and symfony.
-The cakes made by <a href="http://www.papermoon.cc/">Paper Moon</a>. I know the shop is very nice cafe. I recommend for you.</p>
-
-<blockquote>
-<p>僕はちょうど次のサプライズに向けて準備中でSymfony2のセッションはほとんど聞けませんでした。それは日本のCakePHPイベントでは恒例のリアルケーキです。今回は僕が担当だったのと、とにかくLithiumの出来映えがどうなのか心配だったのです。Symfony2セッションが終わるころホテルの人にケーキが運び入れてもらいました。みんな群がって来て写真を取りまくっていました。ケーキは南麻布のPaper Moonさんにお願いしました。良い店なのでお勧めです。</p>
-</blockquote>
-
-<p><img src="/images/blog/phpmatsuri_6.png" /> 
-And sounds of StarWars heard, JIREI master entered. He look like Jedi master!
-JIREI means the use-case.
-2 teams of CakePHP and symfony competed presentation to get a degree of JIREI master.
-So, @HIROCAST won competition and became JIREI master. He talked about Agile development by symfony.</p>
-
-<blockquote>
-<p>スターウォーズの曲と共にJIREI masterが入場。ここから事例紹介セッション「JIREI night」が始まります。CakePHPとsymfonyに別れ交互に事例発表を行い、勝ったのは@HIROCASTさんの「アジャイルな開発をチームでやってみた」(symfony)に決定しました。</p>
-</blockquote>
-
-<p>Time is over 23:00. But everyone continue to develop about themself theme.
-I started myself theme too.
-I tried OpenpearPEG for develop parser of Cucumber feature.</p>
-
-<blockquote>
-<p>事例紹介が終了したのが23時過ぎ。ここからようやく自分の開発時間です。OpenpearPEGでCucumberのパーサーを作ろうと思っていました。</p>
-</blockquote>
-
-<p>About 2 hours later, I saw some problem.
-But file of feature don’t match PEG because it isn’t structured.
-I started giving it up.
-I was looking for difference theme.
-So, I got destiny project.
-It&rsquo;s <a href="http://everzet.com/Behat/">Behat</a>.
-I had feeled very interesting about this project.
-I decided this to be my theme.</p>
-
-<p>Time is over 5:00. My challenge finished. I go back to my room.
-What my room-mates was developing his theme in the room !</p>
-
-<blockquote>
-<p>2時間ぐらい頑張ったのですが、自然言語はPEGと相性が悪いように思い、諦めかけて違うテーマを探していたら、運命の出会いが待っていました。それが「Behat」です。これで行くぞ、と決めたのです。そして5時頃なんとか日本語フィーチャが通るようにハックして部屋に戻りました。合部屋の人はすっかり寝ているのかと思ったら、なんと部屋で開発していました！みんな頑張ってるなー</p>
-</blockquote>
-
-<p>I got up 7:00 on 10/3. After breakfast, I wrote presentation for demonstration on event room.
-Everybody get up, but they were maybe very tired.
-Afternoon 10/3,  demonstration about every theme started. The entries are 33.
-Each presentation is 4 minutes, and the style is Japanese LT having &quot;Dora-Musume&rdquo;.
-Whenever demonstration finished , the auditor posts the score from Google-Form.</p>
-
-<blockquote>
-<p>1時間半ぐらい寝て、7:00から朝食を取りイベント会場でデモ大会用のプレゼンを作成。みんな会場入りするけど、お疲れの様子です。どうも結構な人数が徹夜でやっていたようで。。10/3午後からデモ大会の開始です。発表は1人4分、日本のLT形式（もちろんドラ娘付き）です。なんと33人のエントリーがありました。各プレゼンが終わると事例発表と同じGoogleフォームから投票できるようになっています。そういえばドラ娘の写真がありません。どなたかプリーズ。</p>
-</blockquote>
-
-<p>My position is 8th in sector-1. But I started on 7th by few accidents.
-Since sector-2, I presided.
-All demonstration was finished 3 hour later. The talker and auditor was very tired. long long time LT had been first time for us.</p>
-
-<blockquote>
-<p>僕は最初の8番目の予定だったのですが、並び順を間違えて7番手でプレゼンとなりました。その後セクター2からは司会にバトンタッチ。全部のLTが終わったのが3時間後（1時間おきに休憩はありましたよ）。こんなに長いLTは初めてで、すごく疲れました。</p>
-</blockquote>
-
-<div style="width:425px" id="__ss_5362886">
-<strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/kishida4slideshare/phpmatsuri2010" title="Phpmatsuri2010" rel="nofollow">Phpmatsuri2010</a></strong><object id="__sse5362886" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpmatsuri2010-101005095236-phpapp02&amp;stripped_title=phpmatsuri2010&amp;userName=kishida4slideshare">
-<param name="allowFullScreen" value="true">
-<param name="allowScriptAccess" value="never">
-<embed name="__sse5362886" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpmatsuri2010-101005095236-phpapp02&amp;stripped_title=phpmatsuri2010&amp;userName=kishida4slideshare" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="padding:5px 0 12px">View more <a href="http://www.slideshare.net/" rel="nofollow">presentations</a> from <a href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
-</div>
-
-<p><img src="/images/blog/phpmatsuri_7.png" /> 
-And&hellip;&hellip;. I won Hacker Prize. It means best performance into these demonstrations.
-I got new iPod-touch of prize. I&rsquo;m very happy !</p>
-
-<blockquote>
-<p>そして運命の結果発表。僕はハッカー賞に選ばれました。これは最高得点の賞なんです。賞品は新しいiPod Touchです！</p>
-</blockquote>
-
-<p>Long long time was spent, phpmatsuri finished.
-I think almost participants and staffs were satisfaction.
-And for Japanese PHP developer, it will become to trigger to publish some information positively. I think so.</p>
-
-<p>At last, thanks for 2 days. @yando and staffs, everybody.</p>
-
-<blockquote>
-<p>長い時間が過ぎ、PHP祭りは終了しました。参加者／スタッフともに満足できる内容だったと思っています。また日本のPHP開発者にとって積極的に情報発信をするきっかけになるイベントになったんじゃないかと思いました。最後に、２日間ありがとうございました。特に@yandoさん、そしてスタッフ・参加者の皆様に感謝です。</p>
-</blockquote>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPmatsuri was greatest event for PHP developer." data-url="http://blog.open.tokyo.jp/2010/10/05/phpmatsuri.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2010/10/05/phpmatsuri.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2010/10/05/phpmatsuri.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2010/10/05/phpmatsuri.html&t=PHPmatsuri%20was%20greatest%20event%20for%20PHP%20developer." class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2010/10/05/phpmatsuri.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1347,6 +1358,8 @@ And for Japanese PHP developer, it will become to trigger to publish some inform
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
+                
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
@@ -1364,8 +1377,6 @@ And for Japanese PHP developer, it will become to trigger to publish some inform
                   <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
-                
-                  <li><a href="/2013/12/31/2013.html">2013年ふりかえり</a> <span>2013/12/31</span></li>
                 
               </ul>
             </div>
@@ -1689,6 +1700,10 @@ And for Japanese PHP developer, it will become to trigger to publish some inform
                   
                   
                 
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1697,7 +1712,7 @@ And for Japanese PHP developer, it will become to trigger to publish some inform
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (9)</li>
+                  <li><a href="/2014.html">2014</a> (10)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
