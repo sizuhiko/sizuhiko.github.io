@@ -275,7 +275,164 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2011/10/20/phpmatsuri-3.html">PHPMatsuriで"できたこと"</a></h2>
+            <h2 class="title"><a href="/2011/12/03/cakebehat-master-cakephp2-0-selenium.html">CakeBehat の master を CakePHP2.0 対応に切り替えました。Seleniumによるテストも簡単に。</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/12/03.html">Saturday, December 03, 2011 05:12:14 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/behat.html">Behat</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/selenium.html">Selenium</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<h2>CakeBehat for CakePHP2.0</h2>
+
+<p>PHPMatsuri 2011 で完了させた CakePHP2.0 対応ですが、しばらく 2.0 ブランチで開発バージョンとして扱っていたものを最新のCakePHP,Behat,Minkで動作確認してmasterに昇格させました。</p>
+
+<p><a href="https://github.com/sizuhiko/CakeBehat">https://github.com/sizuhiko/CakeBehat</a></p>
+
+<h2>はじめに</h2>
+
+<p>CakeBehatはCakePHPからBehatを呼び出してテストするためのプラグインです。CakePHP1.3対応として公開したのが2011年6月投稿です。  </p>
+
+<p><a href="http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat">http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat</a></p>
+
+<h2>インストール</h2>
+
+<h3>前提事項</h3>
+
+<ol>
+<li>gitが利用可能なこと</li>
+<li>PHPUnitがインストールされていること</li>
+<li>CakePHP2.0.xがインストールされていること</li>
+<li>MySQLなどデータベースがインストールされていて、テスト用データベースが準備されていること</li>
+</ol>
+
+<h3>導入</h3>
+
+<p>CakePHPのルートディレクトリへ移動して、以下のコマンドを実行してください。</p>
+<pre class="highlight plaintext">cd plugins
+git clone git@github.com:sizuhiko/CakeBehat.git
+cd ..
+</pre>
+
+<p>すると、plugins 配下に CakeBehat のディレクトリができているはずです。CakeBehatプラグインを有効にするためにbootstrapでプラグインの読み込みを行います。  </p>
+<pre class="highlight plaintext">app/Config/bootstrap.phpの最後に追加します。
+....
+
+CakePlugin::load('CakeBehat');
+</pre>
+
+<p>次に、CakeBehatで必要なBehatやMinkをダウンロードし、featues を初期化します。CakePHPのルートディレクトリに移動して、以下のコマンドを実行します。  </p>
+<pre class="highlight plaintext">lib/Cake/Console/cake CakeBehat.init
+</pre>
+
+<p>するとCakePHPのルートディレクトリに featues ディレクトリができているはずです。
+その他にplugins/CakeBehat/Console/Command の下に behat.phar と mink.phar がダウンロードされます。</p>
+
+<h2>環境設定</h2>
+
+<h3>Behat/Mink環境設定</h3>
+
+<p>app/Config/behat.yml がinitコマンドによって生成されています。  </p>
+
+<p>５行目に</p>
+<pre class="highlight plaintext">base_url: http://test.localhost:8888/application-name/
+</pre>
+
+<p>という設定があります。これはアプリケーションのルートパスを設定するもので、ホスト名、ポート番号、アプリケーション名などを指定します。ホスト名はできるだけtest環境と識別可能なものにしておく事がオススメです。</p>
+
+<h2>実行する</h2>
+
+<p>基本的な環境設定は、ここまでで、behatは実行可能な状況になっています。
+具体的にサンプルアプリケーションのコードを使っての解説は、以前のPostと同じなので、以下のURLから確認してください。  </p>
+
+<p><a href="http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat">http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat</a></p>
+
+<p>ただし実行コマンドがプラグイン化に伴って変更されています。プラグイン名が付いたので、cake behat というシンプルなものからは少し遠くなってしまいましたが、以下のコマンドを実行してください。</p>
+<pre class="highlight plaintext">lib/Cake/Console/cake CakeBehat.bdd
+</pre>
+
+<h2>Ajaxを利用したページをテストしたい</h2>
+
+<p>最新版のMinkでは、Ajaxを使ったページをテストできるように、ブラウザエンジンを選択することができるようになっています。</p>
+
+<ol>
+<li>GoutteDriver : Ajaxは使えないがライトなブラウザテストが可能</li>
+<li>SahiDriver：ブラウザのプロキシ設定が必要だが、様々なブラウザでテストが可能</li>
+<li>ZombieDriver：Node.js を使ったブラウザテストが可能</li>
+<li>SeleniumDriver：Mink1.2 からサポートされた、お馴染みのSeleniumによるテストが可能</li>
+</ol>
+
+<p>公式のBehatやMinkのドキュメントを参照すると、Seleniumなどを使う場合の方法が書いていませんコードを書いて初期化しないといけませんが、Behat+Minkのインテグレーションでは、behat.ymlに設定するだけで簡単にSeleniumによるテストが実行できるようになります。</p>
+
+<h3>JavaScriptセッションエンジンを指定する</h3>
+
+<p>CakeBehatではデフォルトのJavaScriptセッションエンジンをSeleniumとしています。app/Config/behat.yml の 4行目に</p>
+<pre class="highlight plaintext">javascript_session:   selenium
+</pre>
+
+<p>設定を入れてあります。まだ試していませんが、sahiやzombieを使う場合はこの設定を変更すれば動作するはずです。</p>
+
+<h3>JavaScriptを使ったページをテストしたいシナリオでは</h3>
+
+<p>@javascript アノテーションをfeatureに指定します。</p>
+
+<p>サンプルアプリケーション（blogチュートリアル）のindex.ctpでDeleteボタンがクリックされたときにtrエレメントを消すだけの実装を追加してみました。<a href="https://github.com/sizuhiko/CakeBehat/blob/master/sample/app/View/Posts/index.ctp">app/View/Posts/index.ctp</a>で</p>
+<pre class="highlight plaintext">&lt;td&gt;&lt;a href="javascript:void(0);" onclick="$(this).closest('tr').remove();"&gt;Delete&lt;?php echo $index++; ?&gt;&lt;/a&gt;
+</pre>
+
+<p>のようにしました。  </p>
+
+<p>このリンク「Delete3」をクリックして3行目を削除するfeatureを書きます。</p>
+<pre class="highlight plaintext">  @javascript
+  シナリオ: 記事を削除できること
+    前提 "トップページ" を表示している
+    かつ "Title strikes back" と表示されていること
+    もし "Delete3" のリンク先へ移動する
+    ならば "Title strikes back" と表示されていないこと
+</pre>
+
+<p>「リンクをクリックする」みたいなステップへ書き換えた方が本当は直感的なのですが、とりあえず「リンク先へ移動する」を使っています。  </p>
+
+<p>後は、Seleniumを実行しておくだけです。</p>
+<pre class="highlight plaintext">java -jar selenium-server-standalone-2.14.0.jar 
+</pre>
+
+<p>これだけです。特にSeleniumを使うと意識しなくても、@javascriptを付けたシナリオだけでFirefoxが起動してテストが実行されます。もちろんこのJavaScriptを使ったテストも成功します。</p>
+
+<h2>さいごに</h2>
+
+<p>BehatやMinkは少しのバージョンアップ違いでうまく動かないケースがあります。もしCakeBehatを使ってうまく動作しないケースなどはgithubのissueなどに書き込んでいただければ、改善していきたいと思っていますのでよろしくお願いします。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeBehat の master を CakePHP2.0 対応に切り替えました。Seleniumによるテストも簡単に。" data-url="http://blog.open.tokyo.jp/2011/12/03/cakebehat-master-cakephp2-0-selenium.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/12/03/cakebehat-master-cakephp2-0-selenium.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/12/03/cakebehat-master-cakephp2-0-selenium.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/12/03/cakebehat-master-cakephp2-0-selenium.html&t=CakeBehat%20%E3%81%AE%20master%20%E3%82%92%20CakePHP2.0%20%E5%AF%BE%E5%BF%9C%E3%81%AB%E5%88%87%E3%82%8A%E6%9B%BF%E3%81%88%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82Selenium%E3%81%AB%E3%82%88%E3%82%8B%E3%83%86%E3%82%B9%E3%83%88%E3%82%82%E7%B0%A1%E5%8D%98%E3%81%AB%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/12/03/cakebehat-master-cakephp2-0-selenium.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2011/10/20/phpmatsuri-3.html">PHPMatsuriで"できたこと"</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2011/10/20.html">Thursday, October 20, 2011 05:10:21 PM</a></p>
   <p class="tags">
     
@@ -679,106 +836,6 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
     </div>
 
   </div>
-  <h2 class="title"><a href="/2011/09/13/cakefest2011.html">CakeFest2011に参加してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/09/14.html">Wednesday, September 14, 2011 02:09:19 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/images/cakefest/webpage.png" /> </p>
-
-<p>昨年のシカゴに続いて２度目の参加となるCakeFest2011。今回はイギリスのマンチェスターにて行われました。
-昨年のLTに続き、今年はPechaKucha形式(20秒x20枚）でCakeBehatについての紹介と、LTで日本のLTタイマ係であるドラ娘の紹介という２本の発表を行ってきました。</p>
-
-<h3>9/2(金)：移動日</h3>
-
-<p>昼頃成田を出発し、同日の夜に現地に到着しました。<br>
-<img src="/images/blog/images/cakefest/100_1067.jpg" /> 
-途中ロンドンで乗り継ぎだったのですが、行く前にイロイロと調べたらロンドンの乗り継ぎはあまり便利ではないということを聞いていて、どうなることかと思っていました。実際、ロンドン空港に到着すると案内表示版には、ほとんど搭乗ゲートが出ていません。遠いゲートまでは25分もあるというのに&hellip;. 結局30分前ぐらいに15分程度のゲート案内が出て、移動しました。丸っきりの廊下でしたが、国内線なのでそんなものなのかな、と。  </p>
-
-<p>で、マンチェスター空港から電車でホテルへ移動してチェックイン。ホテルのバーではワークショップからの参加者や、既に到着していた@yanodo, @cakephper と合流し、GUINNESSで空腹を満たして寝ました。空港からホテルまで、途中何も食べるところがない（というかよくわからない）というのは誤算でした。  </p>
-
-<h3>9/3(土)：カンファレンス初日</h3>
-
-<p><img src="/images/blog/images/cakefest/100_1075.jpg" /> 
-会場は手前に電源の準備された丸テーブルと、階段状の客席になっていて、自由に座ります。PCを持ってワークショップに参加している人は割とテーブル席で、そうでない人は階段席という感じでした。昨年のシカゴは全てテーブル席でみんなPCを持っていたような気がしたので、ちょっと意外な光景でした。しっかり話を聞いたり議論したりする、という雰囲気は濃かったように思います。<br>
-<img src="/images/blog/images/cakefest/100_1080.jpg" /> </p>
-
-<p>今回のCakeFestは部分的に２トラックになっていて、私は主にメイン会場に居ました。初日は@yandoさんがCandyCane（RedmineをCakePHPで移植したもの）の発表をして大きな反響を得ていました。私も微力ながらCandyCaneの開発に携わっていたので、この反響の大きさは嬉しかったです。その後はPHPMatsuriのサイトでも利用しているCMS Croogoについて@fahadから発表がありました。fahadは現在ロンドンで働いているということで、同じ会社からは数名のCakePHP使いが参加していました。  </p>
-
-<p>午後は大混雑のMarkによるPHPUnitの話を聞くために奥の部屋（いわゆる会議室）に移動していました。  </p>
-
-<h4>Pecha Kucha Talksでの発表</h4>
-
-<p>本編にも申し込んでいたのですが、そちらかは落選してしまったので、当日の昼休みに夕方から始まるPecha Kuchaに申し込みました。20秒でスライドが自動送りされるという、英語が堪能ではない環境では大変難しい状況だったのですが、何とか思いは伝えられ、当日の夜や翌日には何人かの人に興味を持ってもらえました。ただ海外でもテストを書くということはあまり浸透していないようで、BDDの前にまだTDDがねー的な話があったのも、そんなに日本の状況と変わりないのだな、と思いました。  </p>
-
-<p>Pecha Kuchaのスライドは<a href="http://twl.sh/oOPjyf">コチラ</a>から参照できます。  </p>
-
-<h3>休憩時間など</h3>
-
-<p>CakeFestではセッション間に30分以上の十分な休憩時間が用意されており、各々中庭で歓談したりバーでビールを飲んだりと、なかなか楽しい雰囲気でした。
-バーには陽気なバーテンダーがいて、場を盛り上げてくれていました。<img src="/images/blog/images/cakefest/100_1088.jpg" /><img src="/images/blog/images/cakefest/100_1092.jpg" /> </p>
-
-<h3>9/4(日)：カンファレンス2日目</h3>
-
-<p>phpnutの基調講演、国際化対応、CakePHP2.0、コアデベロッパーによるパネルディスカッションと、主にCakeDCからの発表が多かった1日でした。またMongoDBを絡めた発表も２つあり、1つは日本から参加の@cakephperさんによるMongoDB Datasource。ちょうどメイン会場が国際化対応だったので見れなかったのですが、だいぶ盛り上がっていたようです。<br>
-<img src="/images/blog/images/cakefest/100_1119.jpg" /> 
-お昼には恒例のリアルケーキも登場。ちょうどその場にいたコアデベロッパーが揃って記念撮影。左から２番目が国際化対応の発表をしたrenanでオランダで働いているそうです。ブラジル人でもある彼は、国際化対応について問題点と解決策をわかりやすく解説していました。これは日本語圏のユーザにとってもありがたいですね。どの国でも作られたプラグインなどが国際化考慮されていれば言語ファイルなどを用意するだけで良い訳ですし。</p>
-
-<p>で、マンチェスターまで行ってLTの参加枠もあるなら、せっかくなのでLTもやってきました。昨年のLTが長い話を全然打ち切れなくてすっきりしないものになっていたので、日本ではLTのタイマ係＝ドラ娘という役がありまして〜という発表をしました。スライドは昨晩から少しずつ作って、長い休憩時間も使い無事完成。LTだと自分のペースで話せるので少し楽です。CakeFest参加者にはDoraGirl, DoraMUSUMEというものをバッチリ印象づけて、このネタでさらに多くの人に声をかけてもらうことができました。あのアプリ（DoraGirl）はどこからダウンロードするの？どうやって使うの？とか。</p>
-
-<h3>CakeFestで得たもの</h3>
-
-<p>もちろん最新のCakePHP2.0情報を得たり、コアデベロッパーの発表を聴くということはとても有意義なことです。ただもちろん参加するにあたり、最低１つ以上質問をしたいし、発表もしたい。幸いCakeFestでは当日申し込みのPechaKuchaやLTなどで容易に発表可能（倍率１倍 w）ということもあり、昨年の5分から今年は12分弱という時間をもらうことができました。質問はもっとも内容が理解できたMarkのPHPUnitの話でアノテーションの使いどころなどに関して聞きました。  </p>
-
-<p>また発表や質問を通じて、コアデベロッパーにアイツは何者？とか、こういうことをやっている人、例えば私だとなんかやたらテストについて発表したり質問したりする人、という印象で持ってもらえていると思っています。（事実Markに関してはそういう風に声をかけてくれる。）  </p>
-
-<p>で、じゃぁすぐに何かに役立つわけではないかもしれないけど、何かコア部分に関してやりとりしたくなったときや、もちろん日本のイベントに来てもらえるということも、そういった事の積み重ねではないかなぁ、と思っているのです。ですので、来年は日本からより多くの参加者がCakeFestに行ってもらえると嬉しいなぁと思っています。</p>
-
-<h3>その他、雑多にふりかえると</h3>
-
-<p><img src="/images/blog/images/cakefest/100_1163.jpg" /> 
-ビールが安い！  </p>
-
-<p>例えばGUINNESSのパイントが約3ポンド。500しないぐらい。日本の半額以下ですね。これなら毎日相当量飲めそう。事実他のビールも含めだいぶいっぱい飲みましたが&hellip;</p>
-
-<p><img src="/images/blog/images/cakefest/100_1199.jpg" /> 
-マンチェスター・ユナイテッド博物館がいい！  </p>
-
-<p>イギリスでのサッカーの歴史を感じる博物館で、展示内容もすばらしかったです。</p>
-
-<p>あと全般、ずっと雨模様だったり、涼しかった（寒いに近いぐらい）だったり。
-帰国日はマンチェスター空港からの出発が天候不良で１時間近く遅くなり、ロンドンに付いたら1時間半遅れ、３時間の乗り継ぎ時間があったのですが、おみやげ買ったりロンドン空港内の移動（すごい遠い）したりしていたら全く余裕がなく帰国便に搭乗となりました。ロンドン経由にするなら乗り継ぎ時間にかなり余裕を見ておいた方がいいなぁと感じました。  </p>
-
-<p>ロンドン空港はオリンピックに向けて、新ターミナルを作っていたりとまた大きくなる印象。さらに複雑になるのかなぁ〜</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2011に参加してきました" data-url="http://blog.open.tokyo.jp/2011/09/13/cakefest2011.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/09/13/cakefest2011.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/09/13/cakefest2011.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/09/13/cakefest2011.html&t=CakeFest2011%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/09/13/cakefest2011.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -848,6 +905,8 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
+                
                   <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
                 
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
@@ -865,8 +924,6 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
-                
-                  <li><a href="/2014/02/22/hello-world.html">Hello Middleman!</a> <span>2014/02/22</span></li>
                 
               </ul>
             </div>
@@ -1194,6 +1251,14 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1202,7 +1267,7 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (10)</li>
+                  <li><a href="/2014.html">2014</a> (11)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
