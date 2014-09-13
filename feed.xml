@@ -5,10 +5,145 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2014-09-07T05:04:00Z</updated>
+  <updated>2014-09-13T06:43:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</title>
+    <link rel="alternate" href="http://blog.url.com/2014/09/13/cakephp3_debugkit_require_sqlite.html"/>
+    <id>http://blog.url.com/2014/09/13/cakephp3_debugkit_require_sqlite.html</id>
+    <published>2014-09-13T06:43:00Z</published>
+    <updated>2014-09-13T17:30:44+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="http://coedo-cakephp.doorkeeper.jp/events/14670"&gt;CakePHP 3.0.0 もくもく会（勉強会） #7&lt;/a&gt; に参加してCakePHP3ベータ1を早速試しました。&lt;/p&gt;
+
+&lt;p&gt;ベータ1はアルファ版からディレクトリの変更も多く、CakePHP本体をcomposer updateしてもダメなので、再度 composer create-project でテンプレートから生成しなおします。&lt;/p&gt;
+
+&lt;p&gt;最新の&lt;a href="https://github.com/cakephp/app"&gt;cakephp/app&lt;/a&gt;テンプレートにはDebugKitプラグインが依存関係に入っています。&lt;/p&gt;
+&lt;pre class="highlight json"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"require"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"php"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"&amp;gt;=5.4.19"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"cakephp/cakephp"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"3.0.*-dev"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"mobiledetect/mobiledetectlib"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"2.*"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"cakephp/debug_kit"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"3.0.*-dev"&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/pre&gt;
+
+&lt;p&gt;require-devではないのですね、と思ったり。。&lt;/p&gt;
+
+&lt;p&gt;以下のコマンドでCakePHP3アプリケーションのプロジェクトスケルトンを作ります。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;composer create-project -s dev cakephp/app dev-cake3 app
+&lt;/pre&gt;
+
+&lt;p&gt;ブラウザでアクセスすると、以下のような画面が表示されます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_debugkit_sqlite.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;なんかDebugKitがSQLiteを参照しているみたいなんですよ。&lt;/p&gt;
+
+&lt;p&gt;そこで、DebugKitの設定を見てみます&lt;/p&gt;
+
+&lt;p&gt;app/plugins/DebugKit/config/bootstrap.php&lt;/p&gt;
+&lt;pre class="highlight php"&gt;if (!ConnectionManager::config('debug_kit')) {
+    ConnectionManager::config('debug_kit', [
+        'className' =&amp;gt; 'Cake\Database\Connection',
+        'driver' =&amp;gt; 'Cake\Database\Driver\Sqlite',
+        'database' =&amp;gt; TMP . 'debug_kit.sqlite',
+        'encoding' =&amp;gt; 'utf8',
+        'cacheMetadata' =&amp;gt; true,
+        'quoteIdentifiers' =&amp;gt; false,
+    ]);
+}
+&lt;/pre&gt;
+
+&lt;p&gt;そうですか、そうですか…&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/cakephp/debug_kit/tree/3.0"&gt;githubのCakePHP3用ブランチ&lt;/a&gt;もチェックしてみました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Requirements&lt;/p&gt;
+
+&lt;p&gt;The 3.0 branch has the following requirements:&lt;/p&gt;
+
+&lt;p&gt;CakePHP 3.0.0 or greater.
+PHP 5.4.19 or greater.
+SQLite or another database driver that CakePHP can talk to. By default DebugKit will use SQLite, if you need to use a different database see the Database Configuration section below.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;そうですか、そうですか….&lt;/p&gt;
+
+&lt;p&gt;でもなんか別のDB接続も可能みたいに書いてあるよ&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Database Configuration&lt;/p&gt;
+
+&lt;p&gt;By default DebugKit will store panel data into a SQLite database in your application&amp;rsquo;s tmp directory. If you cannot install pdo&lt;em&gt;sqlite, you can configure DebugKit to use a different database by defining a debug&lt;/em&gt;kit connection in your config/app.php file.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;ふむふむ&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;config/app.php&lt;/code&gt; のDatasourceに以下のような&lt;code&gt;debug_kit&lt;/code&gt;接続を追加してみます。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;        'debug_kit', [
+            'className' =&amp;gt; 'Cake\Database\Connection',
+            'driver' =&amp;gt; 'Cake\Database\Driver\Mysql',
+            'persistent' =&amp;gt; false,
+            'host' =&amp;gt; 'localhost',
+            'login' =&amp;gt; 'hoge',
+            'password' =&amp;gt; 'fuga',
+            'database' =&amp;gt; 'database_name',
+            'prefix' =&amp;gt; false,
+            'encoding' =&amp;gt; 'utf8',
+            'timezone' =&amp;gt; 'UTC',
+            'cacheMetadata' =&amp;gt; true,
+            'quoteIdentifiers' =&amp;gt; false,
+        ],
+
+&lt;/pre&gt;
+
+&lt;p&gt;ブラウザをリロード&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_debugkit_mysql.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;ぎゃー、DebugKitの該当箇所のコードを見てみると、そんなに変じゃないように見えますが、&lt;/p&gt;
+&lt;pre class="highlight php"&gt;        $configs = ConnectionManager::configured();
+        foreach ($configs as $name) {
+            $connection = ConnectionManager::get($name);
+&lt;/pre&gt;
+
+&lt;p&gt;このときの&lt;code&gt;$config&lt;/code&gt;をwatchしてみると&lt;/p&gt;
+&lt;pre class="highlight php"&gt;array (size=5)
+  0 =&amp;gt; string 'default' (length=7)
+  1 =&amp;gt; string 'test' (length=4)
+  2 =&amp;gt; int 0
+  3 =&amp;gt; int 1
+  4 =&amp;gt; string 'debug_kit' (length=9)
+&lt;/pre&gt;
+
+&lt;p&gt;以下のようになっています。2と3誰よ….&lt;/p&gt;
+
+&lt;p&gt;ということで、まだベータ１だからねー。はははーという事で、現時点はSQLiteのextension入れて試しましょう。&lt;/p&gt;
+
+&lt;p&gt;例えば、friendsofcakeのvagrant-chef使っているなら、cookbooks/php/recipes/install.rbに追加します。&lt;/p&gt;
+&lt;pre class="highlight ruby"&gt;  &lt;span class="s2"&gt;"php5-mysql"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="s2"&gt;"php5-sqlite"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+
+&lt;/pre&gt;
+
+&lt;p&gt;mysqlの下あたりに追加します。vagrant destroy/upを実行して環境を作り直したら、もう一度ブラウザをリロードします。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_beta1_success.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;おなじみの青いバーの画面が表示されました。画面の右下に出ているCakePHPアイコンがDebugKitです。
+アイコンをクリックすると以下のようにデバッグ情報を参照可能になります。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/cakephp3_beta1_debugkit.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;DebugKitも使えるし、どんどんCakePHP3のアプリケーション開発がやりやすくなっていると思います。
+CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を試してみませんか？&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CakePHPで学ぶ継続的インテグレーションが発売されます</title>
     <link rel="alternate" href="http://blog.url.com/2014/09/07/cakephp_ci_book.html"/>
@@ -1020,66 +1155,6 @@ $ Console/cake bake view Posts
 実際にアプリケーションを作ってみてCakePHP3の新機能について感想を書いてみたり、要望を出してみたりすることも実リリースまでの期間としては大切なことだと思うので、今回簡単ではありますがブログとして公開してみました。&lt;/p&gt;
 
 &lt;p&gt;Co-Edo では今後も CakePHP3もくもく会が開かれると思うので、イベントページをチェックしておくと良いと思います。私も可能な範囲で参加していこうと思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Composerのautoloadを使いこなす</title>
-    <link rel="alternate" href="http://blog.url.com/2014/03/30/composer-autoload.html"/>
-    <id>http://blog.url.com/2014/03/30/composer-autoload.html</id>
-    <published>2014-03-30T09:22:00Z</published>
-    <updated>2014-03-30T18:41:51+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;Composerにはautoloadを自動生成する機能があり、これを利用するとrequire_onceなどを使わなくとも自動的にソースコードがロードされます。言葉のとおりautoloadですね。&lt;/p&gt;
-
-&lt;p&gt;例えばCakePHPでは&lt;code&gt;App::uses()&lt;/code&gt;という記述で利用するクラスがどこにあるのか識別して、クラスをロードできるようにするのですが、これを使わなくても Composer のautoload機能を使うとクラスが利用可能になります。&lt;/p&gt;
-
-&lt;p&gt;app/composer.json に以下のような定義を記述してみましょう。&lt;/p&gt;
-&lt;pre class="highlight json"&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="s2"&gt;"autoload"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-        &lt;/span&gt;&lt;span class="s2"&gt;"classmap"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"Model"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"Controller"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;span class="err"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/pre&gt;
-
-&lt;p&gt;ここで &lt;code&gt;autoloadだけ&lt;/code&gt; を更新するコマンドを実行します。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;composer dumpautoload
-&lt;/pre&gt;
-
-&lt;p&gt;コマンド名からはちょっと想像がつきにくいのですが、これを実行すると &lt;code&gt;Generating autoload files&lt;/code&gt; という結果が表示されてautoload定義が更新されます。&lt;/p&gt;
-&lt;pre class="highlight php"&gt;// app/Vendor/composer/autoload_classmap.php
-&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
-
-&lt;span class="c1"&gt;// autoload_classmap.php @generated by Composer
-&lt;/span&gt;
-&lt;span class="nv"&gt;$vendorDir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;__FILE__&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$vendorDir&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-    &lt;span class="s1"&gt;'AppController'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/Controller/AppController.php'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;'AppModel'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/Model/AppModel.php'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;'PagesController'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/Controller/PagesController.php'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;'Post'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/Model/Post.php'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s1"&gt;'PostsController'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$baseDir&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/Controller/PostsController.php'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;
-
-&lt;p&gt;今回は予めpostsテーブルからbakeしてPostモデルとPostsコントローラを生成しておきました。
-こうすると、App::uses()を記述しなくても、composerのautoloadがクラス名からPHPファイルを自動解決してくれます。App::uses()の記述が多過ぎてコードの見通しが悪い場合などに利用を検討されてはいかがでしょうか？&lt;/p&gt;
-
-&lt;p&gt;この他にもComposerのautoload機能は&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;PSR-4&lt;/li&gt;
-&lt;li&gt;PSR-0&lt;/li&gt;
-&lt;li&gt;Files（ファイルを直接指定できる）&lt;/li&gt;
-&lt;li&gt;include-path(どうしてもphp.ini的なincludeパスで解決しなくてはならない時のためにある)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;といったパス解決方法を用意していますので、namespaceが入ったものなどのサポートも万全です。&lt;/p&gt;
-
-&lt;p&gt;詳しくは &lt;a href="https://getcomposer.org/doc/04-schema.md#autoload"&gt;Composerの公式ドキュメントのautoload&lt;/a&gt;を参照ください。&lt;/p&gt;
 </content>
   </entry>
 </feed>

@@ -275,7 +275,290 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a></h2>
+            <h2 class="title"><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/04/19.html">Saturday, April 19, 2014 02:04:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2013/4/4(金) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/10020">CakePHP3 もくもく会 #3</a>」に参加しました。</p>
+
+<p>CakePHP3もdev preview2、せっかくの機会なので初Cake3を体験しようということです。</p>
+
+<h3>環境構築する</h3>
+
+<p>イベントページからリンクされていたCo-Edo謹製Vagrantを使っても良かったのですが、私はCakePHPのコアデベロッパも参加するコミュニティ <a href="http://friendsofcake.com/">Friends Of Cake</a> の <a href="https://github.com/FriendsOfCake/vagrant-chef">Vagrant Chef</a> を使いました。</p>
+
+<p>事前に用意するものは</p>
+
+<ul>
+<li><a href="http://www.vagrantup.com/">Vagrant</a></li>
+<li><a href="https://www.virtualbox.org/">Virtual Box</a></li>
+</ul>
+
+<p>です。概ね最新版で大丈夫でしょう。
+ダウンロード＆インストールしたら、任意のディレクトリに先程のVagrant Chefをクローン（またはダウンロード）します。後は</p>
+<pre class="highlight plaintext">cd vagrant-chef
+vagrant up
+</pre>
+
+<p>を実行してしばらく待ちましょう。Chefでインストールされるものは Vagrant Chef のREADMEに書いてあるので、そちらを参照してください。</p>
+<pre class="highlight plaintext">INFO: Chef Run complete in 541.542816 seconds
+INFO: Running report handlers
+INFO: Report handlers complete
+</pre>
+
+<p>なメッセージが出て、コンソールが戻ってきたらインストールの完了です。
+動作確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
+
+<p><img src="/images/blog/cakephp3_vagrant_chef.png" /></p>
+
+<p>デフォルト画面が出たら環境構築の完了です。</p>
+
+<h3>CakePHP3をインストールする</h3>
+
+<p>Vagrant ChefにはCakePHPをインストールするレシピも入っているのですが、Friends Of CakeにCakePHPの環境を作るスケルトンコマンドが別途用意されているので、レシピの編集は必要ないです。
+生成したVagrant環境にログインします。</p>
+<pre class="highlight plaintext">vagrant ssh
+</pre>
+
+<p>ログイン直後</p>
+<pre class="highlight plaintext">vagrant@precise64:/vagrant$ ls -la
+total 20
+drwxr-xr-x  1 vagrant vagrant  306 Apr 19 05:37 .
+drwxr-xr-x 25 root    root    4096 Apr 19 05:37 ..
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:37 app
+drwxr-xr-x  1 vagrant vagrant  510 Apr 19 05:30 cookbooks
+drwxr-xr-x  1 vagrant vagrant  442 Apr 19 05:30 .git
+-rw-r--r--  1 vagrant vagrant   12 Apr 19 05:30 .gitignore
+-rw-r--r--  1 vagrant vagrant 5489 Apr 19 05:30 README.markdown
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
+-rw-r--r--  1 vagrant vagrant 1179 Apr 19 05:30 Vagrantfile
+</pre>
+
+<p>のようになっていて、すでにappディレクトリが存在します。ここには先程のデフォルト画面が入っているのですが、今回は新しくアプリを作成するのでappディレクトリは削除します。</p>
+<pre class="highlight plaintext">rm -rf app
+</pre>
+
+<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
+<pre class="highlight plaintext">composer -sdev create-project friendsofcake/app-template app dev-cake3
+</pre>
+
+<p>app の部分がアプリケーション名です。Vagrant Chefを使った場合はappを指定してください。</p>
+<pre class="highlight plaintext">Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
+</pre>
+
+<p>最後に上記のような確認メッセージが出てくるので、履歴が気にならなければそのままEnterを押して終了します。
+インストールの確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
+
+<p><img src="/images/blog/cakephp3_installed.png" /></p>
+
+<p>おなじみのCakePHP画面が表示されます。tmpディレクトリが書き込みできないと警告されます。これはwebサーバのデフォルトuserがvagrantでなくwww-dataであるためですが、開発環境用なの気にせず</p>
+<pre class="highlight plaintext">sudo chmod -R 777 app/tmp
+</pre>
+
+<p>などのコマンドで権限を書き換えてください。</p>
+
+<p><img src="/images/blog/cakephp3_tmp_ok.png" /></p>
+
+<h3>データベースを設定する</h3>
+
+<p>vagrant-chefを使うとデフォルトで database<em>name, test</em>database_name というデータベースが生成されています。
+ただ文字コードの指定などの問題もあると思うので、ここは自分でデータベースを作成します。</p>
+<pre class="highlight plaintext">mysql -u root -p
+</pre>
+
+<p>vagrant-chefのMySQL rootパスワードは、vagrant-chefのREADMEを参照ください（現時点ではbananasです）。</p>
+<pre class="highlight plaintext">mysql&gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+mysql&gt; CREATE DATABASE test_cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+</pre>
+
+<p>続けておなじみのpostsテーブルを作成します。</p>
+<pre class="highlight plaintext">mysql&gt; use cake3_mokumoku;
+mysql&gt; CREATE TABLE `posts` (
+          `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+          `title` varchar(50) DEFAULT NULL,
+          `body` text,
+          `created` datetime DEFAULT NULL,
+          `modified` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+</pre>
+
+<p>app-templateで作成したCakePHPアプリケーションは、<a href="https://github.com/josegonzalez/php-dotenv">php-dotenv</a>というライブラリを使って環境設定できるようになっています。
+<code>app/App/Config/.env.default</code> ファイルをコピーして <code>app/App/Config/.env</code>ファイルを作成します。</p>
+<pre class="highlight plaintext">// app/App/Config/.env
+export DATABASE_URL="mysql://my_app:secret@localhost/my_app?encoding=utf8"
+export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_myapp?encoding=utf8"
+</pre>
+
+<p>の部分を</p>
+<pre class="highlight plaintext">// mysql://ユーザ名:パスワード@URL/データベース名
+export CAKEDATABASE_URL="mysql://root:bananas@localhost/cake3_mokumoku?encoding=utf8"
+export CAKEDATABASE_TEST_URL="mysql://root:bananas@localhost/test_cake3_mokumoku?encoding=utf8"
+</pre>
+
+<p>のように書き換えます。データベースの詳しい設定方法は <a href="https://github.com/AD7six/php-dsn">AD7six/php-dsn</a>を参照ください。
+exportの名前を変更しているのは、nginxのfastcgiパラメータとしてvagrantインストール時に</p>
+<pre class="highlight plaintext">fastcgi_param DATABASE_URL          "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/database_name?encoding=utf8";
+fastcgi_param DATABASE_TEST_URL     "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/test_database_name?encoding=utf8";
+</pre>
+
+<p>のような指定がされているため、設定値が重複してしまいfastcgi側が優先される仕組みとなっています。
+このため異なる名前に変更しておきます。
+合わせて、app.phpでDATABASE<em>URLを利用している箇所もCAKEDATABASE</em>URLに変更します。</p>
+<pre class="highlight plaintext">// app/Config/app.php#L211-
+/**
+ * Connection information used by the ORM to connect
+ * to your application's datastores.
+ */
+    'Datasources' =&gt; [
+        'default' =&gt; DbDsn::parse(env('CAKEDATABASE_URL')),
+
+        /**
+         * The test connection is used during the test suite.
+         */
+        'test' =&gt; DbDsn::parse(env('CAKEDATABASE_TEST_URL'))
+    ],
+</pre>
+
+<h3>Cakeシェルを利用する</h3>
+
+<p>コンソールから</p>
+<pre class="highlight plaintext">cd app/App
+Console/cake -h
+</pre>
+
+<p>とヘルプを表示してみたいのですが、もし</p>
+<pre class="highlight plaintext">Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
+</pre>
+
+<p>というエラーが表示されたら、app/App/Console/cake を編集して</p>
+<pre class="highlight plaintext">exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
+</pre>
+
+<p>の行を</p>
+<pre class="highlight plaintext">exec php -q "$CONSOLE"/cake.php "$@"
+</pre>
+
+<p>のように変更してください。現時点では -working オプションがあるとうまく動作しないためです。
+うまく動作した場合は</p>
+<pre class="highlight shell"><span class="gp">$ </span>Console/cake -h
+
+Welcome to CakePHP v3.0.0-dev2 Console
+---------------------------------------------------------------
+App : App
+Path: /vagrant/app/App/
+---------------------------------------------------------------
+Current Paths:
+
+<span class="k">*</span> app: App
+<span class="k">*</span> root: /vagrant/app
+<span class="k">*</span> core: /vagrant/app/vendor/cakephp/cakephp
+
+Available Shells:
+
+<span class="o">[</span>CORE] bake, i18n, server, <span class="nb">test</span>
+
+<span class="o">[</span>app] console
+
+To run an app or core <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="o">[</span>args]
+To run a plugin <span class="nb">command</span>, <span class="nb">type </span>cake Plugin.shell_name <span class="o">[</span>args]
+To get <span class="nb">help </span>on a specific <span class="nb">command</span>, <span class="nb">type </span>cake shell_name --help
+</pre>
+
+<p>のように表示されるはずです。</p>
+
+<h3>Bakeする</h3>
+
+<p>では早速Bakeしましょう</p>
+<pre class="highlight plaintext">$ Console/cake bake model Posts
+
+Welcome to CakePHP v3.0.0-dev2 Console
+---------------------------------------------------------------
+App : App
+Path: /vagrant/app/App/
+---------------------------------------------------------------
+One moment while associations are detected.
+
+Baking table class for Posts...
+
+Creating file /vagrant/app/App/Model/Table/PostsTable.php
+Wrote `/vagrant/app/App/Model/Table/PostsTable.php`
+
+Baking entity class for Post...
+
+Creating file /vagrant/app/App/Model/Entity/Post.php
+Wrote `/vagrant/app/App/Model/Entity/Post.php`
+
+Baking test fixture for Posts...
+
+Creating file /vagrant/app/Test/Fixture/PostFixture.php
+Wrote `/vagrant/app/Test/Fixture/PostFixture.php`
+
+Baking test case for App\Model\Table\PostsTable ...
+
+Creating file /vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php
+Wrote `/vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php`
+</pre>
+
+<p>うまく動きます！！</p>
+
+<p>続けてコントローラとビューも</p>
+<pre class="highlight plaintext">$ Console/cake bake controller Posts
+$ Console/cake bake view Posts
+</pre>
+
+<p>で生成します。</p>
+
+<p>一通りbakeしたら、http://192.168.13.37/posts/ にアクセスしてみます。</p>
+
+<p><img src="/images/blog/cakephp3_baked_posts.png" /></p>
+
+<p>おなじみのBake画面が表示されます。追加、変更、削除などもうまく動作するようです（執筆時においては）。</p>
+
+<p><img src="/images/blog/cakephp3_baked_saved.png" /></p>
+
+<h3>最後に</h3>
+
+<p>このブログはもくもく会から2週間ぐらい経過してしまいましたが、今回再度新しい環境を作って試しています。
+もくもく会のときも同様の手順で進めていたのですが、いくらかbake周辺でコードの変更があったようで、うまく動いていた箇所が動かなくなっていたり、動かなかった箇所が動いていたりします。
+開発者用のプレビュー2ということで、今後もコードは変わって行くと思いますが、Bakeが動く事で取り急ぎ動作するプログラムのベースは作れるようになっています。
+実際にアプリケーションを作ってみてCakePHP3の新機能について感想を書いてみたり、要望を出してみたりすることも実リリースまでの期間としては大切なことだと思うので、今回簡単ではありますがブログとして公開してみました。</p>
+
+<p>Co-Edo では今後も CakePHP3もくもく会が開かれると思うので、イベントページをチェックしておくと良いと思います。私も可能な範囲で参加していこうと思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 もくもく会#3 に参加して Bake してきた" data-url="http://blog.open.tokyo.jp/2014/04/19/cake3_mokumoku_3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/04/19/cake3_mokumoku_3.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/04/19/cake3_mokumoku_3.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/04/19/cake3_mokumoku_3.html&t=CakePHP3%20%E3%82%82%E3%81%8F%E3%82%82%E3%81%8F%E4%BC%9A%233%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Bake%20%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/04/19/cake3_mokumoku_3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/03/30.html">Sunday, March 30, 2014 06:22:00 PM</a></p>
   <p class="tags">
     
@@ -772,149 +1055,6 @@ windows上だと c:¥develop¥your_app¥app みたいなところ</li>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 11:13:26 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/middleman.html">middleman</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
-
-<h3>参考になったサイト</h3>
-
-<p>以下のサイトを参照しながら、作業を実施しました。</p>
-
-<ul>
-<li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
-<li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
-<li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
-<li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
-</ul>
-
-<h3>HTMLジェネレータは何を使うの？</h3>
-
-<p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
-
-<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&hellip;.</p>
-
-<p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
-
-<h3>Middleman インストール</h3>
-
-<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
-もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
-<pre class="highlight plaintext">gem install middleman
-</pre>
-
-<p>でインストールも楽々完了です。</p>
-
-<p>ブログモジュールを使うので、middleman の Gemfile に</p>
-<pre class="highlight plaintext">gem "middleman-blog", "~&gt; 3.5.1"
-</pre>
-
-<p>を追加して</p>
-<pre class="highlight plaintext">bundle install
-middleman init blog --template=blog
-</pre>
-
-<p>と実行すると blog ディレクトリに環境が生成されます。</p>
-
-<h3>WorkPress からのインポート</h3>
-
-<p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
-いよいよ先程の変換ツールで実行&hellip;. エラーだよ！！（泣）</p>
-
-<p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
-イロイロ調べたところ、</p>
-
-<ul>
-<li>wp2middleman</li>
-<li>wordpress-to-jekyll</li>
-<li>ruby-wpdb</li>
-<li>wp_conversion</li>
-</ul>
-
-<p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
-どれもうまくいかない&hellip;.</p>
-
-<p>python系のライブラリもあるらしく</p>
-
-<ul>
-<li>wp2md</li>
-<li>prlican-import</li>
-<li>exitwp</li>
-</ul>
-
-<p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
-しかしいくつか失敗する&hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」&hellip;..
-もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
-
-<h3>WordPress インストール</h3>
-
-<p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
-これを先程一番うまく変換できた exitwp にかけると&hellip;&hellip;.</p>
-
-<p>あらー全部奇麗に変換できるじゃないですかー</p>
-
-<h3>デザイン</h3>
-
-<p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
-<pre class="highlight plaintext">middleman server
-</pre>
-
-<p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
-
-<p>GitHub Pages へデプロイするために Gemfile に</p>
-<pre class="highlight plaintext">gem "middleman-deploy"
-</pre>
-
-<p>モジュールを追加して bundle install。</p>
-
-<p>config.rg に</p>
-<pre class="highlight plaintext">activate :deploy do |deploy|
-  deploy.build_before = true # default: false
-  deploy.method = :git
-  deploy.branch   = "master" # default: gh-pages
-end
-</pre>
-
-<p>な感じで設定したら </p>
-<pre class="highlight plaintext">middleman deproy
-</pre>
-
-<p>でビルドした内容をgithubへ連携してくれます。</p>
-
-<h3>今後</h3>
-
-<p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Middleman インストールメモ" data-url="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html&t=Middleman%20%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%83%A1%E3%83%A2" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -969,6 +1109,8 @@ end
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
+                
                   <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
                 
                   <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
@@ -986,8 +1128,6 @@ end
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
                 
                   <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
-                
-                  <li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a> <span>2014/03/08</span></li>
                 
               </ul>
             </div>
@@ -1323,6 +1463,14 @@ end
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1331,7 +1479,7 @@ end
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (11)</li>
+                  <li><a href="/2014.html">2014</a> (12)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
