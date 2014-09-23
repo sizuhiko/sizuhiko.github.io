@@ -275,7 +275,106 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a></h2>
+            <h2 class="title"><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/04/19.html">Saturday, April 19, 2014 04:38:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/html5.html">HTML5</a>
+    
+      <a rel="tag" href="/tags/test.html">Test</a>
+    
+      <a rel="tag" href="/tags/shadow-dom.html">Shadow-DOM</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>html5jテスト部の活動「<a href="http://html5j-testing.doorkeeper.jp/events/10161">Test the Web Forward Meetup (仮), Tokyo#2</a>」に参加してきました。</p>
+
+<p>当日は1回目の反省をふまえて以下の仕様について実施することとなっていました。</p>
+
+<ul>
+<li>HTMLのルビ（のパーサ周り）</li>
+<li>CSS Text Decoration</li>
+<li>Shadow DOM</li>
+</ul>
+
+<p>私は Shadow DOM を選択しました。理由はGoogle JapanのHayatoさんがSpecを書いているので、テストがマージされやすいんじゃないか？！という不純な動機と、仕様が難しいので参加者が少ないかな？という妄想からでした（ただ実際は一番人気でした！）。</p>
+
+<p>そもそもこの活動は何なのか？というと、<code>みんなでHTML5やCSS、API仕様のテストケースを書こうというミートアップです</code>と書いてある通りです。
+私たちWebに関わるデベロッパーであれば必ず利用するHTMLやCSS、ブラウザによって実装がマチマチでとか、IEがぁーとか言ってますよね。</p>
+
+<p>なぜそうなるのか？</p>
+
+<p>まずHTMLとかCSSはW3Cの仕様があってそれを各ブラウザベンダが実装するわけです（もちろん先に実装されているケースもあります）。ですが結果としてどのように見えるのか？という部分に関して言うと、特に<code>こうなるべき</code>という具体的な結果が書いてある訳ではありません。そうなると各ベンダは自分の実装は正しいと思ってリリースするのですが、それぞれバラバラだったという結果が起きるのです。
+そのため、W3Cではテストの充実に力を入れているのですが、現時点ではリソース不足であったり、そもそもスペックの理解不足という自体が起こります。W3Cのスペックを読んだことがあると何となく想像できるかな、と思います。
+そこでTest the Web Forwardという公式イベントや、今回のようなコミュニティ主導のミートアップでテストコードを充実させようという機会が増えてきています。</p>
+
+<h3>テストの準備をする</h3>
+
+<p><a href="http://testthewebforward.org/docs/github-101.html">Test the Web Forwardのドキュメント</a>を見れば、今時のWebデベロッパーであれば問題なく環境を構築することができます。
+pythonのバージョンが2.7系だったり、<code>pip install html5lib</code> が必要なのに漏れていた（これについては今回のミートアップでPRが出されてマージされたはずです）り、ちょっと面倒なのですがまぁ問題ないでしょう。GitHub便利。そのうちVagrantファイルでも作ろうかなーと思っています。
+ここまでは事前の準備としてやっておきました。</p>
+
+<h3>当日やったこと</h3>
+
+<p><a href="http://w3c.github.io/webcomponents/spec/shadow/">W3Cのスペック</a>を見ましょう。
+当日はHayato Itoさんから仕様の説明を受けて進めるという流れだったのですが、それにしても仕様がむずい。
+新しいテストケースはちょっと置いておき、既存のテストを流してみることにしました。すると１つエラーがあって、typoであることがわかったので<a href="https://github.com/w3c/web-platform-tests/pull/861">Pull Request</a>。これはすぐ取り込まれました。嬉しい！W3Cへの貢献ですよ！！</p>
+
+<p>続けて Fail しているテストについて、スペシャリストの方に確認して修正方針を聞いたりして、テストを黙々と書いていきます。
+1日作業でしたが、2つのテスト失敗を修正してタイムアップ。</p>
+
+<h3>テストのやり方</h3>
+
+<p>テストには</p>
+
+<ul>
+<li>refテスト
+期待値:新しい仕様で書いたものと同じになるように既存の仕様で書いたもの、実際:新しい仕様で書いたもの、をスクリーンショットで比較する<br></li>
+<li>domテスト
+testharness.js という xUnit ベースのテスティングフレームワークが使える</li>
+</ul>
+
+<p>2通りのやり方があって、Shadow DOMはtestharness.jsでDOMのテストをする段階でした。
+testharness.jsはxUnit系なんですが、equals(:actual, :expected) の記法になっていて、キモい！という話をしたら、開発者がmozilla系の方でfire方面ではそういう記述になっているという話を（FireFoxのcontributorの方から）伺うことができました。
+これもミートアップでこその体験です。</p>
+
+<p>モダンなテストの書き方という意味では、サーバサイドスクリプトとか今時のJavaScriptのテスティングフレームワークの方がイケてる感じにできますが、これも歴史的な背景（DOMの細かい評価をするのにtestharness.jsが最適であるという理由）ということです。今後についてはわからないけど、各ブラウザベンダなどがテストするときに利用しているということで変更（例えばJasmineに変えるとか）には高い壁があるのかもしれないです。</p>
+
+<h3>最後に</h3>
+
+<p>W3Cの活動に貢献する作業は今後も続けて行きたいので、ミートアップなくてもテストコードを書き続けて行きたいとおもいました。
+ただmetaデータの書き方とかちょっと特殊なところもあったので、新しくやる場合は既存のテストコードをいくつか参照して、書き方のテンプレート部分を把握した方が良いと思いました。</p>
+
+<p>それと今回はW3Cのテストスペシャリストとして Gérard Talbot 氏が初来日ということで基調講演を聴く事ができました。<a href="http://test.csswg.org/suites/css2.1/nightly-unstable/html4/vertical-align-117a.htm">2年間かかって作ったという最高傑作テストケース</a>を見てスペックのテストとは！を感じれたのも良かった。早速 Ahem フォントもインストールしました。</p>
+
+<p>ミートアップ終了後は懇親会もあったのですが、体調不良のため最後までは持たずに帰宅いたしました&hellip;.</p>
+
+<p>会場を提供いただいた Adobe さん（ノベルティまでいただき感謝！）、スポンサー各社様の協力でとても楽しいイベント（部活）でした。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた" data-url="http://blog.open.tokyo.jp/2014/04/19/twfm_2014_04.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/04/19/twfm_2014_04.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/04/19/twfm_2014_04.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/04/19/twfm_2014_04.html&t=Test%20the%20Web%20Forward%20Meetup%20(%E4%BB%AE),%20Tokyo%232%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Shadow%20DOM%20%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E6%9B%B8%E3%81%84%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/04/19/twfm_2014_04.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/04/19.html">Saturday, April 19, 2014 02:04:00 PM</a></p>
   <p class="tags">
     
@@ -899,162 +998,6 @@ $request-&gt;addParams(array(
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 04:12:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/composer.html">composer</a>
-    
-      <a rel="tag" href="/tags/phpunit.html">phpunit</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<p>現在以下のような環境を設置して開発をしています。</p>
-
-<ul>
-<li>ホストOS: Windows7 </li>
-<li>仮想環境: Vagrant + VirtualBox</li>
-<li>ゲストOS: CentOS 6.4</li>
-<li>開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  &hellip;</li>
-</ul>
-
-<h3>事件その1: Bddプラグインがインストールできなくなった</h3>
-
-<p>ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど&hellip;」
-という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。</p>
-
-<p>それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
-で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
-現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに</p>
-<pre class="highlight plaintext">"pear-phpunit/Object_Freezer": "*"
-</pre>
-
-<p>のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。</p>
-
-<h3>事件その2: PHPUnitがインストールできない!</h3>
-
-<p>で、Vagrant環境で更新してみたら&hellip;.</p>
-<pre class="highlight plaintext">composer update sizuhiko/Bdd
-</pre>
-
-<p>失敗&hellip;.</p>
-
-<p>しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
-ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。</p>
-
-<p>でcomposer.jsonにはPHPUnitの記述が</p>
-<pre class="highlight plaintext">"phpunit/phpunit": "3.7.*"
-</pre>
-
-<p>のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 <code>composer install</code> を実行すると</p>
-<pre class="highlight plaintext">.....
-  - Installing phpunit/php-token-stream (dev-master 292f4d5)
-    Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
-
-  - Installing phpunit/php-file-iterator (dev-master acd6903)
-    Cloning acd690379117b042d1c8af1fafd61bde001bf6bb
-
-  - Installing phpunit/php-code-coverage (1.2.x-dev 3a60a66)
-    Cloning 3a60a660998e8d41d5ea81ff8d96ead546bce150
-
-[RuntimeException]
-Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;
-&amp; git reset -- hard '3a60a660998e8d41d5ea81ff8d96ead546bce150'
-
-error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
-would be overwritten by merge.
-</pre>
-
-<p>のようにエラーになります。</p>
-
-<h3>事件その3: Issueが光の速さで取り消される</h3>
-
-<p>ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。</p>
-
-<p><a href="https://github.com/sebastianbergmann/phpunit/issues/1144">Can&rsquo;t install 3.7.x to Linux environment by composer</a></p>
-
-<p>ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。</p>
-
-<h3>原因を調べてみた</h3>
-
-<p>まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。</p>
-
-<p>ここで composer がどのようにライブラリを取得するか考えてみたところ、</p>
-
-<ul>
-<li>packagist からリポジトリ情報をダウンロード</li>
-<li>phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）</li>
-<li><code>git clone git@github.com:sebastianbergmann/phpunit.git</code> が実行される</li>
-<li>リリースを指定しているので一致するタグがチェックアウトされる <code>git checkout ....</code></li>
-</ul>
-
-<p>この最後のステップで「Untracked working tree file」になり失敗するのです。</p>
-
-<p>PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。</p>
-
-<p>自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功&hellip;. えぇぇー！</p>
-
-<p>その環境は Vagrant上のCentOSでなく、素のWindowsでした。
-何かがおかしい&hellip;.</p>
-
-<p>そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。</p>
-
-<p>composer update （この日は何度実行したろう&hellip;.）  &hellip;&hellip; 成功した！！！！でも、なんで？！</p>
-
-<h3>違いに悩むと&hellip;</h3>
-
-<p>成功したところ：</p>
-
-<ul>
-<li>素のWindows</li>
-<li>Vagrant仮想環境内の /tmp/work/app</li>
-</ul>
-
-<p>失敗したところ：</p>
-
-<ul>
-<li>Vagrantのsync<em>folderである /var/www/html/your</em>app/app (CentOSから見えるディレクトリ)
-windows上だと c:¥develop¥your_app¥app みたいなところ</li>
-</ul>
-
-<p>もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！</p>
-
-<p>という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。</p>
-
-<h3>まとめ</h3>
-
-<p>ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
-その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。</p>
-
-<p>上記のような <code>Failed to execute git checkout ...</code> エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。</p>
-
-<p>まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&hellip;</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="VagrantでComposerからPHPUnitをインストールするときに注意したいこと" data-url="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html&t=Vagrant%E3%81%A7Composer%E3%81%8B%E3%82%89PHPUnit%E3%82%92%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AB%E6%B3%A8%E6%84%8F%E3%81%97%E3%81%9F%E3%81%84%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1109,6 +1052,8 @@ windows上だと c:¥develop¥your_app¥app みたいなところ</li>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
+                
                   <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
                 
                   <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
@@ -1126,8 +1071,6 @@ windows上だと c:¥develop¥your_app¥app みたいなところ</li>
                   <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
                 
                   <li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a> <span>2014/03/08</span></li>
-                
-                  <li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a> <span>2014/03/08</span></li>
                 
               </ul>
             </div>
@@ -1317,6 +1260,10 @@ windows上だと c:¥develop¥your_app¥app みたいなところ</li>
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                    </li>
+                  
                   
                 
                   
@@ -1479,7 +1426,7 @@ windows上だと c:¥develop¥your_app¥app みたいなところ</li>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2014.html">2014</a> (12)</li>
+                  <li><a href="/2014.html">2014</a> (13)</li>
                 
                   <li><a href="/2013.html">2013</a> (6)</li>
                 
