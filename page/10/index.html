@@ -275,7 +275,318 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2009/07/22/cakephp-cafe-livetalk.html">CakePHP Cafe LiveTalk</a></h2>
+            <h2 class="title"><a href="/2009/10/01/cakephp-webtestcase-fixture.html">CakePHPのWebTestCaseでfixtureを使う</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/10/01.html">Thursday, October 01, 2009 08:10:02 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/fixture.html">fixture</a>
+    
+      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+    
+      <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;９／３０に行われた<a href="http://events.php.gr.jp/events/show/84">第46回PHP勉強会</a>で発表した内容ですが、そのままブログで読めるように展開します。</p>
+
+<hr>
+
+<h3>経緯</h3>
+
+<p>CakePHPはユニットテスト実行時にテストデータを投入するfixture機能をサポートしています。CakePHPのユニットテストはSimpleTestをベースにしており、UnitTestCaseと、それを継承してWebブラウザ動作のテストを行うWebTestCase、２つのテストケースを持っています。CakeではそれぞれCakeTestCase、CakeWebTestCaseという名前になります。
+ただしCakeWebTestCaseはWebTestCaseを継承しているだけで、何も機能拡張をしていません。</p>
+
+<p>cake/tests/lib/cake<em>web</em>test_case.php</p>
+<pre class="highlight plaintext">class CakeWebTestCase extends WebTestCase {
+}
+</pre>
+
+<p>CakePHPオフィシャルのCookBookでも、以下のように解説されています。</p>
+
+<blockquote>
+<p>CakeWebTestCase は、SimpleTest の WebTestCase をただ拡張したもので、特に機能追加はありません。SimpleTest の Web testing に関する文書中に記載がある全ての機能は、 CakeWebTestCase で利用できます。これはまた、 SimpleTest が持つ機能以外のものは使えないことを意味します。すなわち、 CakeWebTestCase においてフィクスチャは利用できず、テストケースにデータベースに対する更新や保存が含まれていた場合、恒久的にデータベースの値が変更されることを意味します。テストの結果は、しばしばデータベースが持つ値に基づくので、テスト手順の一部としてデータベースが期待した値を持つことを確認してください。</p>
+</blockquote>
+
+<p>しかし実際に開発の場面では、WebTestCaseを使って、ログインからの操作を試したり、データベースに依存した操作・結果を求めなければならない場面に遭遇します。そこで今回はfixutureを使えるようなWebTestCaseを作ってみます。</p>
+
+<h3>考察</h3>
+
+<p>今回fixtureを使えるWebTestCaseを作る上で、考慮したポイントは以下のとおりです。</p>
+
+<ol>
+<li>なるべく書かない</li>
+<li>Cakeのバージョンが変わっても簡単に移行したい</li>
+<li>いつかは本体に組み込んで欲しい</li>
+</ol>
+
+<p>そこで、今回はUnitTestCaseを継承している、cake<em>test</em>case.php を流用して差分のみ別クラスに作成することにしました。こうすると、後でCakeのバージョンが変わったても問題が少ないし、後で本体に組み込んでもらうときもわかりやすいと思ったからです。</p>
+
+<h3>実施</h3>
+
+<p>実施の手順は以下のとおりです。</p>
+
+<ol>
+<li>cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</li>
+<li>上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</li>
+<li>FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</li>
+<li>FixturableWebTestCase を作成</li>
+<li>bootstrap に初期化コードを追加</li>
+<li>実際のテストケースを記述</li>
+</ol>
+
+<p>それぞれの手順を詳細に解説します。</p>
+
+<h4>1.cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</h4>
+
+<p>まず流用元のテストケースをコピして、継承する元になるクラスを作成します。</p>
+<pre class="highlight plaintext">cd {アプリケーションのHOMEディレクトリ}
+mkdir app/vendors/webtest
+
+cp cake/tests/lib/cake_test_case.php app/vendors/webtest/fixturable_web_base_test_case.php
+</pre>
+
+<h4>2.上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</h4>
+
+<p>これはお使いのエディタを開いて、置換機能を使えばあっという間に完了です。
+app/vendors/webtest/ fixturable<em>web</em>base<em>test</em>case.php を編集してください。</p>
+
+<h4>3.FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</h4>
+
+<p>このままでは、単にCakeTestCaseの名前を変更しただけなので、そのスーパークラスをUnitTestCaseからWebTestCaseに変更します。</p>
+<pre class="highlight plaintext">class FixturableWebBaseTestCase extends WebTestCase {
+    // extends を変更する
+}
+</pre>
+
+<h4>4.FixturableWebTestCase を作成</h4>
+
+<p>手順3でWebTestCaseを使ったCakeTestCaseと似たものができました。ただしこのままではWebアクセス時にfixtureを読み込むようにはできません。
+FixturableWebBaseTestを継承したクラスを作成します。このクラスでは、Webテスト中なのか、通常動作中なのかを判定するロジック（CakeTestCaseからの差分）を記述します。
+またWebテスト中なのか、そうでないのかを判定するために、以下の方法を検討しました。</p>
+
+<ul>
+<li>tmp/tests 以下のファイルで識別する</li>
+<li>UserAgentを使って識別する</li>
+<li>HTTP独自ヘッダで識別する</li>
+</ul>
+
+<p>まずUserAgentでテスト中か判断する方法を思いついたのですが、Webテストの場合UserAgentそのものを判断してビューを切り替えたり（特に携帯など）するので、これは方法としては最適ではないと判断し却下。
+HTTP独自ヘッダは、やはり通常運用しているときにセキュリティホールを作る事にも繋がるので、微妙なところです。ただし通常（本番）運用する場合はCakeのデバッグレベルを0にして運用すると思うので、独自ヘッダの判定前にデバッグレベルを判定すれば問題ないということも言えます。
+そこで今回は、tmp/tests以下にテンポラリファイルを作って判定するという方法を採用しています。
+app/vendors/webtest/fixturable<em>web</em>test_case.php</p>
+<pre class="highlight plaintext">&lt;?php
+App::import('Vendor', 'webtest' . DS . 'fixturable_web_base_test_case');
+
+/**
+ * FixturableWebTestCase class
+ */
+class FixturableWebTestCase extends FixturableWebBaseTestCase {
+    /**
+     * @overwrite 
+     */
+    function startCase() {
+        $this-&gt;_lockWebTesting();
+    }
+    /**
+     * @overwrite 
+     */
+    function endCase() {
+        $this-&gt;_unlockWebTesting();
+    }
+    /**
+     * bootstrap.php から呼び出す
+     */
+    function initIfTestMode() {
+        if(file_exists(FixturableWebTestCase::_getLockFileName())) {
+            parent::_initDb();
+            Configure::write('Acl.database', 'test_suite');
+        }
+    }
+    /**
+     * TMPファイルを作成して、Webテスト中であることを宣言
+     */
+    function _lockWebTesting() {
+        touch($this-&gt;_getLockFileName());
+    }
+    /**
+     * TMPファイルを削除して、Webテスト中でなくす
+     */
+    function _unlockWebTesting() {
+        unlink($this-&gt;_getLockFileName());
+    }
+    function _getLockFileName() {
+        return TMP.'tests'.DS.'fixturable.web.test.tmp';
+    }
+}
+</pre>
+
+<h4>5.bootstrap に初期化コードを追加</h4>
+
+<p>最後の準備として、bootstrapに初期化コードを追加します。bootstrapはCakePHPで動作するすべてのアクションが必ず通過する最初のポイントなので、ここで利用するデータベースを切り替えるようにします。
+app/config/bootstrap.php</p>
+<pre class="highlight plaintext">if(($_SERVER['PHP_SELF'] != '/webroot/test.php') &amp;&amp; Configure::read() &gt; 0) {
+  if(App::import('Vendor', 'webtest' . DS . 'fixturable_web_test_case')) {
+    FixturableWebTestCase::initIfTestMode();
+  }
+}
+</pre>
+
+<p>bootstrapはテストコードをtest.phpから実行しようとした場合も通過してしまうので、このURLはフィルタする必要があります。また通常運用で呼ばれないようにデバッグ値が０より大きい場合にデータベースの切り替えを実行するようにします。</p>
+
+<h4>6.実際のテストケースを記述</h4>
+
+<p>これでWebTestCaseでfixtureが使える準備は整いました。後はテストケースを記述するだけです。
+今回サンプルとして、私の執筆した「<a href="http://www.amazon.co.jp/CakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA-%E5%AE%89%E8%97%A4-%E7%A5%90%E4%BB%8B/dp/4839930651/ref=sr_1_1?ie=UTF8&amp;amp;s=books&amp;amp;qid=1254396747&amp;amp;sr=1-1">CakePHPによる実践Webアプリケーション開発</a>」で作ったCalendarNoteをテストしてみます。</p>
+<pre class="highlight plaintext">&lt;?php 
+App::import('Vendor', 'webtest' . DS . 'fixturable_web_test_case');
+
+class UsersWebTest extends FixturableWebTestCase {
+    var $fixtures = array('app.group', 'app.user', 'app.users_group',     'app.schedule', 'app.schedules_user',
+        'app.aco', 'app.aro', 'app.aros_aco'
+    );
+
+    function startTest($method) {
+        parent::startTest($method);
+        Configure::write('Acl.database', 'test_suite');
+        $this-&gt;addHeader('Accept-Language:ja');
+    }
+    function testLoginAndCheckSchedule() {
+        $this-&gt;assertTrue($this-&gt;get('http://calendarnote.localhost/users/login'));
+        $this-&gt;assertTitle(new PatternExpectation('/CalendarNote/'));
+        $this-&gt;assertSubmit('Login');
+
+        $this-&gt;clickSubmit('Login', array(
+            'data[User][username]'=&gt;'hide',
+            'data[User][password]'=&gt;'password',
+        ));
+        $this-&gt;assertText('Hidetoshi Nakata');
+        $this-&gt;assertLink('ログアウト');
+
+        $this-&gt;assertTrue($this-&gt;get('http://calendarnote.localhost/schedules/index/month/2009/01'));
+        $this-&gt;assertText('2008年12月28日');
+        $this-&gt;assertTrue($this-&gt;clickLink('10:00-12:00 Nengashiki'));
+
+        $this-&gt;assertFieldByName('data[Schedule][title]', 'Nengashiki');
+        $this-&gt;assertFieldByName('data[Schedule][contents]', 'In Japan, there are the New Year holidays and a New-Year's-greetings ceremony is performed to the first day of work.');
+
+    }
+    function endTest($method) {
+        parent::endTest($method);
+        $this-&gt;get('http://calendarnote.localhost/users/logout');
+    }
+}
+</pre>
+
+<p>このテストシナリオは以下のとおりです。</p>
+
+<ol>
+<li>ログイン画面にアクセスできるか検証する</li>
+<li>タイトルがCalendarNoteになっているか検証する</li>
+<li>ログインボタンが出ているか検証する</li>
+<li>ユーザ名hide、パスワードpasswordでログイン（サブミット）する</li>
+<li>次の画面に、フルネームが表示されていて、ログアウトリンクがあるか検証する。</li>
+<li>2009年1月の月単位スケジュール一覧に遷移できることを検証する。</li>
+<li>2008年12月28日という文字列の表示を検証する。</li>
+<li>スケジュール詳細へのリンクが表示されることを検証する。</li>
+<li>フォームのタイトルに正しい値が入っていることを検証する。</li>
+<li>フォームのコンテンツに正しい値が入っていることを検証する。</li>
+</ol>
+
+<p>テストコードに目を向けると、最初にApp::importでテストケースの親クラスを取り込んで、テストケースの親クラスをFixturableWebTestCaseに指定する以外、ほとんど通常のモデルなどのテストコードと書き方は同じだということに気がつくでしょう。特にfixtureの記法に関しては、まったく同じです。
+これは「cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更」したために、CakeTestCaseと同じ機能が利用できるようになっているのです。
+もちろん記述方法が同じなら、実行方法も同じで、<a href="http://localhost/test.php">http://localhost/test.php</a>のようにブラウザからの実行や、コンソールからの実行なども問題ありません。CakeMateを使ってTextMate上からもテストが実行できます。もちろんコンソールやTextMateなどCLI環境から実行する場合なども、裏でHTTPアクセスするので、Apacheは動作している必要があります。
+Webテストで、どのようなブラウザ動作ができるのかは、本家のSimpleTestサイトか、こちらも私が執筆に参加した「<a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;amp;s=books&amp;amp;qid=1254396747&amp;amp;sr=1-2">Webアプリケーションテスト手法</a>」にて確認してください。</p>
+
+<h3>最後に</h3>
+
+<p>本カスタマイズはPHP5.2.10、CakePHP1.2.5で検証しています。CakePHP1.2系であれば特に問題なく動作すると思いますが、うまく動作しない場合はコメントいただけると助かります。
+今後の展開としては、まずこの記事を英語にしてBakeryにアップしたいと思います。
+それをきっかけにコア開発者の目にでもとまったら、本体への組み込みなんか検討してくれるかもしれません。
+もしかして一度やろうとしてやめたのかもしれないんですけど、Cake祭り(*1)でコア開発者が日本に来るので、直接聞いてみたいなと思います。</p>
+
+<hr>
+
+<p>(*1) Cake祭り：昨年はCakePHPカンファレンスとして実施した、イベントの第２回目。今年もコア開発者が日本に来るので要注目のイベントです。今すぐ申し込みへ。
+<a href="http://matsuri.cakephp.jp/">http://matsuri.cakephp.jp/</a></p>
+
+<div style="width:425px;text-align:left" id="__ss_2102965">
+<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/cakephpwebtestcasefixture" title="CakePHPのWebTestCaseでfixtureを使う" rel="nofollow">CakePHPのWebTestCaseでfixtureを使う</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture">
+<param name="allowFullScreen" value="true">
+<param name="allowScriptAccess" value="never">
+<embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View more <a style="text-decoration:underline;" href="http://www.slideshare.net/" rel="nofollow">documents</a> from <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
+</div>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのWebTestCaseでfixtureを使う" data-url="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html&t=CakePHP%E3%81%AEWebTestCase%E3%81%A7fixture%E3%82%92%E4%BD%BF%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/07/25/cakephp-cafe-livetalk-2.html">CakePHP Cafe LiveTalk は盛況のうちに終了しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/07/26.html">Sunday, July 26, 2009 12:07:06 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;本日、ジュンク堂池袋店にて、CakePHP1.2ガイドブック刊行記念トークショー（CakePHP Cafe LiveTalk）で司会を勤めました。  </p>
+
+<p>相変わらずゆるーい感じの仕切りでしたが、１時間半という時間を感じさせない内容になっていたのではないでしょうか？  </p>
+
+<p>Cafe LiveTalkと銘打ったように「Cafeでの楽しいおしゃべり」的な雰囲気を出せたのではないかと思います。  </p>
+
+<p>花火大会やガンダムを見るBBQなど誘惑の多い、しかも真夏日な暑い一日でしたが、来場していただいた皆様に感謝です。  </p>
+
+<p>本日の模様はUSTなどされなかったのですが、後日動画サイトに一部アップされるかも？しれません。  </p>
+
+<p>参加者の皆様のBlogを見るのが楽しみやら、心配やら。あんまり本の話をしなかったしなー（汗）  </p>
+
+<p>またCakePHPオフ会や、PHPカンファレンス、CakePHPカンファレンスでお会いしましょう。ではでは。  </p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP Cafe LiveTalk は盛況のうちに終了しました" data-url="http://blog.open.tokyo.jp/2009/07/25/cakephp-cafe-livetalk-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/07/25/cakephp-cafe-livetalk-2.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/07/25/cakephp-cafe-livetalk-2.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/07/25/cakephp-cafe-livetalk-2.html&t=CakePHP%20Cafe%20LiveTalk%20%E3%81%AF%E7%9B%9B%E6%B3%81%E3%81%AE%E3%81%86%E3%81%A1%E3%81%AB%E7%B5%82%E4%BA%86%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/07/25/cakephp-cafe-livetalk-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/07/22/cakephp-cafe-livetalk.html">CakePHP Cafe LiveTalk</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2009/07/22.html">Wednesday, July 22, 2009 10:07:55 AM</a></p>
   <p class="tags">
     
@@ -427,88 +738,6 @@
     </div>
 
   </div>
-  <h2 class="title"><a href="/2009/03/11/cakephp-web.html">「CakePHPによる実践Webアプリケーション開発」が出ます</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2009/03/11.html">Wednesday, March 11, 2009 05:03:39 PM</a></p>
-  <p class="tags">
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;Amazonにupされていたので、もう告知してもいいかな。  </p>
-
-<p>3/26(木)3/31（Amazonでは4/8になってますね）に発売される「CakePHPによる実践Webアプリケーション開発」という本を企画＆共著しました。  </p>
-
-<p><a href="http://www.amazon.co.jp/CakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA-%E5%AE%89%E8%97%A4-%E7%A5%90%E4%BB%8B/dp/4839930651/ref=sr_1_38?ie=UTF8&amp;amp;s=books&amp;amp;qid=1236752037&amp;amp;sr=8-38"><img src="http://images.amazon.com/images/P/4839930651.09._PC_SCMZZZZZZZ_.jpg" /></a></p>
-
-<p>内容は入門的な内容はほとんどなく、淡々とサンプルアプリケーション（サイボウズ的なスケジュール表）を作っていくというものです。  </p>
-
-<p>今までCakePHPではこの手の本がなかったので、１冊ぐらいあっても良いかな？ということで。皆様、手にとって・・・というかぜひ買ってください！:cry:   </p>
-
-<p>CakePHP1.2stableをベースとした最初の書籍となる・・・・なんて書いたのですが、なんとその２週間ぐらい前の14日に、秀和システムさんから題名も良く似た「CakePHPによるWebアプリケーション開発」という本も出るようです（こちらはAmazonに登録がないので、実体はよくわかりません）。うーん執筆中に他の本の状況はわからないですからねー。  </p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="「CakePHPによる実践Webアプリケーション開発」が出ます" data-url="http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html&t=%E3%80%8CCakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA%E3%80%8D%E3%81%8C%E5%87%BA%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2009/03/07/cakephp-tokyo.html">CakePHPハンズオン＠Tokyo#2が実施されました。</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2009/03/07.html">Saturday, March 07, 2009 11:03:25 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://events.php.gr.jp/events/show/70">CakePHPハンズオン＠Tokyo#2</a>にサポーターとして参加してきました。  </p>
-
-<p>えーXAMPP方面でいくらかヘルプできたかな？と。  </p>
-
-<p>後は皆さん以外とスムーズに進んでいたようで、感心が高く事前に予習している感がありました。すごーい。  </p>
-
-<p>反省としては、あんまり本のCMができなかったことでしょうか:ko:   </p>
-
-<p>来週九州でCakePHP勉強会があるので、共著の皆様に宣伝をお願いする事にします・・・</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPハンズオン＠Tokyo#2が実施されました。" data-url="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html&t=CakePHP%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%EF%BC%A0Tokyo%232%E3%81%8C%E5%AE%9F%E6%96%BD%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -578,6 +807,10 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
+                
+                  <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
+                
                   <li><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a> <span>2014/10/13</span></li>
                 
                   <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
@@ -593,10 +826,6 @@
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
                 
                   <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a> <span>2014/03/30</span></li>
-                
-                  <li><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a> <span>2014/03/22</span></li>
                 
               </ul>
             </div>
@@ -948,6 +1177,10 @@
                   
                   
                 
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -955,6 +1188,8 @@
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                
+                  <li><a href="/2015.html">2015</a> (2)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
