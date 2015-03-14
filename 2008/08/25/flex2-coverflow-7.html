@@ -313,11 +313,11 @@
 <h3>■マウスの基本動作はクリックと移動</h3>
 
 <p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
-<pre class="highlight plaintext">&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
+<pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
       paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
       mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
       mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
-</pre>
+</code></pre>
 
 <p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
 
@@ -341,8 +341,8 @@
 
 <p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
 料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
-<pre class="highlight plaintext">if(event.target.parent is HScrollBar)
-</pre>
+<pre class="highlight plaintext"><code>if(event.target.parent is HScrollBar)
+</code></pre>
 
 <p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
 
@@ -351,8 +351,8 @@
 <p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
 
 <p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
-<pre class="highlight plaintext">h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
-</pre>
+<pre class="highlight plaintext"><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
+</code></pre>
 
 <p>のように、記述します。  </p>
 
@@ -401,6 +401,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -418,8 +420,6 @@
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -581,7 +581,7 @@
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -697,6 +697,10 @@
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -783,7 +787,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

@@ -320,7 +320,7 @@
 <p>最後に、当日紹介したサンプルのCakePHPテストコードを掲載しておきます。</p>
 
 <h5>モデルのテスト例：</h5>
-<pre class="highlight php"><span class="cp">&lt;?php</span>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
 <span class="k">class</span> <span class="nc">PostTest</span> <span class="k">extends</span> <span class="nx">CakeTestCase</span> <span class="p">{</span>
     <span class="k">public</span> <span class="nv">$fixture</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'app.Post'</span><span class="p">,</span> <span class="s1">'app.Comment'</span><span class="p">];</span>
 
@@ -343,12 +343,12 @@
 
     <span class="p">}</span>
 <span class="p">}</span>
-</pre>
+</code></pre>
 
 <p>モデルの初期化方法には3つのやり方があり、通常は<code>ClassRegistry::init()</code>で良いのですが、モデルをモックしたい場合は<code>getMockForModel()</code>というCakeTestCaseが用意してくれているモデル専用のモックジェネレータを使います。第二引数にメソッドの配列を指定するとパーシャルモックとなり、特定のメソッドのみモックします。</p>
 
 <h5>コントローラのテスト例:</h5>
-<pre class="highlight php"><span class="cp">&lt;?php</span>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
 <span class="k">class</span> <span class="nc">PostsControllerTest</span> <span class="k">extends</span> <span class="nx">ControllerTestCase</span> <span class="p">{</span>
     <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span> <span class="p">{</span>
         <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">controller</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">generate</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,[</span>
@@ -388,7 +388,7 @@
 
     <span class="p">}</span>
 <span class="p">}</span>
-</pre>
+</code></pre>
 
 <p>コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには<code>ControllerTestCase</code>が用意してくれているコントローラ専用のモックジェネレータである<code>generate()</code>を利用します。generateで作成したインスタンスをテストケースクラスの<code>controller</code>メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。</p>
 
@@ -425,6 +425,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -442,8 +444,6 @@
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -605,7 +605,7 @@
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -721,6 +721,10 @@
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -807,7 +811,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

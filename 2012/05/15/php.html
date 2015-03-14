@@ -296,7 +296,7 @@
 <p>LTのスライドでも紹介したのはPHPといえばまず最初に思いつく <a href="http://www.phpspec.net/">PHPSpec</a> です。大抵はまず「言語プレフィクス+Spec」で検索してみますよね。PHPはユニットテストがPHPUnitだからPHPSpecだよね、と誰もが連想できます。  </p>
 
 <p>で、PHPSpecの書き方としては、</p>
-<pre class="highlight plaintext">class DescribeNewBowlingGame extends PHPSpecContext {  
+<pre class="highlight plaintext"><code>class DescribeNewBowlingGame extends PHPSpecContext {  
     private $_bowling = null;  
     public function before() {  
         $this-&gt;_bowling = $this-&gt;spec(new Bowling);  
@@ -309,7 +309,7 @@
         $this-&gt;_bowling-&gt;score-&gt;should-&gt;equal(0);  
     }  
 }  
-</pre>
+</code></pre>
 
 <p>のように、まぁPHPのコードだとすれば読むのはそれほど困難ではないわけですが、やっぱりSpec（仕様）という視点で眺めると、ちょっと無駄な記述が目立ちますよね。それは言語の文法だからしょうがない、そうなんですが。  </p>
 
@@ -335,7 +335,7 @@ yuya-takeyamaさん(@yuya_takeyama)がRspecに影響を受けて作成。subject
 Hamcrestライブラリとtoken<em>get</em>all関数を使って、自然に英語として読める文章として記述が可能。解析した結果をPHPUnitのテストケースとして生成して実行している</p>
 
 <p>以下のコードは、Speciphy を例にPHPSpec以外でどのように書けるかをあらわしています。pecsもspectrumもほぼ同じような記述になります。</p>
-<pre class="highlight plaintext">namespace SpeciphyDSL;
+<pre class="highlight plaintext"><code>namespace SpeciphyDSL;
 return
 describe('Bowling',
     describe('-&gt;score',
@@ -353,17 +353,17 @@ describe('Bowling',
         )
     )
 );
-</pre>
+</code></pre>
 
 <p>だいぶ読みやすくなりました。ではRSpecと比較してみま&hellip;.す？えっ、やっちゃうの、それは&hellip;.</p>
-<pre class="highlight plaintext">describe Bowling, "#score" do
+<pre class="highlight plaintext"><code>describe Bowling, "#score" do
   it "returns 0 for all gutter game" do
     bowling = Bowling.new
     20.times { bowling.hit(0) }
     bowling.score.should eq(0)
   end
 end
-</pre>
+</code></pre>
 
 <p>こんな感じです。subjectやcontext使っている違いとかありますが、PHPの場合はどうしても無名関数を使うのに </p>
 
@@ -376,7 +376,7 @@ end
 <h3>変態PHPスペックフレームワーク Spec for PHP</h3>
 
 <p>そこで Spec for PHP ということなのですが、こいつはだいぶ変態です（ごめんなさい。良い意味です）。まず先程紹介したような funcition(){ &hellip; } の無名関数で書いたような記法も使えます。それはほぼ同じように書く事が可能です。で、何が変態かと言うと Hamcrestライブラリとtoken<em>get</em>all関数を使って構文解析することで、以下のようなSpecが書けちゃいます。</p>
-<pre class="highlight plaintext">describe "Bowling"
+<pre class="highlight plaintext"><code>describe "Bowling"
   describe "#score"
     it "returns 0 for all gutter game"
       $bowling = new Bowling;
@@ -387,7 +387,7 @@ end
     end
   end
 end
-</pre>
+</code></pre>
 
 <p>it ブロックの内容は、Hamcrestを使って$bowling-&gt;score should equal 0 のように書いていますが、基本的にはPHPのソースコードであるとわかるでしょう。ただしdescribeやitなどの構文からはfunctionが消えて見通しが良くなっています。  </p>
 
@@ -411,7 +411,7 @@ end
 <p>上記問題に対応するための修正と、日本語関連でPHP関数名の正規表現に x7f-xff の範囲を追加した修正が、 <strong>develop ブランチ</strong>に入っていますので、こちらでお試しください。  </p>
 
 <p>まず必要なpearパッケージをインストールします。すでにインストール済みならスキップして構いません。</p>
-<pre class="highlight plaintext">pear channel-discover pear.phpunit.de
+<pre class="highlight plaintext"><code>pear channel-discover pear.phpunit.de
 pear install phpunit/PHPUnit
 pear install phpunit/Object_Freezer
 pear install Console_CommandLine
@@ -419,12 +419,12 @@ pear install Console_CommandLine
 Install Hamcrest matchers library
 pear channel-discover hamcrest.googlecode.com/svn/pear
 pear install hamcrest/Hamcrest
-</pre>
+</code></pre>
 
 <p>つづいて、githubからcloneしてdevelopにスイッチします。</p>
-<pre class="highlight plaintext">git clone git@github.com:sizuhiko/Spec-PHP.git
+<pre class="highlight plaintext"><code>git clone git@github.com:sizuhiko/Spec-PHP.git
 git checkout origin/develop -b develop
-</pre>
+</code></pre>
 
 <p>Spec for PHPはPHPUnit経由の実行方法と、Cliランナーも持っています。</p>
 
@@ -470,6 +470,8 @@ git checkout origin/develop -b develop
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -487,8 +489,6 @@ git checkout origin/develop -b develop
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -650,7 +650,7 @@ git checkout origin/develop -b develop
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -766,6 +766,10 @@ git checkout origin/develop -b develop
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -852,7 +856,7 @@ git checkout origin/develop -b develop
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

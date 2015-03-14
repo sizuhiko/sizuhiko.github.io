@@ -309,21 +309,21 @@
 </ol>
 
 <p>のいずれかから導入可能です。この記事ではgithubから取得して進めます。</p>
-<pre class="highlight plaintext">git clone git://github.com/bluelovers/phpQuery.git
-</pre>
+<pre class="highlight plaintext"><code>git clone git://github.com/bluelovers/phpQuery.git
+</code></pre>
 
 <h3>サンプルHTMLの取得</h3>
 
 <p>この記事では、みんな大好きWORDPRESSの日本語TOPページのHTMLを使ってみたいと思います。  </p>
-<pre class="highlight plaintext">mkdir templates
+<pre class="highlight plaintext"><code>mkdir templates
 wget http://ja.wordpress.org/
 mv index.html templates
-</pre>
+</code></pre>
 
 <p>ここで注意なのですが、現在DOMDocumentではXHTMLを正しくパースできないようです。そこで、通常のHTMLとして解釈できるように先頭数行を以下のように書き換えます。</p>
-<pre class="highlight html"><span class="nt">&lt;html&gt;</span>
+<pre class="highlight html"><code><span class="nt">&lt;html&gt;</span>
     <span class="nt">&lt;head&gt;</span>
-</pre>
+</code></pre>
 
 <p>DOCTYPEを削除し、htmlとheadにあった属性を削除しています。  </p>
 
@@ -338,7 +338,7 @@ mv index.html templates
 <h3>phpshを使って試す</h3>
 
 <p>簡単に試すにはインタラクティブシェルを使うのが便利なので、今回もphpshを使います。  </p>
-<pre class="highlight plaintext">bash-3.2$ phpsh
+<pre class="highlight plaintext"><code>bash-3.2$ phpsh
 Starting php
 type 'h' or 'help' to see instructions &amp; features
 
@@ -346,12 +346,12 @@ php&gt; require('phpQuery/phpQuery/phpQuery.php');
 php&gt; $file = file_get_contents('template/index.html');
 php&gt; $html = phpQuery::newDocumentHTML($file);
 php&gt; echo $html-&gt;html();
-</pre>
+</code></pre>
 
 <p>最後のhtml()で読み込んだHTMLがそのまま出力されることを確認しましょう。  </p>
 
 <p>ブログ記事の箇所のHTMLは以下のようになっています。  </p>
-<pre class="highlight plaintext">&lt;div id="blog" class="section"&gt;
+<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
   &lt;div class="main"&gt;
     &lt;h3&gt;ブログ&lt;/h3&gt;
     &lt;div class="post" id="post-2057"&gt;
@@ -368,10 +368,10 @@ php&gt; echo $html-&gt;html();
       &lt;p&gt;WordPress 3.3「Sonny」がご利用いただけるようになりました。&lt;/p&gt;
     &lt;/div&gt;
   &lt;/div&gt;
-</pre>
+</code></pre>
 
 <p>ブログ記事は $posts という配列に入っていると仮定します。</p>
-<pre class="highlight plaintext">php&gt; $html['#blog .post:gt(0)']-&gt;remove();
+<pre class="highlight plaintext"><code>php&gt; $html['#blog .post:gt(0)']-&gt;remove();
 php&gt; $html['#blog .post']-&gt;wrapPHP('foreach($posts as $post) {', '}');
 php&gt; $html['#blog .post']-&gt;attrPHP('id', 'echo "post-$post-&gt;id;"');
 php&gt; $html['#blog .post h4 a']-&gt;attrPHP('href', 'echo $post-&gt;url;')-&gt;attrPHP('title', 'echo $post-&gt;title;')-&gt;php('echo $post-&gt;title;');
@@ -379,10 +379,10 @@ php&gt; $html['#blog .post h6']-&gt;php('echo $post-&gt;date;');
 php&gt; $html['#blog .post .entry p']-&gt;php('echo $post-&gt;intro;');
 
 php&gt; print $html-&gt;php();                                                                                             
-</pre>
+</code></pre>
 
 <p>のようにphpshで実行すると、先ほどのHTML部分が以下のようになります。</p>
-<pre class="highlight plaintext">&lt;div id="blog" class="section"&gt;
+<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
   &lt;div class="main"&gt;
     &lt;h3&gt;ブログ&lt;/h3&gt;
     &lt;?php  foreach($posts as $post) {  ?&gt;
@@ -395,7 +395,7 @@ php&gt; print $html-&gt;php();
       &lt;/div&gt;
     &lt;?php  }  ?&gt;
   &lt;/div&gt;
-</pre>
+</code></pre>
 
 <p>どうです？  </p>
 
@@ -442,6 +442,8 @@ php&gt; print $html-&gt;php();
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -459,8 +461,6 @@ php&gt; print $html-&gt;php();
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -622,7 +622,7 @@ php&gt; print $html-&gt;php();
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -738,6 +738,10 @@ php&gt; print $html-&gt;php();
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -824,7 +828,7 @@ php&gt; print $html-&gt;php();
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

@@ -311,7 +311,7 @@ Searchプラグインにも、あのビルド成功やダウンロード数、�
 
 <p><code>.travis.yml</code> ファイルがあるので、内容を確認してみます。
 すると、</p>
-<pre class="highlight yaml"><span class="s">before_script</span><span class="pi">:</span>
+<pre class="highlight yaml"><code><span class="s">before_script</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">git clone https://github.com/burzum/travis.git --depth 1 ../travis</span>
   <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
   <span class="pi">-</span> <span class="s">if [ "$PHPCS" != 1 ]; then</span>
@@ -319,7 +319,7 @@ Searchプラグインにも、あのビルド成功やダウンロード数、�
                 <span class="s">require_once APP . DS . 'vendor' . DS . 'phpunit' . DS . 'phpunit' . DS . 'PHPUnit' . DS . 'Autoload.php';</span>
             <span class="s">" &gt;&gt; ../cakephp/app/Config/bootstrap.php;</span>
     <span class="s">fi</span>
-</pre>
+</code></pre>
 
 <p><code>https://github.com/burzum/travis.git</code>をcloneしてきて、何かやっているようです。</p>
 
@@ -340,7 +340,7 @@ This repository helps easy travis integration for CakePHP plugins, primarily foc
 <p>最近作った中で、最も思い入れのあるCakePHPプラグイン<code>Fabricate</code>を継続的インテグレーションするため、上記の<code>FriendsOfCake/travis</code>を導入してみます。</p>
 
 <p><code>Quick Install</code>に書いてるとおり、以下の手順で進めます。</p>
-<pre class="highlight shell"><span class="nb">cd</span> ~/develop/fabricate
+<pre class="highlight shell"><code><span class="nb">cd</span> ~/develop/fabricate
 
 git clone https://github.com/FriendsOfCake/travis.git
 
@@ -349,7 +349,7 @@ git clone https://github.com/FriendsOfCake/travis.git
 travis/setup.sh
 
 rm -rf travis
-</pre>
+</code></pre>
 
 <p>私がやったときはこの手順ではなかったのですが、最近変わったみたいです…
 まぁ細かい事は気にせずですね。</p>
@@ -386,10 +386,10 @@ rm -rf travis
 <p><img src="/images/blog/cakephp2_plugin_ci_4.png" /></p>
 
 <p>現在のtravis.gitではPHP5.4以上のようなので、問題ないのですが、当時（と言っても数ヶ月前）はPHP5.3もテスト対象になっていたので、ショートArrayシンタックスを使っている私のコードはテストが失敗していました。.travis,ymlのPHP部分を以下のように変更して</p>
-<pre class="highlight yaml"><span class="s">php</span><span class="pi">:</span>
+<pre class="highlight yaml"><code><span class="s">php</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">5.4</span>
   <span class="pi">-</span> <span class="s">5.5</span>
-</pre>
+</code></pre>
 
 <p>pushすると、ビルド結果は以下のようになります。</p>
 
@@ -399,7 +399,7 @@ rm -rf travis
 
 <p>PHPCSではCakePHPのコード標準がチェックされます。
 CakePHPの標準コードチェックだと厳しい部分だったり、パラメータを変更してチェックさせたくないディレクトリがあったりすると思うので、<code>PHPCS_ARGS</code>でphpcsを実行するときのパラメータを上書きできるようになっています。</p>
-<pre class="highlight yaml"><span class="s">matrix</span><span class="pi">:</span>
+<pre class="highlight yaml"><code><span class="s">matrix</span><span class="pi">:</span>
   <span class="s">include</span><span class="pi">:</span>
     <span class="pi">-</span> <span class="s">php</span><span class="pi">:</span> <span class="s">5.4</span>
       <span class="s">env</span><span class="pi">:</span>
@@ -409,11 +409,11 @@ CakePHPの標準コードチェックだと厳しい部分だったり、パラ�
         <span class="pi">-</span> <span class="s">PHPCS=1</span>
         <span class="pi">-</span> <span class="s">PHPCS_ARGS="-p -s --extensions=php --standard=ruleset.xml --ignore='*/Test/*,*/Vendor/*' ."</span>
 
-</pre>
+</code></pre>
 
 <p>拡張子phpのファイルを対象とし、TestやVendorのディレクトリを対象外として実行します。
 ruleset.xmlは以下のようにしました。</p>
-<pre class="highlight xml"><span class="nt">&lt;ruleset</span> <span class="na">name=</span><span class="s">"Custom Standard"</span><span class="nt">&gt;</span>
+<pre class="highlight xml"><code><span class="nt">&lt;ruleset</span> <span class="na">name=</span><span class="s">"Custom Standard"</span><span class="nt">&gt;</span>
     <span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"CakePHP"</span><span class="nt">&gt;</span>
         <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
         <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
@@ -425,21 +425,21 @@ ruleset.xmlは以下のようにしました。</p>
     <span class="nt">&lt;/rule&gt;</span>
 <span class="nt">&lt;/ruleset&gt;</span>
 
-</pre>
+</code></pre>
 
 <p>CakePHPのコード標準ではprivateやprotectedの変数、関数の先頭にアンダースコアが求められるので、それを無効にしたのと、キャメルケースではない変数や関数名を使いたい箇所があったので、それを無効にしています。
 最後の<code>CakePHP.WhiteSpace.TabAndSpace</code>では、以下のように<code>=</code>のインデント位置を合わせたコードがエラーになってしまうので、無効にしています（わかりづらいですが、=の位置が揃っています）。</p>
-<pre class="highlight php">public function __construct($name) {
+<pre class="highlight php"><code>public function __construct($name) {
     $this-&gt;name  = $name;
     $this-&gt;items = [];
 }
-</pre>
+</code></pre>
 
 <h3>どうなっているのか？</h3>
 
 <p>プラグインのリポジトリには<code>.travis.yml</code>が追加されるぐらいです。
 この設定内で、FriendsOfCakeのtravisリポジトリがcloneされ、以下に記述されている手順が実行されます。</p>
-<pre class="highlight yaml"><span class="s">before_script</span><span class="pi">:</span>
+<pre class="highlight yaml"><code><span class="s">before_script</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">git clone -b master https://github.com/FriendsOfCake/travis.git --depth 1 ../travis</span>
   <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
 
@@ -448,7 +448,7 @@ ruleset.xmlは以下のようにしました。</p>
 
 <span class="s">after_success</span><span class="pi">:</span>
   <span class="pi">-</span> <span class="s">../travis/after_success.sh</span>
-</pre>
+</code></pre>
 
 <p>実行されるパターンは.travis.ymlに記述されている<code>php</code>と<code>env-matrix</code>の組み合わせと、<code>matrix</code>のパターンになります。</p>
 
@@ -466,13 +466,13 @@ ruleset.xmlは以下のようにしました。</p>
 <h4>事前準備</h4>
 
 <p><code>before_script.sh</code>は実行準備のためのスクリプトで、PHPCSが1にセットされている場合は、以下のとおりpearチャンネルからCakePHPのコード標準とphpcsが依存関係としてインストールされます。</p>
-<pre class="highlight shell"><span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$PHPCS</span><span class="s2">"</span> <span class="o">=</span> <span class="s1">'1'</span> <span class="o">]</span>; <span class="k">then
+<pre class="highlight shell"><code><span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$PHPCS</span><span class="s2">"</span> <span class="o">=</span> <span class="s1">'1'</span> <span class="o">]</span>; <span class="k">then
     </span>pear channel-discover pear.cakephp.org
     pear install --alldeps cakephp/CakePHP_CodeSniffer
     phpenv rehash
     <span class="nb">exit </span>0
 <span class="k">fi</span>
-</pre>
+</code></pre>
 
 <p>続いて、CakePHP本体が1つ親のディレクトリにインストールされます。Travis.ciではプラグインのリポジトリが最初にcloneされるのですが、結果として以下のようなディレクトリ構成となります。</p>
 
@@ -587,6 +587,8 @@ ruleset.xmlは以下のようにしました。</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -604,8 +606,6 @@ ruleset.xmlは以下のようにしました。</p>
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -767,7 +767,7 @@ ruleset.xmlは以下のようにしました。</p>
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -883,6 +883,10 @@ ruleset.xmlは以下のようにしました。</p>
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -969,7 +973,7 @@ ruleset.xmlは以下のようにしました。</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

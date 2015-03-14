@@ -1,0 +1,984 @@
+<!doctype html>
+<html>
+  <head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - Fabricateのversion2を作成しました</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          
+            <h2>Fabricateのversion2を作成しました</h2>
+            <p class="postdate"><a title="Permanent link" href="/2015/03/14.html">Saturday, March 14, 2015 03:44:00 PM</a></p>
+            <p class="tags">
+              
+                <a rel="tag" href="/tags/php.html">PHP</a>
+              
+                <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+              
+                <a rel="tag" href="/tags/fixture.html">fixture</a>
+              
+                <a rel="tag" href="/tags/test.html">Test</a>
+              
+                <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+              
+            </p>
+          
+
+          <p>これまでCakePHP2用のデータジェネレータプラグインとして開発を続けてきた<a href="https://github.com/sizuhiko/Fabricate">Fabricate</a>を<code>V2</code>として各種ORMへ対応するようなコアモジュールへと変更しました。
+またFabiricateリポジトリのmasterブランチへは統合されていませんが、CakePHP3のリリース時期を合わせて、V2ブランチを本流にする予定です。
+これまでのCakePHP2用ライブラリはcakephp2ブランチでメンテナンスを続ける予定です。</p>
+
+<p>データジェネレータって何？誰得？という方は、以下の投稿を一読していただけると理解が深まります。</p>
+
+<ul>
+<li><a href="http://twileshare.com/bgrg">テストデータの作り方 - 第73回 PHP勉強会</a></li>
+</ul>
+
+<p>FabricateはRubyのFabricationとFactory_Girlに影響された「fixtureはDRYではないので、Fixture replacement を使おう」という流れに乗ったPHPクローンです。</p>
+
+<h3>Version2を作成するきっかけ</h3>
+
+<p>このキッカケはいくつかあります。
+1つには昨年の CakeFest2014 で Fabricate の LT をした後で、 CodeIgniter の開発者だったことでも知られる<a href="https://github.com/philsturgeon">Phil Sturgeon</a> から、「これいいね、他のフレームワークでも使えるようにしてよ」と言われたことでした。
+他のフレームワークでも使えるようにしたいという思いは、少しあったのですがまだ確約できなかったので「maybe」と返しただけでした。（このときPhilはかなり酔っていたので、私に話した事を覚えているのかどうかも怪しいですがw）</p>
+
+<p>さらにもう1つおおきなキッカケがCakePHP3でのPSR対応によって、namespaceなど外部ライブラリを使いやすくなり、さらに外部ライブラリからフレームワーク本体のコードへのアクセスしやすくなったということがあります。
+CakePHP2ではフレームワークへアクセスするにはアプリケーションまたはプラグインでないと困難で、特にORMに依存したライブラリをフレームワークをまたいで作成するのは困難でした。これがPSRの対応でやりやすくなったということ、CakePHP3への対応に合わせてV2を作って、他のフレームワークにも対応できるようにしようと思ったのです。</p>
+
+<h3>Fabricate V2の主な変更点</h3>
+
+<p>Fabricateの利用方法はほとんど変わっていませんが、各ORM用にアダプターと呼ばれるORMの差分を吸収するクラスを準備する必要があります。
+Fabricateの本体には<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/FabricateArrayAdaptor.php">Fabricate\Adaptor\FabricateArrayAdaptor</a>という連想配列構造を返すサンプル用のアダプターを用意しています。これを参考にアダプターを実装すれば<a href="http://www.doctrine-project.org/">Doctrine</a>や<a href="https://github.com/propelorm/Propel">Propel</a>、<a href="http://www.yiiframework.com/">Yii</a>や<a href="http://www.codeigniter.com/">CodeIgniter</a>でも利用可能になります。</p>
+
+<h3>アダプターの実装方法</h3>
+
+<p>とはいえ実際にORMに接続するアダプターもないと、ということでCakePHP3用のアダプター<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">CakePHP Fabricate Adaptor</a>も作成しました。</p>
+
+<p>ここではCakePHP3のアダプター実装を例に、アダプターで何を実装しなくてはいけないのかを解説したいと思います。</p>
+
+<h4>作成するクラス</h4>
+
+<p>アダプタークラスは<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/AbstractFabricateAdaptor.php">Fabricate\Adaptor\AbstractFabricateAdaptor</a>クラスを継承します。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Fabricate\Adaptor\AbstractFabricateAdaptor</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">CakeFabricateAdaptor</span> <span class="k">extends</span> <span class="nx">AbstractFabricateAdaptor</span>
+<span class="p">{</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<h4>実装するメソッド</h4>
+
+<p>アダプターとして実装する必要があるメソッドは以下の3つです。</p>
+
+<ul>
+<li>getModel</li>
+<li>create</li>
+<li>build</li>
+</ul>
+
+<p>それぞれのメソッドの実装を確認しましょう。</p>
+
+<h5>getModel</h5>
+
+<p>getModelメソッドは各ORMの差分を吸収するためのモデルインスタンスを返却するデータジェネレータの定義部分です。
+データジェネレータとしては最も重要な機能です。   </p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">use</span> <span class="nx">Fabricate\Model\FabricateModel</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="nf">getModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$model</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FabricateModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">schema</span><span class="p">();</span>
+    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$schema</span><span class="o">-&gt;</span><span class="na">columns</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">filterKey</span><span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$name</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nv">$attrs</span> <span class="o">=</span> <span class="nv">$schema</span><span class="o">-&gt;</span><span class="na">column</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
+        <span class="nv">$options</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'length'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$options</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'length'</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'null'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$options</span><span class="p">[</span><span class="s1">'null'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'null'</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'type'</span><span class="p">],</span> <span class="nv">$options</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$table</span><span class="o">-&gt;</span><span class="na">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">keys</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$association</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
+        <span class="nv">$target</span> <span class="o">=</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">target</span><span class="p">();</span>
+        <span class="nv">$className</span> <span class="o">=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$target</span><span class="p">);</span>
+        <span class="nv">$alias</span> <span class="o">=</span> <span class="nv">$target</span><span class="o">-&gt;</span><span class="na">alias</span><span class="p">();</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="nv">$association</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">())</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">ONE_TO_ONE</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">hasOne</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">ONE_TO_MANY</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">hasMany</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">MANY_TO_ONE</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">belongsTo</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$model</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>getModelはFabricateModelクラスのインスタンスを生成する責務があります。
+FabricateModelはPHPのマイグレーションツールである<a href="https://phinx.org/">Phinx</a>に影響を受けていて、スキーマの定義方法が似ています。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="c1">// Phinx
+</span><span class="nv">$users</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">table</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
+
+<span class="c1">// FabricateModel
+</span><span class="nv">$users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FabricateModel</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
+</code></pre>
+
+<p>利用できるカラム型はPhinxと同様で、オプションについて現時点ではlimit(長さ)のみ対応しています。</p>
+
+<p>CakePHP3では</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+
+<span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+<span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">schema</span><span class="p">();</span>
+</code></pre>
+
+<p>という記述でスキーマ情報が連想配列で取得できるので、それを繰り返して<code>addColumn</code>を呼び出しています。</p>
+
+<p>スキーマ定義を作成したら、次にモデルの関連を定義します。
+モデルの関連定義は、以下のようにassociationを使って関連構造を一度に作成する場合に必要となります。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="nx">Fabricate</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="s1">'Users'</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="nv">$world</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'taro'</span><span class="p">,</span>
+        <span class="s1">'posts'</span> <span class="o">=&gt;</span> <span class="nv">$world</span><span class="o">-&gt;</span><span class="na">association</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">];</span>
+<span class="p">});</span>
+</code></pre>
+
+<p>この例のように関連を設定するには、以下のようにFabricateModel::hasMany()やbelongsTo()を使います。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">hasMany</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Posts'</span><span class="p">);</span>
+<span class="nv">$posts</span><span class="o">-&gt;</span><span class="na">belongsTo</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Users'</span><span class="p">);</span>
+</code></pre>
+
+<p>パラメータの指定方法は、hasManyもhasOneもbelongsToも同じで、(別名、外部キーカラム名、モデル名）を指定します。</p>
+
+<h5>create</h5>
+
+<p>createメソッドは、Fabricateによって生成された連想配列構造のデータを、ORMを使ってDBに保存する機能を実装します。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$attributes</span><span class="p">,</span> <span class="nv">$recordCount</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$entities</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">newEntities</span><span class="p">(</span><span class="nv">$attributes</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">options</span><span class="p">[</span><span class="nx">self</span><span class="o">::</span><span class="na">OPTION_VALIDATE</span><span class="p">]]);</span>
+    <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">connection</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">transactional</span><span class="p">(</span><span class="k">function</span> <span class="p">()</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$entities</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$entities</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$ret</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">save</span><span class="p">(</span><span class="nv">$entity</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$ret</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nv">$entities</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+
+<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
+<code>$attributes</code>には生成された連想配列が渡ります。例えば以下のとおりです。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">array</span> <span class="p">(</span>
+  <span class="mi">0</span> <span class="o">=&gt;</span> 
+  <span class="k">array</span> <span class="p">(</span>
+    <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
+    <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
+    <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+    <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+  <span class="p">),</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> 
+  <span class="k">array</span> <span class="p">(</span>
+  <span class="o">....</span>
+</code></pre>
+
+<p><code>$recordCount</code>は生成する件数ですが、この値は<code>count($attributes)</code>の値と一致します。
+CakePHP3では以下の流れでDBへ保存しています。</p>
+
+<ul>
+<li>TableRegistry::get()でテーブルインスタンスを取得</li>
+<li>Table::newEntities()で連想配列からエンティティを生成</li>
+<li>Table::save()でエンティティをDBに保存</li>
+</ul>
+
+<h5>build</h5>
+
+<p>buildメソッドは、Fabricateによって生成された連想配列構造のデータから生成したエンティティを返却する機能を実装します。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">build</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$data</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$entity</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">newEntity</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">options</span><span class="p">[</span><span class="nx">self</span><span class="o">::</span><span class="na">OPTION_VALIDATE</span><span class="p">]]);</span>
+    <span class="k">return</span> <span class="nv">$entity</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+
+<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
+<code>$data</code>には生成された連想配列が1インスタンス分だけ渡ります。例えば以下のとおりです。</p>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">array</span> <span class="p">(</span>
+  <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
+  <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
+  <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+  <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre>
+
+<h3>さいごに</h3>
+
+<p>現在CakePHP3用のアダプターしかないので「xxxx ORMについてアダプター実装したよ！」という連絡を待っています。
+<a href="https://github.com/sizuhiko/Fabricate/blob/v2/composer.json">Fabricateのcomposer.json</a>のsuggestに追加してPull Requestをもらえるととても助かります。</p>
+<pre class="highlight json"><code><span class="w">    </span><span class="s2">"suggest"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"sizuhiko/cake_fabricate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"for integration with CakePHP3"</span><span class="w">
+        </span><span class="err">//</span><span class="w"> </span><span class="err">ここに追加したPRをお待ちしています</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>皆様のPull Requestをお待ちしております！！</p>
+
+
+          
+            
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Fabricateのversion2を作成しました" data-url="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html&t=Fabricate%E3%81%AEversion2%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
+                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
+                
+                  <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
+                
+                  <li><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a> <span>2014/10/13</span></li>
+                
+                  <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
+                
+                  <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
+                
+                  <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
+                
+                  <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
+                
+                  <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
+                
+                  <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/flex.html">Flex</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/1-2.html">1.2</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size5">
+                      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/rc1.html">RC1</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/fixture.html">fixture</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size4">
+                      <a rel="tag" href="/tags/php.html">PHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/bdd.html">BDD</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/behat.html">Behat</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/spec.html">Spec</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/test.html">Test</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015.html">2015</a> (3)</li>
+                
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

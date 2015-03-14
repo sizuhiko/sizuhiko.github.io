@@ -275,7 +275,150 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h2>
+            <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 11:13:26 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/middleman.html">middleman</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
+
+<h3>参考になったサイト</h3>
+
+<p>以下のサイトを参照しながら、作業を実施しました。</p>
+
+<ul>
+<li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
+<li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
+<li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
+<li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
+</ul>
+
+<h3>HTMLジェネレータは何を使うの？</h3>
+
+<p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
+
+<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&hellip;.</p>
+
+<p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
+
+<h3>Middleman インストール</h3>
+
+<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
+もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
+<pre class="highlight plaintext"><code>gem install middleman
+</code></pre>
+
+<p>でインストールも楽々完了です。</p>
+
+<p>ブログモジュールを使うので、middleman の Gemfile に</p>
+<pre class="highlight plaintext"><code>gem "middleman-blog", "~&gt; 3.5.1"
+</code></pre>
+
+<p>を追加して</p>
+<pre class="highlight plaintext"><code>bundle install
+middleman init blog --template=blog
+</code></pre>
+
+<p>と実行すると blog ディレクトリに環境が生成されます。</p>
+
+<h3>WorkPress からのインポート</h3>
+
+<p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
+いよいよ先程の変換ツールで実行&hellip;. エラーだよ！！（泣）</p>
+
+<p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
+イロイロ調べたところ、</p>
+
+<ul>
+<li>wp2middleman</li>
+<li>wordpress-to-jekyll</li>
+<li>ruby-wpdb</li>
+<li>wp_conversion</li>
+</ul>
+
+<p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
+どれもうまくいかない&hellip;.</p>
+
+<p>python系のライブラリもあるらしく</p>
+
+<ul>
+<li>wp2md</li>
+<li>prlican-import</li>
+<li>exitwp</li>
+</ul>
+
+<p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
+しかしいくつか失敗する&hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」&hellip;..
+もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
+
+<h3>WordPress インストール</h3>
+
+<p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
+これを先程一番うまく変換できた exitwp にかけると&hellip;&hellip;.</p>
+
+<p>あらー全部奇麗に変換できるじゃないですかー</p>
+
+<h3>デザイン</h3>
+
+<p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
+<pre class="highlight plaintext"><code>middleman server
+</code></pre>
+
+<p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
+
+<p>GitHub Pages へデプロイするために Gemfile に</p>
+<pre class="highlight plaintext"><code>gem "middleman-deploy"
+</code></pre>
+
+<p>モジュールを追加して bundle install。</p>
+
+<p>config.rg に</p>
+<pre class="highlight plaintext"><code>activate :deploy do |deploy|
+  deploy.build_before = true # default: false
+  deploy.method = :git
+  deploy.branch   = "master" # default: gh-pages
+end
+</code></pre>
+
+<p>な感じで設定したら </p>
+<pre class="highlight plaintext"><code>middleman deproy
+</code></pre>
+
+<p>でビルドした内容をgithubへ連携してくれます。</p>
+
+<h3>今後</h3>
+
+<p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Middleman インストールメモ" data-url="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html&t=Middleman%20%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%83%A1%E3%83%A2" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/02/22.html">Saturday, February 22, 2014 08:13:26 PM</a></p>
   <p class="tags">
     
@@ -500,15 +643,15 @@ HTML5カルタとは</p>
 これを直接引数でarrayを指定できるようにしました。  </p>
 
 <p>従来の記述方法：  </p>
-<pre class="highlight plaintext">Fabricate::create('Post', 10, function($data){
+<pre class="highlight plaintext"><code>Fabricate::create('Post', 10, function($data){
     return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
 });
-</pre>
+</code></pre>
 
 <p>新しくサポートした記述方法：  </p>
-<pre class="highlight plaintext">Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
+<pre class="highlight plaintext"><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
 });
-</pre>
+</code></pre>
 
 <p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
 
@@ -517,10 +660,10 @@ HTML5カルタとは</p>
 <h3>初期連番をconfigで指定</h3>
 
 <p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
-<pre class="highlight plaintext">Fabricate::config(function($config) {
+<pre class="highlight plaintext"><code>Fabricate::config(function($config) {
     $config-&gt;sequence_start = 100;
 });
-</pre>
+</code></pre>
 
 <p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
 config関数を使わない場合は、従来通り1から開始されます。  </p>
@@ -529,13 +672,13 @@ config関数を使わない場合は、従来通り1から開始されます。 
 
 <p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
 この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
-<pre class="highlight plaintext">Fabricate::attributes_for('Post', 10, function($data, $world){
+<pre class="highlight plaintext"><code>Fabricate::attributes_for('Post', 10, function($data, $world){
     return [
         'id'=&gt; $world-&gt;sequence('id'),
         'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
     ];
 });
-</pre>
+</code></pre>
 
 <p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
 $worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
@@ -610,7 +753,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
 <h3>インストール方法</h3>
 
 <p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
-<pre class="highlight plaintext">    "extra": {
+<pre class="highlight plaintext"><code>    "extra": {
         "installer-paths": {
             "Plugin/Fabricate": ["sizuhiko/fabricate"]
         }
@@ -619,13 +762,13 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
         "composer/installers": "*",
         "sizuhiko/fabricate": "*"
     }
-</pre>
+</code></pre>
 
 <p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
 
 <p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
-<pre class="highlight plaintext">CakePlugin::load('Fabricate');
-</pre>
+<pre class="highlight plaintext"><code>CakePlugin::load('Fabricate');
+</code></pre>
 
 <h3>概要</h3>
 
@@ -650,7 +793,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
 <h3>使い方＆サンプル</h3>
 
 <h4>attributes_for</h4>
-<pre class="highlight plaintext">$results = Fabricate::attributes_for('Post', 10, function($data){
+<pre class="highlight plaintext"><code>$results = Fabricate::attributes_for('Post', 10, function($data){
     return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
 });
 
@@ -667,7 +810,7 @@ array (
   1 =&gt; 
   array (
   ....
-</pre>
+</code></pre>
 
 <p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br>
 第二引数に生成するレコード件数を指定します。<br>
@@ -679,7 +822,7 @@ CakePHPでfixtureを生成したときrecordsに入っている内容と同じ�
 <p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
 
 <p>また、第二引数、第三引数は省略可能ですので、  </p>
-<pre class="highlight plaintext">// 1件だけ生成
+<pre class="highlight plaintext"><code>// 1件だけ生成
 Fabricate::attributes_for('Post');
 // 1件だけコールバックを指定して生成
 Fabricate::attributes_for('Post', function($data){
@@ -687,7 +830,7 @@ Fabricate::attributes_for('Post', function($data){
 });
 // 10件生成
 Fabricate::attributes_for('Post', 10);
-</pre>
+</code></pre>
 
 <p>というバリエーションでも利用可能です。  </p>
 
@@ -722,116 +865,6 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
           </li>
           <li>
             <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BF%20Fabricate%20%E3%82%92%E4%BD%9C%E3%82%8A%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/09/13.html">Friday, September 13, 2013 02:09:19 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/controller.html">Controller</a>
-    
-      <a rel="tag" href="/tags/phpunit.html">PHPUnit</a>
-    
-      <a rel="tag" href="/tags/test.html">Test</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3>コントローラのテストは難解である</h3>
-
-<p>とは言え、テストを書かないというのも何なのでテストを書くわけですが。  </p>
-
-<p>CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  </p>
-<pre class="highlight plaintext">class PostsTestController extends PostsController {
-// モックしたい処理
-....
-}
-class PostsControllerTest extends ControllerTestCase {
-
-    public function testアクションをテストする() {
-        $this-&gt;testAction('url', array('controller'=&gt;'PostsTestController'));
-    }
-}
-</pre>
-
-<p>ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  </p>
-
-<h3>なぜモックが必要？</h3>
-
-<p>もしこの記事を読んでいる方で、testActionがブラウザからも、コンソールからも成功するよ、という場合は依存関係が少ないか、たまたまなのかもしれません。  </p>
-
-<p>Webアプリケーションのコントローラは様々な依存関係があり、簡単にテストを通過させることができません。特にSessionComponentを使ったactionをテストする場合、問題が発生します。<br>
-Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  </p>
-
-<p>しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  </p>
-<pre class="highlight plaintext">// 実際のコントローラ
-    $components = ['Session', 'Auth'];
-
-    public function index() {
-        $hoge = $this-&gt;Session-&gt;read('hoge');
-        .....
-    }
-
-// テストケース
-    public function testIndex() {
-        CakeSession::write('hoge', 'fuga');
-        $this-&gt;testAction('/posts/index');
-        ......
-    }
-</pre>
-
-<p>みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  </p>
-
-<h3>どうやってモックを使うのか</h3>
-
-<p>で、調べてみたら意外と解説してある部分がない。こういうときはCakePHPのコアテストコードを見るのが一番です。<br>
-具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/&hellip;でないところがミソ）。  </p>
-
-<p>で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  </p>
-<pre class="highlight plaintext">    public function testIndex() {
-        $this-&gt;controller = $this-&gt;generate("Posts", ['components' =&gt; ['Session']]);
-        $this-&gt;controller-&gt;Session-&gt;expects($this-&gt;any())
-             -&gt;method('read')
-             -&gt;will($this-&gt;returnValueMap([['hoge', 'fuga']]));
-        $this-&gt;testAction('/posts/index');
-</pre>
-
-<p>$this-&gt;generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。<br>
-このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  </p>
-
-<p>generate()の戻り値はコントローラのモックオブジェクトになっています。さらにSessionもモックしているので、 $this-&gt;controller-&gt;Session に対して、read(&lsquo;hoge&rsquo;)はいつでも&#39;fuga&#39;を返すという記述をすることが可能です。<br>
-モック自体はPHPUnitのモックオブジェクトなので、詳しい記法はPHPUnitのマニュアルからモックオブジェクトの章を参照してください。  </p>
-
-<p><a href="http://phpunit.de/manual/3.7/ja/test-doubles.html#test-doubles.mock-objects">PHPUnit3.7のモックオブジェクト解説</a>  </p>
-
-<h3>最後に</h3>
-
-<p>コントローラのテストは本当に難解です。ただコアのテストコードを見るだけでもだいぶ理解が深まります。一度自分のアプリでテストを書く前に、その親クラス(ModelとかControllerなど)やテストケースのテストコードを見ると、これまでにテストの書き方がわからなかったところも、腑に落ちることがあるはずです。  </p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのコントローラテストで注意すること" data-url="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html&t=CakePHP%E3%81%AE%E3%82%B3%E3%83%B3%E3%83%88%E3%83%AD%E3%83%BC%E3%83%A9%E3%83%86%E3%82%B9%E3%83%88%E3%81%A7%E6%B3%A8%E6%84%8F%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
           </li>
         </ul>
       </div>
@@ -903,6 +936,8 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -920,8 +955,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -1083,7 +1116,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -1199,6 +1232,10 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -1285,7 +1322,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

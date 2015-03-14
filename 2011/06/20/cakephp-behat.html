@@ -317,13 +317,13 @@
 <h3>導入</h3>
 
 <p>CakePHPのvendorsディレクトリへ移動して、以下のコマンドを実行してください。</p>
-<pre class="highlight plaintext">git clone git@github.com:sizuhiko/CakeBehat.git
+<pre class="highlight plaintext"><code>git clone git@github.com:sizuhiko/CakeBehat.git
 git clone git://github.com/Behat/Behat.git &amp;&amp; cd Behat
 git submodule update --init
 cd ..
 git clone git://github.com/Behat/Mink.git &amp;&amp; cd Mink
 git submodule update --init
-</pre>
+</code></pre>
 
 <p>すると、vendors 配下に CakeBehat, Behat, Mink の３つのディレクトリができているはずです。  </p>
 
@@ -342,8 +342,8 @@ git submodule update --init
 <p>vendors直下にコピーしたbehat.yml.defaultをbehat.ymlにコピーします。  </p>
 
 <p>４行目に</p>
-<pre class="highlight plaintext">      start_url: http://test.localhost:8888/application-name/
-</pre>
+<pre class="highlight plaintext"><code>      start_url: http://test.localhost:8888/application-name/
+</code></pre>
 
 <p>という設定があります。これはアプリケーションのルートパスを設定するもので、ホスト名、ポート番号、アプリケーション名などを指定します。ホスト名はできるだけtest環境と識別可能なものにしておく事がオススメです。</p>
 
@@ -371,7 +371,7 @@ git submodule update --init
 <p>Behatのシナリオ記述は基本的にcucumberと同じです。もし基本的な記述方法がわからない場合は、<a href="http://tatsu-zine.com/books/cuke">達人出版社「はじめる！ Cucumber」</a>を読むと良いと思います。  </p>
 
 <p>ブログチュートリアルの一覧表示と、詳細表示のテストとして、以下のようなシナリオを書きました。</p>
-<pre class="highlight plaintext">sample/features/posts.features
+<pre class="highlight plaintext"><code>sample/features/posts.features
 
 # language: ja
 フィーチャ: ブログの記事を閲覧した
@@ -394,22 +394,22 @@ git submodule update --init
     前提 トップページ を表示している
     かつ "またタイトル" のリンク先へ移動する
     ならば "そこに本文が続きます" と表示されていること
-</pre>
+</code></pre>
 
 <p>どうですか？最低限の決まりがあるように見えますが、普通のドキュメントとして読む事も可能ですよね？少なくともプログラマでなければ読めないSeleniumのようなテストコードとは違うと思います。これがBehatの特徴でもあります。</p>
 
 <h4>Hint</h4>
 
 <p>Behat/Minkでどんなステップ記述が利用可能かどうかは、</p>
-<pre class="highlight plaintext">cake/console/cake behat --steps --lang ja
-</pre>
+<pre class="highlight plaintext"><code>cake/console/cake behat --steps --lang ja
+</code></pre>
 
 <p>のように実行すると一覧表示されます。</p>
 
 <h3>テストデータの登録</h3>
 
 <p>サンプルでは「ブログ記事に以下の内容が登録されていること:」のように記述しました。これは最初から用意されているものではなく、独自に定義する必要があるステップです。ステップは features/steps の下に phpファイルを作成すれば自動的に読み込まれ、利用可能になります。</p>
-<pre class="highlight plaintext">sample/features/steps/posts_step.php
+<pre class="highlight plaintext"><code>sample/features/steps/posts_step.php
 
 $steps-&gt;Given('/^ブログ記事に以下の内容が登録されていること:$/', function($world, $table) {
   $hash = $table-&gt;getHash();
@@ -420,7 +420,7 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
     $post-&gt;save();
   }
 });
-</pre>
+</code></pre>
 
 <p>ステップの雛形自体は、ステップが存在しないときにBehatを実行すると、以下のように画面表示されるので、そのままコピペして作成すると簡単です。<img src="/images/blog/images/cakebehat/notimplement.png" /></p>
 
@@ -437,8 +437,8 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
 <h3>実行してみよう</h3>
 
 <p>cakeやappのディレクトリに移動して、以下のコマンドを実行します。</p>
-<pre class="highlight plaintext">cake/console/cake behat
-</pre>
+<pre class="highlight plaintext"><code>cake/console/cake behat
+</code></pre>
 
 <p><img src="/images/blog/images/cakebehat/success.png" /></p>
 
@@ -491,6 +491,8 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -508,8 +510,6 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -671,7 +671,7 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -787,6 +787,10 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -873,7 +877,7 @@ $steps-&gt;Given('/^ブログ記事に以下の内容が登録されているこ
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

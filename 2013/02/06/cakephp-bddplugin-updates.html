@@ -313,16 +313,16 @@
 <p>これはAuthの問題というよりも、Authでログインした結果リダイレクトが動くので、リダイレクト先が正しいか検証したい、ということでした。  </p>
 
 <p>これはBehat&amp;Mink側の問題だけど、使ってくれているのでMLとか漁ったところ、goutte&amp;guzzleではパラメータを指定しろ、という変更が入っていることがわかり、behat.yml.defaultに以下の設定を追加しました。</p>
-<pre class="highlight plaintext">      goutte:
+<pre class="highlight plaintext"><code>      goutte:
         guzzle_parameters:
           request.params:
             redirect.disable: true
-</pre>
+</code></pre>
 
 <p>その上で、サンプルアプリにAuthのケースを追加し、動作検証後にリリース。質問者に返信を打ってIssueをCloseしました。  </p>
 
 <p>リダイレクトURLを検証する方法としては、以下のサンプルシナリオのようになります。</p>
-<pre class="highlight plaintext">  シナリオ: 記事を追加できること
+<pre class="highlight plaintext"><code>  シナリオ: 記事を追加できること
     前提 "トップページ" を表示している
     もし "追加" のリンク先へ移動する
     かつ "bob"、"obo"でログインする
@@ -334,7 +334,7 @@
     かつ "投稿" ボタンをクリックする
     もし I should be redirected to "/posts"
     ならば "今日は歓送迎会" と表示されていること
-</pre>
+</code></pre>
 
 <ul>
 <li>I do not follow redirects と宣言することで、リダイレクトがHTTPヘッダに入っていても自動ではリダクレクとしなくなります（redirect.disable: trueが有効になる）。</li>
@@ -349,8 +349,8 @@
 <h5>コードカバレッジ</h5>
 
 <p>みんな大好きJenkinsなどでCI環境を作ってコードカバレッジなどを計測している現場では、PHPUnitではカバレッジレポートが出せるのに、BddPluginでは出ないのはアレだよね、ということで対応しました。</p>
-<pre class="highlight plaintext">lib/Cake/Console/cake Bdd.spec --coverage-html report
-</pre>
+<pre class="highlight plaintext"><code>lib/Cake/Console/cake Bdd.spec --coverage-html report
+</code></pre>
 
 <p>でコードカバレッジを出力できるようになっています。</p>
 
@@ -366,11 +366,11 @@
 <h5>mink-extensionのi18nステップファイルの置き換えを可能に</h5>
 
 <p>Behat&amp;MinkをBddPluginから利用する場合、シナリオに「前提 &ldquo;トップページ&rdquo; を表示している」のように書けたりするわけですが、これらはすべてmink-extensionのi18n機構で翻訳されています。例えばこのステップは</p>
-<pre class="highlight plaintext">        &lt;trans-unit id="i-go-to-page"&gt;
+<pre class="highlight plaintext"><code>        &lt;trans-unit id="i-go-to-page"&gt;
             &lt;source&gt;&lt;![CDATA[/^(?:|I )go to "(?P&lt;page&gt;[^"]+)"$/]]&gt;&lt;/source&gt;
             &lt;target&gt;&lt;![CDATA[/^(?:|ユーザーが )"(?P&lt;page&gt;[^s]+)" へ移動する$/]]&gt;&lt;/target&gt;
         &lt;/trans-unit&gt;
-</pre>
+</code></pre>
 
 <p>というxmlで変換定義されているのですが、見て分かる通り正規表現です。PHPで正規表現、それに日本語というと、まぁ考慮しないといけませんね。preg<em>match にUTF-8オプションを付けないと「s」が変なところでマッチして期待どおりに動きません。@kaz</em>29さんから指摘を受けたのは「&quot;管理者画面&ldquo;へ移動する」みたいに「者」が入っているとステップが認識されないというものでした。  </p>
 
@@ -425,6 +425,8 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -442,8 +444,6 @@
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -605,7 +605,7 @@
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -721,6 +721,10 @@
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -807,7 +811,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

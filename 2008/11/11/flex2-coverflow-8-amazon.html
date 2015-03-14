@@ -330,17 +330,17 @@
 <p>登録すると、登録ID(Subscription ID)が取得できます。  </p>
 
 <p>そのIDをAmazonWebservice.asのAWSAccessKeyId変数に入れてください。  </p>
-<pre class="highlight plaintext">public class AmazonWebservice {
+<pre class="highlight plaintext"><code>public class AmazonWebservice {
     private const AWSAccessKeyId:String = "***** あなたの登録ID ******";
     private const AmazonRegionCode:String = "09"; // 日本は09
-</pre>
+</code></pre>
 
 <h3>■Amazonから商品情報を取得する</h3>
 
 <p>Amazonとのデータのやりとりは、FlashからGETパラメータで必要な情報を送り込み、戻りとしてXMLを受け取るシンプルなRESTインターフェースです。  </p>
 
 <p>AmazonへリクエストするURLをgetAmazonRestUrl関数で作っています。  </p>
-<pre class="highlight plaintext">private function getAmazonRestUrl(asin:String):String 
+<pre class="highlight plaintext"><code>private function getAmazonRestUrl(asin:String):String 
 {
     var url:String = "http://webservices.amazon.co.jp/onca/xml?"
                + "Service=AWSECommerceService&amp;"
@@ -350,7 +350,7 @@
                + "ResponseGroup=Request,ItemIds,ItemAttributes,Tracks,EditorialReview";
     return url; 
 }
-</pre>
+</code></pre>
 
 <p>パラメータごとの詳細な解説は、上記ドキュメントを参照して欲しいのですが、ここでは
 IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </p>
@@ -361,21 +361,21 @@ IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </
 <h3>■Amazonからの戻り値を取得する</h3>
 
 <p>URLを呼び出して、結果を取得するのは、AmazonからCoverFlow用の写真を取得するインターフェースと同じです。  </p>
-<pre class="highlight plaintext">_amazonLoader = new URLLoader();
+<pre class="highlight plaintext"><code>_amazonLoader = new URLLoader();
 _amazonLoader.addEventListener(Event.COMPLETE, completeAmazonRequest);
 _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
-</pre>
+</code></pre>
 
 <p>のようにして、URLから取得できたらcompleteAmazonRequest関数が呼ばれます。  </p>
 
 <p>受信部分のコードは  </p>
-<pre class="highlight plaintext">private function completeAmazonRequest(event:Event):void
+<pre class="highlight plaintext"><code>private function completeAmazonRequest(event:Event):void
 {
     namespace ns = 'http://webservices.amazon.com/AWSECommerceService/2005-10-05';
     use namespace ns;
     _xml = new XML(_amazonLoader.data);
 }
-</pre>
+</code></pre>
 
 <p>と、たったこれだけです。Amazon Webサービスで指定されたネーミングスペースを指定して、XMLオブジェクトを作ります。  </p>
 
@@ -386,7 +386,7 @@ _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
 <p>取得したXMLを解析するのはとても簡単です。  </p>
 
 <p>たとえばWeb2.0ビギナーズバイブルのasinIdを指定して戻ってくるXMLは以下のとおりです。  </p>
-<pre class="highlight xml"><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
+<pre class="highlight xml"><code><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
 <span class="nt">&lt;ItemLookupResponse</span> <span class="na">xmlns=</span><span class="s">"http://webservices.amazon.com/AWSECommerceService/2005-10-05"</span><span class="nt">&gt;</span>
   <span class="nt">&lt;OperationRequest&gt;</span>
     <span class="nt">&lt;HTTPHeaders&gt;</span>
@@ -457,18 +457,18 @@ _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
     <span class="nt">&lt;/Item&gt;</span>
   <span class="nt">&lt;/Items&gt;</span>
 <span class="nt">&lt;/ItemLookupResponse&gt;</span>
-</pre>
+</code></pre>
 
 <p>で、本のタイトルは、  </p>
-<pre class="highlight plaintext">ItemLookupResponse
+<pre class="highlight plaintext"><code>ItemLookupResponse
  +-- Item
       +-- ItemAttributes
            +-- Title
-</pre>
+</code></pre>
 
 <p>という階層にあります。これを取得するにはXMLオブジェクトから  </p>
-<pre class="highlight plaintext">_xml.Items.Item.ItemAttributes.child('Title');
-</pre>
+<pre class="highlight plaintext"><code>_xml.Items.Item.ItemAttributes.child('Title');
+</code></pre>
 
 <p>と書くだけで取得できます。_xmlオブジェクトからXMLの階層をたどるようにタグ名を.(ドット)で区切っていくだけです。簡単ですね。  </p>
 
@@ -477,18 +477,18 @@ _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
 <p>AmazonWebserviceの実装ができたら、ImageReflectorから呼び出します。  </p>
 
 <p>initLoader()の末尾に、  </p>
-<pre class="highlight plaintext">_amazonInfo.callAmazon(asinId);
-</pre>
+<pre class="highlight plaintext"><code>_amazonInfo.callAmazon(asinId);
+</code></pre>
 
 <p>を追加し、asinIdの商品情報を取得します。情報が取得できたか判断して、描画終了という判断にするために、isCompleted関数を  </p>
-<pre class="highlight plaintext">public function isCompleted():Boolean {
+<pre class="highlight plaintext"><code>public function isCompleted():Boolean {
     if (!_invalidatedReflection) return false
     if (_amazonInfo == null) return false
     if (!_amazonInfo.isLoaded()) return false;
 
     return true;
 }
-</pre>
+</code></pre>
 
 <p>のように修正して、Amazon Webサービスからのロードが終了していることも判断材料とします。</p>
 
@@ -497,15 +497,15 @@ _amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
 <p>最後に画面に描画領域を作成します。  </p>
 
 <p>mxmlにラベルとして、タイトルと著者名を表示する欄を作ります。  </p>
-<pre class="highlight plaintext">&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
+<pre class="highlight plaintext"><code>&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
 &lt;Label id="subtitle" text="著者" color="0xFFFFFF" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
-</pre>
+</code></pre>
 
 <p>この表示は、特定の本を選択したときに変更したいので、選択が変更されたときのイベントselectedIndex関数で、値を代入します。  </p>
-<pre class="highlight plaintext">// 選択された項目のタイトルを表示
+<pre class="highlight plaintext"><code>// 選択された項目のタイトルを表示
 title.text = imageReflector[value].titleText;
 subtitle.text = imageReflector[value].authorText;
-</pre>
+</code></pre>
 
 <p>お約束ですが、ImageReflector側では、titleTextとauthorTextはBindableにしておく必要があります。  </p>
 
@@ -553,6 +553,8 @@ subtitle.text = imageReflector[value].authorText;
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -570,8 +572,6 @@ subtitle.text = imageReflector[value].authorText;
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -733,7 +733,7 @@ subtitle.text = imageReflector[value].authorText;
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -849,6 +849,10 @@ subtitle.text = imageReflector[value].authorText;
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -935,7 +939,7 @@ subtitle.text = imageReflector[value].authorText;
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

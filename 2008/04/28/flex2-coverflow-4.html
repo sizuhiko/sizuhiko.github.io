@@ -311,53 +311,53 @@
 <h3>■commitProperties()の修正</h3>
 
 <p>以下のようなコードに修正となります。</p>
-<pre class="highlight plaintext">override protected function commitProperties():void
+<pre class="highlight plaintext"><code>override protected function commitProperties():void
 {
     if (_imageLoader == null) {
         initLoader();
     }
     invalidateDisplayList();
 }
-</pre>
+</code></pre>
 
 <p>具体的な変更イメージが掴めないと思うので、initLoader関数の処理も見てみましょう。  </p>
 
 <p>前回のサンプルでは、</p>
-<pre class="highlight plaintext">_content = UIComponent(new Image());
-</pre>
+<pre class="highlight plaintext"><code>_content = UIComponent(new Image());
+</code></pre>
 
 <p>の部分で、Image.dataに値をセットすることで画像を出していましたが、今回はかなり異なります。これはオリジナルの画像を鏡面加工するには、元の画像の読み込みが完了していなければならないためです。Imageを使って画像を表示する方法は便利なのですが、読み込み状況まで制御することができません。このような場合は、Loaderクラスを使って画像を読み込むことができます。</p>
-<pre class="highlight plaintext">_imageLoader.load(new URLRequest("http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"));
-</pre>
+<pre class="highlight plaintext"><code>_imageLoader.load(new URLRequest("http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"));
+</code></pre>
 
 <p>で画像の読み込みを命令すると、完了イベント(Event.COMPLETE)を受け取れます。イベントを受け取ると、addEventListenerに記述された内容を実行します。</p>
-<pre class="highlight plaintext">_imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function():void {
+<pre class="highlight plaintext"><code>_imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function():void {
      // ここに記述された内容を実行
 }
-</pre>
+</code></pre>
 
 <p>次に、</p>
-<pre class="highlight plaintext">_imageShape = new Shape();
+<pre class="highlight plaintext"><code>_imageShape = new Shape();
 _content.addChild(_imageShape);
-</pre>
+</code></pre>
 
 <p>のようにして描画領域を作成します。描画領域はShapeと呼ばれる単純な描画コンポーネントを使います。Flex本ではSpriteを使うケースも多いのですが、使い分けとしては、さらに子供の要素を追加する場合はSprite。単純な描画枠ならShapeという理解でよいでしょう。Shapeの方がSpriteよりも使用メモリが少ないという利点もあります。  </p>
 
 <p>取得した画像をビットマップデータに変換しておきます。</p>
-<pre class="highlight plaintext">_imageShapeBitmap = new BitmapData(_imageLoader.width, _imageLoader.height, true, 0x000000);
+<pre class="highlight plaintext"><code>_imageShapeBitmap = new BitmapData(_imageLoader.width, _imageLoader.height, true, 0x000000);
 _imageShapeBitmap.draw(_imageLoader);
-</pre>
+</code></pre>
 
 <p>のように書くと、ロードした画像を簡単にビットマップとして扱えるようになります。  </p>
-<pre class="highlight plaintext">var reflectionBitmap:Bitmap = createReflectionBitmap(_imageShapeBitmap);
-</pre>
+<pre class="highlight plaintext"><code>var reflectionBitmap:Bitmap = createReflectionBitmap(_imageShapeBitmap);
+</code></pre>
 
 <p>で鏡面画像を作成して、_contentの子オブジェクトの更新イベントでinvalidateReflection()が呼ばれるようにしておきます。</p>
 
 <h3>■鏡面画像を作成する createReflectionBitmap()</h3>
 
 <p>この関数のポイントはグラデーションパターンを作成するところです。</p>
-<pre class="highlight plaintext">var alphaGradientBitmap:BitmapData = new BitmapData(tw, th, true, 0x00000000);
+<pre class="highlight plaintext"><code>var alphaGradientBitmap:BitmapData = new BitmapData(tw, th, true, 0x00000000);
 var gradientMatrix: Matrix = new Matrix();
 var gradientShape: Shape = new Shape();
 gradientMatrix.createGradientBox(tw, th * kFalloff, Math.PI/2, 0, th * (1.0 - kFalloff));
@@ -365,32 +365,32 @@ gradientShape.graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0xFFFFF
 gradientShape.graphics.drawRect(0, th * (1.0 - kFalloff), tw, th * kFalloff);
 gradientShape.graphics.endFill();
 alphaGradientBitmap.draw(gradientShape, new Matrix());
-</pre>
+</code></pre>
 
 <p>Math.PIとは、円周率を表していて、Math.PI/2は90度を意味します。通常の座標軸は、左から右にむかうので、Math.PI/2を適用した場合は、時計回りに90度つまり上から下に向かって描画するように制御できます。またグラデーションには、線状(LINEAR)と放射線状(RADIAL)があり、段々薄くなっていく鏡面効果の場合は、線状を使います。</p>
-<pre class="highlight plaintext">var reflectionData:BitmapData = new BitmapData(tw, th, false, 0x00000000);
+<pre class="highlight plaintext"><code>var reflectionData:BitmapData = new BitmapData(tw, th, false, 0x00000000);
 reflectionData.fillRect(rect, 0x00000000);
 reflectionData.copyPixels(target, rect, new Point(), alphaGradientBitmap);
-</pre>
+</code></pre>
 
 <p>のように引数で渡されたオリジナル画像と、グラデーションパターンの画像を重ね合わせますが、copyPixelsを使うと、重ね合わせる透過ビットマップを指定できるので、便利です。
 最後に</p>
-<pre class="highlight plaintext">reflectionBitmap = new Bitmap(reflectionData);
+<pre class="highlight plaintext"><code>reflectionBitmap = new Bitmap(reflectionData);
 reflectionBitmap.alpha = .85;
-</pre>
+</code></pre>
 
 <p>で使いやすいようにBitmapDataに変換し、透過度を指定しておきます。背景を白に変更した場合など、透過度を調整すると、お好みの鏡面効果にすることができます。 </p>
 
 <h3>■鏡面効果を開始する</h3>
 
 <p>initLoaderで設定した、Imageの描画が完了したときに呼ばれるメソッドを以下のように定義します。</p>
-<pre class="highlight plaintext">private function invalidateReflection(event:Event):void
+<pre class="highlight plaintext"><code>private function invalidateReflection(event:Event):void
 {
     _invalidatedReflection = true;
     invalidateSize();
     invalidateDisplayList();
 }
-</pre>
+</code></pre>
 
 <p>このタイミングでようやく鏡面画像を書いてよし、というタイミングになるので_invalidatedReflectionフラグをオン(true)に設定します。
 その後、画面の再描画を即すために、invalidateDisplayList()を呼び出します。</p>
@@ -400,19 +400,19 @@ reflectionBitmap.alpha = .85;
 <p>updateDisplayListを修正して、ビットマップの描画を行います。  </p>
 
 <p>ビットマップを描画領域に書き出すには、graphicsオブジェクトを使用します。</p>
-<pre class="highlight plaintext">_imageShape.graphics
-</pre>
+<pre class="highlight plaintext"><code>_imageShape.graphics
+</code></pre>
 
 <p>graphicsオブジェクトはShape上にベクター描画するためのプロパティです。beginBitmapFillはビットマップで塗りつぶしを開始する、という宣言で、描画範囲をdrawRectで決定します。graphicsオブジェクトで描画を終了する場合は、描画の種類に関係なくendFillで終了します。  </p>
 
 <p>鏡面画像はそのままだと、オリジナル画像にグラデーションが重なっているだけの画像です。実際に鏡面効果に見せるためには、反転させて、位置を下げる必要があります。</p>
-<pre class="highlight plaintext">var m:Matrix = new Matrix();
+<pre class="highlight plaintext"><code>var m:Matrix = new Matrix();
 m.scale(1.0, -1.0);
 m.ty = 2 * _imageShapeBitmap.height;
 _imageShape.graphics.beginBitmapFill(_reflectionShapeBitmap, m);
 _imageShape.graphics.drawRect(0, _imageShapeBitmap.height, _reflectionShapeBitmap.width, _reflectionShapeBitmap.height);
 _imageShape.graphics.endFill();
-</pre>
+</code></pre>
 
 <p>本サンプルではMatrixクラスを使って反転させています。画像の反転など3D効果を出すのには、行列計算を行う必要があります。Matrixは表示オブジェクトの回転、拡大縮小、平行移動を行列を使って計算することができます。今回のケースは単純に反転するだけなので、拡大縮小(scale)メソッドを使います。なぜ反転するのに拡大縮小？という疑問があるかもしれません。なぜなら鏡面効果を考えてください。画像を180度回転させると左右が逆になります。するとその後左右反転を呼ばなければなりません。これでは二度手間ですね。  </p>
 
@@ -426,26 +426,26 @@ _imageShape.graphics.endFill();
 <p>そこで、PHPスクリプトなどを使って回避することができます。なお本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
 
 <p>まずPHPのコードは以下のようになります。例えば、crossdomain.phpとしておきましょう。</p>
-<pre class="highlight plaintext">&lt;?php
+<pre class="highlight plaintext"><code>&lt;?php
 if($_GET["file"]){
     header("Content-Type:image/jpeg;");
     readfile($_GET["file"]);
 }
 ?&gt;
-</pre>
+</code></pre>
 
 <p>次にcrossdomain.xmlをドキュメントルートに配置します。</p>
-<pre class="highlight xml"><span class="cp">&lt;?xml version="1.0"?&gt;</span>
+<pre class="highlight xml"><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
 <span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM "http://www.adobe.com/xml/dtds/cross-domain-policy.dtd"&gt;</span>
 <span class="nt">&lt;cross-domain-policy&gt;</span>
     <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">"*"</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;/cross-domain-policy&gt;</span>
-</pre>
+</code></pre>
 
 <p>後は、ImageReflector.asのload部分を以下のように書き換えます。</p>
-<pre class="highlight plaintext">var context:LoaderContext = new LoaderContext(true);
+<pre class="highlight plaintext"><code>var context:LoaderContext = new LoaderContext(true);
 _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://images.amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"), context);
-</pre>
+</code></pre>
 
 <p>すると、PHPサイトがプロキシとなってくれ、PHPサイトのcrossdomain.xmlをFlashは解釈して、SWFから画像が表示できるようになります。  </p>
 
@@ -484,6 +484,8 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -501,8 +503,6 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -664,7 +664,7 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -780,6 +780,10 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -866,7 +870,7 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

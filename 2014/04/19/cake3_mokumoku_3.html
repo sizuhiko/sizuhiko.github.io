@@ -304,15 +304,15 @@
 
 <p>です。概ね最新版で大丈夫でしょう。
 ダウンロード＆インストールしたら、任意のディレクトリに先程のVagrant Chefをクローン（またはダウンロード）します。後は</p>
-<pre class="highlight plaintext">cd vagrant-chef
+<pre class="highlight plaintext"><code>cd vagrant-chef
 vagrant up
-</pre>
+</code></pre>
 
 <p>を実行してしばらく待ちましょう。Chefでインストールされるものは Vagrant Chef のREADMEに書いてあるので、そちらを参照してください。</p>
-<pre class="highlight plaintext">INFO: Chef Run complete in 541.542816 seconds
+<pre class="highlight plaintext"><code>INFO: Chef Run complete in 541.542816 seconds
 INFO: Running report handlers
 INFO: Report handlers complete
-</pre>
+</code></pre>
 
 <p>なメッセージが出て、コンソールが戻ってきたらインストールの完了です。
 動作確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
@@ -325,11 +325,11 @@ INFO: Report handlers complete
 
 <p>Vagrant ChefにはCakePHPをインストールするレシピも入っているのですが、Friends Of CakeにCakePHPの環境を作るスケルトンコマンドが別途用意されているので、レシピの編集は必要ないです。
 生成したVagrant環境にログインします。</p>
-<pre class="highlight plaintext">vagrant ssh
-</pre>
+<pre class="highlight plaintext"><code>vagrant ssh
+</code></pre>
 
 <p>ログイン直後</p>
-<pre class="highlight plaintext">vagrant@precise64:/vagrant$ ls -la
+<pre class="highlight plaintext"><code>vagrant@precise64:/vagrant$ ls -la
 total 20
 drwxr-xr-x  1 vagrant vagrant  306 Apr 19 05:37 .
 drwxr-xr-x 25 root    root    4096 Apr 19 05:37 ..
@@ -340,20 +340,20 @@ drwxr-xr-x  1 vagrant vagrant  442 Apr 19 05:30 .git
 -rw-r--r--  1 vagrant vagrant 5489 Apr 19 05:30 README.markdown
 drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
 -rw-r--r--  1 vagrant vagrant 1179 Apr 19 05:30 Vagrantfile
-</pre>
+</code></pre>
 
 <p>のようになっていて、すでにappディレクトリが存在します。ここには先程のデフォルト画面が入っているのですが、今回は新しくアプリを作成するのでappディレクトリは削除します。</p>
-<pre class="highlight plaintext">rm -rf app
-</pre>
+<pre class="highlight plaintext"><code>rm -rf app
+</code></pre>
 
 <p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
 すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
-<pre class="highlight plaintext">composer -sdev create-project friendsofcake/app-template app dev-cake3
-</pre>
+<pre class="highlight plaintext"><code>composer -sdev create-project friendsofcake/app-template app dev-cake3
+</code></pre>
 
 <p>app の部分がアプリケーション名です。Vagrant Chefを使った場合はappを指定してください。</p>
-<pre class="highlight plaintext">Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
-</pre>
+<pre class="highlight plaintext"><code>Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
+</code></pre>
 
 <p>最後に上記のような確認メッセージが出てくるので、履歴が気にならなければそのままEnterを押して終了します。
 インストールの確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
@@ -361,8 +361,8 @@ drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
 <p><img src="/images/blog/cakephp3_installed.png" /></p>
 
 <p>おなじみのCakePHP画面が表示されます。tmpディレクトリが書き込みできないと警告されます。これはwebサーバのデフォルトuserがvagrantでなくwww-dataであるためですが、開発環境用なの気にせず</p>
-<pre class="highlight plaintext">sudo chmod -R 777 app/tmp
-</pre>
+<pre class="highlight plaintext"><code>sudo chmod -R 777 app/tmp
+</code></pre>
 
 <p>などのコマンドで権限を書き換えてください。</p>
 
@@ -372,16 +372,16 @@ drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
 
 <p>vagrant-chefを使うとデフォルトで database<em>name, test</em>database_name というデータベースが生成されています。
 ただ文字コードの指定などの問題もあると思うので、ここは自分でデータベースを作成します。</p>
-<pre class="highlight plaintext">mysql -u root -p
-</pre>
+<pre class="highlight plaintext"><code>mysql -u root -p
+</code></pre>
 
 <p>vagrant-chefのMySQL rootパスワードは、vagrant-chefのREADMEを参照ください（現時点ではbananasです）。</p>
-<pre class="highlight plaintext">mysql&gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+<pre class="highlight plaintext"><code>mysql&gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 mysql&gt; CREATE DATABASE test_cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-</pre>
+</code></pre>
 
 <p>続けておなじみのpostsテーブルを作成します。</p>
-<pre class="highlight plaintext">mysql&gt; use cake3_mokumoku;
+<pre class="highlight plaintext"><code>mysql&gt; use cake3_mokumoku;
 mysql&gt; CREATE TABLE `posts` (
           `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
           `title` varchar(50) DEFAULT NULL,
@@ -390,31 +390,31 @@ mysql&gt; CREATE TABLE `posts` (
           `modified` datetime DEFAULT NULL,
           PRIMARY KEY (`id`)
         ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-</pre>
+</code></pre>
 
 <p>app-templateで作成したCakePHPアプリケーションは、<a href="https://github.com/josegonzalez/php-dotenv">php-dotenv</a>というライブラリを使って環境設定できるようになっています。
 <code>app/App/Config/.env.default</code> ファイルをコピーして <code>app/App/Config/.env</code>ファイルを作成します。</p>
-<pre class="highlight plaintext">// app/App/Config/.env
+<pre class="highlight plaintext"><code>// app/App/Config/.env
 export DATABASE_URL="mysql://my_app:secret@localhost/my_app?encoding=utf8"
 export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_myapp?encoding=utf8"
-</pre>
+</code></pre>
 
 <p>の部分を</p>
-<pre class="highlight plaintext">// mysql://ユーザ名:パスワード@URL/データベース名
+<pre class="highlight plaintext"><code>// mysql://ユーザ名:パスワード@URL/データベース名
 export CAKEDATABASE_URL="mysql://root:bananas@localhost/cake3_mokumoku?encoding=utf8"
 export CAKEDATABASE_TEST_URL="mysql://root:bananas@localhost/test_cake3_mokumoku?encoding=utf8"
-</pre>
+</code></pre>
 
 <p>のように書き換えます。データベースの詳しい設定方法は <a href="https://github.com/AD7six/php-dsn">AD7six/php-dsn</a>を参照ください。
 exportの名前を変更しているのは、nginxのfastcgiパラメータとしてvagrantインストール時に</p>
-<pre class="highlight plaintext">fastcgi_param DATABASE_URL          "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/database_name?encoding=utf8";
+<pre class="highlight plaintext"><code>fastcgi_param DATABASE_URL          "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/database_name?encoding=utf8";
 fastcgi_param DATABASE_TEST_URL     "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/test_database_name?encoding=utf8";
-</pre>
+</code></pre>
 
 <p>のような指定がされているため、設定値が重複してしまいfastcgi側が優先される仕組みとなっています。
 このため異なる名前に変更しておきます。
 合わせて、app.phpでDATABASE<em>URLを利用している箇所もCAKEDATABASE</em>URLに変更します。</p>
-<pre class="highlight plaintext">// app/Config/app.php#L211-
+<pre class="highlight plaintext"><code>// app/Config/app.php#L211-
 /**
  * Connection information used by the ORM to connect
  * to your application's datastores.
@@ -427,30 +427,30 @@ fastcgi_param DATABASE_TEST_URL     "mysql://root:&lt;%= node[:mysql][:server_ro
          */
         'test' =&gt; DbDsn::parse(env('CAKEDATABASE_TEST_URL'))
     ],
-</pre>
+</code></pre>
 
 <h3>Cakeシェルを利用する</h3>
 
 <p>コンソールから</p>
-<pre class="highlight plaintext">cd app/App
+<pre class="highlight plaintext"><code>cd app/App
 Console/cake -h
-</pre>
+</code></pre>
 
 <p>とヘルプを表示してみたいのですが、もし</p>
-<pre class="highlight plaintext">Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
-</pre>
+<pre class="highlight plaintext"><code>Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
+</code></pre>
 
 <p>というエラーが表示されたら、app/App/Console/cake を編集して</p>
-<pre class="highlight plaintext">exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
-</pre>
+<pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
+</code></pre>
 
 <p>の行を</p>
-<pre class="highlight plaintext">exec php -q "$CONSOLE"/cake.php "$@"
-</pre>
+<pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php "$@"
+</code></pre>
 
 <p>のように変更してください。現時点では -working オプションがあるとうまく動作しないためです。
 うまく動作した場合は</p>
-<pre class="highlight shell"><span class="gp">$ </span>Console/cake -h
+<pre class="highlight shell"><code><span class="gp">$ </span>Console/cake -h
 
 Welcome to CakePHP v3.0.0-dev2 Console
 ---------------------------------------------------------------
@@ -472,14 +472,14 @@ Available Shells:
 To run an app or core <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="o">[</span>args]
 To run a plugin <span class="nb">command</span>, <span class="nb">type </span>cake Plugin.shell_name <span class="o">[</span>args]
 To get <span class="nb">help </span>on a specific <span class="nb">command</span>, <span class="nb">type </span>cake shell_name --help
-</pre>
+</code></pre>
 
 <p>のように表示されるはずです。</p>
 
 <h3>Bakeする</h3>
 
 <p>では早速Bakeしましょう</p>
-<pre class="highlight plaintext">$ Console/cake bake model Posts
+<pre class="highlight plaintext"><code>$ Console/cake bake model Posts
 
 Welcome to CakePHP v3.0.0-dev2 Console
 ---------------------------------------------------------------
@@ -507,14 +507,14 @@ Baking test case for App\Model\Table\PostsTable ...
 
 Creating file /vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php
 Wrote `/vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php`
-</pre>
+</code></pre>
 
 <p>うまく動きます！！</p>
 
 <p>続けてコントローラとビューも</p>
-<pre class="highlight plaintext">$ Console/cake bake controller Posts
+<pre class="highlight plaintext"><code>$ Console/cake bake controller Posts
 $ Console/cake bake view Posts
-</pre>
+</code></pre>
 
 <p>で生成します。</p>
 
@@ -566,6 +566,8 @@ $ Console/cake bake view Posts
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -583,8 +585,6 @@ $ Console/cake bake view Posts
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -746,7 +746,7 @@ $ Console/cake bake view Posts
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -862,6 +862,10 @@ $ Console/cake bake view Posts
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -948,7 +952,7 @@ $ Console/cake bake view Posts
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

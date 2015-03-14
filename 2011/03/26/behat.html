@@ -302,7 +302,7 @@ git submodule update &ndash;init</p></li>
 </ol>
 
 <p>とくに問題がなければ、しばらくして終了しますが、本稿執筆次点では以下のようなエラーで中断してしまいます。  </p>
-<pre class="highlight plaintext">Initialized empty Git repository in /Behat/vendor/Symfony/Component/Translation/.git/
+<pre class="highlight plaintext"><code>Initialized empty Git repository in /Behat/vendor/Symfony/Component/Translation/.git/
 remote: Counting objects: 220, done.
 remote: Compressing objects: 100% (124/124), done.
 remote: Total 220 (delta 147), reused 141 (delta 94)
@@ -310,14 +310,14 @@ Receiving objects: 100% (220/220), 52.61 KiB, done.
 Resolving deltas: 100% (147/147), done.
 fatal: reference is not a tree: d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
 Unable to checkout 'd5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c' in submodule path 'vendor/Symfony/Component/Translation'
-</pre>
+</code></pre>
 
 <p>そこで、エラーになったサブモジュールの変更ログを確認します。  </p>
-<pre class="highlight plaintext">git log --oneline -p -- vendor/Symfony/Component/Translation
-</pre>
+<pre class="highlight plaintext"><code>git log --oneline -p -- vendor/Symfony/Component/Translation
+</code></pre>
 
 <p>上記コマンドを実行すると、以下のように表示されます。  </p>
-<pre class="highlight plaintext">85d8dac updated vendors
+<pre class="highlight plaintext"><code>85d8dac updated vendors
 diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
 index f70e0ba..d5cdaba 160000
 --- a/vendor/Symfony/Component/Translation
@@ -333,12 +333,12 @@ index 0000000..f70e0ba
 +++ b/vendor/Symfony/Component/Translation
 @@ -0,0 +1 @@
 +Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
-</pre>
+</code></pre>
 
 <p>ここで表示されたログの１行目「85d8dac updated vendors」の85d8dacを使ってチェックアウトします。  </p>
-<pre class="highlight plaintext">git checkout 85d8dac~ -- vendor/Symfony/Component/Translation
+<pre class="highlight plaintext"><code>git checkout 85d8dac~ -- vendor/Symfony/Component/Translation
 git submodule update
-</pre>
+</code></pre>
 
 <p>こうすることで、サブモジュールのインストールが継続できます。  </p>
 
@@ -388,6 +388,8 @@ git submodule update
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -405,8 +407,6 @@ git submodule update
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -568,7 +568,7 @@ git submodule update
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -684,6 +684,10 @@ git submodule update
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -770,7 +774,7 @@ git submodule update
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

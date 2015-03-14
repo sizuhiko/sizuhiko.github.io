@@ -310,19 +310,19 @@
 
 <p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
 もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
-<pre class="highlight plaintext">gem install middleman
-</pre>
+<pre class="highlight plaintext"><code>gem install middleman
+</code></pre>
 
 <p>でインストールも楽々完了です。</p>
 
 <p>ブログモジュールを使うので、middleman の Gemfile に</p>
-<pre class="highlight plaintext">gem "middleman-blog", "~&gt; 3.5.1"
-</pre>
+<pre class="highlight plaintext"><code>gem "middleman-blog", "~&gt; 3.5.1"
+</code></pre>
 
 <p>を追加して</p>
-<pre class="highlight plaintext">bundle install
+<pre class="highlight plaintext"><code>bundle install
 middleman init blog --template=blog
-</pre>
+</code></pre>
 
 <p>と実行すると blog ディレクトリに環境が生成されます。</p>
 
@@ -366,28 +366,28 @@ middleman init blog --template=blog
 <h3>デザイン</h3>
 
 <p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
-<pre class="highlight plaintext">middleman server
-</pre>
+<pre class="highlight plaintext"><code>middleman server
+</code></pre>
 
 <p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
 
 <p>GitHub Pages へデプロイするために Gemfile に</p>
-<pre class="highlight plaintext">gem "middleman-deploy"
-</pre>
+<pre class="highlight plaintext"><code>gem "middleman-deploy"
+</code></pre>
 
 <p>モジュールを追加して bundle install。</p>
 
 <p>config.rg に</p>
-<pre class="highlight plaintext">activate :deploy do |deploy|
+<pre class="highlight plaintext"><code>activate :deploy do |deploy|
   deploy.build_before = true # default: false
   deploy.method = :git
   deploy.branch   = "master" # default: gh-pages
 end
-</pre>
+</code></pre>
 
 <p>な感じで設定したら </p>
-<pre class="highlight plaintext">middleman deproy
-</pre>
+<pre class="highlight plaintext"><code>middleman deproy
+</code></pre>
 
 <p>でビルドした内容をgithubへ連携してくれます。</p>
 
@@ -426,6 +426,8 @@ end
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -443,8 +445,6 @@ end
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -606,7 +606,7 @@ end
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -722,6 +722,10 @@ end
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -808,7 +812,7 @@ end
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

@@ -339,13 +339,13 @@
 <h4>サンプルHTMLの取得</h4>
 
 <p>前回のphpQueryと同じく、WORDPRESSの日本語TOPページのHTMLを使ってみたいと思います。</p>
-<pre class="highlight plaintext">wget http://ja.wordpress.org/
-</pre>
+<pre class="highlight plaintext"><code>wget http://ja.wordpress.org/
+</code></pre>
 
 <h4>phpshを使って試す</h4>
 
 <p>こちらも前回と同様に、簡単に試すにはインタラクティブシェルを使うのが便利なので、phpshを使います。</p>
-<pre class="highlight plaintext">bash-3.2$ phpsh
+<pre class="highlight plaintext"><code>bash-3.2$ phpsh
 Starting php
 type 'h' or 'help' to see instructions &amp; feature
 
@@ -355,14 +355,14 @@ php&gt; $html = htmlqp('index.html');
 
 php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
 "ntttttttttWordPress 3.3.2 が利用できるようになりました。これはすべての前バージョンへのセキュリティアップデートです。nWordPress に含まれる3つの外部ライブラリでセキュリティアップデートがありました:n    Plupload (バージョン 1.5.4)、WordPress ではメディアのアップロードに使用しています。n    SWFUpload、WordPress では以前にメディアのアップロードに使用していました。おそらくプラグインによってはまだ使われています。n    SWFObject、WordPress では以前に Flash コンテンツの埋め込みに使用していました。おそらくプラグインやテーマによってはまだ使われています。ntttttttt"
-</pre>
+</code></pre>
 
 <p>ブログエントリーの先頭記事を抜き出してみました。phpQueryは配列キーにセレクタを記述する方式だったのですが、QueryPathではPHP言語としての「-&gt;」の部分以外はjQueryと同じだとわかるでしょう。
 またQueryPathにはqpというコア関数もあるのですが、こちらはXML用で、HTMLを利用する場合はhtmlqpを使っておいた方が良さそうです。  </p>
 
 <p>最後に</p>
-<pre class="highlight plaintext">php&gt; = $html-&gt;top()-&gt;html();
-</pre>
+<pre class="highlight plaintext"><code>php&gt; = $html-&gt;top()-&gt;html();
+</code></pre>
 
 <p>を実行すると、HTML全文を文字列として取得することができます。日本語がまったく問題ないことを確認できると思います。  </p>
 
@@ -405,6 +405,8 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -422,8 +424,6 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -585,7 +585,7 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -701,6 +701,10 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -787,7 +791,7 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

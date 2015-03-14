@@ -304,24 +304,24 @@
 <h3>準備しよう</h3>
 
 <p>まず初期状態のディレクトリを以下のようにしました。</p>
-<pre class="highlight plaintext">|-- Behat Behat本体のclone
+<pre class="highlight plaintext"><code>|-- Behat Behat本体のclone
 |-- behat_websteps behat_webstepsのclone
-</pre>
+</code></pre>
 
 <h3>練習環境を作る</h3>
 
 <p>behat_webstepsを土台にして、テスト環境を作ります。といっても、まずは単にコピーするだけです。</p>
-<pre class="highlight plaintext">cp -R behat_websteps sandbox
-</pre>
+<pre class="highlight plaintext"><code>cp -R behat_websteps sandbox
+</code></pre>
 
 <h3>フィーチャーファイルを作成する</h3>
 
 <p>スライドでも引用したgihyo.jpでのcucumberについてとてもわかりやすい連載「<a href="http://gihyo.jp/dev/serial/01/ruby/0022">第22回　Railsアプリの受け入れテストをCucumberで書こう</a>」のフィーチャーを使用します。  </p>
-<pre class="highlight plaintext">vi sandbox/features/sample.feature
-</pre>
+<pre class="highlight plaintext"><code>vi sandbox/features/sample.feature
+</code></pre>
 
 <p>実際のコードは以下のとおりです。</p>
-<pre class="highlight plaintext"># language: ja
+<pre class="highlight plaintext"><code># language: ja
 フィーチャ: ユーザを管理したい
 
   シナリオ: ユーザの登録
@@ -334,18 +334,18 @@
     かつ "example@example.com"と表示されていること
     かつ "赤松 祐希"と表示されていること
     かつ "22"と表示されていること
-</pre>
+</code></pre>
 
 <p>ここでcucumberと違うのは1行目（フェーチャの前）に言語指定をするところです。現時点のBehatではこれを書く事でja.xmlを利用してくれます。</p>
 
 <h3>実行してみる</h3>
 
 <p>フィーチャーはbin/behatコマンドでテストします。</p>
-<pre class="highlight plaintext">bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
-</pre>
+<pre class="highlight plaintext"><code>bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
+</code></pre>
 
 <p>画面には、以下のように出力されます。</p>
-<pre class="highlight plaintext">&lt;code&gt;
+<pre class="highlight plaintext"><code>&lt;code&gt;
 フィーチャ: ユーザを管理したい
 
   シナリオ: ユーザの登録                                     # features/sample.feature:4
@@ -384,14 +384,14 @@ $steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($wo
 });
 &lt;/span&gt;
 &lt;/code&gt;
-</pre>
+</code></pre>
 
 <p>ステップ（テストの定義）が記述されていないので、9つの未定義エラーが表示されています。その下にはスケルトンが表示されているので、まずこれをコピペしてstepファイルを作成します。</p>
 
 <h3>ステップファイルの作成</h3>
 
 <p>stepファイル「web<em>test</em>step.php」に前節のスケルトンを貼付けます。以下のようになるでしょう。</p>
-<pre class="highlight plaintext">&lt;?php
+<pre class="highlight plaintext"><code>&lt;?php
 
 $steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $arg1) {
     throw new EverzetBehatExceptionPending();
@@ -408,10 +408,10 @@ $steps-&gt;かつ('/^"([^"]*)"ボタンをクリックする$/', function($world
 $steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($world, $arg1) {
     throw new EverzetBehatExceptionPending();
 });
-</pre>
+</code></pre>
 
 <p>また実行してみましょう。</p>
-<pre class="highlight plaintext">&lt;code&gt;
+<pre class="highlight plaintext"><code>&lt;code&gt;
 bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
 フィーチャ: ユーザを管理したい
 
@@ -429,14 +429,14 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;, &lt;span style="color: goldenrod"&gt;1 pending&lt;/span&gt;)
 0.089s
 &lt;/code&gt;
-</pre>
+</code></pre>
 
 <p>未定義（undefined）から、ペンディングに変わりましたね。これは貼付けたコードが現時点でPending例外を投げているためです。</p>
 
 <h3>ステップを記述する</h3>
 
 <p>ステップの中身はbehat_webstepsのcommon.phpを流用しました。</p>
-<pre class="highlight plaintext">&lt;?php
+<pre class="highlight plaintext"><code>&lt;?php
 
 $steps-&gt;前提('/^"([^"]*)"ページを表示している$/', function($world, $page) {
   $page = $world-&gt;__getPath($page);
@@ -462,10 +462,10 @@ $steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($wo
   assertNotNull($world-&gt;page,"No webpage loaded");
   assertContains($text,$world-&gt;output);
 });
-</pre>
+</code></pre>
 
 <p>実行してみましょう。</p>
-<pre class="highlight plaintext">&lt;code&gt;
+<pre class="highlight plaintext"><code>&lt;code&gt;
 bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
 フィーチャ: ユーザを管理したい
 
@@ -482,18 +482,18 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 9 steps (&lt;span style="color: skyblue"&gt;8 skipped&lt;/span&gt;), &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
 0.355s
 &lt;/code&gt;
-</pre>
+</code></pre>
 
 <p>すると「ユーザ登録」なんてURLは見つからないというエラーになります。まぁそうですね。URLに関しては画面名と実際のhttpリクエストするURLを関連づけておく必要があります。これはgoutte以外のHTTPクライアントを使っても同じことです。ベースとしたbehat_webstepsではsupport/paths.phpにそのマッピングを書くようにしていますので、追加します。</p>
-<pre class="highlight plaintext">&lt;?php
+<pre class="highlight plaintext"><code>&lt;?php
 $world-&gt;paths = array();
 $world-&gt;paths['ユーザ登録'] = "http://localhost/user_regist.php";
-</pre>
+</code></pre>
 
 <h3>テストを失敗させる</h3>
 
 <p>ここまでで、初期段階の準備は完了です。ではまたテストを実行してみましょう。</p>
-<pre class="highlight plaintext">&lt;code&gt;
+<pre class="highlight plaintext"><code>&lt;code&gt;
 bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
 フィーチャ: ユーザを管理したい
 
@@ -508,7 +508,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 9 steps (&lt;span style="color: green"&gt;1 passed&lt;/span&gt;, &lt;span style="color: skyblue"&gt;7 skipped&lt;/span&gt;, &lt;span style="color: firebrick"&gt;1 failed&lt;/span&gt;)
 0.114s
 &lt;/code&gt;
-</pre>
+</code></pre>
 
 <p>テストを実行してみると、最初に入力フォームに値をセットしようとするところで失敗します。まだユーザ登録画面を表示するプログラムはありません。  </p>
 
@@ -517,7 +517,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 <h3>実装する</h3>
 
 <p>ここではあくまでテストを通過させる簡単なコードを書いてみます。画面の入力フォームから入力された値を表示するuser_regist.phpを書いてみましょう。</p>
-<pre class="highlight html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<pre class="highlight html"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
     <span class="nt">&lt;head&gt;</span>
       <span class="nt">&lt;title&gt;</span>ユーザ登録<span class="nt">&lt;/title&gt;</span>
@@ -547,12 +547,12 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
         <span class="nt">&lt;/form&gt;</span>
     <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</pre>
+</code></pre>
 
 <p>※まぁなんとも安直なコードですが、ご勘弁を・・・</p>
 
 <p>作成したファイルをドキュメントルートに設置してテストを実行しましょう。</p>
-<pre class="highlight plaintext">&lt;code&gt;
+<pre class="highlight plaintext"><code>&lt;code&gt;
 bash-3.2$ Behat/bin/behat sandbox/features/sample.feature 
 フィーチャ: ユーザを管理したい
 
@@ -572,7 +572,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 9 steps (&lt;span style="color: green"&gt;9 passed&lt;/span&gt;)
 0.389s
 &lt;/code&gt;
-</pre>
+</code></pre>
 
 <p>やったー、グリーンでテスト成功です。  </p>
 
@@ -628,6 +628,8 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -645,8 +647,6 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -808,7 +808,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -924,6 +924,10 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -1010,7 +1014,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

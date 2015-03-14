@@ -311,26 +311,26 @@
 <p>Flashでは、Boxを使うとBox内に要素を並べることができます。BoxにはHBox（横並び）とVBox（縦並び）の実装があり、CoverFlowでは横並びを利用します。  </p>
 
 <p>HBoxを使って以下のようなコードを書けばよいのですが、</p>
-<pre class="highlight plaintext">&lt;HBox&gt;
+<pre class="highlight plaintext"><code>&lt;HBox&gt;
   &lt;local:ImageReflector id="imageReflector0" /&gt;
   &lt;local:ImageReflector id="imageReflector1" /&gt;
   &lt;local:ImageReflector id="imageReflector2" /&gt;
   &lt;local:ImageReflector id="imageReflector3" /&gt;
 &lt;/HBox&gt;
-</pre>
+</code></pre>
 
 <p>これだとImageReflectorを必要な分、記述しなければいけないのでかなり面倒です。そこで、繰り返しを便利にしてくれるRepeaterという要素があります。今回のmxmlでは以下のように記述しています。</p>
-<pre class="highlight plaintext">&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
+<pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
     &lt;Repeater id="rp" dataProvider="{dp}"&gt;
         &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
     &lt;/Repeater&gt;
 &lt;/HBox&gt;
-</pre>
+</code></pre>
 
 <p>Repeaterで繰り返したい要素はdataProviderというパラメータで指定することができます。dpは同じmxmlのスクリプト部分に記述しています。</p>
-<pre class="highlight plaintext">[Bindable]
+<pre class="highlight plaintext"><code>[Bindable]
 private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655", "4274066940", "4822283143", "4839923221", "4873113202", "4797333502", "4822282295"]);
-</pre>
+</code></pre>
 
 <p>配列要素（ArrayCollection）に、amazonのasinidを指定していけば、値が変更になった場合も簡単です。後々XMLファイルに外だしにする場合もそれほど変更が必要になりません。  </p>
 
@@ -339,30 +339,30 @@ private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655
 <p>dataProviderで指定した、asinidをActionScriptに引き渡すには、[Bindable]を宣言すれば良いだけです。この宣言は変数でも関数でも、直前に記述すれば、MXMLとActionScriptの間で情報を交換することができます。本サンプルでは、asinIdと、選択表示（今回は中央）のIndexをMXMLからActionScriptに対して引き渡しています。引渡し方法は、タグの中で指定する方法や、MXMLのScriptからID指定で渡す方法があります。  </p>
 
 <p>タグの中で指定するには、</p>
-<pre class="highlight plaintext">&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
-</pre>
+<pre class="highlight plaintext"><code>&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
+</code></pre>
 
 <p>と書くことで、ImageReflectorクラスのasinId変数の初期値として、rp.currentItemの値がセットされます。rp.currentItemはRepeater(idがrp)の現在のdataProvider配列の値です。繰り返している現在の値を引き渡しています。  </p>
 
 <p>スクリプトの中で指定するには、</p>
-<pre class="highlight plaintext">imageReflector[0].selectedIndex = dp.length / 2;
-</pre>
+<pre class="highlight plaintext"><code>imageReflector[0].selectedIndex = dp.length / 2;
+</code></pre>
 
 <p>と書くことで、idがimageReflectorの要素の0番目のselectedIndex変数に値をセットすることができます。imageReflectorはRepeaterで繰り返しているImageReflector要素のidで同じIDが複数出現すると、自動的に配列要素となってくれます。  </p>
 
 <h3>■measureを修正して、個々の横幅を指定する</h3>
 
 <p>Flashが個々の要素の幅を決定するときに呼ぶmeasure関数で、選択要素は等幅、それ以外は台形変形したときに横幅を指定するようにします。</p>
-<pre class="highlight plaintext">if(selectedIndex == repeaterIndex) {
+<pre class="highlight plaintext"><code>if(selectedIndex == repeaterIndex) {
     measuredWidth = _content.getExplicitOrMeasuredWidth();
 }
 else {
     measuredWidth = tiltingWidth;
 }
-</pre>
+</code></pre>
 
 <p>selectedIndexはMXMLとバインディングしている変数ですが、repeaterIndexはどこにも出てきません。これは自分のコントロールがRepeaterの中にある場合に有効な変数で、自分がRepeaterの何番目かを知ることができるのです。ですからMXMLから指定された選択Indexである場合は、画像の幅を指定し、それ以外の場合はtiltingWidthを指定します。このtiltingWidthも変数宣言していませんが、今回追加したコードに関数が記述されています。</p>
-<pre class="highlight plaintext">public function set tiltingWidth(value:Number):void
+<pre class="highlight plaintext"><code>public function set tiltingWidth(value:Number):void
 {
     // no set
 }
@@ -375,7 +375,7 @@ public function get tiltingWidth():Number
     var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
     return Math.min(maxTiltingWidth, w);
 }
-</pre>
+</code></pre>
 
 <p>functionの後にset,getと書くとプロパティ値のsetter,getterの意味を持つことができ、あたかもtiltingWidthというメンバ変数があるように見せかけることができます。  </p>
 
@@ -435,6 +435,8 @@ transformImage関数では、図のように６つの点を計算しています
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -452,8 +454,6 @@ transformImage関数では、図のように６つの点を計算しています
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -615,7 +615,7 @@ transformImage関数では、図のように６つの点を計算しています
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -731,6 +731,10 @@ transformImage関数では、図のように６つの点を計算しています
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -817,7 +821,7 @@ transformImage関数では、図のように６つの点を計算しています
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

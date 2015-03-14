@@ -296,7 +296,7 @@
 <p>とは言え、テストを書かないというのも何なのでテストを書くわけですが。  </p>
 
 <p>CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  </p>
-<pre class="highlight plaintext">class PostsTestController extends PostsController {
+<pre class="highlight plaintext"><code>class PostsTestController extends PostsController {
 // モックしたい処理
 ....
 }
@@ -306,7 +306,7 @@ class PostsControllerTest extends ControllerTestCase {
         $this-&gt;testAction('url', array('controller'=&gt;'PostsTestController'));
     }
 }
-</pre>
+</code></pre>
 
 <p>ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  </p>
 
@@ -318,7 +318,7 @@ class PostsControllerTest extends ControllerTestCase {
 Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  </p>
 
 <p>しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  </p>
-<pre class="highlight plaintext">// 実際のコントローラ
+<pre class="highlight plaintext"><code>// 実際のコントローラ
     $components = ['Session', 'Auth'];
 
     public function index() {
@@ -332,7 +332,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
         $this-&gt;testAction('/posts/index');
         ......
     }
-</pre>
+</code></pre>
 
 <p>みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  </p>
 
@@ -342,13 +342,13 @@ Sessionはブラウザからテストを実行している範囲では問題が�
 具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/&hellip;でないところがミソ）。  </p>
 
 <p>で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  </p>
-<pre class="highlight plaintext">    public function testIndex() {
+<pre class="highlight plaintext"><code>    public function testIndex() {
         $this-&gt;controller = $this-&gt;generate("Posts", ['components' =&gt; ['Session']]);
         $this-&gt;controller-&gt;Session-&gt;expects($this-&gt;any())
              -&gt;method('read')
              -&gt;will($this-&gt;returnValueMap([['hoge', 'fuga']]));
         $this-&gt;testAction('/posts/index');
-</pre>
+</code></pre>
 
 <p>$this-&gt;generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。<br>
 このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  </p>
@@ -393,6 +393,8 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -410,8 +412,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -573,7 +573,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -689,6 +689,10 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -775,7 +779,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

@@ -5,10 +5,260 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-01-03T07:05:00Z</updated>
+  <updated>2015-03-14T06:44:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Fabricateのversion2を作成しました</title>
+    <link rel="alternate" href="http://blog.url.com/2015/03/14/fabricate-v2.html"/>
+    <id>http://blog.url.com/2015/03/14/fabricate-v2.html</id>
+    <published>2015-03-14T06:44:00Z</published>
+    <updated>2015-03-14T17:35:50+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;これまでCakePHP2用のデータジェネレータプラグインとして開発を続けてきた&lt;a href="https://github.com/sizuhiko/Fabricate"&gt;Fabricate&lt;/a&gt;を&lt;code&gt;V2&lt;/code&gt;として各種ORMへ対応するようなコアモジュールへと変更しました。
+またFabiricateリポジトリのmasterブランチへは統合されていませんが、CakePHP3のリリース時期を合わせて、V2ブランチを本流にする予定です。
+これまでのCakePHP2用ライブラリはcakephp2ブランチでメンテナンスを続ける予定です。&lt;/p&gt;
+
+&lt;p&gt;データジェネレータって何？誰得？という方は、以下の投稿を一読していただけると理解が深まります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://twileshare.com/bgrg"&gt;テストデータの作り方 - 第73回 PHP勉強会&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;FabricateはRubyのFabricationとFactory_Girlに影響された「fixtureはDRYではないので、Fixture replacement を使おう」という流れに乗ったPHPクローンです。&lt;/p&gt;
+
+&lt;h3&gt;Version2を作成するきっかけ&lt;/h3&gt;
+
+&lt;p&gt;このキッカケはいくつかあります。
+1つには昨年の CakeFest2014 で Fabricate の LT をした後で、 CodeIgniter の開発者だったことでも知られる&lt;a href="https://github.com/philsturgeon"&gt;Phil Sturgeon&lt;/a&gt; から、「これいいね、他のフレームワークでも使えるようにしてよ」と言われたことでした。
+他のフレームワークでも使えるようにしたいという思いは、少しあったのですがまだ確約できなかったので「maybe」と返しただけでした。（このときPhilはかなり酔っていたので、私に話した事を覚えているのかどうかも怪しいですがw）&lt;/p&gt;
+
+&lt;p&gt;さらにもう1つおおきなキッカケがCakePHP3でのPSR対応によって、namespaceなど外部ライブラリを使いやすくなり、さらに外部ライブラリからフレームワーク本体のコードへのアクセスしやすくなったということがあります。
+CakePHP2ではフレームワークへアクセスするにはアプリケーションまたはプラグインでないと困難で、特にORMに依存したライブラリをフレームワークをまたいで作成するのは困難でした。これがPSRの対応でやりやすくなったということ、CakePHP3への対応に合わせてV2を作って、他のフレームワークにも対応できるようにしようと思ったのです。&lt;/p&gt;
+
+&lt;h3&gt;Fabricate V2の主な変更点&lt;/h3&gt;
+
+&lt;p&gt;Fabricateの利用方法はほとんど変わっていませんが、各ORM用にアダプターと呼ばれるORMの差分を吸収するクラスを準備する必要があります。
+Fabricateの本体には&lt;a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/FabricateArrayAdaptor.php"&gt;Fabricate\Adaptor\FabricateArrayAdaptor&lt;/a&gt;という連想配列構造を返すサンプル用のアダプターを用意しています。これを参考にアダプターを実装すれば&lt;a href="http://www.doctrine-project.org/"&gt;Doctrine&lt;/a&gt;や&lt;a href="https://github.com/propelorm/Propel"&gt;Propel&lt;/a&gt;、&lt;a href="http://www.yiiframework.com/"&gt;Yii&lt;/a&gt;や&lt;a href="http://www.codeigniter.com/"&gt;CodeIgniter&lt;/a&gt;でも利用可能になります。&lt;/p&gt;
+
+&lt;h3&gt;アダプターの実装方法&lt;/h3&gt;
+
+&lt;p&gt;とはいえ実際にORMに接続するアダプターもないと、ということでCakePHP3用のアダプター&lt;a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor"&gt;CakePHP Fabricate Adaptor&lt;/a&gt;も作成しました。&lt;/p&gt;
+
+&lt;p&gt;ここではCakePHP3のアダプター実装を例に、アダプターで何を実装しなくてはいけないのかを解説したいと思います。&lt;/p&gt;
+
+&lt;h4&gt;作成するクラス&lt;/h4&gt;
+
+&lt;p&gt;アダプタークラスは&lt;a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/AbstractFabricateAdaptor.php"&gt;Fabricate\Adaptor\AbstractFabricateAdaptor&lt;/a&gt;クラスを継承します。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;Fabricate\Adaptor\AbstractFabricateAdaptor&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;CakeFabricateAdaptor&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;AbstractFabricateAdaptor&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4&gt;実装するメソッド&lt;/h4&gt;
+
+&lt;p&gt;アダプターとして実装する必要があるメソッドは以下の3つです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;getModel&lt;/li&gt;
+&lt;li&gt;create&lt;/li&gt;
+&lt;li&gt;build&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;それぞれのメソッドの実装を確認しましょう。&lt;/p&gt;
+
+&lt;h5&gt;getModel&lt;/h5&gt;
+
+&lt;p&gt;getModelメソッドは各ORMの差分を吸収するためのモデルインスタンスを返却するデータジェネレータの定義部分です。
+データジェネレータとしては最も重要な機能です。   &lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="nx"&gt;Fabricate\Model\FabricateModel&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;getModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$model&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;FabricateModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;TableRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nv"&gt;$schema&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;schema&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$schema&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;filterKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;continue&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="nv"&gt;$attrs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$schema&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;column&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$name&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$options&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[];&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;array_key_exists&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'length'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$attrs&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$attrs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'length'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;array_key_exists&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'null'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$attrs&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'null'&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$attrs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'null'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="nv"&gt;$model&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$attrs&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'type'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nv"&gt;$options&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;associations&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;keys&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$association&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;associations&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$key&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$target&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$association&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;target&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="nv"&gt;$className&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;get_class&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$target&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="nv"&gt;$alias&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$target&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;alias&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;switch&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$association&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;type&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;Association&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;ONE_TO_ONE&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+                &lt;span class="nv"&gt;$model&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hasOne&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$alias&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$association&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;foreignKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+                &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;Association&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;ONE_TO_MANY&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+                &lt;span class="nv"&gt;$model&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hasMany&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$alias&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$association&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;foreignKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+                &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="nx"&gt;Association&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;MANY_TO_ONE&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+                &lt;span class="nv"&gt;$model&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;belongsTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$alias&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$association&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;foreignKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="nv"&gt;$className&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+                &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$model&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;getModelはFabricateModelクラスのインスタンスを生成する責務があります。
+FabricateModelはPHPのマイグレーションツールである&lt;a href="https://phinx.org/"&gt;Phinx&lt;/a&gt;に影響を受けていて、スキーマの定義方法が似ています。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="c1"&gt;// Phinx
+&lt;/span&gt;&lt;span class="nv"&gt;$users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'users'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$users&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'password'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'password_salt'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'email'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'first_name'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'last_name'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'created'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'updated'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'null'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+&lt;span class="c1"&gt;// FabricateModel
+&lt;/span&gt;&lt;span class="nv"&gt;$users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;FabricateModel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'users'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$users&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'password'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'password_salt'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'email'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'first_name'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'last_name'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'created'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'updated'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'null'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;利用できるカラム型はPhinxと同様で、オプションについて現時点ではlimit(長さ)のみ対応しています。&lt;/p&gt;
+
+&lt;p&gt;CakePHP3では&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+
+&lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;TableRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$schema&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;schema&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;という記述でスキーマ情報が連想配列で取得できるので、それを繰り返して&lt;code&gt;addColumn&lt;/code&gt;を呼び出しています。&lt;/p&gt;
+
+&lt;p&gt;スキーマ定義を作成したら、次にモデルの関連を定義します。
+モデルの関連定義は、以下のようにassociationを使って関連構造を一度に作成する場合に必要となります。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nx"&gt;Fabricate&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;create&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Users'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$world&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+        &lt;span class="s1"&gt;'username'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'taro'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="s1"&gt;'posts'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$world&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;association&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Posts'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;この例のように関連を設定するには、以下のようにFabricateModel::hasMany()やbelongsTo()を使います。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="nv"&gt;$users&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;hasMany&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'posts'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'post_id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'Posts'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$posts&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;belongsTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'users'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'post_id'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'Users'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;パラメータの指定方法は、hasManyもhasOneもbelongsToも同じで、(別名、外部キーカラム名、モデル名）を指定します。&lt;/p&gt;
+
+&lt;h5&gt;create&lt;/h5&gt;
+
+&lt;p&gt;createメソッドは、Fabricateによって生成された連想配列構造のデータを、ORMを使ってDBに保存する機能を実装します。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;create&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$attributes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$recordCount&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;TableRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nv"&gt;$entities&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;newEntities&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$attributes&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'validate'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;options&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;OPTION_VALIDATE&lt;/span&gt;&lt;span class="p"&gt;]]);&lt;/span&gt;
+    &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;connection&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;transactional&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;use&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$entities&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;foreach&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$entities&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nv"&gt;$entity&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$ret&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$entity&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nv"&gt;$ret&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;});&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$entities&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$modelName&lt;/code&gt;には&lt;code&gt;Fabricate::create(&amp;#39;Users&amp;#39;,&lt;/code&gt;と記述した場合の、&lt;code&gt;Users&lt;/code&gt;が渡ります。
+&lt;code&gt;$attributes&lt;/code&gt;には生成された連想配列が渡ります。例えば以下のとおりです。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="mi"&gt;0&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+  &lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="s1"&gt;'title'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'Lorem ipsum dolor sit amet'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;'body'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;'created'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'2013-10-09 12:40:28'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s1"&gt;'updated'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'2013-10-09 12:40:28'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;),&lt;/span&gt;
+  &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+  &lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="o"&gt;....&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$recordCount&lt;/code&gt;は生成する件数ですが、この値は&lt;code&gt;count($attributes)&lt;/code&gt;の値と一致します。
+CakePHP3では以下の流れでDBへ保存しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;TableRegistry::get()でテーブルインスタンスを取得&lt;/li&gt;
+&lt;li&gt;Table::newEntities()で連想配列からエンティティを生成&lt;/li&gt;
+&lt;li&gt;Table::save()でエンティティをDBに保存&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5&gt;build&lt;/h5&gt;
+
+&lt;p&gt;buildメソッドは、Fabricateによって生成された連想配列構造のデータから生成したエンティティを返却する機能を実装します。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;build&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;TableRegistry&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$modelName&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nv"&gt;$entity&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;newEntity&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'validate'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;options&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;self&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="na"&gt;OPTION_VALIDATE&lt;/span&gt;&lt;span class="p"&gt;]]);&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$entity&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;$modelName&lt;/code&gt;には&lt;code&gt;Fabricate::create(&amp;#39;Users&amp;#39;,&lt;/code&gt;と記述した場合の、&lt;code&gt;Users&lt;/code&gt;が渡ります。
+&lt;code&gt;$data&lt;/code&gt;には生成された連想配列が1インスタンス分だけ渡ります。例えば以下のとおりです。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class="k"&gt;array&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="s1"&gt;'title'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'Lorem ipsum dolor sit amet'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="s1"&gt;'body'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="s1"&gt;'created'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'2013-10-09 12:40:28'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="s1"&gt;'updated'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="s1"&gt;'2013-10-09 12:40:28'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;現在CakePHP3用のアダプターしかないので「xxxx ORMについてアダプター実装したよ！」という連絡を待っています。
+&lt;a href="https://github.com/sizuhiko/Fabricate/blob/v2/composer.json"&gt;Fabricateのcomposer.json&lt;/a&gt;のsuggestに追加してPull Requestをもらえるととても助かります。&lt;/p&gt;
+&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"suggest"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"sizuhiko/cake_fabricate"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"for integration with CakePHP3"&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;ここに追加したPRをお待ちしています&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;皆様のPull Requestをお待ちしております！！&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>2014年ふりかえり</title>
     <link rel="alternate" href="http://blog.url.com/2015/01/03/2014-retrospective.html"/>
@@ -512,19 +762,19 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
 &lt;p&gt;ベータ1はアルファ版からディレクトリの変更も多く、CakePHP本体をcomposer updateしてもダメなので、再度 composer create-project でテンプレートから生成しなおします。&lt;/p&gt;
 
 &lt;p&gt;最新の&lt;a href="https://github.com/cakephp/app"&gt;cakephp/app&lt;/a&gt;テンプレートにはDebugKitプラグインが依存関係に入っています。&lt;/p&gt;
-&lt;pre class="highlight json"&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"require"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"require"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
         &lt;/span&gt;&lt;span class="s2"&gt;"php"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"&amp;gt;=5.4.19"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
         &lt;/span&gt;&lt;span class="s2"&gt;"cakephp/cakephp"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"3.0.*-dev"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
         &lt;/span&gt;&lt;span class="s2"&gt;"mobiledetect/mobiledetectlib"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"2.*"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
         &lt;/span&gt;&lt;span class="s2"&gt;"cakephp/debug_kit"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"3.0.*-dev"&lt;/span&gt;&lt;span class="w"&gt;
     &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/pre&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;require-devではないのですね、と思ったり。。&lt;/p&gt;
 
 &lt;p&gt;以下のコマンドでCakePHP3アプリケーションのプロジェクトスケルトンを作ります。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;composer create-project -s dev cakephp/app dev-cake3 app
-&lt;/pre&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;composer create-project -s dev cakephp/app dev-cake3 app
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;ブラウザでアクセスすると、以下のような画面が表示されます。&lt;/p&gt;
 
@@ -535,7 +785,7 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
 &lt;p&gt;そこで、DebugKitの設定を見てみます&lt;/p&gt;
 
 &lt;p&gt;app/plugins/DebugKit/config/bootstrap.php&lt;/p&gt;
-&lt;pre class="highlight php"&gt;if (!ConnectionManager::config('debug_kit')) {
+&lt;pre class="highlight php"&gt;&lt;code&gt;if (!ConnectionManager::config('debug_kit')) {
     ConnectionManager::config('debug_kit', [
         'className' =&amp;gt; 'Cake\Database\Connection',
         'driver' =&amp;gt; 'Cake\Database\Driver\Sqlite',
@@ -545,7 +795,7 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
         'quoteIdentifiers' =&amp;gt; false,
     ]);
 }
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;そうですか、そうですか…&lt;/p&gt;
 
@@ -574,7 +824,7 @@ SQLite or another database driver that CakePHP can talk to. By default DebugKit 
 &lt;p&gt;ふむふむ&lt;/p&gt;
 
 &lt;p&gt;&lt;code&gt;config/app.php&lt;/code&gt; のDatasourceに以下のような&lt;code&gt;debug_kit&lt;/code&gt;接続を追加してみます。&lt;/p&gt;
-&lt;pre class="highlight php"&gt;        'debug_kit', [
+&lt;pre class="highlight php"&gt;&lt;code&gt;        'debug_kit', [
             'className' =&amp;gt; 'Cake\Database\Connection',
             'driver' =&amp;gt; 'Cake\Database\Driver\Mysql',
             'persistent' =&amp;gt; false,
@@ -589,36 +839,36 @@ SQLite or another database driver that CakePHP can talk to. By default DebugKit 
             'quoteIdentifiers' =&amp;gt; false,
         ],
 
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;ブラウザをリロード&lt;/p&gt;
 
 &lt;p&gt;&lt;img src="/images/blog/cakephp3_debugkit_mysql.png" /&gt;&lt;/p&gt;
 
 &lt;p&gt;ぎゃー、DebugKitの該当箇所のコードを見てみると、そんなに変じゃないように見えますが、&lt;/p&gt;
-&lt;pre class="highlight php"&gt;        $configs = ConnectionManager::configured();
+&lt;pre class="highlight php"&gt;&lt;code&gt;        $configs = ConnectionManager::configured();
         foreach ($configs as $name) {
             $connection = ConnectionManager::get($name);
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;このときの&lt;code&gt;$config&lt;/code&gt;をwatchしてみると&lt;/p&gt;
-&lt;pre class="highlight php"&gt;array (size=5)
+&lt;pre class="highlight php"&gt;&lt;code&gt;array (size=5)
   0 =&amp;gt; string 'default' (length=7)
   1 =&amp;gt; string 'test' (length=4)
   2 =&amp;gt; int 0
   3 =&amp;gt; int 1
   4 =&amp;gt; string 'debug_kit' (length=9)
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;上記のようになっています。2と3誰よ….&lt;/p&gt;
 
 &lt;p&gt;ということで、まだベータ１だからねー。はははーという事で、現時点はSQLiteのextension入れて試しましょう。&lt;/p&gt;
 
 &lt;p&gt;例えば、friendsofcakeのvagrant-chef使っているなら、cookbooks/php/recipes/install.rbに追加します。&lt;/p&gt;
-&lt;pre class="highlight ruby"&gt;  &lt;span class="s2"&gt;"php5-mysql"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;pre class="highlight ruby"&gt;&lt;code&gt;  &lt;span class="s2"&gt;"php5-mysql"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
   &lt;span class="s2"&gt;"php5-sqlite"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
 
-&lt;/pre&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;mysqlの下あたりに追加します。vagrant destroy/upを実行して環境を作り直したら、もう一度ブラウザをリロードします。&lt;/p&gt;
 
@@ -631,122 +881,6 @@ SQLite or another database driver that CakePHP can talk to. By default DebugKit 
 
 &lt;p&gt;DebugKitも使えるし、どんどんCakePHP3のアプリケーション開発がやりやすくなっていると思います。
 CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を試してみませんか？&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>CakePHPで学ぶ継続的インテグレーションが発売されます</title>
-    <link rel="alternate" href="http://blog.url.com/2014/09/07/cakephp_ci_book.html"/>
-    <id>http://blog.url.com/2014/09/07/cakephp_ci_book.html</id>
-    <published>2014-09-07T05:04:00Z</published>
-    <updated>2014-09-07T17:13:46+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;先日の記事にも書きましたが、&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;春先ぐらいからBlogの更新が滞っていましたが、その要因となったアレが大分落ち着いてきたので、たまっていたネタを順番に書き出します。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;code&gt;アレ&lt;/code&gt;が出ます。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/cakephp_ci_book.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;ババーン ww とでかい画像を付けましたよ。&lt;/p&gt;
-
-&lt;h3&gt;CakePHPで学ぶ継続的インテグレーション&lt;/h3&gt;
-
-&lt;p&gt;共著者の&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="http://kaz29.hatenablog.com/entry/2014/09/03/095358"&gt;@kaz_29さんのブログ&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="http://www.ryuzee.com/contents/blog/6994"&gt;@ryuzeeさんのブログ&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;でも既に紹介されていますので、そちらを一読いただくと理解が深まります。&lt;/p&gt;
-
-&lt;p&gt;私は主に以下のあたりを担当しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Chapter 5 開発工程(1)
-
-&lt;ul&gt;
-&lt;li&gt;5-1 開発の進め方&lt;/li&gt;
-&lt;li&gt;5-2 ユーザーストーリーの定義&lt;/li&gt;
-&lt;li&gt;5-3 機能実装&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Chapter 6 開発工程(2)
-
-&lt;ul&gt;
-&lt;li&gt;6-1 ステップの定義&lt;/li&gt;
-&lt;li&gt;6-2 継続的インテグレーションの定義&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;上記以外でも、おおよそCakePHPに関連するところを書いたと思っていただければ。&lt;/p&gt;
-
-&lt;h3&gt;これは何の本&lt;/h3&gt;
-
-&lt;p&gt;タイトルの通り、と言いたいところですが、わからないという人のために補足すると&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;継続的インテグレーションの入門書です&lt;/li&gt;
-&lt;li&gt;CakePHPでのアプリケーションの作り方を解説した本ではありません&lt;/li&gt;
-&lt;li&gt;サンプルアプリケーションの構築、自動テストの作成方法の解説にCakePHPを使っています&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;タイトルや見出しから内容が想像しずらいと思うので、私が書いた部分の継続的インテグレーションに関する技術的キーワードを列挙すると、以下のとおりです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://getcomposer.org/"&gt;Composer&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="http://docs.behat.org/en/v2.5/"&gt;Behat&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;ユニットテスト&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/CakeDC/migrations"&gt;CakePHP Migrations プラグイン&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/josegonzalez/cakephp-environments"&gt;CakePHP Environments プラグイン&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/sizuhiko/Bdd"&gt;CakePHP BDDプラグイン&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/sizuhiko/Fabricate"&gt;CakePHP Fabricate プラグイン&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;上記以外にアプリケーション構築用にBoostCake、CakeDC Usersプラグインも使っています。
-自分が作ったプラグインであるBDDとFabricateを採用していますが、これは現在支援を行っている現場でも活躍しているので手前味噌というだけでなく、自動テストを継続していく上で役立つと思います。&lt;/p&gt;
-
-&lt;p&gt;私の記述したところの、ざっくりした解説は以下のとおりです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;ComposerとMigrationsプラグインを使うと、誰でも簡単に同じ環境を構築することができるようになります。&lt;/li&gt;
-&lt;li&gt;Environmentsプラグインを使うと、環境毎の設定切り替えや、振る舞いの制御を容易にできるようになります。&lt;/li&gt;
-&lt;li&gt;BDDプラグインを使うとCakePHPからBehatとの連携が容易になり、受入テストの自動化に取り組みやすくなります。&lt;/li&gt;
-&lt;li&gt;Fabricateプラグインを使うとFixtureを使ったテストデータの呪縛から解放されます。&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらは過去から現在に至るまで、私が様々なプロジェクトで経験したことを背景にしています。
-もちろんプロジェクトごとに様々な背景があると思いますが、一度実践していただければ効果を体感していただけるのではないかと思っています。&lt;/p&gt;
-
-&lt;p&gt;また、PHP界隈ではまだBDDやATDDに関して、解説する本がなかったり、実践的な解説がなかったのですが、本書がこれらを導入するきっかけになると嬉しいなと思っています。&lt;/p&gt;
-
-&lt;h3&gt;CakePHP以外ではどうなの&lt;/h3&gt;
-
-&lt;p&gt;サンプルアプリケーションの構築にはCakePHPを利用していますが、上記の技術要素に関しては他のPHPフレームワークでも同様のものがあると思います。
-もし、CakePHP以外のフレームワークに精通していれば、Behatを直接使ったり、データジェネレータにFakerの機能を使ったり、各フレームワークのマイグレーションや環境切り替えプラグインを使ったりできるのではないかと思います。
-皆様の現場の状況に合わせて読み替えて、継続的インテグレーションを導入する参考にしていただければ幸いです。&lt;/p&gt;
-
-&lt;h3&gt;いつ発売なの？&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;amp;ie=UTF8&amp;amp;amp;qid=1410066610&amp;amp;amp;sr=1-1"&gt;amazon&lt;/a&gt;では&lt;code&gt;2014/09/19(金)&lt;/code&gt;に発売です。&lt;/p&gt;
-
-&lt;p&gt;書店などでは多少前後することがあると思いますが、ぜひ一度手に取ってみてください。&lt;/p&gt;
-
-&lt;p&gt;また9/19は、茅場町Co-Edoにて&lt;a href="http://coedo-cakephp.doorkeeper.jp/events/15008"&gt;CakeFest2014報告会&lt;/a&gt;を実施します。本会には共著者である@kaz_29さんも参加予定なので、著者サインを集めるチャンスです！
-先月実施されたCakeFestではどんな事があったのか、CakePHP3の動向などを話しますので、ぜひこちらにも参加ください。&lt;/p&gt;
-
-&lt;h3&gt;お知らせと感謝（追記）&lt;/h3&gt;
-
-&lt;p&gt;CakePHP3の話題もあるなか、まだまだ現場ではCakePHP2を利用するケースもあると思います。
-本書をきっかけにCakePHPをより学んでみたいなと思っていただけたら、私も共著者で参加したCakePHP2実践入門(&lt;a href="http://www.amazon.co.jp/CakePHP2-%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80-WEB-PRESS-plus/dp/4774153249"&gt;amazonでチェック&lt;/a&gt;)を参考文献として手に取ってみてください。&lt;/p&gt;
-
-&lt;p&gt;こちらはちょうど2年ほど前の2012/09/29に発刊となったのですが、このたび &lt;code&gt;第3刷&lt;/code&gt; の増刷が決まりました。&lt;/p&gt;
-
-&lt;p&gt;長い間CakePHP2の参考書として手に取っていただいているようで、本当に嬉しいです。ありがとうございます。&lt;/p&gt;
 </content>
   </entry>
 </feed>

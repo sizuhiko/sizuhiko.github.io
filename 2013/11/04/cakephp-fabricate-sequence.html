@@ -307,15 +307,15 @@
 これを直接引数でarrayを指定できるようにしました。  </p>
 
 <p>従来の記述方法：  </p>
-<pre class="highlight plaintext">Fabricate::create('Post', 10, function($data){
+<pre class="highlight plaintext"><code>Fabricate::create('Post', 10, function($data){
     return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
 });
-</pre>
+</code></pre>
 
 <p>新しくサポートした記述方法：  </p>
-<pre class="highlight plaintext">Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
+<pre class="highlight plaintext"><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
 });
-</pre>
+</code></pre>
 
 <p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
 
@@ -324,10 +324,10 @@
 <h3>初期連番をconfigで指定</h3>
 
 <p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
-<pre class="highlight plaintext">Fabricate::config(function($config) {
+<pre class="highlight plaintext"><code>Fabricate::config(function($config) {
     $config-&gt;sequence_start = 100;
 });
-</pre>
+</code></pre>
 
 <p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
 config関数を使わない場合は、従来通り1から開始されます。  </p>
@@ -336,13 +336,13 @@ config関数を使わない場合は、従来通り1から開始されます。 
 
 <p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
 この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
-<pre class="highlight plaintext">Fabricate::attributes_for('Post', 10, function($data, $world){
+<pre class="highlight plaintext"><code>Fabricate::attributes_for('Post', 10, function($data, $world){
     return [
         'id'=&gt; $world-&gt;sequence('id'),
         'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
     ];
 });
-</pre>
+</code></pre>
 
 <p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
 $worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
@@ -402,6 +402,8 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -419,8 +421,6 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -582,7 +582,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -698,6 +698,10 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -784,7 +788,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

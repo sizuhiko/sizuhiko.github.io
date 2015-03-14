@@ -290,7 +290,7 @@
 <h3>動的にプレフィックスルーティングを追加するには</h3>
 
 <p>公式ドキュメントの解説のとおり、</p>
-<pre class="highlight plaintext">// routes.php
+<pre class="highlight plaintext"><code>// routes.php
 Router::connect(
     "/site-proxy/:controller",
     array('action' =&gt; 'index', 'prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true)
@@ -298,44 +298,44 @@ Router::connect(
 
 // core.phpなど
 Configure::write('Routing.prefixes', array('site-proxy'));
-</pre>
+</code></pre>
 
 <p>のように記述します。</p>
 
 <p>RouterTest.phpのテストコードを見たら</p>
-<pre class="highlight plaintext">$request = new CakeRequest();
+<pre class="highlight plaintext"><code>$request = new CakeRequest();
 $request-&gt;addParams(array(
     'controller' =&gt; 'registrations', 'action' =&gt; 'admin_index',
     'plugin' =&gt; null, 'prefix' =&gt; 'admin', 'admin' =&gt; true,
     'ext' =&gt; 'html'
 ));
-</pre>
+</code></pre>
 
 <p>みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。</p>
 
 <p>実際コントローラで</p>
-<pre class="highlight plaintext">$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
-</pre>
+<pre class="highlight plaintext"><code>$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
+</code></pre>
 
 <p>みたいに書くと、View上で $this-&gt;html-&gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。</p>
 
 <h3>ハマりポイント</h3>
 
 <p>View上でフォームを作成するときに</p>
-<pre class="highlight plaintext">echo $this-&gt;Form-&gt;create('Post');
-</pre>
+<pre class="highlight plaintext"><code>echo $this-&gt;Form-&gt;create('Post');
+</code></pre>
 
 <p>のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと</p>
-<pre class="highlight plaintext">// FormHelper::create() L367付近
+<pre class="highlight plaintext"><code>// FormHelper::create() L367付近
 if ($options['action'] === null &amp;&amp; $options['url'] === null) {
     $options['action'] = $this-&gt;request-&gt;here(false);
 } elseif (empty($options['url']) || is_array($options['url'])) {
-</pre>
+</code></pre>
 
 <p>URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。</p>
 
 <p>で、CakeRequest::here() とはどんなコードか見てみると</p>
-<pre class="highlight plaintext">public function here($base = true) {
+<pre class="highlight plaintext"><code>public function here($base = true) {
     $url = $this-&gt;here;
     if (!empty($this-&gt;query)) {
         $url .= '?' . http_build_query($this-&gt;query, null, '&amp;');
@@ -345,7 +345,7 @@ if ($options['action'] === null &amp;&amp; $options['url'] === null) {
     }
     return $url;
 }
-</pre>
+</code></pre>
 
 <p>のようになっていて、要は現在のURL（$this-&gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。</p>
 
@@ -356,14 +356,14 @@ if ($options['action'] === null &amp;&amp; $options['url'] === null) {
 <ul>
 <li>Form::create() で <code>url</code> オプションを追加する</li>
 <li><p>addParams するときに here を変更する</p>
-<pre class="highlight plaintext">// 例）
+<pre class="highlight plaintext"><code>// 例）
 $request-&gt;addParams(array(
     'admin' =&gt; true,
     'prefix' =&gt; 'admin',
 ))-&gt;addPaths(array(
     'here' =&gt; '/admin/this/interesting/index',
 ))
-</pre></li>
+</code></pre></li>
 </ul>
 
 <p>あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&hellip;    </p>
@@ -399,6 +399,8 @@ $request-&gt;addParams(array(
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -416,8 +418,6 @@ $request-&gt;addParams(array(
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -579,7 +579,7 @@ $request-&gt;addParams(array(
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -695,6 +695,10 @@ $request-&gt;addParams(array(
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -781,7 +785,7 @@ $request-&gt;addParams(array(
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

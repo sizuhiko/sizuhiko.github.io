@@ -337,7 +337,7 @@ php composer.phar install &ndash;dev</p></li>
 <h3>テストを実行してみる</h3>
 
 <p>CakePHPのルートディレクトリに移動して以下のようにコマンドを実行します。behatのテストでseleniumを利用しているので、可能であればコチラ(<a href="http://www.phpunit.de/manual/3.6/ja/selenium.html">http://www.phpunit.de/manual/3.6/ja/selenium.html</a>)を参考にseleniumをダウンロードして実行しておいてください。  </p>
-<pre class="highlight plaintext">$ lib/Cake/Console/cake Bdd.spec
+<pre class="highlight plaintext"><code>$ lib/Cake/Console/cake Bdd.spec
 
 Welcome to CakePHP v2.x.x Console
 ---------------------------------------------------------------
@@ -375,13 +375,13 @@ Feature:
     And I should see "Title strikes back" # FeatureContext::assertPageContainsText()
 
 ....
-</pre>
+</code></pre>
 
 <h3>スペックフレームワークの使い方</h3>
 
 <p>基本的なコマンドラインのオプションなどはSpec for PHP(<a href="https://github.com/drslump/Spec-PHP">https://github.com/drslump/Spec-PHP</a>) に対して透過的になっていて、意味もPHPUnitと似ている（実際内部はPHPUnitである）ので、感覚は掴みやすいと思います。<br>
 前のコマンド実行例では Bdd.spec にオプションがない状況でしたが、代表的な使い方は以下のとおりです。  </p>
-<pre class="highlight plaintext"># デフォルトディレクトリ（spec）にあるspecファイルをすべて実行
+<pre class="highlight plaintext"><code># デフォルトディレクトリ（spec）にあるspecファイルをすべて実行
 lib/Cake/Console/cake Bdd.spec
 
 # 指定したディレクトリ（spec）にあるspecファイルをすべて実行
@@ -392,7 +392,7 @@ lib/Cake/Console/cake Bdd.spec spec/post.spec.php
 
 # オプションの詳細を見る
 lib/Cake/Console/cake Bdd.spec --help
-</pre>
+</code></pre>
 
 <p>スペックファイルの命名ルールは以下のようにspec.phpで終わる3通りです。  </p>
 
@@ -408,9 +408,9 @@ lib/Cake/Console/cake Bdd.spec --help
 
 <p>あとはフィクスチャですが、これはCake本来のテストで利用するものと同じで、宣言する場所と意味がちょっと変わってきます。<br>
 Cakeのユニットテストでは、テストケースクラスのメンバ変数として$fixuresを宣言するのですが、スペックでは$W（ワールド）インスタンスのfixtures変数にセットします。arrayの書き方は同じです。ただしスペックコードではitブロックの度にfixturesが解決されるのでitの前のbeforeやbefore_eachブロックで書いておけば1ファイル中に何度出て来ても問題ありません。ちょうどloadFixtures()のような動きなのですが、この場合もCakeTestCaseではfixturesにテストケース内で利用するすべてのフィクスチャを書いておく必要がありますが、スペックでは下位階層で利用する分だけでOKです。これはスペックコードのスコープによることろなのですが、これを詳しく知るには、Spec for PHPがどのようにDSLで解釈してPHPコードをPHPUnitに実行させるかを見た方が良いでしょう。  </p>
-<pre class="highlight plaintext"># スペックコードをPHPコードに変換して出力
+<pre class="highlight plaintext"><code># スペックコードをPHPコードに変換して出力
 $ lib/Cake/Console/Bdd.spec spec/post.spec.php --dump
-</pre>
+</code></pre>
 
 <p>Spec for PHP はPHPUnitのTestSuiteとTestCaseを利用しています。このうちitブロックがTestCaseに該当します。その他のdescribe、contextやbeforeはTestSuiteになっています。つまりitブロックで $this 変数を使うと TestCase のインスタンスになります。それ以外のbeforeなどは実際にはTestSuiteにマッピングされるので、実行中のテストケースインスタンスを取得したい場合は DrSlumpSpec::test() を呼び出す事で利用可能になります。このスコープが重要になってくるのが、次のコントローラのテストです。  </p>
 
@@ -427,7 +427,7 @@ $ lib/Cake/Console/Bdd.spec spec/post.spec.php --dump
 
 <p>こちらもスペックと同じく基本的なコマンドラインのオプションなどはBehat(<a href="http://behat.org/">http://behat.org/</a>) に対して透過的になっているので、詳しくは公式のドキュメントかhelpで見るのが良いでしょう。<br>
 先のコマンド実行例では Bdd.stoy にオプションがない状況でしたが、代表的な使い方は以下のとおりです。  </p>
-<pre class="highlight plaintext"># デフォルトディレクトリ（features）にあるfeatureファイルをすべて実行
+<pre class="highlight plaintext"><code># デフォルトディレクトリ（features）にあるfeatureファイルをすべて実行
 lib/Cake/Console/cake Bdd.story
 
 # 指定されたfeatureファイルを実行
@@ -435,7 +435,7 @@ lib/Cake/Console/cake Bdd.story features/posts_ja.feature
 
 # より詳しいヘルプを見る
 lib/Cake/Console/cake Bdd.story --help
-</pre>
+</code></pre>
 
 <p>これ以外に関していえばCakeBehatと基本的な仕組みは変わっていません。  </p>
 
@@ -507,6 +507,8 @@ Behat/Minkについても日本語問題をチェックしていたりします�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -524,8 +526,6 @@ Behat/Minkについても日本語問題をチェックしていたりします�
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -687,7 +687,7 @@ Behat/Minkについても日本語問題をチェックしていたりします�
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -803,6 +803,10 @@ Behat/Minkについても日本語問題をチェックしていたりします�
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -889,7 +893,7 @@ Behat/Minkについても日本語問題をチェックしていたりします�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

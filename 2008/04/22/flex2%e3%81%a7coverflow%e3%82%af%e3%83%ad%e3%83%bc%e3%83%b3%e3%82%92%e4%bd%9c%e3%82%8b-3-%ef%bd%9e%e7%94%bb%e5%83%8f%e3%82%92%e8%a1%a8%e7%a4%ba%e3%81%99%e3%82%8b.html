@@ -321,30 +321,30 @@ amazon.comから取得したWeb2.0ビギナーズバイブル[*1]の書籍画像
 <h3>■コントロールの値を変更する、commitProperties</h3>
 
 <p>commitProperties()メソッドをオーバライドして、このカスタムコントロールが持つ値を設定します。FlashPlayerがmxml上の</p>
-<pre class="highlight plaintext">&lt;local:ImageReflector /&gt;
-</pre>
+<pre class="highlight plaintext"><code>&lt;local:ImageReflector /&gt;
+</code></pre>
 
 <p>を解析すると、内部的にはaddChild() メソッドを使用してコンポーネントが追加されまず。するとFlexはinvalidateProperties()を自動的に呼び出します。  </p>
 
 <p>つまり、必ず１度は最初にcommitProperties()が呼び出されるのです。カスタムコントロールの場合、コンストラクタでなく、ここで描画情報を初期化します。  </p>
 
 <p>まず、画像(Imageクラス)を実体として、UIComponentを作成します。</p>
-<pre class="highlight plaintext">_content = UIComponent(new Image());
-</pre>
+<pre class="highlight plaintext"><code>_content = UIComponent(new Image());
+</code></pre>
 
 <p>Amazonの画像を指定します。IDataRenderer.dataに画像のパスを指定すると、実際の描画はImageクラスが担当してくれます。</p>
-<pre class="highlight plaintext">IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
-</pre>
+<pre class="highlight plaintext"><code>IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
+</code></pre>
 
 <p>カスタムコントロールの要素として、自身の子エレメントとして追加します。</p>
-<pre class="highlight plaintext">addChild(_content);
-</pre>
+<pre class="highlight plaintext"><code>addChild(_content);
+</code></pre>
 
 <p>つまり、mxml上では、</p>
-<pre class="highlight plaintext">      &lt;local:ImageReflector &gt;
+<pre class="highlight plaintext"><code>      &lt;local:ImageReflector &gt;
         &lt;Image /&gt;
       &lt;/local:ImageReflector &gt;
-</pre>
+</code></pre>
 
 <p>と書いたのと同じような状態となります。  </p>
 
@@ -361,8 +361,8 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
 
 <p>親要素のどの辺に、どのくらいの大きさで表示するか指定するのです。今回は画像を表示するだけなので、画像サイズを取得して、UIComponentのサイ
 ズに設定します。</p>
-<pre class="highlight plaintext">_content.setActualSize(contentWidth,contentHeight);
-</pre>
+<pre class="highlight plaintext"><code>_content.setActualSize(contentWidth,contentHeight);
+</code></pre>
 
 <h3>■まとめ</h3>
 
@@ -407,6 +407,8 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -424,8 +426,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -587,7 +587,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -703,6 +703,10 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -789,7 +793,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

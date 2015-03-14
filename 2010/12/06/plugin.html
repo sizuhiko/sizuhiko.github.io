@@ -323,7 +323,7 @@
 <h3>一般的なフォームって？</h3>
 
 <p>このプラグインでは以下のような構造のHTMLフォームが利用されることを想定しています。</p>
-<pre class="highlight plaintext">&lt;form action="posted.html" method="get" id="inputForm"&gt;
+<pre class="highlight plaintext"><code>&lt;form action="posted.html" method="get" id="inputForm"&gt;
   &lt;div&gt;
     &lt;label for="user_id"&gt;ID:&lt;/label&gt;
     &lt;input type="text" name="id" id="user_id" value=""&gt;&lt;span class="required"&gt;*&lt;/span&gt;
@@ -358,7 +358,7 @@
     &lt;input type="submit" value="next" id="submit_ok"&gt;
   &lt;/div&gt;
 &lt;/form&gt;
-</pre>
+</code></pre>
 
 <p>これはデモページのフォーム部分そのものなのですが、項目をdivタグで囲い、その中の項目名はlabelで入力フィールドはinputやselectを使うようなデザインです。</p>
 
@@ -366,52 +366,52 @@
 
 <p>javascriptファイルをロードします。
 jqModelプラグインを使っているので、jqModal、もちろんjqueryもロードしてください。</p>
-<pre class="highlight plaintext">&lt;script charset="utf-8" type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.js"&gt;&lt;/script&gt;
+<pre class="highlight plaintext"><code>&lt;script charset="utf-8" type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.js"&gt;&lt;/script&gt;
 &lt;script charset="utf-8" type="text/javascript" src="http://dev.iceburg.net/jquery/jqModal/jqModal.js"&gt;&lt;/script&gt;
 &lt;script src="../src/confirmform.js"&gt;&lt;/script&gt;
-</pre>
+</code></pre>
 
 <p>jqModalのスタイルシートが必要になります。また、jqModalのexampleで記述されているConfirmサンプルのスタイル定義を利用しているので、サンプルHTML上から切り出したスタイルシートをvendorディレクトリに用意しました。これを使うと簡単に利用を開始することができます。</p>
-<pre class="highlight plaintext">&lt;link charset="utf-8" href="../vendor/jqModal/jqmConfirm.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
+<pre class="highlight plaintext"><code>&lt;link charset="utf-8" href="../vendor/jqModal/jqmConfirm.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
 &lt;link charset="utf-8" href="http://dev.iceburg.net/jquery/jqModal/jqModal.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
-</pre>
+</code></pre>
 
 <h3>プラグインの初期化</h3>
 
 <p>プラグインを利用するためには、HTML上に１つ確認画面用の空エレメントを追加する必要があります。場所はbody内であればどこでもかまいません。</p>
-<pre class="highlight plaintext">&lt;div id="confirmForm"&gt;&lt;/div&gt;
-</pre>
+<pre class="highlight plaintext"><code>&lt;div id="confirmForm"&gt;&lt;/div&gt;
+</code></pre>
 
 <p>idの値も特に意味はありません。ここではconfirmFormという値にしておきます。  </p>
 
 <p>プラグインのインスタンスを初期化するには、$(&ldquo;入力フォームのセレクタ&rdquo;).confirmForm(&ldquo;確認画面用のセレクタ&rdquo;, オプション) を使います。</p>
-<pre class="highlight plaintext">$(document).ready(function(){
+<pre class="highlight plaintext"><code>$(document).ready(function(){
   ...
   $("#inputForm").confirmForm("#confirmForm", {});
   ...
 }
-</pre>
+</code></pre>
 
 <p>ひとまず、このようにシンプルな宣言で動作します。実際に利用する場面では、入力フォームでselectボックスやcheckbox,radioボタンなどを利用していると思います。デフォルトの挙動では値をinputのvalueから取り出して表示するだけなので、コード値を名前に変換する必要があるかもしれません。このあたりのカスタマイズは、オプション節で解説します。</p>
 
 <h3>確認画面を表示する</h3>
 
 <p>このプラグインでは確認画面は自分で表示する必要があります。たとえばバリデーションプラグインの成功時コールバックで呼び出すようなイメージです。</p>
-<pre class="highlight plaintext">$("#inputForm").confirmShow();
-</pre>
+<pre class="highlight plaintext"><code>$("#inputForm").confirmShow();
+</code></pre>
 
 <p>これはとてもシンプルで、confirmShow関数を呼び出すだけです。</p>
 
 <h3>OKが押されたかどうかチェックする</h3>
 
 <p>このプラグインでは、確認画面でOKが選択されたらもう一度入力フォームでSubmitを実行します。そのため入力チェックが再実行されて、コールバックが呼び出されるかもしれません。そのためにOKが既に選択されていたらそのままreturnするような実装にすることになると思います。</p>
-<pre class="highlight plaintext">validCallback:function() {
+<pre class="highlight plaintext"><code>validCallback:function() {
   if($("#inputForm").isConfirmed()) {
     return;
   }
   $("#inputForm").confirmShow();
 }
-</pre>
+</code></pre>
 
 <p>確認済みかどうかはisConfirmed関数を呼び出すだけです。入力内容が問題ないときのコールバックがvalidCallbackだったとすると、上記のような実装になります。</p>
 
@@ -456,16 +456,16 @@ value値がコードだが、確認画面では値（名前）で出したい場
 <h4>ラベル文字列のコールバック</h4>
 
 <p>デフォルトの挙動は以下のとおりです。</p>
-<pre class="highlight plaintext">'findLabel': function(inputField) {
+<pre class="highlight plaintext"><code>'findLabel': function(inputField) {
     return $(inputField).prev().html();
 }
-</pre>
+</code></pre>
 
 <p>textボックスは直前の要素がlabelであることを想定しているので、すべてが一般的なフォームのレイアウトで、textボックスしか利用していなければ、オプションの指定は必要ありません。しかし実際はlabelが右だったり１つ親の要素だったりすることがあります。
 このような場面ではコールバックを実装してください。  </p>
 
 <p>例えばデモページでは以下のようなコードになっています。</p>
-<pre class="highlight plaintext">'findLabel': function(field) {
+<pre class="highlight plaintext"><code>'findLabel': function(field) {
     switch(field.name) {
     case 'sex':
         return 'Sex';
@@ -476,7 +476,7 @@ value値がコードだが、確認画面では値（名前）で出したい場
         return str.substring(0, str.length-1);
     }
 }
-</pre>
+</code></pre>
 
 <p>findLabelに関してはformatValurのように項目別ではなく、functionで受け取って独自にカスタマイズする方式を取っています。これは項目名は一括ルールで変換できる場合が想定できるためです。  </p>
 
@@ -487,7 +487,7 @@ value値がコードだが、確認画面では値（名前）で出したい場
 <p>inputやselectのvalue値は必ずしも確認表示用には向いていないこともある（例えばコード値になっているなど）ので、このようなケースではコールバック関数を実装してください。  </p>
 
 <p>例えばデモページでは以下のようなコードになっています。</p>
-<pre class="highlight plaintext">'formatValue':{
+<pre class="highlight plaintext"><code>'formatValue':{
   'sex':function(field) {
     return {1:"Male", 2:"Female"}[$(field).val()];
   },
@@ -498,7 +498,7 @@ value値がコードだが、確認画面では値（名前）で出したい場
     return {1:"Sports", 2:"Music", 3:"Computer"}[$(field).val()];
   }
 }
-</pre>
+</code></pre>
 
 <p>formatValue自体は各入力項目のname属性をキーにしたhashで定義します。</p>
 
@@ -545,6 +545,8 @@ value値がコードだが、確認画面では値（名前）で出したい場
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -562,8 +564,6 @@ value値がコードだが、確認画面では値（名前）で出したい場
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -725,7 +725,7 @@ value値がコードだが、確認画面では値（名前）で出したい場
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -841,6 +841,10 @@ value値がコードだが、確認画面では値（名前）で出したい場
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -927,7 +931,7 @@ value値がコードだが、確認画面では値（名前）で出したい場
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

@@ -290,19 +290,19 @@
 <p>ベータ1はアルファ版からディレクトリの変更も多く、CakePHP本体をcomposer updateしてもダメなので、再度 composer create-project でテンプレートから生成しなおします。</p>
 
 <p>最新の<a href="https://github.com/cakephp/app">cakephp/app</a>テンプレートにはDebugKitプラグインが依存関係に入っています。</p>
-<pre class="highlight json"><span class="w">    </span><span class="s2">"require"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+<pre class="highlight json"><code><span class="w">    </span><span class="s2">"require"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"php"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&gt;=5.4.19"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"cakephp/cakephp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"mobiledetect/mobiledetectlib"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.*"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"cakephp/debug_kit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="w">
     </span><span class="p">}</span><span class="err">,</span><span class="w">
-</span></pre>
+</span></code></pre>
 
 <p>require-devではないのですね、と思ったり。。</p>
 
 <p>以下のコマンドでCakePHP3アプリケーションのプロジェクトスケルトンを作ります。</p>
-<pre class="highlight plaintext">composer create-project -s dev cakephp/app dev-cake3 app
-</pre>
+<pre class="highlight plaintext"><code>composer create-project -s dev cakephp/app dev-cake3 app
+</code></pre>
 
 <p>ブラウザでアクセスすると、以下のような画面が表示されます。</p>
 
@@ -313,7 +313,7 @@
 <p>そこで、DebugKitの設定を見てみます</p>
 
 <p>app/plugins/DebugKit/config/bootstrap.php</p>
-<pre class="highlight php">if (!ConnectionManager::config('debug_kit')) {
+<pre class="highlight php"><code>if (!ConnectionManager::config('debug_kit')) {
     ConnectionManager::config('debug_kit', [
         'className' =&gt; 'Cake\Database\Connection',
         'driver' =&gt; 'Cake\Database\Driver\Sqlite',
@@ -323,7 +323,7 @@
         'quoteIdentifiers' =&gt; false,
     ]);
 }
-</pre>
+</code></pre>
 
 <p>そうですか、そうですか…</p>
 
@@ -352,7 +352,7 @@ SQLite or another database driver that CakePHP can talk to. By default DebugKit 
 <p>ふむふむ</p>
 
 <p><code>config/app.php</code> のDatasourceに以下のような<code>debug_kit</code>接続を追加してみます。</p>
-<pre class="highlight php">        'debug_kit', [
+<pre class="highlight php"><code>        'debug_kit', [
             'className' =&gt; 'Cake\Database\Connection',
             'driver' =&gt; 'Cake\Database\Driver\Mysql',
             'persistent' =&gt; false,
@@ -367,36 +367,36 @@ SQLite or another database driver that CakePHP can talk to. By default DebugKit 
             'quoteIdentifiers' =&gt; false,
         ],
 
-</pre>
+</code></pre>
 
 <p>ブラウザをリロード</p>
 
 <p><img src="/images/blog/cakephp3_debugkit_mysql.png" /></p>
 
 <p>ぎゃー、DebugKitの該当箇所のコードを見てみると、そんなに変じゃないように見えますが、</p>
-<pre class="highlight php">        $configs = ConnectionManager::configured();
+<pre class="highlight php"><code>        $configs = ConnectionManager::configured();
         foreach ($configs as $name) {
             $connection = ConnectionManager::get($name);
-</pre>
+</code></pre>
 
 <p>このときの<code>$config</code>をwatchしてみると</p>
-<pre class="highlight php">array (size=5)
+<pre class="highlight php"><code>array (size=5)
   0 =&gt; string 'default' (length=7)
   1 =&gt; string 'test' (length=4)
   2 =&gt; int 0
   3 =&gt; int 1
   4 =&gt; string 'debug_kit' (length=9)
-</pre>
+</code></pre>
 
 <p>上記のようになっています。2と3誰よ….</p>
 
 <p>ということで、まだベータ１だからねー。はははーという事で、現時点はSQLiteのextension入れて試しましょう。</p>
 
 <p>例えば、friendsofcakeのvagrant-chef使っているなら、cookbooks/php/recipes/install.rbに追加します。</p>
-<pre class="highlight ruby">  <span class="s2">"php5-mysql"</span><span class="p">,</span>
+<pre class="highlight ruby"><code>  <span class="s2">"php5-mysql"</span><span class="p">,</span>
   <span class="s2">"php5-sqlite"</span><span class="p">,</span>
 
-</pre>
+</code></pre>
 
 <p>mysqlの下あたりに追加します。vagrant destroy/upを実行して環境を作り直したら、もう一度ブラウザをリロードします。</p>
 
@@ -441,6 +441,8 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -458,8 +460,6 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -621,7 +621,7 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -737,6 +737,10 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -823,7 +827,7 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

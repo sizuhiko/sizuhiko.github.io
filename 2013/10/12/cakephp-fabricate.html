@@ -298,7 +298,7 @@
 <h3>インストール方法</h3>
 
 <p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
-<pre class="highlight plaintext">    "extra": {
+<pre class="highlight plaintext"><code>    "extra": {
         "installer-paths": {
             "Plugin/Fabricate": ["sizuhiko/fabricate"]
         }
@@ -307,13 +307,13 @@
         "composer/installers": "*",
         "sizuhiko/fabricate": "*"
     }
-</pre>
+</code></pre>
 
 <p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
 
 <p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
-<pre class="highlight plaintext">CakePlugin::load('Fabricate');
-</pre>
+<pre class="highlight plaintext"><code>CakePlugin::load('Fabricate');
+</code></pre>
 
 <h3>概要</h3>
 
@@ -338,7 +338,7 @@
 <h3>使い方＆サンプル</h3>
 
 <h4>attributes_for</h4>
-<pre class="highlight plaintext">$results = Fabricate::attributes_for('Post', 10, function($data){
+<pre class="highlight plaintext"><code>$results = Fabricate::attributes_for('Post', 10, function($data){
     return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
 });
 
@@ -355,7 +355,7 @@ array (
   1 =&gt; 
   array (
   ....
-</pre>
+</code></pre>
 
 <p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br>
 第二引数に生成するレコード件数を指定します。<br>
@@ -367,7 +367,7 @@ CakePHPでfixtureを生成したときrecordsに入っている内容と同じ�
 <p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
 
 <p>また、第二引数、第三引数は省略可能ですので、  </p>
-<pre class="highlight plaintext">// 1件だけ生成
+<pre class="highlight plaintext"><code>// 1件だけ生成
 Fabricate::attributes_for('Post');
 // 1件だけコールバックを指定して生成
 Fabricate::attributes_for('Post', function($data){
@@ -375,7 +375,7 @@ Fabricate::attributes_for('Post', function($data){
 });
 // 10件生成
 Fabricate::attributes_for('Post', 10);
-</pre>
+</code></pre>
 
 <p>というバリエーションでも利用可能です。  </p>
 
@@ -427,6 +427,8 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -444,8 +446,6 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -607,7 +607,7 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -723,6 +723,10 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -809,7 +813,7 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

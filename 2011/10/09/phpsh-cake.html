@@ -288,8 +288,8 @@
           <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/taste-cake.png" /> </p>
 
 <p>普段 Rails でプログラミングをしていて、便利だなぁと思う機能の１つに</p>
-<pre class="highlight plaintext">rails c
-</pre>
+<pre class="highlight plaintext"><code>rails c
+</code></pre>
 
 <p>があります。</p>
 
@@ -312,20 +312,20 @@
 <h3>インストール</h3>
 
 <p>事前にphpshをインストールしておいてください。インストール方法はgithubのREADMEに書かれているので簡単にできると思います。ちなみに私の環境ではphpshのzipをダウンロードして、以下のコマンドを実行しました。</p>
-<pre class="highlight plaintext">python setup.py install --prefix=/usr/local
-</pre>
+<pre class="highlight plaintext"><code>python setup.py install --prefix=/usr/local
+</code></pre>
 
 <p>.bashrcに以下の行を追加</p>
-<pre class="highlight plaintext">export PYTHONPATH=/usr/local/lib/python2.6/site-packages 
-</pre>
+<pre class="highlight plaintext"><code>export PYTHONPATH=/usr/local/lib/python2.6/site-packages 
+</code></pre>
 
 <p>後はTasteをインストールします。これはgithubで公開している taste.php を CakePHP のルートディレクトリにコピーするだけです。</p>
 
 <h3>実行</h3>
 
 <p>phpshは &ndash;prefixを付けたディレクトリ/bin にインストールされます。仮にそのディレクトリにパスが通っているとして、以下のコマンドを実行します。</p>
-<pre class="highlight plaintext">phpsh taste.php
-</pre>
+<pre class="highlight plaintext"><code>phpsh taste.php
+</code></pre>
 
 <p><img src="/images/blog/taste-cake-2.png" /></p>
 
@@ -342,24 +342,24 @@
 <h4>モデルクラスを使ってみる</h4>
 
 <p>phpshのコンソールでClassRegistryを使ってモデルを取得し、findしてみます。</p>
-<pre class="highlight plaintext">php&gt; $post = ClassRegistry::init('Post');
+<pre class="highlight plaintext"><code>php&gt; $post = ClassRegistry::init('Post');
 php&gt; $data = $post-&gt;find('all');
-</pre>
+</code></pre>
 
 <p>以下のように、色付きで表示することができます。<img src="/images/blog/taste-cake-3.png" />   </p>
 
 <h4>URLを実行してみる</h4>
 
 <p>通常のブラウザから実行したときのように Dispatcher クラスを使ってみると、アクションから出力されるhtmlコードを表示してみることができます。</p>
-<pre class="highlight plaintext">php&gt; $Dispatcher = new Dispatcher('/posts');
-</pre>
+<pre class="highlight plaintext"><code>php&gt; $Dispatcher = new Dispatcher('/posts');
+</code></pre>
 
 <p><img src="/images/blog/taste-cake-4.png" /> </p>
 
 <h4>Routerを使って、URLルーティングを試す</h4>
-<pre class="highlight plaintext">php&gt; echo Router::url(array('controller'=&gt;'posts', 'action'=&gt;'index'), false);
+<pre class="highlight plaintext"><code>php&gt; echo Router::url(array('controller'=&gt;'posts', 'action'=&gt;'index'), false);
 /posts
-</pre>
+</code></pre>
 
 <h3>さいごに</h3>
 
@@ -402,6 +402,8 @@ php&gt; $data = $post-&gt;find('all');
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -419,8 +421,6 @@ php&gt; $data = $post-&gt;find('all');
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -582,7 +582,7 @@ php&gt; $data = $post-&gt;find('all');
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -698,6 +698,10 @@ php&gt; $data = $post-&gt;find('all');
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -784,7 +788,7 @@ php&gt; $data = $post-&gt;find('all');
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

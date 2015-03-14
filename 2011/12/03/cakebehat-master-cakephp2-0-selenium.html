@@ -315,21 +315,21 @@
 <h3>導入</h3>
 
 <p>CakePHPのルートディレクトリへ移動して、以下のコマンドを実行してください。</p>
-<pre class="highlight plaintext">cd plugins
+<pre class="highlight plaintext"><code>cd plugins
 git clone git@github.com:sizuhiko/CakeBehat.git
 cd ..
-</pre>
+</code></pre>
 
 <p>すると、plugins 配下に CakeBehat のディレクトリができているはずです。CakeBehatプラグインを有効にするためにbootstrapでプラグインの読み込みを行います。  </p>
-<pre class="highlight plaintext">app/Config/bootstrap.phpの最後に追加します。
+<pre class="highlight plaintext"><code>app/Config/bootstrap.phpの最後に追加します。
 ....
 
 CakePlugin::load('CakeBehat');
-</pre>
+</code></pre>
 
 <p>次に、CakeBehatで必要なBehatやMinkをダウンロードし、featues を初期化します。CakePHPのルートディレクトリに移動して、以下のコマンドを実行します。  </p>
-<pre class="highlight plaintext">lib/Cake/Console/cake CakeBehat.init
-</pre>
+<pre class="highlight plaintext"><code>lib/Cake/Console/cake CakeBehat.init
+</code></pre>
 
 <p>するとCakePHPのルートディレクトリに featues ディレクトリができているはずです。
 その他にplugins/CakeBehat/Console/Command の下に behat.phar と mink.phar がダウンロードされます。</p>
@@ -341,8 +341,8 @@ CakePlugin::load('CakeBehat');
 <p>app/Config/behat.yml がinitコマンドによって生成されています。  </p>
 
 <p>５行目に</p>
-<pre class="highlight plaintext">base_url: http://test.localhost:8888/application-name/
-</pre>
+<pre class="highlight plaintext"><code>base_url: http://test.localhost:8888/application-name/
+</code></pre>
 
 <p>という設定があります。これはアプリケーションのルートパスを設定するもので、ホスト名、ポート番号、アプリケーション名などを指定します。ホスト名はできるだけtest環境と識別可能なものにしておく事がオススメです。</p>
 
@@ -354,8 +354,8 @@ CakePlugin::load('CakeBehat');
 <p><a href="http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat">http://my.opera.com/sizuhiko/blog/2011/06/20/cakephp-behat</a></p>
 
 <p>ただし実行コマンドがプラグイン化に伴って変更されています。プラグイン名が付いたので、cake behat というシンプルなものからは少し遠くなってしまいましたが、以下のコマンドを実行してください。</p>
-<pre class="highlight plaintext">lib/Cake/Console/cake CakeBehat.bdd
-</pre>
+<pre class="highlight plaintext"><code>lib/Cake/Console/cake CakeBehat.bdd
+</code></pre>
 
 <h2>Ajaxを利用したページをテストしたい</h2>
 
@@ -373,8 +373,8 @@ CakePlugin::load('CakeBehat');
 <h3>JavaScriptセッションエンジンを指定する</h3>
 
 <p>CakeBehatではデフォルトのJavaScriptセッションエンジンをSeleniumとしています。app/Config/behat.yml の 4行目に</p>
-<pre class="highlight plaintext">javascript_session:   selenium
-</pre>
+<pre class="highlight plaintext"><code>javascript_session:   selenium
+</code></pre>
 
 <p>設定を入れてあります。まだ試していませんが、sahiやzombieを使う場合はこの設定を変更すれば動作するはずです。</p>
 
@@ -383,25 +383,25 @@ CakePlugin::load('CakeBehat');
 <p>@javascript アノテーションをfeatureに指定します。</p>
 
 <p>サンプルアプリケーション（blogチュートリアル）のindex.ctpでDeleteボタンがクリックされたときにtrエレメントを消すだけの実装を追加してみました。<a href="https://github.com/sizuhiko/CakeBehat/blob/master/sample/app/View/Posts/index.ctp">app/View/Posts/index.ctp</a>で</p>
-<pre class="highlight plaintext">&lt;td&gt;&lt;a href="javascript:void(0);" onclick="$(this).closest('tr').remove();"&gt;Delete&lt;?php echo $index++; ?&gt;&lt;/a&gt;
-</pre>
+<pre class="highlight plaintext"><code>&lt;td&gt;&lt;a href="javascript:void(0);" onclick="$(this).closest('tr').remove();"&gt;Delete&lt;?php echo $index++; ?&gt;&lt;/a&gt;
+</code></pre>
 
 <p>のようにしました。  </p>
 
 <p>このリンク「Delete3」をクリックして3行目を削除するfeatureを書きます。</p>
-<pre class="highlight plaintext">  @javascript
+<pre class="highlight plaintext"><code>  @javascript
   シナリオ: 記事を削除できること
     前提 "トップページ" を表示している
     かつ "Title strikes back" と表示されていること
     もし "Delete3" のリンク先へ移動する
     ならば "Title strikes back" と表示されていないこと
-</pre>
+</code></pre>
 
 <p>「リンクをクリックする」みたいなステップへ書き換えた方が本当は直感的なのですが、とりあえず「リンク先へ移動する」を使っています。  </p>
 
 <p>後は、Seleniumを実行しておくだけです。</p>
-<pre class="highlight plaintext">java -jar selenium-server-standalone-2.14.0.jar 
-</pre>
+<pre class="highlight plaintext"><code>java -jar selenium-server-standalone-2.14.0.jar 
+</code></pre>
 
 <p>これだけです。特にSeleniumを使うと意識しなくても、@javascriptを付けたシナリオだけでFirefoxが起動してテストが実行されます。もちろんこのJavaScriptを使ったテストも成功します。</p>
 
@@ -440,6 +440,8 @@ CakePlugin::load('CakeBehat');
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
@@ -457,8 +459,6 @@ CakePlugin::load('CakeBehat');
                   <li><a href="/2014/06/27/cake3_mokumoku_5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a> <span>2014/06/27</span></li>
                 
                   <li><a href="/2014/04/19/twfm_2014_04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a> <span>2014/04/19</span></li>
-                
-                  <li><a href="/2014/04/19/cake3_mokumoku_3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a> <span>2014/04/19</span></li>
                 
               </ul>
             </div>
@@ -620,7 +620,7 @@ CakePlugin::load('CakeBehat');
                 
                   
                   
-                    <li class="size2">
+                    <li class="size1">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -736,6 +736,10 @@ CakePlugin::load('CakeBehat');
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
                   
                 
                   
@@ -822,7 +826,7 @@ CakePlugin::load('CakeBehat');
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (2)</li>
+                  <li><a href="/2015.html">2015</a> (3)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
