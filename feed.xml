@@ -5,10 +5,172 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-04-19T06:19:00Z</updated>
+  <updated>2015-05-02T06:51:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</title>
+    <link rel="alternate" href="http://blog.url.com/2015/05/02/notice-gulp-rev-replace.html"/>
+    <id>http://blog.url.com/2015/05/02/notice-gulp-rev-replace.html</id>
+    <published>2015-05-02T06:51:00Z</published>
+    <updated>2015-05-02T17:14:37+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;JavaScriptでモダンな開発をするとき、&lt;a href="http://gulpjs.com/"&gt;gulp&lt;/a&gt;というビルドシステムを使うと、簡単にビルド過程を自動化できます。
+さらに、JavaScriptでアプリケーションを作ったとき、ライブラリはCDNなどから取得するとして、自分で作ったスクリプトファイルは１つのファイルにまとめてミニファイズする、ということをgulpのタスクで書くでしょう。
+一般的にJavaScriptやCSSをHTML上に記述するとき、以下のようにします。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/js/app.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;rel=&lt;/span&gt;&lt;span class="s"&gt;"stylesheet"&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;"/css/app.css"&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/css"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;リリースしたのにファイルの変更が読み込まれない&lt;/h3&gt;
+
+&lt;p&gt;良くあるシーンとして、JavaScriptファイルやCSSファイルを差し替えたのに、変更がブラウザに反映されない、というケースです。
+これはブラウザのキャッシュが有効になっていて、JavaScriptやCSSのファイルをWebサーバへ取得しに行かないために発生します。&lt;/p&gt;
+
+&lt;p&gt;そこで、この課題に対応するため、以下のどちらかの方法を採用すると思います。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ファイル名のGETパラメータに、乱数を付加して &lt;code&gt;/js/app.js?_リビジョン番号&lt;/code&gt; のようにする&lt;/li&gt;
+&lt;li&gt;ファイル名にリビジョン番号を入れて &lt;code&gt;/js/app-リビジョン番号.js&lt;/code&gt; のようにする&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;こうすると、リビジョンが変更になった（リリースした）ときにファイルが必ず読み込まれるようになります。&lt;/p&gt;
+
+&lt;h3&gt;GETパラメータの付加は推奨されない&lt;/h3&gt;
+
+&lt;p&gt;前記の対応のうち、GETパラメータにリビジョン番号を追加する方法はあまり推奨されません(参照:&lt;a href="http://www.amazon.co.jp/High-Performance-Web-Sites-Essential/dp/0596529309/ref=tmm_pap_title_0?ie=UTF8&amp;amp;amp;qid=1430550831&amp;amp;amp;sr=8-1"&gt;&lt;code&gt;High Performance Web Sites&lt;/code&gt;&lt;/a&gt;)。
+この方法は、ブラウザやWebサーバがキャッシュを利用しないため、サイトの負荷につながります。&lt;/p&gt;
+
+&lt;p&gt;もちろん毎回リクエストが来ても問題ないサイトや、利用者が想定されていれば問題ないかもしれないですが、利用できるのであればキャッシュが有効になっていてページが速く表示できた方が良いことはいうまでもありません。&lt;/p&gt;
+
+&lt;p&gt;gulp-revを使ってGETパラメータにリビジョン番号を入れたい場合は、&lt;a href="https://github.com/bustardcelly/gulp-rev-append"&gt;gulp-rev-append&lt;/a&gt;を使うとクエリ文字列としてハッシュ値を入れられるようになります。&lt;/p&gt;
+
+&lt;h3&gt;ビルド時にファイル名を変更する&lt;/h3&gt;
+
+&lt;p&gt;推奨される方法は  &lt;code&gt;/js/app-リビジョン番号.js&lt;/code&gt; のように、ファイル名を変更することです。
+gulpのタスク上に、&lt;code&gt;gulp-rev&lt;/code&gt;のREADMEに書いてあるとおりの方法で対応します。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'gulp'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;rev&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'gulp-rev'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'default'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// by default, gulp would pick `assets/css` as the base, &lt;/span&gt;
+    &lt;span class="c1"&gt;// so we need to set it explicitly: &lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;'assets/css/*.css'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'assets/js/*.js'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="na"&gt;base&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'assets'&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'build/assets'&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;  &lt;span class="c1"&gt;// copy original assets to build dir &lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rev&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'build/assets'&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;  &lt;span class="c1"&gt;// write rev'd assets to build dir &lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rev&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;manifest&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'build/assets'&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt; &lt;span class="c1"&gt;// write manifest to build dir &lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;プロジェクトによっては、このように単純な構成ではなく、複数のストリームを使ってビルドすることもあるでしょう。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'build_js'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'src/*.js'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sourcemaps&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;init&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;concat&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'bundle.js'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;cwd&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;''&lt;/span&gt;&lt;span class="p"&gt;}))&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rev&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sourcemaps&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'.'&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'dist'&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rev&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;manifest&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'dist'&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;たとえばjsとcssを分けてビルドしなくてはいけないようなケースですね。
+元ファイル名と、置き換えられたファイル名のマッピングを出力するために、&lt;code&gt;rev.manifest()&lt;/code&gt;というAPIを呼び出します。
+出力先は、そのあとの&lt;code&gt;dest&lt;/code&gt;API呼び出しで指定します。ファイル名は省略時には &lt;code&gt;manifest.json&lt;/code&gt; というファイル名になります。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="s2"&gt;"app.css"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"app-098f6bcd.css"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="s2"&gt;"app.js"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"app-273c2cin.js"&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;ファイル名の変更を反映する&lt;/h3&gt;
+
+&lt;p&gt;HTMLファイルのjsやcssのファイル名を書き換えるのに使うのが、&lt;a href="https://github.com/jamesknelson/gulp-rev-replace"&gt;gulp-rev-replace&lt;/a&gt;です。
+マニフェストファイルを入力として、HTMLファイルのビルド（コピー）過程で差し込むことができるようになっています。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"revreplace"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"revision"&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
+  &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;manifest&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"./"&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;opt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;distFolder&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s2"&gt;"/rev-manifest.json"&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;opt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;distFolder&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s2"&gt;"/index.html"&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;revReplace&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="na"&gt;manifest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;manifest&lt;/span&gt;&lt;span class="p"&gt;}))&lt;/span&gt;
+    &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;opt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;distFolder&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;revReplace()&lt;/code&gt; というAPIを使って、指定したマニフェストの内容と一致する部分を置換します。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/js/app-273c2cin.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;rel=&lt;/span&gt;&lt;span class="s"&gt;"stylesheet"&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;"/css/app-098f6bcd.css"&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/css"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;とても便利、でも&amp;hellip;&lt;/h3&gt;
+
+&lt;p&gt;私が遭遇したケースで説明しましょう。
+ビルド済みファイル名が &lt;code&gt;domain.js&lt;/code&gt; というファイル名でそれにリビジョン番号を追加する必要がありました。
+さらにドメイン名のチェック用に、&lt;a href="https://github.com/miguelmota/is-valid-domain"&gt;is-valid-domain.js&lt;/a&gt;というライブラリも読み込んでいました。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/lib/is-valid-domain.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/js/domain.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ここでビルドしたところ&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/lib/is-valid-domain-リビジョン番号.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/js/domain-リビジョン番号.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;のようになってしまいました。&lt;code&gt;domain.js&lt;/code&gt; だけでなく、&lt;code&gt;is-valid-domain.js&lt;/code&gt; も変わってしまいます。
+なぜこうなるか、ソースを見てみました。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="nx"&gt;renames&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;replaceOnce&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rename&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;contents&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;contents&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rename&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;unreved&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rename&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reved&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;options&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;prefix&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;contents&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;contents&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/'&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;options&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;prefix&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;options&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;prefix&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;'/'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;まぁですよね。ファイルを読み込んで &lt;code&gt;domain.js&lt;/code&gt; に一致するところで分割、&lt;code&gt;domain-リビジョン番号.js&lt;/code&gt; を追加して繰り返す、という実装です。
+ファイルのどこに入っているか厳密に識別するのは困難（正規表現を使えばできなくはないかもしれないけど）です。&lt;/p&gt;
+
+&lt;p&gt;で、このようなケースにならなそうなら、そのまま gulp-rev-replace を使ってもらえば問題ないと思います。
+ライブラリの挙動がわかっていれば利用するのも安心ですね。&lt;/p&gt;
+
+&lt;h3&gt;私は gulp-template を使いました&lt;/h3&gt;
+
+&lt;p&gt;で、私は gulp-rev-replace 使うのやめました。&lt;/p&gt;
+
+&lt;p&gt;ちょっと予期しない動作をするのは怖かったので、リビジョン番号が入って欲しいところを明示するようにしたかったのです。
+そこで使ったのが &lt;a href="https://github.com/sindresorhus/gulp-template"&gt;gulp-template&lt;/a&gt; です。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;h1&amp;gt;&lt;/span&gt;Hello &lt;span class="err"&gt;&amp;lt;&lt;/span&gt;%= name %&amp;gt;&lt;span class="nt"&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;lt;%= =&amp;gt;&lt;/code&gt; で囲んだ部分に値を差し込むことができるので、以下のように記述します。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/lib/is-valid-domain.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"text/javascript"&lt;/span&gt; &lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"/js/&amp;lt;%= data['domain.js'] %&amp;gt;"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;そこにマニフェストJSONを&lt;code&gt;fs-extra&lt;/code&gt;で読み込んで、&lt;code&gt;template&lt;/code&gt;APIに流し込むようにします。
+そのままだと、変換前JSファイル名が変数名になって取り出しずらいので、&lt;code&gt;variable&lt;/code&gt;オプションを指定して&lt;code&gt;data&lt;/code&gt;という変数名にバインドするようにします。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'gulp'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;template&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'gulp-template'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;fs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'fs-extra'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'build_html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;manifest&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;fs&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;readJsonSync&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./'&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;opt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;distFolder&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;'/rev-manifest.json'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="na"&gt;throws&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'src/*.html'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;template&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;manifest&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="na"&gt;variable&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'data'&lt;/span&gt;&lt;span class="p"&gt;}))&lt;/span&gt;
+        &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;gulp&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'dist'&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;静的ファイルのリビジョン管理って結構面倒なんですが、gulp使うと便利なライブラリあって簡単に実装できます。
+今回は私が遭遇した特殊なケースかもしれないので、そのままgulp-revだけで完結できることも多々あるでしょう。
+gulp-revや、その関連ライブラリには便利な機能がまだあるので、一度使ってみてください。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Cakebox を使ってCakePHP3アプリケーションを作ってみよう</title>
     <link rel="alternate" href="http://blog.url.com/2015/04/19/cakebox-is-awesome.html"/>
@@ -1057,81 +1219,6 @@ CakePHPだとCI本でも解説した &lt;a href="https://github.com/josegonzalez
 &lt;p&gt;最後にステキなお花と色紙をいただきました。&lt;/p&gt;
 
 &lt;p&gt;本当にありがとうございました。引き続き開発頑張ってください！！&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</title>
-    <link rel="alternate" href="http://blog.url.com/2014/10/13/phpconference2014.html"/>
-    <id>http://blog.url.com/2014/10/13/phpconference2014.html</id>
-    <published>2014-10-13T11:11:00Z</published>
-    <updated>2014-10-13T22:03:11+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;2014/10/11 に行われた&lt;a href="http://phpcon.php.gr.jp/w/2014/"&gt;PHPカンファレンス2014&lt;/a&gt;で発表をしてきました。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phpconference2014.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="http://gihyo.jp/news/report/01/phpcon2014/0001?page=2"&gt;Photo by gihyo.jp&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;スライドは以下の内容です。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="74562820350401328a4766ded83ef86d" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;PHPカンファレンスでは公募セッションは最大30分のため、なぜ今回このようなタイトルを発表しようと思ったか、という背景については話ことができませんした。こちらのブログでは、スライドの共有と共に、その辺りの経緯について書いておきたいと思います。&lt;/p&gt;
-
-&lt;h3&gt;なぜ今オブジェクト指向か？&lt;/h3&gt;
-
-&lt;p&gt;オブジェクトデザインは原著から数えると、もう12年になろうとする訳です。これはセッションの中でも話したのですが、2003年当時はまだWebのフレームワークもまだ今日のようなものでなく、多くの会社は各社オレオレフレームワークを作っていた時代です。
-オブジェクト指向が必要ないような使い捨てサイトならまだしも、受託やサービスなどソースコードを維持したり、機能アップをするような場面ではオブジェクト指向が必要だと考え、今のアジャイルムーブメントかそれ以上に語られていたはずです。&lt;/p&gt;
-
-&lt;p&gt;オレオレフレームワークを作ったことがある人は、オブジェクト指向やデザインパターンをよく勉強してそのあり方を議論したものです。
-そのような人たちが、現在の入門プログラマーに「オブジェクト指向がわかってない」と言っても、そもそも通じないと思ったのがきっかけでです。&lt;/p&gt;
-
-&lt;p&gt;ここ4,5年の間にWebからプログラミングを始めた人（Webフレームワーク世代）は、すでに素晴らしいWebフレームワークがあり、その上でプログラミングをすることを要求されます。言語そのもの、たとえばPHPなら「イラストでよくわかるPHP はじめてのWebプログラミング入門」や「よくわかるPHPの教科書」あたりを読んでから、各フレームワークの本や公式チュートリアルを片手にアプリケーション開発を始めています。
-つまりオレオレフレームワーク世代のオッサンが通過したオブジェクト指向やデザインパターンの経験に基づいてソースコードに手厳しいコメントを付けても、受けた方も辛いだけなのです。&lt;/p&gt;
-
-&lt;h3&gt;今どのような弊害が起きているのか&lt;/h3&gt;
-
-&lt;p&gt;で、このようなWebフレームワーク世代はCakePHPやその他のWebフレームワーク（MVC的なもの）を使って、MVCの枠に収めようとしてFatコントローラになったりしやすいのです。
-なぜなら特定のディレクトリにフレームワークが指定した方法で書いていれば、良くわかんないけどうまく動いてしまうのです。フレームワークすげーな！という訳です。
-それ以外の書き方は知らないし、どこにも書いてないのです。
-結局、適切にクラス分割ができないため、結果として与えられた範囲の枠組みで問題はない、と考えているような状況を見かけるのです。
-classってPHPの文法です、キリッ！とか言われたことはないですが、まぁ無くはないのかな…と。&lt;/p&gt;
-
-&lt;p&gt;じゃぁフレームワークの本に、その概念や考え方を書くべきだという声もあるかもしれません。私もCakePHP本の執筆に携わったことがあり、耳の痛い話です。しかしフレームワークの本では、すべてのフレームワークについての説明もページ数的に困難な中、OOPやMVCの概念のような内容を解説するのは困難なことも事実です。&lt;/p&gt;
-
-&lt;h3&gt;そこで話してみようと思った&lt;/h3&gt;
-
-&lt;p&gt;もちろん、オブジェクト指向ムーブメント世代のオッサンであってもオブジェクト指向をみんな理解しているかというと、そういう訳ではありません（まぁ少なくともみんな読書会なんかして勉強はしていたような気がします）。
-今時のWebフレームワーク世代だって、しっかり勉強している意識高い人はいっぱいいるし、知っています。
-ただ最近プログラミングを始めた人は、技術の移り変わりが激しいし、言語やフレームワークはどんどんバージョンアップするし、なかなか基礎的な事に対する勉強時間を作るのが難しいのではないかな、と思うのです。
-しかもオブジェクト指向の勉強って難しいし「銀の弾丸」は無いわけです。最近そういった勉強会の話もあまり聞きません。
-ではどのあたりから始めると良いだろう？という当たりを付けられるセッションをしてみたいと思ったのです。&lt;/p&gt;
-
-&lt;p&gt;私が技術支援で入った中で良く感じている問題はオブジェクト指向プログラミングというより、そもそものオブジェクト指向がうまく理解されていないと思ったので以下のポイントに絞った内容にしたいと思いました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;オブジェクトとは何なのか&lt;/li&gt;
-&lt;li&gt;オブジェクトを導出するにはどうしたら良いのか&lt;/li&gt;
-&lt;li&gt;今回のPHPカンファレンスのテーマは「知りたい，があなたを変えていく」&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらの要件に合うのは、責務駆動設計の中心的原理とテクニックを解説した「オブジェクトデザイン」の紹介が最適で、30分という時間に適している（知りたい==何か持ち帰って始めることができる）と思ったのです。&lt;/p&gt;
-
-&lt;h3&gt;どうだったか&lt;/h3&gt;
-
-&lt;p&gt;セッションをやっている間、いつも盛り上がっていないと不安なので、小ネタを差し込むのですが、皆さん真面目に聞きに来ていただいたので、講演者から見るとダダ滑りでした（個人的な感想です）。ただ&lt;a href="https://joind.in/talk/view/12043"&gt;joind.in&lt;/a&gt;のコメントを読ませていただいたり、顔見知りの方に確認した範囲では何かしら体験を持ち帰っていただけたようで「知りたい」につながったのかな、と思っています。&lt;/p&gt;
-
-&lt;p&gt;もし私の講演を聴いていただいてコメントまだな方は、&lt;a href="https://joind.in/talk/view/12043"&gt;コチラに&lt;/a&gt;一言いただけると嬉しいです。&lt;a href="https://joind.in/talk/view/12043"&gt;joind.in&lt;/a&gt;は匿名でのコメントもできますので、ご安心ください。&lt;/p&gt;
-
-&lt;p&gt;また、今回の目玉？！セッションであった「ウェブエンジニアに必要なセキュリティスキルとは 徳丸浩 x 大垣靖男」の対談セッションでも思ったのですが、お二人の話の大きな相違点のベースである&lt;code&gt;現実論&lt;/code&gt;と&lt;code&gt;理想論&lt;/code&gt;のケースはセキュリティだけではなく、オブジェクト指向についても同じだな、と思いました。
-私はすべての人がオブジェクト指向を理解して進めるのが理想だと思うし、アジャイル原則の&lt;code&gt;私たち&lt;/code&gt;はオブジェクト指向を理解しているプログラマーであるべき、と思っています。ただすべての人がそうでないというのも理解できるので、理解度はともかくオブジェクト指向と向き合って欲しいなと思っています。そこから何かが変わると良いな、と。&lt;/p&gt;
-
-&lt;h3&gt;裏話&lt;/h3&gt;
-
-&lt;p&gt;実は、セッションを応募するとき、PHPカンファレンスでは重複して申し込めると聞いていたので、オブジェクト指向超入門（上）と、オブジェクト指向超入門（下）の2セッションにして合わせて60分で申し込もうと思ったのですが、それは通らなそう(www)と思って自重しました。
-またどこかで60分セッションやれる機会があれば、やってみたいなと思うのでした。&lt;/p&gt;
 </content>
   </entry>
 </feed>

@@ -275,7 +275,194 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2012/05/14/php-2012.html">PHPカンファレンス関西2012に参加しました</a></h2>
+            <h2 class="title"><a href="/2012/05/15/php.html">PHPのスペックフレームワーク</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2012/05/16.html">Wednesday, May 16, 2012 02:05:22 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/bdd.html">BDD</a>
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/xspec.html">xSpec</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/phpspec_cover.png" /> </p>
+
+<p>PHPでのBDDについては、何度か取り上げてきましたがほとんどがストーリフレームワークであるBehatについてで、スペックフレームワークについてはあまりふれてきませんでした。せっかく今回はPHPカンファレンス関西のLTで2種類のBDDフレームワークについて話したので、スペックフレームワークについてまとめてみたいと思います。  </p>
+
+<h3>最初にたどり着くのはPHPSpec</h3>
+
+<p>LTのスライドでも紹介したのはPHPといえばまず最初に思いつく <a href="http://www.phpspec.net/">PHPSpec</a> です。大抵はまず「言語プレフィクス+Spec」で検索してみますよね。PHPはユニットテストがPHPUnitだからPHPSpecだよね、と誰もが連想できます。  </p>
+
+<p>で、PHPSpecの書き方としては、</p>
+<pre class="highlight plaintext"><code>class DescribeNewBowlingGame extends PHPSpecContext {  
+    private $_bowling = null;  
+    public function before() {  
+        $this-&gt;_bowling = $this-&gt;spec(new Bowling);  
+    }  
+    public function itShouldScore0ForGutterGame() {  
+        for ($i=1; $i&lt;=20; $i++) {  
+            // someone is really bad at bowling!  
+            $this-&gt;_bowling-&gt;hit(0);  
+        }  
+        $this-&gt;_bowling-&gt;score-&gt;should-&gt;equal(0);  
+    }  
+}  
+</code></pre>
+
+<p>のように、まぁPHPのコードだとすれば読むのはそれほど困難ではないわけですが、やっぱりSpec（仕様）という視点で眺めると、ちょっと無駄な記述が目立ちますよね。それは言語の文法だからしょうがない、そうなんですが。  </p>
+
+<h3>その他のスペックフレームワーク</h3>
+
+<p>で、試しにGitHubで他にないのかと探すと、意外とスペックフレームワークがある事に気がつきました。  </p>
+
+<p>名前所感</p>
+
+<p><a href="http://www.phpspec.net/">PHPSpec</a>
+最初に出てくる有名どころ</p>
+
+<p><a href="https://github.com/noonat/pecs">pecs</a>
+JSpecに影響を受けている。しばらくメンテされていない&hellip;</p>
+
+<p><a href="https://github.com/mkharitonov/spectrum">spectrum</a>
+まだα版でドキュメントもロシア語しかないが、設計の筋が良くいろいろできそう。今後に期待</p>
+
+<p><a href="https://github.com/speciphy/speciphy">speciphy</a>
+yuya-takeyamaさん(@yuya_takeyama)がRspecに影響を受けて作成。subjectが使える。コアはPHPSpecを利用している</p>
+
+<p><a href="https://github.com/drslump/Spec-PHP">Spec for PHP</a>
+Hamcrestライブラリとtoken<em>get</em>all関数を使って、自然に英語として読める文章として記述が可能。解析した結果をPHPUnitのテストケースとして生成して実行している</p>
+
+<p>以下のコードは、Speciphy を例にPHPSpec以外でどのように書けるかをあらわしています。pecsもspectrumもほぼ同じような記述になります。</p>
+<pre class="highlight plaintext"><code>namespace SpeciphyDSL;
+return
+describe('Bowling',
+    describe('-&gt;score',
+        context('all gutter game',
+            subject(function () {
+                $bowling = new Bowling;
+                for ($i = 1; $i &lt;= 20; $i++) {
+                    $bowling-&gt;hit(0);
+                }
+                return $bowling;
+            }),
+            it('should equal 0', function ($bowling) {
+                $bowling-&gt;score-&gt;should-&gt;equal(0);
+            })
+        )
+    )
+);
+</code></pre>
+
+<p>だいぶ読みやすくなりました。ではRSpecと比較してみま&hellip;.す？えっ、やっちゃうの、それは&hellip;.</p>
+<pre class="highlight plaintext"><code>describe Bowling, "#score" do
+  it "returns 0 for all gutter game" do
+    bowling = Bowling.new
+    20.times { bowling.hit(0) }
+    bowling.score.should eq(0)
+  end
+end
+</code></pre>
+
+<p>こんな感じです。subjectやcontext使っている違いとかありますが、PHPの場合はどうしても無名関数を使うのに </p>
+
+<blockquote>
+<p>function () {&hellip;}</p>
+</blockquote>
+
+<p>を使わなくてはならないので、そこが惜しいのです。  </p>
+
+<h3>変態PHPスペックフレームワーク Spec for PHP</h3>
+
+<p>そこで Spec for PHP ということなのですが、こいつはだいぶ変態です（ごめんなさい。良い意味です）。まず先程紹介したような funcition(){ &hellip; } の無名関数で書いたような記法も使えます。それはほぼ同じように書く事が可能です。で、何が変態かと言うと Hamcrestライブラリとtoken<em>get</em>all関数を使って構文解析することで、以下のようなSpecが書けちゃいます。</p>
+<pre class="highlight plaintext"><code>describe "Bowling"
+  describe "#score"
+    it "returns 0 for all gutter game"
+      $bowling = new Bowling;
+      for ($i = 1; $i &lt;= 20; $i++) {
+        $bowling-&gt;hit(0);
+      }
+      $bowling-&gt;score should equal 0
+    end
+  end
+end
+</code></pre>
+
+<p>it ブロックの内容は、Hamcrestを使って$bowling-&gt;score should equal 0 のように書いていますが、基本的にはPHPのソースコードであるとわかるでしょう。ただしdescribeやitなどの構文からはfunctionが消えて見通しが良くなっています。  </p>
+
+<h4>では早速試してみましょう</h4>
+
+<p>Spec for PHP は以下の依存関係を持っています。</p>
+
+<ul>
+<li>PHP 5.3</li>
+<li>PHPUnit 3.5</li>
+<li>Hamcrest matchers library（ベータ版のときに作成されたらしい）</li>
+<li>PHP Object_Freezer 1.0.0</li>
+</ul>
+
+<p>この記事の執筆時点で最新版の依存関係を適用すると、PHPUnitとHamcrestを利用している箇所で一部エラーになってしまいます。そこで、これらを修正し本家にPull Requestを送付しています。<br>
+<img src="/images/blog/spec4php_pr.png" /> 
+このため、本家に取り込まれるまでは、私のforkリポジトリから取得することを推奨します。  </p>
+
+<p><a href="https://github.com/sizuhiko/Spec-PHP">https://github.com/sizuhiko/Spec-PHP</a>  </p>
+
+<p>上記問題に対応するための修正と、日本語関連でPHP関数名の正規表現に x7f-xff の範囲を追加した修正が、 <strong>develop ブランチ</strong>に入っていますので、こちらでお試しください。  </p>
+
+<p>まず必要なpearパッケージをインストールします。すでにインストール済みならスキップして構いません。</p>
+<pre class="highlight plaintext"><code>pear channel-discover pear.phpunit.de
+pear install phpunit/PHPUnit
+pear install phpunit/Object_Freezer
+pear install Console_CommandLine
+
+Install Hamcrest matchers library
+pear channel-discover hamcrest.googlecode.com/svn/pear
+pear install hamcrest/Hamcrest
+</code></pre>
+
+<p>つづいて、githubからcloneしてdevelopにスイッチします。</p>
+<pre class="highlight plaintext"><code>git clone git@github.com:sizuhiko/Spec-PHP.git
+git checkout origin/develop -b develop
+</code></pre>
+
+<p>Spec for PHPはPHPUnit経由の実行方法と、Cliランナーも持っています。</p>
+
+<ul>
+<li>phpunit tests/AllTests.php</li>
+<li>./spec4php.php tests</li>
+</ul>
+
+<h3>さいごに</h3>
+
+<p>Spec for PHP はテストコードを書いていて楽しい気分になれるような気がします。まだまだ奥がありそうなので、ちょっと追いかけてみようと思っています。また本家にPRが取り込まれたときなどに、インストール方法など更新予定です。  </p>
+
+<p>また、PHPのスペックフレームワークについて「もくもく会」か「勉強会」をやろうと思っていますので、こちらは<a href="http://twitter.com/sizuhiko">@sizuhiko</a>のTwitterなどをチェックしておいていただければと思います。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPのスペックフレームワーク" data-url="http://blog.open.tokyo.jp/2012/05/15/php.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2012/05/15/php.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2012/05/15/php.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/05/15/php.html&t=PHP%E3%81%AE%E3%82%B9%E3%83%9A%E3%83%83%E3%82%AF%E3%83%95%E3%83%AC%E3%83%BC%E3%83%A0%E3%83%AF%E3%83%BC%E3%82%AF" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/05/15/php.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2012/05/14/php-2012.html">PHPカンファレンス関西2012に参加しました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2012/05/14.html">Monday, May 14, 2012 10:05:29 AM</a></p>
   <p class="tags">
     
@@ -769,116 +956,6 @@ CakePlugin::load('CakeBehat');
     </div>
 
   </div>
-  <h2 class="title"><a href="/2011/10/20/phpmatsuri-3.html">PHPMatsuriで"できたこと"</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/10/20.html">Thursday, October 20, 2011 05:10:21 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/osaka.html">osaka</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
-    
-      <a rel="tag" href="/tags/titanium.html">Titanium</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://www.flickr.com/photos/koyhoge/6247049544/"><img alt="DSC05649" src="http://farm7.static.flickr.com/6235/6247049544_3f37a2af25.jpg" /></a></p>
-
-<h3>大事なことは最初に</h3>
-
-<p><a href="http://2011.phpmatsuri.net/">PHPMatsuri 2011</a>は昨年に続き、多くの参加者に恵まれまして、無事終了することができました。今年は幹事的な立場で進めてきたのですが、大勢のスタッフやスポンサー、参加者の皆様に支えられたことを感謝しています。  </p>
-
-<p>人数もスタッフ、ゲスト、参加者合わせて目標としていた100名に近い96名と、ほぼ満員御礼で開催できたことがとても嬉しいです。  </p>
-
-<p>さて今回は、イベント開催前にリレーブログ「<a href="http://my.opera.com/sizuhiko/blog/2011/09/28/phpmatsuri">PHPMatsuriに参加するとできること</a>」で書いた内容をふりかえる形で開催/参加報告にしたいと思います。</p>
-
-<h3>とにかく聴いてみる</h3>
-
-<p><a href="http://www.flickr.com/photos/koyhoge/6247023308/"><img alt="DSC05620" src="http://farm7.static.flickr.com/6233/6247023308_06662b7015.jpg" /></a>  </p>
-
-<p>初日は午前中から、夜の闇PHPMatsuriまでとても濃いセッションが展開されました。昨年は「ハッカソンで何かを作る」というよりは講演スペースで聴く人の割合が多かったのですが、今年は聴講中心という人の割合よりも、ワークショップとセッションへ交互に参加するという、より幅広くイベントを楽しむスタイルの人が多かったと思います。  </p>
-
-<p>夜には昨年はJIREIマスターか登場したのですが、今年は闇の者（NINJA）が登場し、会場を盛り上げていました。闇PHPMatsuriは当初プログラム計画にない持ち込み企画だったのですが、闇の皆様には大変感謝しています。海外のゲストもとても楽しんでいたと思います。  </p>
-
-<p>2日目の発表LT大会でも、昨年とほぼ同数の40名近くの参加者がPHPMatsuriでの体験を発表。このLTが中盤にさしかかった休憩時間には「<strong>今回イベントとか初参加なのですけど、LTを見て作ったものを発表してみたいな、と思うのですが（エントリーしていないけど）これから可能ですか？</strong>」という声をいただき、審査時間の間にリジェクトトーク時間を急遽作りました。これは昨年になかったサプライズで、スタッフのshin1x1さんや、多くの方が「まぁ発表しなくても良いかな？」から「発表したい」に変わっていく瞬間を見れたことはスタッフとして嬉しいことです。リジェクトトークの時間はおよそ30分ぐらいあったのですが、賞品がもらえる訳でもないこの時間に隙間無く発表者が飛び入り参加したのは、PHPMatsuriの中毒症状というか、始めてイベントに参加した人にとっても、これから他のイベントに参加するきっかけになったのではないかと思っています。  </p>
-
-<p>また通常のスポンサード以外にも、初日の15時ティータイムにスイーツの差し入れをしてくれた「<a href="http://wattaina.com/">わったい菜</a>」のスイーツが絶品でした。  </p>
-
-<h3>何か作ってみたい</h3>
-
-<p><img src="/images/blog/hack_night_tl.png" /> 初日の昼間の状況は前述したとおりですが、各フレームワークのワークショップも大変盛況でした。昨年は時間が近くなったら何となく集まってやっていたワークショップも、今年は「どこでやりますか？」「すぐ始まりますか？」など参加者の意欲がとても熱く、最初はスタッフもバタバタしてしまい申し訳なかったなぁと思いました。ワークショップに関して今年は特に熱かった（部屋の温度が暑かったのは参加者の熱気では？と思うぐらい）！  </p>
-
-<p>また、そこかしこでは、明日の発表に向けて黙々と作っている人などもいて、それぞれの祭りを楽しんでいる様子が伺えました。  </p>
-
-<p>それを証明するのが、増井さんと有志の方が定点カメラで撮影した深夜の様子。昨年はほとんどいなかった貫徹組が今年はとても多かったのがビックリでした。コアデベロッパーも質問が来るかもしれないからと、ずっと起きてくれていたのにも感謝です。</p>
-
-<h3>他の人と一緒に作ってみたい</h3>
-
-<p>残念ながらまだ他の人と一緒に作ってみて発表、というところまでは中々難しいですね。ただポジションペーパーに協力いただいたのは嬉しかったです。少しずつ、昨年よりも今年の盛り上がりが熱かったように、共同製作のようなことが来年以降あるのではないかと期待しています。</p>
-
-<h3>長い夜の過ごし方</h3>
-
-<p><a href="http://www.flickr.com/photos/koyhoge/6247070944/"><img alt="DSC05675" src="http://farm7.static.flickr.com/6049/6247070944_969d0127eb.jpg" /></a>  </p>
-
-<p>今年の会場はとても広く、会場の外でも開発を続ける様子が見受けられました。隣のビジネスコーナーや、談話室、はたまたマッサージチェアでといった具合に自分に合った?!スタイルで開発をしていたのが印象的でした。  </p>
-
-<p>夜のテストワークショップに至っては時間を延長して4時間以上やっていたり、スポンサーセッションがあったり、闇の忍者が現れたりと。  </p>
-
-<p>その後深夜はアングリーバードのゲーム大会が行われていたり、例のEpic Saxが流れていたり、ともかく様々な楽しみ方で盛り上がっていました。</p>
-
-<h3>何でも良いので発表してみよう</h3>
-
-<p><a href="http://www.flickr.com/photos/koyhoge/6254425900/"><img alt="DSC05804" src="http://farm7.static.flickr.com/6211/6254425900_822e6851aa.jpg" /></a>  </p>
-
-<p>そして多いに盛り上がったLT大会。あれほど接続テストをしたのに、いざ本番でうまく画面がでなかったり、緊張でタイマーを見てなくて一番大事なところで発表が終わったり（これは関東のLTでは一番盛り上がるネタ手法）、キモいw 発表があったりと、あっという間に3時間が過ぎたのではないかと思います。  </p>
-
-<p>もちろん前述したとおりリジェクトトークもあり、ビールタイムもありで、盛りだくさんではなかったかと。  </p>
-
-<p>後は今年もsioさんにドラ娘を任せっきりになってしまって、皆さんドラ娘も貴重な機会なので叩いてみるといいよ、と思うのですがなかなかに難しいですね。一度叩くとこれも中毒になるものなので、ぜひ来年はドラ娘に協力していただける方がいるといいなぁと思っています。</p>
-
-<h3>最後に</h3>
-
-<p>すでにここまでにも嬉しかった事などを書いたのですが、ちょっと書ききれなかったところでもあるので2つほど印象に残っていたことを紹介します。</p>
-
-<ol>
-<li>CakePHPで何か作ろうと思って参加したけど、Titanium が面白そうでそちらで作ったものを発表します、という発表があった。これはPHPMatsuriのようにセッションやワークショップがあった効果だと思っています。また参加者の人が通常仕事では出会う場面がなかったかもしれない、新たな発見をする機会でもあったのではないかと。</li>
-<li>CakePHPコアデベロッパーのグラハムが、昨年よりも多くの質問がきたり、声をかけてくれる人が増えたけど何かしたの？と驚いていた。これまでに公開されたblogの記事をいくつか読んで感じたのは、せっかくの機会なので交流を持とうと思ってくれていた人の多さでした。海外のコアデベロッパーに会うには、もちろん海外のカンファレンスに行くのが近道です。ただ参加費や言葉の問題などを考えると簡単ではありません。PHPMatsuriではそういった開発者にも交流の機会を作りたいという思いもあるので、それは今回とても参加者の熱意に感謝しているところであります。</li>
-</ol>
-
-<p>PHPMatsuriは1月ぐらいから、少しずつ準備が始まり、3月の震災以降開催場所の検討やイベントの内容などオンラインで様々なスタッフ協議が行われてきました。来年のことを現時点で考えられないぐらい抜け殻になっている青年団がほとんどだと思いますが、コメントボードに書かれていた熱い想いを受け止めていければなぁと思います。  </p>
-
-<p>まぁ偶然とは言え、ハッカー賞、次点が某方面で出ましたので、そういう流れなのかもしれませんが、またお知らせができるときがくるまで、各地の勉強会・開発合宿・カンファレンスなどで盛り上がって行ければなぁと思っています。  </p>
-
-<p><a href="http://www.flickr.com/photos/zatsu/6260527568/"><img src="http://farm7.static.flickr.com/6051/6260527568_8a2c658fef.jpg" /></a></p>
-
-<p>本記事中の写真は<a href="http://www.flickr.com/photos/koyhoge/sets/72157627775049941/">@koyhoge</a>さん、<a href="http://www.flickr.com/photos/zatsu/6259999717/in/set-72157627805074311">@suzuki</a>さんのflickrよりお借りしています。  </p>
-
-<p>イベント全体の様子は、アルバムサイトを是非ご覧下さい。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPMatsuriで"できたこと"" data-url="http://blog.open.tokyo.jp/2011/10/20/phpmatsuri-3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/10/20/phpmatsuri-3.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/10/20/phpmatsuri-3.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/10/20/phpmatsuri-3.html&t=PHPMatsuri%E3%81%A7%22%E3%81%A7%E3%81%8D%E3%81%9F%E3%81%93%E3%81%A8%22" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/10/20/phpmatsuri-3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -948,6 +1025,8 @@ CakePlugin::load('CakeBehat');
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
+                
                   <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
                 
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
@@ -965,8 +1044,6 @@ CakePlugin::load('CakeBehat');
                   <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
                 
                   <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
-                
-                  <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
                 
               </ul>
             </div>
@@ -1272,6 +1349,10 @@ CakePlugin::load('CakeBehat');
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+                    </li>
+                  
                   
                 
                   
@@ -1346,6 +1427,14 @@ CakePlugin::load('CakeBehat');
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1354,7 +1443,7 @@ CakePlugin::load('CakeBehat');
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (6)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

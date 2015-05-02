@@ -275,7 +275,149 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h2>
+            <h2 class="title"><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/03/22.html">Saturday, March 22, 2014 03:24:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+    
+      <a rel="tag" href="/tags/tdd.html">TDD</a>
+    
+      <a rel="tag" href="/tags/bdd.html">BDD</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2014/3/18に<a href="http://blog.coworking.tokyo.jp/">コワーキングスペース茅場町Co-Edo</a>で開催された「<a href="http://tdd-web.doorkeeper.jp/events/9439">テスト駆動web開発勉強会 Vol.1</a>」で「Webアプリケーションテスト手法2014」の発表をしました。</p>
+
+<p>第一回目ということと、1時間枠と限られた時間の中でCakePHPとJavaScriptについてのテストの話をしたので、ざっくりした内容となっています。</p>
+
+<p>今後ハンズオンなども計画しているようなので、DoorKeeperのページをチェックしておくと良いかなーと思います。
+また当日は「<a href="https://japheego.jp/">Java,PHPエンジニアの派遣、求人を探すならJapheego（ジャフィーゴ）</a>」さんに懇親会スポンサーになっていただき、美味いビールとSUBWAYのサンドイッチをいただきました。感謝!
+勉強会の懇親会はピザが多いのですが、連続すると飽きるのでたまには<a href="http://demae-can.com/shop/menu/3007411/">SUBWAYのデリバリー</a>とか良いと思いますよ！（SUBWAY大好きです）</p>
+
+<div id="file_embed">
+    <div id="embedded_doc"><p class="no_javascript">To see files inline you need to enable JavaScript.<br />Yahoo has some <a href="http://help.yahoo.com/l/us/yahoo/help/faq/browsers/browsers-63474.html" target="_blank">instructions for enabling JavaScript</a> if you&rsquo;re unsure how to do it.</p></div>
+
+    <script type="text/javascript">
+    var scribd_doc = scribd.Document.getDoc(213088053, 'key-c8og2igawuh9o7wx4j7');
+
+    var onDocReady = function(e){
+        // scribd_doc.api.setPage(3);
+    }
+
+    scribd_doc.addParam('jsapi_version', 2);
+    scribd_doc.addEventListener('docReady', onDocReady);
+    scribd_doc.addParam('height', 494);
+    scribd_doc.addParam('width', 600);
+    scribd_doc.write('embedded_doc');
+    </script>
+
+    <p class="download"><a href="http://twileshare.com/uploads/WebTest201403_pub.pdf" class="big_green_button_link" title="Filename: WebTest201403_pub.pdf">Download this file</a></p>
+</div>
+
+<p>最後に、当日紹介したサンプルのCakePHPテストコードを掲載しておきます。</p>
+
+<h5>モデルのテスト例：</h5>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">PostTest</span> <span class="k">extends</span> <span class="nx">CakeTestCase</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="nv">$fixture</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'app.Post'</span><span class="p">,</span> <span class="s1">'app.Comment'</span><span class="p">];</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">model</span> <span class="o">=</span> <span class="nx">ClassRegistry</span><span class="o">::</span><span class="na">init</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">model</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getMockForModel</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">model</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">getMockForModel</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'save'</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">タイトルがない場合はバリデーションエラーになること</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">データベースへの保存に失敗した場合は</span><span class="nx">false</span><span class="err">が戻ること</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">データベースへの保存に成功した場合は</span><span class="nx">true</span><span class="err">が戻ること</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">データベースに新規登録できること</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>モデルの初期化方法には3つのやり方があり、通常は<code>ClassRegistry::init()</code>で良いのですが、モデルをモックしたい場合は<code>getMockForModel()</code>というCakeTestCaseが用意してくれているモデル専用のモックジェネレータを使います。第二引数にメソッドの配列を指定するとパーシャルモックとなり、特定のメソッドのみモックします。</p>
+
+<h5>コントローラのテスト例:</h5>
+<pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">class</span> <span class="nc">PostsControllerTest</span> <span class="k">extends</span> <span class="nx">ControllerTestCase</span> <span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">setUp</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">controller</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">generate</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,[</span>
+            <span class="s1">'components'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="s1">'Session'</span><span class="p">,</span>
+                <span class="s1">'RequestHandler'</span><span class="o">=&gt;</span><span class="p">[</span><span class="s1">'isPost'</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s1">'models'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="s1">'Post'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'findById'</span><span class="p">,</span><span class="s1">'delete'</span><span class="p">],</span>
+            <span class="p">],</span>
+            <span class="s1">'methods'</span> <span class="o">=&gt;</span> <span class="p">[</span>
+                <span class="s1">'redirect'</span><span class="p">,</span> <span class="s1">'render'</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="sd">/**
+     * @expectedException NotFoundException
+     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">存在しない記事を表示すると</span><span class="nx">NotFound</span><span class="err">例外になること</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">testAction</span><span class="p">(</span><span class="s1">'/posts/view/999'</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="sd">/**
+     * @expectedException BadRequestException
+     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">保存が</span><span class="nx">POST</span><span class="err">以外で呼び出されたら</span><span class="nx">BadResuest</span><span class="err">例外になること</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">testAction</span><span class="p">(</span><span class="s1">'/posts/save/1'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'method'</span> <span class="o">=&gt;</span> <span class="s1">'get'</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">削除が成功したら</span><span class="nx">index</span><span class="err">にリダイレクトする</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">controller</span><span class="o">-&gt;</span><span class="na">Post</span><span class="o">-&gt;</span><span class="na">expects</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">once</span><span class="p">())</span><span class="o">-&gt;</span><span class="na">method</span><span class="p">(</span><span class="s1">'delete'</span><span class="p">)</span>
+                <span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">equalTo</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">-&gt;</span><span class="na">will</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">returnValue</span><span class="p">(</span><span class="kc">true</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">controller</span><span class="o">-&gt;</span><span class="na">expects</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">once</span><span class="p">())</span><span class="o">-&gt;</span><span class="na">method</span><span class="p">(</span><span class="s1">'redirect'</span><span class="p">)</span>
+                <span class="o">-&gt;</span><span class="na">with</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">equalTo</span><span class="p">(</span><span class="s1">'index'</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">testAction</span><span class="p">(</span><span class="s1">'/posts/delete/1'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'method'</span> <span class="o">=&gt;</span> <span class="s1">'delete'</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="nf">test</span><span class="err">新しいトピックを追加できたら画面にメッセージが戻ること</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには<code>ControllerTestCase</code>が用意してくれているコントローラ専用のモックジェネレータである<code>generate()</code>を利用します。generateで作成したインスタンスをテストケースクラスの<code>controller</code>メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。</p>
+
+<p>コントローラから依存関係にある、コンポーネント、モデルについてそれぞれサンプルのようにモックでき、コントローラ自体のメソッドも<code>methods</code>に列挙することでモックできます。例えば<code>redirect()</code>や<code>render()</code>などがよく使われると思います。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="テスト駆動web開発勉強会 Vol.1で発表しました" data-url="http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html&t=%E3%83%86%E3%82%B9%E3%83%88%E9%A7%86%E5%8B%95web%E9%96%8B%E7%99%BA%E5%8B%89%E5%BC%B7%E4%BC%9A%20Vol.1%E3%81%A7%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/03/08.html">Saturday, March 08, 2014 05:04:00 PM</a></p>
   <p class="tags">
     
@@ -725,162 +867,6 @@ end
     </div>
 
   </div>
-  <h2 class="title"><a href="/2013/12/31/2013.html">2013年ふりかえり</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/12/31.html">Tuesday, December 31, 2013 05:12:51 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/2013.html">2013</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;この投稿は今年参加／発表したり、運営に携わったイベント、やっていた仕事の内容などについてふりかえるポストです。</p>
-
-<h3>1月</h3>
-
-<p>2013年最初のイベント参加は1/6に開催された「<a href="http://roadstohtml5.com/html5karuta/">新春!!HTML5KARUTA大会</a>」。
-HTML5カルタとは</p>
-
-<blockquote>
-<p>2012年現在、W3Cで正式に採用されているHTML5のタグは108つあります。HTML5KARUTAは、このHTML5のタグを日本古来から伝わる伝統的な遊戯、カルタとして遊びながら覚えようというものです。</p>
-</blockquote>
-
-<p>というもので、当日はCakePHPユーザの集う茅場町会場（コワーキングスペース茅場町 Co-Edo）に参加しました。
-みんなでビールや日本酒飲みながら楽しくカルタをやって、なんと茅場町会場で優勝いたしました。その後、第二版として販売されたHTML5カルタ初級、中級、上級を購入したのは言うまでもありません。とても楽しいので、2014年の年初めに皆様もカルタで遊んでみてはいかがでしょうか？何？お手元に無い？、大丈夫です、茅場町Co-Edoにカレンダーが揃っていますので、ドロップイン料金だけで楽しめますよ！！</p>
-
-<p>続いては1/21に開催された「<a href="http://blog.coworking.tokyo.jp/2013/01/cakephp.html">CakePHPもくもく会</a>」に参加。こちらも引き続き茅場町Co-Edoでの開催です。元々は<a href="https://twitter.com/kaz_29">@kaz_29</a>さんとCakePHPのBehat連携周辺のアレやコレやを解決したくて開催したのですが、コアデベロッパのGraham含め10名程が参加するイベントとなりました。そこでの成果はCakePHPの<a href="https://github.com/sizuhiko/Bdd">Bddプラグイン</a> v0.9.2 としてリリースしました。詳しくは<a href="http://my.opera.com/sizuhiko/blog/2013/02/06/cakephp-bddplugin-updates">こちらの記事</a>で。</p>
-
-<p>また今年はPHP Matsuriが7月開催だったので、この頃から開催会場の選定などが始まっていました。</p>
-
-<h3>2月</h3>
-
-<p>2/14に開催された「<a href="http://cake-beer-talk.doorkeeper.jp/events/2736">第一回CakeBeerTalk</a>」に参加しました。こちらも茅場町Co-Edo。CakePHP1から2へのマイグレーションの話があったり、CakePHP2.3の新機能の話をしていたんですねー。気付くと年末にはもう3の話をしているというサイクルに驚きます。1月に実施したもくもく会の成果なども含め@kaz_29さんが「<a href="https://speakerdeck.com/kaz29/cakephp2-plus-bdd-pluginwoshi-tutemiyou">CakePHP2+BDD Plugin</a>」の発表をしていました。自分が作ったプラグインを他の人が利用して発表してくれるというのはとても嬉しい事です。</p>
-
-<p>続いて2/28に株式会社 Engine Yardで開催された「<a href="http://atnd.org/events/36965">第65回 PHP勉強会@東京</a>」に参加。この頃BddプラグインにありがたいPull RequestをいただきComposer対応を進めていたのですが、その過程でいわゆるForkプロジェクトを登録して良いのか？問題に直面したので若干愚痴っぽいLT「<a href="http://twl.sh/19E7mPA">composer/installers</a>」もしました。今も結局repositoriesに追記するようにしているのですが、どうしたら良いのかの結論は出ていない感じです。で、それについてまとめた記事は<a href="http://my.opera.com/sizuhiko/blog/2013/02/19/cakephp-bddplugin-updates">こちら</a>。
-また、スライドにも書いたのですが、<a href="http://www.amazon.co.jp/CakePHP2-%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80-WEB-PRESS-plus/dp/4774153249">CakePHP2実践入門</a>が<strong>増刷</strong>されたのも2月の事でした。</p>
-
-<p>PHP Matsuriは会場が札幌全日空ホテルでほぼ確定したところでした。PHP MatusriのページをGitHubページで作り始めたのもこの時期です。</p>
-
-<h3>3月</h3>
-
-<p>3/9に開催された「<a href="http://blog.coworking.tokyo.jp/2013/03/cakephp-phpunit-jenkins-selenium-xdebug.html">（CakePHPとか）PHPのテストについての勉強会</a>」で「<a href="http://twl.sh/ZnP7Vf">テストの基本からCakePHPでTDD/BDDへ</a>」講演しました。他の方の発表も大変に興味深く楽しいイベントでした。</p>
-
-<p>続いて3/27に株式会社 Engine Yardで開催された「<a href="http://atnd.org/events/38015">第66回 PHP勉強会</a>」に参加。「<a href="http://twl.sh/1enEWJi">ClientSide MVC Frameworks using?</a>」というタイトルでJavaScript MVCフレームワークである「<a href="http://javascriptmvc.com/">JavaScript MVC</a>」というフレームワークについてLTをしました。名前が紛らわしいんですよね。当時ちょうど仕事でHTML5アプリというかクライアントサイドのお仕事でこのフレームワークを使っていて、とても良かったので紹介したという流れです。この後も何度か同様の発表をしたのですが、時代の流れがクライアントソフト、クライアントサーバ、シンクライアントやサーバサイドWeb、AjaxやHTML5アプリ（クライアントサーバ）といったように目紛しく変わって行く中、来年の動向も気になるところです。</p>
-
-<p>PHP Matsuriはスポンサー依頼が本格的に始まったり、Facebookにイベントページが立ったり、先だって作っていた<a href="http://www.phpmatsuri.net/2013/">公式サイト</a>も公開したり、いよいよ本格的に動き始めた感じでした。</p>
-
-<h3>4月</h3>
-
-<p>もちろん4月といえば4q!カンファレンス（＠かもすや酒店）。今年も参加しましたー。ちょうどSakenote（#SakeLover）がリリースされた後ということで@kuranukiさんも含め盛り上がったイベント（飲み会）でした。</p>
-
-<p>4/27は「<a href="http://atnd.org/events/38500">CandyCane 開発会 2013春</a>」に参加。Bddプラグインでテストを書こう！と挑んだのですが、まずモロモロ環境を作っているうちに時間切れとなってしまいました。今思えばこの時にVagrant使っていれば&hellip;.。その後私が作ったものをベースにComposer対応が完了した模様です。ありがたやー。</p>
-
-<p>仕事はどんどん忙しくなるし、オレ大丈夫かーというような時期でした。マジで。ちょっとイベントに行ける雰囲気でなくなってきたのがちょうどこの頃かなー。</p>
-
-<p>PHP Matsuriの基調講演に Vagrant の Hashimoto さんが決まったのも4月でした。個人的には、これがキッカケで Vagrant 熱が盛り上がってきたのですよね。</p>
-
-<h3>5月</h3>
-
-<p>仕事がテンパっていてそうとうやばい状況で、どこにも行けませんでした。</p>
-
-<p>5/29にPHP Matsuriのチケット販売を開始したのですが、そのサイト更新だけは気力を振り絞って対応した記憶が&hellip;.</p>
-
-<h3>6月</h3>
-
-<p>というのも5/30までで。5/31から前乗りして6/1に開催された<a href="http://conference.kphpug.jp/2013/">PHPカンファレンス関西</a>に参加。仕事はちゃんと5/30までに何とかしました。こちらでは「<a href="http://twl.sh/ZkfW0H">Newtype of Web Application Architecture</a>」というタイトルでJavaScript MVCのLTをしました。今年2度目のJavaScriptMVC発表でした。仕事から解放されて大阪を満喫したのは言うまでもありません。無限もやしが正式なメニュー名になっていたのを覚えています（それかよw）。</p>
-
-<p>もちろん6月といえば恒例の Interop にも参加。新しい話題としては特になかったけど、SDNがしっかりとしてきたのは昨年以上に感じたところでした。</p>
-
-<p>PHP MatsuriはPHPカンファレンス関西のLTでチケット販売やゲストの告知をしたり、ノベルティのデザインが決まったり、LT大会用のシステムが出来上がったり、いよいよ来月の開催に向けて最後の追い込みという感じでした。</p>
-
-<h3>7月</h3>
-
-<p>いよいよPHP Matsuri2013 Sapporo開催。私は夏休み併用で7/10から移動を開始（Matsuriは14,15日）。初の北海道上陸を自家用車で成し遂げようということで大洗からフェリーで行きました。で、その旅の写真は<a href="https://plus.google.com/u/0/photos/107544322587204222942/albums/5902698620304749185">こちら</a>。日焼けして真っ黒な顔で会場入りした私を見て「リゾートを満喫してきた人がいる」と言われました。まぁ確かにMatsuriの写真を見るとサングラス日焼け痕がクッキリとw。</p>
-
-<p>PHP Matsuriでは司会と最初の講演「<a href="http://twl.sh/10U3rtt">PHP x Agile 〜プログラマ視点から気にしたい事</a>」を担当。スライドだけ見るとそれを薦めているように見える箇所もありますが、反対の意味として話した内容もあるので単語だけ一人歩きしないと良いなとおもっています。  </p>
-
-<p>なおハッカソンでは、JavaScriptMVCとCakePHPで作るプロトタイプ開発（9月のPHPカンファレンスの発表資料を参照してください）という発表をしたのですが、ネタが被りまくりな上、TwitterBootstrapのモーダルボタンがプロジェクタの投影範囲外というトラブルに見舞われ失敗しました&hellip;.</p>
-
-<p>7/22に株式会社 Engine Yardで開催された「<a href="http://atnd.org/events/41277">第70回 PHP勉強会@東京</a>」に参加。  </p>
-
-<p>また、月末の30日には元CakePHPのリードデベロッパだったNateさんが来日したのに合わせたイベント「<a href="http://atnd.org/events/41843">緊急開催 Lithium Tokyo 〜Nate Abele氏来日イベント〜</a>」に参加しました（@yandoさんの<a href="http://www.engineyard.co.jp/blog/2013/resource-oriented-webapp/">イベントレポート</a>）。@koriymさんとNateの熱いリソース指向の話はとても素晴らしかったです。</p>
-
-<p>この頃、社内で「<a href="http://www.amazon.co.jp/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%95%E3%82%A7%E3%83%BC%E3%82%B9%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%81%AE%E5%AE%9F%E8%B7%B5%E6%95%99%E5%AE%A4-%E2%80%95%E5%84%AA%E3%82%8C%E3%81%9F%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%93%E3%83%AA%E3%83%86%E3%82%A3%E3%82%92%E5%AE%9F%E7%8F%BE%E3%81%99%E3%82%8B%E3%82%A2%E3%82%A4%E3%83%87%E3%82%A2%E3%81%A8%E3%83%86%E3%82%AF%E3%83%8B%E3%83%83%E3%82%AF-Lukas-Mathis/dp/4873116082">インターフェースデザインの実践教室</a>」の読書会を立ち上げました。途中まで進んだところで社外作業になってしまい中断状況。はやく再開したい&hellip;</p>
-
-<h3>8月</h3>
-
-<p>CakeFest2013まであともう少しという頃、CakeFestの発表者にも名前を連ねるRoland氏がオーストリアから来日してBanchaの講演をするというので「<a href="http://atnd.org/events/42527">CakePHP Tokyo 〜 CakePHPとSenchaTouchによる超高速モバイル開発〜</a>」に参加しました。昨年はJQueryMobileを使った仕事をしたり、今年はJavaScriptMVCを使ったりと、似たような開発をしてきた中でSenchaTouchとどういう連携をするのかとても興味があったのですが、SenchaTouchというよりもそのSDKを使ったパワフルな開発サポート機能もある点がとても面白かったです。</p>
-
-<p>そして30日からCakeFestへ〜</p>
-
-<h3>9月</h3>
-
-<p>5月前後のちょうど多忙な時期にCall For Paperがあったので、結局今年はスピーカー申し込みはできず一般参加です。でも当日LT募集もあるし資料だけは仕込んで参加。今年もくもく会で仕上げたBDDプラグインのアップデート内容などを発表しよう&hellip;と思っていたらペチャクチャ枠に移動となって、挙げ句ペチャクチャ枠の申し込み者が少ないからキャンセル扱いにwww。まぁその後行われたくじ引き大会？で<a href="https://twitter.com/sizuhiko/status/374349561117954048">一等の賞品をもらった</a>ので、終わりよければ全てよしということで。</p>
-
-<p>CakeFestでの内容は<a href="http://www.engineyard.co.jp/blog/2013/cakephp3-on-cakefest/">@yandoさんのレポート</a>に、私と@yandoさんが現地から放送したCakeRadioGagaの動画がアップされているので、そちらをご覧いただければと思います。（そういえばかなりメモ取ったのに何もまとめ記事にしていなかった）。
-この放送の後は、残っていた他の参加者と焼肉を食べに行ったのでした。</p>
-
-<p>9/14にはPHPカンファレンスが開催され「<a href="http://twl.sh/182MRc2">15分で出来るPHPとJavaScript MVCフレームワークで作るプロトタイプ</a>」というタイトルで講演してきました。今年4回目のJavaScriptMVC関連（厳密にはこの時期にはJavaScriptMVCがCanJSベースの新しいバージョンになっていたので、内容には変化がありました）の発表でした。AngularJSの勢力は増す一方ですが、CanJS（ならびにJavaScriptMVC）も頑張るぞ。</p>
-
-<p>またこの頃からCakePHP関連のお仕事を手伝うようになったのですが、現場のControllerのテストがあまりにアレな感じでしたので「<a href="http://my.opera.com/sizuhiko/blog/2013/09/13/cakephp">CakePHPのコントローラテストで注意すること</a>」という記事にしてまとめました。また仕事で本格的にVagrantを使ったのもこのお手伝いが最初となりました（これまでは個人の開発環境ばかり）。</p>
-
-<h3>10月</h3>
-
-<p>バッグを<a href="http://t.co/5BTEXGCG8u">PROTEXのアタッシュケース</a>に変えました。というかしばらく使っていたトートバッグは個人的に合わず&hellip;.</p>
-
-<p>新しいCakePHPプラグインとしてRailsではおなじみのFabricatorのクローンを作りました。<a href="https://github.com/sizuhiko/Fabricate">Github</a>、<a href="https://twitter.com/sizuhiko/status/387821773359955968">そのときのTweet</a>、<a href="http://my.opera.com/sizuhiko/blog/2013/10/12/cakephp-fabricate">ブログ記事</a>。Fabricatorというより作ってみたらFactoryGirlの機能も盛り込みたくて、結局二個一みたいな感じになっていますが、まぁそこは&hellip;.  </p>
-
-<p>現場であまりにFixture絡みでテストが失敗するので、そんなんじゃダメだーという訳で（およそ30分ぐらいでお昼食べた後すぐ）作ったのです。</p>
-
-<h3>11月</h3>
-
-<p>Fabricateにsequence機能などいくつかRuby側にある機能を追加しました。<a href="http://my.opera.com/sizuhiko/blog/2013/11/04/cakephp-fabricate-sequence">ブログ記事</a>。</p>
-
-<p>11/29に株式会社 Engine Yardで開催された「<a href="http://atnd.org/events/45596">第73回 PHP勉強会@東京</a>」に参加。FabricatorとFakerを使った「<a href="http://twl.sh/182I2Sy">テストデータの作り方</a>」という発表をしました。</p>
-
-<p>その翌日11/30には「<a href="http://events.html5j.org/conference/2013/11/">HTML5カンファレンス</a>」にボランティアスタッフとして参加。昨年に続く参加だったのですが、より規模が大きくなり発表も多様でした。動画がアップされているので、すべてのセッションを閲覧できるようになっています。</p>
-
-<h3>12月</h3>
-
-<p>クリスマスにケーキを食べながらCakePHPの話をしよう、という事でCakePHPのイベントが開催される事に。運営でお手伝いしてきました。
-「<a href="http://cakephp.doorkeeper.jp/events/7600">CakePHPクリスマス勉強会</a>」。LTに空きがあるという事で先月のPHP勉強会と同じネタでしたが「テストデータの作り方」について再演しました。</p>
-
-<p>お仕事では引き続きCakePHPを使った開発現場の支援をしております。</p>
-
-<h3>まとめ</h3>
-
-<p>ということで、5月危機を除いては月に一度は何かしらの発表、発信はできていたようです。  </p>
-
-<p>もっと頑張っている人もいっぱい知っていますが、自分のペースとしてはこのぐらいかなー、後は書籍の話もいただいておりますので、いろいろゆっくりと。  </p>
-
-<p>とはいえBDDプラグインのBehat3対応と、Fabricateの拡張も（なるはやで）やりたいなー。という来年に希望を持った前向きな感じで今年を〆たいと思います。  </p>
-
-<p>そうそう、3月にはこのブログを書いている My Operaがサービス終了となるので、どこかに移動しなくちゃいけない。実はそれが最優先だったりするのですが（汗  </p>
-
-<p>ということで何だかバタバタした終わり方ですが、来年も各所で皆様に会えるのを楽しみに。Co-EdoからPOST。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="2013年ふりかえり" data-url="http://blog.open.tokyo.jp/2013/12/31/2013.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2013/12/31/2013.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2013/12/31/2013.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/12/31/2013.html&t=2013%E5%B9%B4%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/12/31/2013.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -945,6 +931,8 @@ HTML5カルタとは</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
+                
                   <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
                 
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
@@ -962,8 +950,6 @@ HTML5カルタとは</p>
                   <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
                 
                   <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
-                
-                  <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
                 
               </ul>
             </div>
@@ -1269,6 +1255,10 @@ HTML5カルタとは</p>
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+                    </li>
+                  
                   
                 
                   
@@ -1343,6 +1333,14 @@ HTML5カルタとは</p>
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1351,7 +1349,7 @@ HTML5カルタとは</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (6)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

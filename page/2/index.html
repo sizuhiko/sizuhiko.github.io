@@ -275,7 +275,116 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a></h2>
+            <h2 class="title"><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2015/01/03.html">Saturday, January 03, 2015 02:23:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+      <a rel="tag" href="/tags/agile.html">Agile</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2014/12/24 に行われた<a href="http://phpstudy.doorkeeper.jp/events/18420">【12/24 クリスマスイブ】第85回 PHP勉強会</a>でLTをしました。</p>
+
+<script async class="speakerdeck-embed" data-id="eaf63b006da5013291a442717aa444ce" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>当日はもの凄く楽しく盛り上がったので、私が発表を開始する頃には会場の終了時間ギリギリになっていました。
+このため高速LTで話していろいろ溢れた話などを記事にまとめます。</p>
+
+<h3>CakePHPを使った開発現場での481日間の支援</h3>
+
+<p>コンサル会社からご指名でお話をいただいたら、コミュニティの知り合いの会社でしたよ、というなんか遠回りな形で始まったお仕事でした。</p>
+
+<p>まず参加して感じたのは、481日前のスライドにあるように、これはなかなか手強いなーという状況でした。
+コンサルの方からイロイロ事情を聞いていたので、ある程度覚悟はしていったのですが、まずの印象はチーム開発ができていないなーという印象。ここでいうチームとは、誰かが指示して動くというよりは、全員の力で進んでいくアジャイルチームをイメージしています。
+良い意味で言うとウォーターフォールのやり方としては、文化があってうまく進めている状況でした。</p>
+
+<p>とはいえ最初に見た手順書とかコードとか、もっと優先してやらないといけなそうな事がたくさんあったので、スライドの順に対策を計画し、開発しながら改善活動をゆるやかに進めるということになりました。</p>
+
+<h3>できたこと と できなかったこと</h3>
+
+<p>かなり大きな案件だったため、複数のサブシステムがあり、スライドの対象は私が直接関わった2つについて支援した内容です。
+ただ、施策のいくつかは全体として取り入れてもらったりして、現在も継続しています。</p>
+
+<p>できたことについては、スライドに含んでいるので、ここではスライドに含められなかった、主にできなかったことについて書きたいと思います。</p>
+
+<ul>
+<li>デプロイの自動化</li>
+<li>環境毎の設定切り替えの仕組み</li>
+<li>共通化されていたコードの改善</li>
+<li>プロダクトオーナーとの関わり方</li>
+<li>more チーム</li>
+</ul>
+
+<p>まずデプロイについては、独自の方法で半自動化されていました。
+ここで列挙したのは、デプロイにcapやjenkinsを使ったりは「しなかった」という意味です。このあたりの改善はすでにワークフローとして機能しているものを改善すべきか、どこまで文化に踏み込むかという判断が必要になると思います。
+本案件ではスクリプトを実行するのは手動ながらも、それによる問題はなさそうだったので、そのまま継続しています。
+ただCI、インテグレーション、ステージング、本番とある内のインテグレーションだけはJenkinsと連動して自動デプロイできるようにしても良かったかなーと今頃思っていますが、まだいるメンバーの方、これを読んだらTRYしてみてください。</p>
+
+<p>環境毎の設定切り替えの仕組みはあったのですが、当初設定を追加するのにExcelファイルを編集しないといけなくて、ひどく苦労しました（Excelファイルだと差分がわからないし）。現在はテキストファイルを直接編集して良い方式となり、これも全サブシステムに影響する箇所で対策がしにくくそのまま継続利用しました。
+CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/cakephp-environments">CakePHP Environmentsプラグイン</a> を使えると良かったのですが。ここはいずれCakePHP3対応するのであればプラグインに切り替えられると良いなーと思います。</p>
+
+<p>上記と同じような理由で、すでに全サブシステムで共通化されていたコードの改善もあまり手が付けられませんでした。サブプロジェクトによって進捗具合が異なり私が入った段階ですでに多くの機能ができあがっていたサブシステムもあり、多くの共通部分は未着手のままとなりました。
+一方で、できたことのほとんどは、まだ実施されていない自動テストだったり、サブシステム単位で改善できる箇所からの着手となったため、このような結果になっています。</p>
+
+<p>プロダクトオーナーとの関わり方については、これはどの現場でもそうですが、開発からのアプローチだけではなかなか改善が難しい部分です。文化を変えるには内側からの大きな力だったり、より大きな成功体験を求めるといったことが必要となるのではないかと思います。
+もしこのあたりを改善したいという現場があれば、プロダクトオーナーを含めて<code>ふりかえり</code>をやって、ProblemとTryを共有して改善していくと良いと思います。でも大規模システムでは… なかなかに難しいですね…</p>
+
+<p>moreチームということでは、最初に関わったサブシステムのチームでは、見積もりゲームをやって、カンバンを導入し、よりチーム力で進めたと思います。そのまま継続してやってくれると良いなーと思っています。私が離れてからもメンバー間でPull Requestに活発にコメントされていたし、とてもうまく廻っているという印象がありました。</p>
+
+<p>一方でその後に担当したサブシステムは、かなり複雑な事情で始まりました。チームの力を付けながら進むというよりは、とにかく完成を目指すような形でしたので、チーム力という意味ではまだ道半ばだったかもしれません。
+あと、年末に様々なイベントが不運なタイミングで重なってしまったのも、多少心残りですが、残ったメンバーの力を合わせて進めていって欲しいです。</p>
+
+<h3>さいごに</h3>
+
+<p>私はいろいろなところで揉めるというか、正論でズバズバ行くタイプなので衝突することが多かったと思います。
+今回支援させてもらった現場では、派遣の方が多く、そういう意味でチーム力で進めていくのはとても困難な状況であったと思います。
+特に社員ではない働き方を選んでいる人の場合、もの凄く前のめりでやりたい人と、3歩後ろをついていきたい人に別れると、これまでの経験で感じます。私もそういう意味では前者になる訳ですが…</p>
+
+<p>例えばチーム全員で要求を仕様にブレークダウンして見積もりゲームをやったり、相互にコードをレビューしたり、これはAgile開発の文化にない開発者にとって、全員が望んでいる方法でないというのは、気持ちでは理解できます。
+が、これをやらずに属人性を排除し、チームとしてより良く開発を進めていく方法が現時点ではあまり思い当たりません。
+特にWeb界隈では人の流動性も高いので、極端に生産性を落とさない為にも、コードや仕様を引き継ぐというために時間を取られるといった事はできれば避けたいはずです。</p>
+
+<p>このプロジェクトを通じて、テストデータジェネレータ <a href="https://github.com/sizuhiko/Fabricate">Fabricate</a> も作ったし、多くの実践投入実績や経験も得ることができました。</p>
+
+<p>まだ現場では開発が続いており <code>CakePHPで継続的インテグレーションを導入したモダンで大規模な開発</code> を継続しているという、貴重な体験ができていると思います。
+そういう意味で、誰か事例発表をすると良いなーと思いますので、今年のPHPカンファレンスなどで話が聞けるのを楽しみに待っています。</p>
+
+<p>そして、PHP勉強会の2日後、2014/12/26をもって、作業支援から離れました。</p>
+
+<p><img src="/images/blog/20141226_flower.jpg" /></p>
+
+<p>最後にステキなお花と色紙をいただきました。</p>
+
+<p>本当にありがとうございました。引き続き開発頑張ってください！！</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="僕とPHPxAgileの481日間" data-url="http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html&t=%E5%83%95%E3%81%A8PHPxAgile%E3%81%AE481%E6%97%A5%E9%96%93" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2014/10/13.html">Monday, October 13, 2014 08:11:00 PM</a></p>
   <p class="tags">
     
@@ -837,310 +946,6 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2014/08/17.html">Sunday, August 17, 2014 04:00:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/継続的インテグレーション.html">継続的インテグレーション</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>春先ぐらいからBlogの更新が滞っていましたが、その要因となったアレが大分落ち着いてきたので、たまっていたネタを順番に書き出します。</p>
-
-<p>CakePHP2のプラグインを作成／公開していて、継続的インテグレーションってどうするの？と思っていました。
-もちろんユニットテスト書いてあるし、素晴らしい協力者の方がPull Requestを送ってくれれば、developブランチに取り込んでテストしたりします。</p>
-
-<p>Githubを徘徊していると、よく見る</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_1.png" /></p>
-
-<p>これを表示したいと思ったのです。</p>
-
-<p>ただCakePHP2のプラグインは当然それだけではユニットテストを実行できません。CakePHPのアプリケーションがあって、テスト用データベースとその設定があって…、ぬーん。
-早い話、テスト用のアプリケーション作って、そこからテスト実行すれば良いの？ということをずっと思っていました。</p>
-
-<h3>CakePHPの有名プラグインはどうしているのだろう？</h3>
-
-<p>と思い、最初にチェックしたのはCakeDC/searchプラグイン。
-大抵のアプリケーションで使う、もっともメジャーなプラグインではないかと思います。
-Searchプラグインにも、あのビルド成功やダウンロード数、バージョン番号の画像が表示されています。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_2.png" /></p>
-
-<p><code>.travis.yml</code> ファイルがあるので、内容を確認してみます。
-すると、</p>
-<pre class="highlight yaml"><code><span class="s">before_script</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="s">git clone https://github.com/burzum/travis.git --depth 1 ../travis</span>
-  <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
-  <span class="pi">-</span> <span class="s">if [ "$PHPCS" != 1 ]; then</span>
-            <span class="s">echo "</span>
-                <span class="s">require_once APP . DS . 'vendor' . DS . 'phpunit' . DS . 'phpunit' . DS . 'PHPUnit' . DS . 'Autoload.php';</span>
-            <span class="s">" &gt;&gt; ../cakephp/app/Config/bootstrap.php;</span>
-    <span class="s">fi</span>
-</code></pre>
-
-<p><code>https://github.com/burzum/travis.git</code>をcloneしてきて、何かやっているようです。</p>
-
-<h3>CakePHPプラグインを簡単にTravis.ciで継続的インテグレーションできる</h3>
-
-<p>早速、ページにアクセスしてみると、どうもそれはあの<code>FriendsOfCake</code>からForkされたもののようです。
-<code>FriendsOfCake</code>の<a href="https://github.com/FriendsOfCake/travis">元リポジトリ</a>を確認します。</p>
-
-<blockquote>
-<p>Easy travis setup for CakePHP plugins
-This repository helps easy travis integration for CakePHP plugins, primarily focused on FriendsOfCake projects, but can be used within any plugin when satisfying the requirements.</p>
-</blockquote>
-
-<p>おぉ、正に私の求めていたもの。</p>
-
-<h4>Fabricateに導入してみた</h4>
-
-<p>最近作った中で、最も思い入れのあるCakePHPプラグイン<code>Fabricate</code>を継続的インテグレーションするため、上記の<code>FriendsOfCake/travis</code>を導入してみます。</p>
-
-<p><code>Quick Install</code>に書いてるとおり、以下の手順で進めます。</p>
-<pre class="highlight shell"><code><span class="nb">cd</span> ~/develop/fabricate
-
-git clone https://github.com/FriendsOfCake/travis.git
-
-<span class="nb">export </span><span class="nv">PLUGIN_NAME</span><span class="o">=</span><span class="s2">"Fabricate"</span>
-
-travis/setup.sh
-
-rm -rf travis
-</code></pre>
-
-<p>私がやったときはこの手順ではなかったのですが、最近変わったみたいです…
-まぁ細かい事は気にせずですね。</p>
-
-<p>実行すると、以下のファイルが自動生成されます。</p>
-
-<ul>
-<li>.travis.yml : Travis.ciで継続的インテグレーションを実行するための設定ファイル</li>
-<li>Test/Case/AllFabricateTest.php : プラグインのユニットテストをすべて実行するテストスイート。すでにこの命名規則で生成されていれば作られません。</li>
-</ul>
-
-<p>以前のバージョンでは</p>
-
-<ul>
-<li><code>.editorconfig</code></li>
-<li><code>.semver</code></li>
-<li><code>.travis.yml</code></li>
-<li><code>.AllPluginNameTest.php</code></li>
-<li><code>composer.json</code></li>
-<li><code>CONTRIBUTING.markdown</code></li>
-<li><code>LICENSE.txt</code></li>
-<li><code>README.markdown</code></li>
-</ul>
-
-<p>が生成されていましたが、継続的インテグレーションには必要がないファイルも混在していたので、整理されたものと思います。</p>
-
-<p>後はTravis.ciにサインアップして、リポジトリを追加するだけです。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_3.png" /></p>
-
-<p>実は、これが最初のビルド。<code>PLUGIN_NAME</code>をexportしていなかったので、正しくテストの実行が動いていませんでした。<code>PLUGIN_NAME</code>はちゃんとexportするようにした方が良いです。
-.travis.ymlの<code>PLUGIN_NAME</code>を<code>Fabricate</code>に設定して実行した結果が以下の画面です。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_4.png" /></p>
-
-<p>現在のtravis.gitではPHP5.4以上のようなので、問題ないのですが、当時（と言っても数ヶ月前）はPHP5.3もテスト対象になっていたので、ショートArrayシンタックスを使っている私のコードはテストが失敗していました。.travis,ymlのPHP部分を以下のように変更して</p>
-<pre class="highlight yaml"><code><span class="s">php</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="s">5.4</span>
-  <span class="pi">-</span> <span class="s">5.5</span>
-</code></pre>
-
-<p>pushすると、ビルド結果は以下のようになります。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_5.png" /></p>
-
-<p>PHPCS以外は成功しています。</p>
-
-<p>PHPCSではCakePHPのコード標準がチェックされます。
-CakePHPの標準コードチェックだと厳しい部分だったり、パラメータを変更してチェックさせたくないディレクトリがあったりすると思うので、<code>PHPCS_ARGS</code>でphpcsを実行するときのパラメータを上書きできるようになっています。</p>
-<pre class="highlight yaml"><code><span class="s">matrix</span><span class="pi">:</span>
-  <span class="s">include</span><span class="pi">:</span>
-    <span class="pi">-</span> <span class="s">php</span><span class="pi">:</span> <span class="s">5.4</span>
-      <span class="s">env</span><span class="pi">:</span>
-        <span class="pi">-</span> <span class="s">COVERALLS=1</span>
-    <span class="pi">-</span> <span class="s">php</span><span class="pi">:</span> <span class="s">5.4</span>
-      <span class="s">env</span><span class="pi">:</span>
-        <span class="pi">-</span> <span class="s">PHPCS=1</span>
-        <span class="pi">-</span> <span class="s">PHPCS_ARGS="-p -s --extensions=php --standard=ruleset.xml --ignore='*/Test/*,*/Vendor/*' ."</span>
-
-</code></pre>
-
-<p>拡張子phpのファイルを対象とし、TestやVendorのディレクトリを対象外として実行します。
-ruleset.xmlは以下のようにしました。</p>
-<pre class="highlight xml"><code><span class="nt">&lt;ruleset</span> <span class="na">name=</span><span class="s">"Custom Standard"</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"CakePHP"</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.ProtectedNoUnderscore"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.ProtectedNoUnderscore"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.ScopeNotCamelCaps"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.MemberVarNotCamelCaps"</span> <span class="nt">/&gt;</span>
-        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.WhiteSpace.TabAndSpace"</span> <span class="nt">/&gt;</span>
-    <span class="nt">&lt;/rule&gt;</span>
-<span class="nt">&lt;/ruleset&gt;</span>
-
-</code></pre>
-
-<p>CakePHPのコード標準ではprivateやprotectedの変数、関数の先頭にアンダースコアが求められるので、それを無効にしたのと、キャメルケースではない変数や関数名を使いたい箇所があったので、それを無効にしています。
-最後の<code>CakePHP.WhiteSpace.TabAndSpace</code>では、以下のように<code>=</code>のインデント位置を合わせたコードがエラーになってしまうので、無効にしています（わかりづらいですが、=の位置が揃っています）。</p>
-<pre class="highlight php"><code>public function __construct($name) {
-    $this-&gt;name  = $name;
-    $this-&gt;items = [];
-}
-</code></pre>
-
-<h3>どうなっているのか？</h3>
-
-<p>プラグインのリポジトリには<code>.travis.yml</code>が追加されるぐらいです。
-この設定内で、FriendsOfCakeのtravisリポジトリがcloneされ、以下に記述されている手順が実行されます。</p>
-<pre class="highlight yaml"><code><span class="s">before_script</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="s">git clone -b master https://github.com/FriendsOfCake/travis.git --depth 1 ../travis</span>
-  <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
-
-<span class="s">script</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="s">../travis/script.sh</span>
-
-<span class="s">after_success</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="s">../travis/after_success.sh</span>
-</code></pre>
-
-<p>実行されるパターンは.travis.ymlに記述されている<code>php</code>と<code>env-matrix</code>の組み合わせと、<code>matrix</code>のパターンになります。</p>
-
-<ul>
-<li>PHP5.4, DB=mysql CAKE_VERSION=2.4</li>
-<li>PHP5,4, DB=mysql CAKE_VERSION=2.5</li>
-<li>PHP5.5, DB=mysql CAKE_VERSION=2.4</li>
-<li>PHP5,5, DB=mysql CAKE_VERSION=2.5</li>
-<li>PHP5.4, COVERALLS=1</li>
-<li>PHP5.4, PHPCS=1</li>
-</ul>
-
-<p>この6パターン毎に、<code>before_script</code>、<code>script</code>、<code>after_success</code>が呼び出されます。</p>
-
-<h4>事前準備</h4>
-
-<p><code>before_script.sh</code>は実行準備のためのスクリプトで、PHPCSが1にセットされている場合は、以下のとおりpearチャンネルからCakePHPのコード標準とphpcsが依存関係としてインストールされます。</p>
-<pre class="highlight shell"><code><span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$PHPCS</span><span class="s2">"</span> <span class="o">=</span> <span class="s1">'1'</span> <span class="o">]</span>; <span class="k">then
-    </span>pear channel-discover pear.cakephp.org
-    pear install --alldeps cakephp/CakePHP_CodeSniffer
-    phpenv rehash
-    <span class="nb">exit </span>0
-<span class="k">fi</span>
-</code></pre>
-
-<p>続いて、CakePHP本体が1つ親のディレクトリにインストールされます。Travis.ciではプラグインのリポジトリが最初にcloneされるのですが、結果として以下のようなディレクトリ構成となります。</p>
-
-<ul>
-<li>$HOME/sizuhiko/Fabricate : プラグイン本体</li>
-<li>$HOME/sizuhiko/travis : FriendsOfCakeのtravis.gitクローン先</li>
-<li>$HOME/sizuhiko/cakephp : CakePHP本体</li>
-<li>$HOME/sizuhiko/cakephp/app/Plugin/$PLUGIN_NAME : プラグイン本体がコピーされる先</li>
-</ul>
-
-<p>上記ディレクトリ構成ができた後で、composer で依存関係を解決します。COVERALLS用のカバレッジレポートも生成されるようにファイルが準備されます。</p>
-
-<h4>実行</h4>
-
-<p><code>script.sh</code>がPHPCSが1の場合はphpcsを、それ以外の場合はユニットテストを実行します。</p>
-
-<h4>実行が成功したら</h4>
-
-<p><code>after_success.sh</code>がCOVERALLSのカバレッジレポートを生成します。</p>
-
-<h3>そして現在</h3>
-
-<p>最初のスクリーンショットがFabricateの現在の状態です。すべて成功しています。</p>
-
-<p>最後にREADMEにバッジを表示させる方法を紹介します。</p>
-
-<h4>Travis.ciのバッジを表示する</h4>
-
-<p>Travis.ciの画面にアクセスして</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_6.png" /></p>
-
-<p><code>build:failing</code>のように表示されている画像をクリックします。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_7.png" /></p>
-
-<p>ブランチを選択して、表示形式からマークダウンを選択したら、表示内容をREADME.mdに貼り付けます。</p>
-
-<h4>カバレッジのバッジを表示する</h4>
-
-<p>カバレッジは<a href="https://coveralls.io/">COVERALLS</a>というサービスを使って表示します。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_8.png" /></p>
-
-<p>サイトにアクセスして、サインアップはGithubのアカウントでできるの簡単です。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_9.png" /></p>
-
-<p>サインアップ後に、上部のメニュー表示から<code>REPOS</code>を選択して、</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_10.png" /></p>
-
-<p><code>ADD REPO</code>をクリックしてリポジトリを追加します。
-その後、追加したリポジトリのページを表示します。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_11.png" /></p>
-
-<p>今度は表示される画像ではなく、<code>GET BADGE URL</code>というボタンをクリックします。このあたりのUIは統一されると嬉しいですね&hellip;</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_12.png" /></p>
-
-<p>いろいろな記述形式のコードが表示されるのでマークダウンのコードを選択してREADME.mdに貼り付けます。</p>
-
-<h4>ダウンロード数、バージョンを表示する</h4>
-
-<p>ここからはCIとは関係ないのですが、よく見るバッジであるダウンロード数とバージョン番号も表示してみたいと思います。</p>
-
-<p><a href="https://poser.pugx.org">Badge Poser</a>というサイトにアクセスします。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_13.png" /></p>
-
-<p>ダウンロード数やバージョン番号は、Packagistで表示されている情報を画像に変換するので、リポジトリがPackagistに登録されていることが条件となります。
-<code>Show the markdown for your Badges</code>にダウンロード数を表示したいPackagistのパッケージ名を入力します。</p>
-
-<p><img src="/images/blog/cakephp2_plugin_ci_14.png" /></p>
-
-<p>表示形式からマークダウンを選択して、コードをREADME.mdに貼り付けます。</p>
-
-<h3>最後に</h3>
-
-<p>CakePHPのプラグインを継続的インテグレーションする方法は、実はとても簡単でした。
-これを機に、まだプラグインを継続的インテグレーションしていない<code>そこのあなた</code>も、Travis.ciとCOVERALLSを使って継続的インテグレーションをしてみましょう。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2のプラグインをTravis.ciで継続的インテグレーションする" data-url="http://blog.open.tokyo.jp/2014/08/17/cakephp2_plugin_travis.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/08/17/cakephp2_plugin_travis.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/08/17/cakephp2_plugin_travis.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/08/17/cakephp2_plugin_travis.html&t=CakePHP2%E3%81%AE%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92Travis.ci%E3%81%A7%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/08/17/cakephp2_plugin_travis.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1195,6 +1000,8 @@ ruleset.xmlは以下のようにしました。</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
+                
                   <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
                 
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
@@ -1212,8 +1019,6 @@ ruleset.xmlは以下のようにしました。</p>
                   <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
                 
                   <li><a href="/2014/09/07/cakephp_ci_book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a> <span>2014/09/07</span></li>
-                
-                  <li><a href="/2014/08/17/cakephp2_plugin_travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a> <span>2014/08/17</span></li>
                 
               </ul>
             </div>
@@ -1519,6 +1324,10 @@ ruleset.xmlは以下のようにしました。</p>
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+                    </li>
+                  
                   
                 
                   
@@ -1593,6 +1402,14 @@ ruleset.xmlは以下のようにしました。</p>
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1601,7 +1418,7 @@ ruleset.xmlは以下のようにしました。</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (6)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
