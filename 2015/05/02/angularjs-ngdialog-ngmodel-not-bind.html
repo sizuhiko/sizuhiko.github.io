@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
-    <title>sizuhiko - Technote</title>
+    <title>sizuhiko - Technote - AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</title>
     <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
@@ -274,25 +274,128 @@
       <div id="mainwrap">
         <div id="main">
           
+            <h2>AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</h2>
+            <p class="postdate"><a title="Permanent link" href="/2015/05/02.html">Saturday, May 02, 2015 05:19:00 PM</a></p>
+            <p class="tags">
+              
+                <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+              
+                <a rel="tag" href="/tags/angularjs.html">AngularJS</a>
+              
+                <a rel="tag" href="/tags/ngdialog.html">ngDialog</a>
+              
+            </p>
+          
 
-          <h1>Archive for
-  
-    May  2 2015
-  
-</h1>
+          <p>AngularJS でモーダルダイアログを表示するために、何を使うでしょうか？
+多くの場合 <a href="https://github.com/likeastore/ngDialog">ngDialog</a> というコンポーネントを使うのではないかと思います。</p>
+
+<p>で、ダイアログ上の値は、それを表示したコントローラのスコープにバインドする、という良くあるシナリオを想定してください。</p>
+
+<p>まずうまく<a href="https://jsfiddle.net/sizuhiko/ox73fktc/1/">動作するサンプル</a>を紹介します。</p>
+
+<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{FormData.allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">FormData</span><span class="o">=</span><span class="p">{</span><span class="na">allcheck</span><span class="p">:</span> <span class="kc">false</span><span class="p">};</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
+            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="FormData.allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
+            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
+
+        <span class="p">});</span>
+    <span class="p">}</span>    
+<span class="p">});</span>
+</code></pre>
+
+<p>とても簡単な例ですが、AngularJSを使ってモーダルダイアログを表示して、チェックボックスの値をコントローラのスコープ変数 <code>FormData.allcheck</code> にバインドしています。</p>
+
+<h3>なぜか変数だとバインドされない</h3>
+
+<p>一方で、こちらは<a href="http://jsfiddle.net/sizuhiko/ox73fktc/2/">動作しないサンプル</a>です。</p>
+
+<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページは <code>check: false</code> のままです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
+            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
+            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
+
+        <span class="p">});</span>
+    <span class="p">}</span>    
+<span class="p">});</span>
+</code></pre>
+
+<p>変わったのは、コントローラのスコープ変数にバインドするオブジェクトです。</p>
+
+<p>うまく動作するのは <code>$scope.FormData={allcheck: false};</code> のようにスコープのプロパティはオブジェクトで、オブジェクトに値を保持しているケースです。
+一方うまく動作しないのは <code>$scope.allcheck = false;</code> のようにスコープのプロパティに変数で値を保持しているケースです。</p>
+
+<h3>ngDialogでなければ変数でバインドできる</h3>
+
+<p>ngDialogでなく普通に表示される範囲にある場合は、<a href="http://jsfiddle.net/sizuhiko/ox73fktc/3/">動作するサンプル</a>です。</p>
+
+<p>チェックボックスをON/OFFしてください。ページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div&gt;&lt;input</span> <span class="na">type=</span><span class="s">"checkbox"</span> <span class="na">ng-model=</span><span class="s">"allcheck"</span><span class="nt">/&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+
+<h3>まとめ</h3>
+
+<p>ngDialogを使うときのちょっとした小ネタなのですが、解決策を見つけるまで結構時間がかかりました。
+もし、ngDialogを使ってうまくデータバィンディングできない！という人の参考になればと思います。</p>
 
 
-<ul>
-  
-    <li><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a> <span>May  2</span></li>
-  
-    <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>May  2</span></li>
-  
-</ul>
-
-  
-
-
+          
+            
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること" data-url="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html&t=AngularJS%E3%81%A7ngDialog%E4%B8%AD%E3%81%AE%E5%80%A4%E3%82%92ngModel%E3%81%A7%E3%83%90%E3%82%A4%E3%83%B3%E3%83%89%E3%81%97%E3%81%9F%E3%81%84%E3%81%A8%E3%81%8D%E6%B3%A8%E6%84%8F%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
           
 
         </div>

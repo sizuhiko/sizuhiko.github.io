@@ -5,10 +5,110 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-05-02T06:51:00Z</updated>
+  <updated>2015-05-02T08:19:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</title>
+    <link rel="alternate" href="http://blog.url.com/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html"/>
+    <id>http://blog.url.com/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html</id>
+    <published>2015-05-02T08:19:00Z</published>
+    <updated>2015-05-02T17:48:57+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;AngularJS でモーダルダイアログを表示するために、何を使うでしょうか？
+多くの場合 &lt;a href="https://github.com/likeastore/ngDialog"&gt;ngDialog&lt;/a&gt; というコンポーネントを使うのではないかと思います。&lt;/p&gt;
+
+&lt;p&gt;で、ダイアログ上の値は、それを表示したコントローラのスコープにバインドする、という良くあるシナリオを想定してください。&lt;/p&gt;
+
+&lt;p&gt;まずうまく&lt;a href="https://jsfiddle.net/sizuhiko/ox73fktc/1/"&gt;動作するサンプル&lt;/a&gt;を紹介します。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Open Dialog&lt;/code&gt;というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページで &lt;code&gt;check: true&lt;/code&gt; と &lt;code&gt;check: false&lt;/code&gt; がトグルするはずです。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;a&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;""&lt;/span&gt; &lt;span class="na"&gt;ng-click=&lt;/span&gt;&lt;span class="s"&gt;"ShowNgDialog()"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;Open Dialog&lt;span class="nt"&gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{FormData.allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+
+&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FormData&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="na"&gt;allcheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;
+    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ShowNgDialog&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;open&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;            
+            &lt;span class="na"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&amp;lt;div&amp;gt;&amp;lt;input type="checkbox" ng-model="FormData.allcheck"/&amp;gt;&amp;lt;/div&amp;gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="na"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="na"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;
+
+        &lt;span class="p"&gt;});&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;    
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;とても簡単な例ですが、AngularJSを使ってモーダルダイアログを表示して、チェックボックスの値をコントローラのスコープ変数 &lt;code&gt;FormData.allcheck&lt;/code&gt; にバインドしています。&lt;/p&gt;
+
+&lt;h3&gt;なぜか変数だとバインドされない&lt;/h3&gt;
+
+&lt;p&gt;一方で、こちらは&lt;a href="http://jsfiddle.net/sizuhiko/ox73fktc/2/"&gt;動作しないサンプル&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Open Dialog&lt;/code&gt;というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページは &lt;code&gt;check: false&lt;/code&gt; のままです。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;a&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;""&lt;/span&gt; &lt;span class="na"&gt;ng-click=&lt;/span&gt;&lt;span class="s"&gt;"ShowNgDialog()"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;Open Dialog&lt;span class="nt"&gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+
+&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;allcheck&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ShowNgDialog&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;open&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;            
+            &lt;span class="na"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&amp;lt;div&amp;gt;&amp;lt;input type="checkbox" ng-model="allcheck"/&amp;gt;&amp;lt;/div&amp;gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="na"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="na"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;
+
+        &lt;span class="p"&gt;});&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;    
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;変わったのは、コントローラのスコープ変数にバインドするオブジェクトです。&lt;/p&gt;
+
+&lt;p&gt;うまく動作するのは &lt;code&gt;$scope.FormData={allcheck: false};&lt;/code&gt; のようにスコープのプロパティはオブジェクトで、オブジェクトに値を保持しているケースです。
+一方うまく動作しないのは &lt;code&gt;$scope.allcheck = false;&lt;/code&gt; のようにスコープのプロパティに変数で値を保持しているケースです。&lt;/p&gt;
+
+&lt;h3&gt;ngDialogでなければ変数でバインドできる&lt;/h3&gt;
+
+&lt;p&gt;ngDialogでなく普通に表示される範囲にある場合は、&lt;a href="http://jsfiddle.net/sizuhiko/ox73fktc/3/"&gt;動作するサンプル&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;p&gt;チェックボックスをON/OFFしてください。ページで &lt;code&gt;check: true&lt;/code&gt; と &lt;code&gt;check: false&lt;/code&gt; がトグルするはずです。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;div&amp;gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"checkbox"&lt;/span&gt; &lt;span class="na"&gt;ng-model=&lt;/span&gt;&lt;span class="s"&gt;"allcheck"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+
+&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;allcheck&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;ngDialogを使うときのちょっとした小ネタなのですが、解決策を見つけるまで結構時間がかかりました。
+もし、ngDialogを使ってうまくデータバィンディングできない！という人の参考になればと思います。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</title>
     <link rel="alternate" href="http://blog.url.com/2015/05/02/notice-gulp-rev-replace.html"/>
@@ -1135,90 +1235,6 @@ CakePHP3では以下の流れでDBへ保存しています。&lt;/p&gt;
 &lt;p&gt;さらには1月末に伊良部大橋が開通するので宮古に行きたいとか（これは完全に趣味ですが）。&lt;/p&gt;
 
 &lt;p&gt;今年もイロイロなイベントに参加したり、橋見に行ったり、また機会に恵まれれば執筆したりと変わらず活動していきたいと思いますので、皆様よろしくお願いいたします。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>僕とPHPxAgileの481日間</title>
-    <link rel="alternate" href="http://blog.url.com/2015/01/03/cakephp-agile-481-days.html"/>
-    <id>http://blog.url.com/2015/01/03/cakephp-agile-481-days.html</id>
-    <published>2015-01-03T05:23:00Z</published>
-    <updated>2015-01-03T15:59:47+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;2014/12/24 に行われた&lt;a href="http://phpstudy.doorkeeper.jp/events/18420"&gt;【12/24 クリスマスイブ】第85回 PHP勉強会&lt;/a&gt;でLTをしました。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="eaf63b006da5013291a442717aa444ce" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;当日はもの凄く楽しく盛り上がったので、私が発表を開始する頃には会場の終了時間ギリギリになっていました。
-このため高速LTで話していろいろ溢れた話などを記事にまとめます。&lt;/p&gt;
-
-&lt;h3&gt;CakePHPを使った開発現場での481日間の支援&lt;/h3&gt;
-
-&lt;p&gt;コンサル会社からご指名でお話をいただいたら、コミュニティの知り合いの会社でしたよ、というなんか遠回りな形で始まったお仕事でした。&lt;/p&gt;
-
-&lt;p&gt;まず参加して感じたのは、481日前のスライドにあるように、これはなかなか手強いなーという状況でした。
-コンサルの方からイロイロ事情を聞いていたので、ある程度覚悟はしていったのですが、まずの印象はチーム開発ができていないなーという印象。ここでいうチームとは、誰かが指示して動くというよりは、全員の力で進んでいくアジャイルチームをイメージしています。
-良い意味で言うとウォーターフォールのやり方としては、文化があってうまく進めている状況でした。&lt;/p&gt;
-
-&lt;p&gt;とはいえ最初に見た手順書とかコードとか、もっと優先してやらないといけなそうな事がたくさんあったので、スライドの順に対策を計画し、開発しながら改善活動をゆるやかに進めるということになりました。&lt;/p&gt;
-
-&lt;h3&gt;できたこと と できなかったこと&lt;/h3&gt;
-
-&lt;p&gt;かなり大きな案件だったため、複数のサブシステムがあり、スライドの対象は私が直接関わった2つについて支援した内容です。
-ただ、施策のいくつかは全体として取り入れてもらったりして、現在も継続しています。&lt;/p&gt;
-
-&lt;p&gt;できたことについては、スライドに含んでいるので、ここではスライドに含められなかった、主にできなかったことについて書きたいと思います。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;デプロイの自動化&lt;/li&gt;
-&lt;li&gt;環境毎の設定切り替えの仕組み&lt;/li&gt;
-&lt;li&gt;共通化されていたコードの改善&lt;/li&gt;
-&lt;li&gt;プロダクトオーナーとの関わり方&lt;/li&gt;
-&lt;li&gt;more チーム&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;まずデプロイについては、独自の方法で半自動化されていました。
-ここで列挙したのは、デプロイにcapやjenkinsを使ったりは「しなかった」という意味です。このあたりの改善はすでにワークフローとして機能しているものを改善すべきか、どこまで文化に踏み込むかという判断が必要になると思います。
-本案件ではスクリプトを実行するのは手動ながらも、それによる問題はなさそうだったので、そのまま継続しています。
-ただCI、インテグレーション、ステージング、本番とある内のインテグレーションだけはJenkinsと連動して自動デプロイできるようにしても良かったかなーと今頃思っていますが、まだいるメンバーの方、これを読んだらTRYしてみてください。&lt;/p&gt;
-
-&lt;p&gt;環境毎の設定切り替えの仕組みはあったのですが、当初設定を追加するのにExcelファイルを編集しないといけなくて、ひどく苦労しました（Excelファイルだと差分がわからないし）。現在はテキストファイルを直接編集して良い方式となり、これも全サブシステムに影響する箇所で対策がしにくくそのまま継続利用しました。
-CakePHPだとCI本でも解説した &lt;a href="https://github.com/josegonzalez/cakephp-environments"&gt;CakePHP Environmentsプラグイン&lt;/a&gt; を使えると良かったのですが。ここはいずれCakePHP3対応するのであればプラグインに切り替えられると良いなーと思います。&lt;/p&gt;
-
-&lt;p&gt;上記と同じような理由で、すでに全サブシステムで共通化されていたコードの改善もあまり手が付けられませんでした。サブプロジェクトによって進捗具合が異なり私が入った段階ですでに多くの機能ができあがっていたサブシステムもあり、多くの共通部分は未着手のままとなりました。
-一方で、できたことのほとんどは、まだ実施されていない自動テストだったり、サブシステム単位で改善できる箇所からの着手となったため、このような結果になっています。&lt;/p&gt;
-
-&lt;p&gt;プロダクトオーナーとの関わり方については、これはどの現場でもそうですが、開発からのアプローチだけではなかなか改善が難しい部分です。文化を変えるには内側からの大きな力だったり、より大きな成功体験を求めるといったことが必要となるのではないかと思います。
-もしこのあたりを改善したいという現場があれば、プロダクトオーナーを含めて&lt;code&gt;ふりかえり&lt;/code&gt;をやって、ProblemとTryを共有して改善していくと良いと思います。でも大規模システムでは… なかなかに難しいですね…&lt;/p&gt;
-
-&lt;p&gt;moreチームということでは、最初に関わったサブシステムのチームでは、見積もりゲームをやって、カンバンを導入し、よりチーム力で進めたと思います。そのまま継続してやってくれると良いなーと思っています。私が離れてからもメンバー間でPull Requestに活発にコメントされていたし、とてもうまく廻っているという印象がありました。&lt;/p&gt;
-
-&lt;p&gt;一方でその後に担当したサブシステムは、かなり複雑な事情で始まりました。チームの力を付けながら進むというよりは、とにかく完成を目指すような形でしたので、チーム力という意味ではまだ道半ばだったかもしれません。
-あと、年末に様々なイベントが不運なタイミングで重なってしまったのも、多少心残りですが、残ったメンバーの力を合わせて進めていって欲しいです。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;私はいろいろなところで揉めるというか、正論でズバズバ行くタイプなので衝突することが多かったと思います。
-今回支援させてもらった現場では、派遣の方が多く、そういう意味でチーム力で進めていくのはとても困難な状況であったと思います。
-特に社員ではない働き方を選んでいる人の場合、もの凄く前のめりでやりたい人と、3歩後ろをついていきたい人に別れると、これまでの経験で感じます。私もそういう意味では前者になる訳ですが…&lt;/p&gt;
-
-&lt;p&gt;例えばチーム全員で要求を仕様にブレークダウンして見積もりゲームをやったり、相互にコードをレビューしたり、これはAgile開発の文化にない開発者にとって、全員が望んでいる方法でないというのは、気持ちでは理解できます。
-が、これをやらずに属人性を排除し、チームとしてより良く開発を進めていく方法が現時点ではあまり思い当たりません。
-特にWeb界隈では人の流動性も高いので、極端に生産性を落とさない為にも、コードや仕様を引き継ぐというために時間を取られるといった事はできれば避けたいはずです。&lt;/p&gt;
-
-&lt;p&gt;このプロジェクトを通じて、テストデータジェネレータ &lt;a href="https://github.com/sizuhiko/Fabricate"&gt;Fabricate&lt;/a&gt; も作ったし、多くの実践投入実績や経験も得ることができました。&lt;/p&gt;
-
-&lt;p&gt;まだ現場では開発が続いており &lt;code&gt;CakePHPで継続的インテグレーションを導入したモダンで大規模な開発&lt;/code&gt; を継続しているという、貴重な体験ができていると思います。
-そういう意味で、誰か事例発表をすると良いなーと思いますので、今年のPHPカンファレンスなどで話が聞けるのを楽しみに待っています。&lt;/p&gt;
-
-&lt;p&gt;そして、PHP勉強会の2日後、2014/12/26をもって、作業支援から離れました。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/20141226_flower.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;最後にステキなお花と色紙をいただきました。&lt;/p&gt;
-
-&lt;p&gt;本当にありがとうございました。引き続き開発頑張ってください！！&lt;/p&gt;
 </content>
   </entry>
 </feed>
