@@ -1,0 +1,1124 @@
+<!doctype html>
+<html>
+  <head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - CakePHP3 のアプリケーションを Behat でテストする</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          
+            <h2>CakePHP3 のアプリケーションを Behat でテストする</h2>
+            <p class="postdate"><a title="Permanent link" href="/2015/05/17.html">Sunday, May 17, 2015 05:21:00 PM</a></p>
+            <p class="tags">
+              
+                <a rel="tag" href="/tags/cakephp3.html">CakePHP3</a>
+              
+                <a rel="tag" href="/tags/bdd.html">BDD</a>
+              
+                <a rel="tag" href="/tags/behat.html">Behat</a>
+              
+            </p>
+          
+
+          <p><img src="/images/blog/cakephp3_behat.png" /></p>
+
+<p>CakePHP3の変更点として大きく取り上げられるのが、モデル層の変更でしょう。
+しかしそれ以上に私たちが受けられる恩恵で大きいのが、PSR-2の採択です。</p>
+
+<p><a href="http://bakery.cakephp.org/2014/12/16/CakePHP-3-to-fully-adopt-PSR-2.html">CakePHP3 is fully adopt PSR-2</a></p>
+
+<p>例えばCakePHP2で単体テストを実行するときは、以下のように<code>cake</code>コマンドを使って実行する必要がありました。</p>
+<pre class="highlight plaintext"><code>Console/cake test app Model/Articles
+</code></pre>
+
+<p>cakeコマンド内でPHPUnitへの依存関係を解決し、PHPUnitからCakePHPのクラスが参照可能になるように作られていました。</p>
+
+<p>ところがCakePHP3からは、以下のように<code>phpunit</code>コマンドを使って実行します。</p>
+<pre class="highlight plaintext"><code>vendor/bin/phpunit
+</code></pre>
+
+<p>PSR-0のオートロードに対応したことで、PHPUnitからCakePHP3のクラスが参照可能になるのです。</p>
+
+<h3>はじめてみよう</h3>
+
+<p>同様の理由で、CakePHP2のアプリケーションをBehatでテストしたい場合は、私が作成した<a href="https://github.com/sizuhiko/Bdd">Bdd Plugin</a>を使ってBehatのステップ記述からCakePHPのクラスを参照可能になるようにしていました。</p>
+
+<p>しかしBehatにおいても直接実行したステップ定義から、CakePHP3のクラスが参照可能になるのです。</p>
+
+<p>CakePHP3のアプリケーションをどのようにBehatからアクセスするのか、CakePHP3のブログチュートリアルを例にサンプルアプリを作成しました。</p>
+
+<p><a href="https://github.com/sizuhiko/cakephp3-bdd-example">cakephp3-bdd-example</a>    </p>
+
+<p>サンプルアプリケーションは<a href="/2015/04/19/cakebox-is-awesome.html">以前記事</a>にもした<a href="https://github.com/alt3/cakebox">Cakebox</a>を使って構築しました。
+またサンプルアプリケーションの実行にもCakeboxを使うと簡単に実行環境を構築することができます。</p>
+
+<p>サンプルアプリケーションのGithubページに書いてあるとおりの手順で進むことができます。
+本ブログでは日本語で補足します。</p>
+
+<h4>必要なアプリケーションのインストール</h4>
+
+<p>以下のアプリケーションをホストOSにインストールします。</p>
+
+<ul>
+<li>VirtualBox</li>
+<li>Vagrant</li>
+<li>Cakebox</li>
+</ul>
+
+<p>詳しくは<a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a>の記事を参照してください。</p>
+
+<h4>サンプルアプリケーションのインストール</h4>
+
+<p>CakeboxのゲストOSにログインして、cakeboxコマンドでアプリケーションをインストールします。</p>
+<pre class="highlight plaintext"><code>localhost:cakebox $ vagrant ssh
+Welcome to Ubuntu 14.04.1 LTS (GNU/Linux 3.13.0-24-generic x86_64)
+
+vagrant@cakebox $ cakebox application add blog-tutorial.app --source https://github.com/sizuhiko/cakephp3-bdd-example.git --webroot blog-tutorial.app
+</code></pre>
+
+<p>すると、以下のように表示されます。</p>
+<pre class="highlight plaintext"><code>Creating application http://blog-tutorial.app
+
+Configuring installer
+Creating installation directory
+Git installing user specified application sources
+Creating virtual host
+* Successfully created PHP-FPM virtual host
+Creating databases
+* Successfully created main database
+* Successfully created test database
+Configuring permissions
+Updating configuration files
+Application created using:
+  database =&gt; blog-tutorial_app
+  framework_human =&gt; user specified
+  framework_short =&gt; custom
+  installation_method =&gt; git
+  path =&gt; /home/vagrant/Apps/blog-tutorial.app
+  source =&gt; https://github.com/sizuhiko/cakephp3-bdd-example.git
+  url =&gt; blog-tutorial.app
+  webroot =&gt; blog-tutorial.app
+Please note:
+  =&gt; Configuration files are not automatically updated for user specified applications.
+  =&gt; Make sure to manually update your database credentials, plugins, etc.
+
+Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
+
+Installation completed successfully
+</code></pre>
+
+<p>新規アプリケーションの構築と同じように、データベースやNginxの設定ファイルも生成してくれるので、すぐにアプリケーションを実行できる環境が整います。</p>
+
+<p>あとはアプリケーションのルートディレクトリに移動して、不足しているディレクトリを作ってcomposerでライブラリをインストールします。</p>
+<pre class="highlight plaintext"><code>vagrant@cakebox $ cd Apps/blog-tutorial.app
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir tmp 
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir logs
+vagrant@cakebox:~/Apps/blog-tutorial.app$ cp config/app.default.php config/app.php
+vagrant@cakebox:~/Apps/blog-tutorial.app$ composer install 
+</code></pre>
+
+<h4>サンプルアプリケーションの環境設定</h4>
+
+<h5>データベース接続設定の変更</h5>
+
+<p><code>config/app.php</code>のデータベース接続設定をCakeboxで生成された内容に変更します。
+以下のとおり<code>username</code>と<code>database</code>の部分のみ変更します（それ以外はそのまま）。</p>
+<pre class="highlight php"><code>    'Datasources' =&gt; [
+        'default' =&gt; [
+            // 省略
+            'username' =&gt; 'cakebox',
+            'database' =&gt; 'blog-tutorial_app',
+            // 省略
+        ],
+        'test' =&gt; [
+            // 省略
+            'username' =&gt; 'cakebox',
+            'database' =&gt; 'test_blog-tutorial_app',
+            // 省略
+        ],
+</code></pre>
+
+<h5>ホストOSのhostsファイルの変更</h5>
+
+<p>ホストOSのhostsファイルに指示されたように <code>10.33.10.10 blog-tutorial.app</code> の行を追加します。</p>
+
+<h5>Cakebox環境のチューニング</h5>
+
+<p>Cakeboxのデフォルト設定ではBehatを使ってアプリケーションをテストしようとすると、いくつか動かない箇所があったので、設定値をチューニングします。
+まずボックスファイルのメモリを2048Mにアップします（デフォルトは1024M）。
+次にxdebug.iniのxdebug.max<em>nesting</em>levelの値を調整します。READMEでは<code>500</code>を設定しています。もう少し値は小さくても大丈夫かもしれないですが、とりあえず500あれば大丈夫です。</p>
+
+<p>具体的な設定例は、githubのREADMEを参照してください。</p>
+
+<h5>Webサーバの設定</h5>
+
+<p>Behatからアプリケーションをテストするときは、ブラウザから通常操作するのと同じようにWebサーバを通過します。
+そのため、アプリケーションが通常操作としてアクセスされたのか、Behatのテストでアクセスされたのかを識別して環境を切り替えてあげないと、データベースのデータがテストによって変更するので、通常操作のデータが失われてしまいます。</p>
+
+<p>このあたりの話（理由や手法）は、過去に何度か記事にしていたり、書籍<a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1410066610&amp;amp;sr=1-1">CakePHPで学ぶ継続的インテグレーション</a>でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。</p>
+
+<p>で、このサンプルはnginx用の設定ファイルを<code>blog-tutorial.app.test</code>というファイルで用意しておいたので、これをCakeboxのnginxの設定ディレクトリにコピーして再起動するだけで大丈夫です。</p>
+
+<p>環境切り替え用に<code>blog-tutorial.app.test</code>というホスト名でアクセスされたら、nginxで環境変数<code>CAKE_ENV</code>に<code>test</code>という文字列を設定するようにしています。
+CakePHP3のアプリケーションでは<code>config/bootstrap.php</code>で環境変数の設定値を見てDBの接続先が<code>test</code>になるように設定します。</p>
+<pre class="highlight php"><code>if (getenv('CAKE_ENV') === 'test') {
+    ConnectionManager::alias('test', 'default');
+}
+</code></pre>
+
+<p>CakePHP3ではConnectionManagerのaliasという機能でdefaultへ接続しようとしたときに、実際はtestの接続内容を参照するように設定することができるので、この機能を利用し、間違ってdefaultのテーブルが書き変わらないようにしています。</p>
+
+<p>より詳しい手順や、設定ファイルの内容はgithubのREADMEや設定ファイルを参照してください。</p>
+
+<p>Behatから参照可能なホスト名として<code>blog-tutorial.app.test</code>をCakeboxのVM側の<code>/etc/hosts</code>に追加します。</p>
+
+<h4>データベースのマイグレーション</h4>
+
+<p>データベースの生成はマイグレーションコマンドで一発です。</p>
+<pre class="highlight plaintext"><code>bin/cake migrations migrate
+</code></pre>
+
+<h4>Behatのテストを実行する</h4>
+
+<p>ここまで設定できれば、後はテストを実行するだけです。</p>
+<pre class="highlight plaintext"><code>vagrant@cakebox:~/Apps/blog-tutorial.app$ vendor/bin/behat
+</code></pre>
+
+<p>おそらくすべてグリーンで成功するはずです。
+うまくいかなかったら、お気軽にgithubのissueに<code>日本語で</code>書いてください。</p>
+
+<h3>どうやったのか？</h3>
+
+<p>まずCakePHP3で最初に注目したのは、単体テストがPHPUnitのコマンドから実行できるようになっていたことです。
+これは過去に外部の様々なツールやアプリケーションとCakePHPを結合するときに一番悩んでいたところでした。</p>
+
+<p>PHPUnitからCakePHP3にどのように連動しているのか？を調べることから始めました。
+PHPUnitは実行すると、カレントディレクトリのphpunit.xml（もしくはphpunit.xml.dist）を参照します。</p>
+
+<h4>PHPUnitがCakePHP3を呼び出す仕組みを知る</h4>
+
+<p>CakePHP3ではアプリケーションスケルトンを生成すると、ルートディレクトリに<code>phpunit.xml.dist</code>が生成されます。</p>
+<pre class="highlight xml"><code><span class="c">&lt;!-- phpunit.xml.dist --&gt;</span>
+<span class="nt">&lt;phpunit</span>
+    <span class="na">colors=</span><span class="s">"true"</span>
+    <span class="na">processIsolation=</span><span class="s">"false"</span>
+    <span class="na">stopOnFailure=</span><span class="s">"false"</span>
+    <span class="na">syntaxCheck=</span><span class="s">"false"</span>
+    <span class="na">bootstrap=</span><span class="s">"./tests/bootstrap.php"</span>  <span class="err">//</span> <span class="err">(1)</span>
+    <span class="nt">&gt;</span>
+    <span class="nt">&lt;php&gt;</span>
+        <span class="nt">&lt;ini</span> <span class="na">name=</span><span class="s">"memory_limit"</span> <span class="na">value=</span><span class="s">"-1"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;ini</span> <span class="na">name=</span><span class="s">"apc.enable_cli"</span> <span class="na">value=</span><span class="s">"1"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/php&gt;</span>
+
+    <span class="c">&lt;!-- Add any additional test suites you want to run here --&gt;</span>
+    <span class="nt">&lt;testsuites&gt;</span>
+        <span class="nt">&lt;testsuite</span> <span class="na">name=</span><span class="s">"App Test Suite"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;directory&gt;</span>./tests/TestCase<span class="nt">&lt;/directory&gt;</span>
+        <span class="nt">&lt;/testsuite&gt;</span>
+        <span class="c">&lt;!-- Add plugin test suites here. --&gt;</span>
+    <span class="nt">&lt;/testsuites&gt;</span>
+
+    <span class="c">&lt;!-- Setup a listener for fixtures (2) --&gt;</span>
+    <span class="nt">&lt;listeners&gt;</span>
+        <span class="nt">&lt;listener</span>
+        <span class="na">class=</span><span class="s">"\Cake\TestSuite\Fixture\FixtureInjector"</span>
+        <span class="na">file=</span><span class="s">"./vendor/cakephp/cakephp/src/TestSuite/Fixture/FixtureInjector.php"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;arguments&gt;</span>
+                <span class="nt">&lt;object</span> <span class="na">class=</span><span class="s">"\Cake\TestSuite\Fixture\FixtureManager"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/arguments&gt;</span>
+        <span class="nt">&lt;/listener&gt;</span>
+    <span class="nt">&lt;/listeners&gt;</span>
+<span class="nt">&lt;/phpunit&gt;</span>
+</code></pre>
+
+<p>このファイルを読むと、2つ重要な箇所があるのに気がつきます。</p>
+
+<p>まず(1)の <code>bootstrap=&quot;./tests/bootstrap.php&quot;</code> という部分。
+bootstrap属性にはPHPUnitが実行されるとき呼び出されるPHPコードを指定することができます。
+ここからCakePHP3アプリケーションをテスト用にロードする場合、このファイルを呼び出せば外部ツールからCakePHP3が操作できるようになることがわかります。</p>
+
+<p>実はこのファイルを実際に見てみると、以下の1行しかありません。</p>
+<pre class="highlight php"><code>require dirname(__DIR__) . '/config/bootstrap.php';
+</code></pre>
+
+<p>テストとは関係なく、アプリケーションの<code>config/bootstrap.php</code>をロードしています。
+おそらく将来テストに関する何か差分が必要になったときに、テスト側にだけ変更が発生すると思うので、テスト用にCakePHP3をロードする場合は<code>tests/bootstrap.php</code>をロードしておいた方が良いでしょう。</p>
+
+<p>次に(2)のリスナー設定です。
+PHPUnitのリスナーはPHPUnitのフックポイントでコールバックされる処理を記述できるクラスです。
+CakePHP3ではフィクスチャ（DBのテストテーブルとデータを準備する仕組み）を投入するのに利用しています。
+以下のように<code>FixtureInjector</code>クラスのstartTestとendTestでテストケース開始／終了ごとにフィクスチャのロードとアンロードが対応するようになっています。</p>
+<pre class="highlight php"><code>class FixtureInjector implements PHPUnit_Framework_TestListener
+{
+
+    /**
+     * Adds fixtures to a test case when it starts.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @return void
+     */
+    public function startTest(PHPUnit_Framework_Test $test)
+    {
+        $test-&gt;fixtureManager = $this-&gt;_fixtureManager;
+        if ($test instanceof TestCase) {
+            $this-&gt;_fixtureManager-&gt;fixturize($test);
+            $this-&gt;_fixtureManager-&gt;load($test);
+        }
+    }
+
+    /**
+     * Unloads fixtures from the test case.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @param float $time current time
+     * @return void
+     */
+    public function endTest(PHPUnit_Framework_Test $test, $time)
+    {
+        if ($test instanceof TestCase) {
+            $this-&gt;_fixtureManager-&gt;unload($test);
+        }
+    }
+
+}
+</code></pre>
+
+<h4>BehatからCakePHP3を呼び出す仕組みに流用する</h4>
+
+<p>ここまでの内容が外部ツールからCakePHP3のアプリケーションをテストするのに重要な部分です。
+PHPUnitがCakePHP3を呼び出すのと同じようにする仕組みをBehatのFeatureContextクラスに用意します。</p>
+
+<p><code>features/bootstrap/FeatureContext.php</code>というBehatが読み込むファイルに記述します。
+CakePHP2とBDDプラグインによるインテグレーションではBehatのバージョンが2系でしたが、CakePHP3との連携では最新の3系を利用しています。
+Behat3からはBehat1系、2系で利用していたファイル構成と異なっています。従来、<code>support/bootstrap.php</code>や<code>support/hooks.php</code>あたりに書いていたコードはすべてContextクラス内に記述することになります。</p>
+
+<p>Behat3からはFeatureContextにブートストラップ記述を、それ以外のコンテキストは用途に応じて別のコンテキストクラスに分割する方がスマートに記述できそうです。
+Behat2では複数のコンテキストクラスを使う場合、FeatureContextでインクルードしないといけなかったのですが、Behat3では<code>behat.yml</code>上で記述できるのでより簡単になっています。</p>
+<pre class="highlight php"><code>class FeatureContext implements Context, SnippetAcceptingContext
+{
+    public function __construct()
+    {
+        require_once dirname(dirname(__DIR__)) . '/tests/bootstrap.php'; // (1)
+
+        // Always connect test database
+        ConnectionManager::alias('test', 'default'); // (2)
+
+        Fabricate::config(function($config) { // (3)
+            $config-&gt;adaptor = new CakeFabricateAdaptor([
+                CakeFabricateAdaptor::OPTION_FILTER_KEY =&gt; true,
+                CakeFabricateAdaptor::OPTION_VALIDATE   =&gt; false
+            ]);
+        });
+
+        $this-&gt;fixtureInjector = new FixtureInjector(new FixtureManager()); //(4)
+        $this-&gt;fixture = new BddAllFixture();
+    }
+}
+</code></pre>
+
+<ul>
+<li>(1)は、phpunit.xmlのbootstrapと同様にCakePHP3の<code>tests/bootstrap.php</code>を呼び出します。</li>
+<li>(2)は、Behatのステップ定義からテストデータを投入するときに、testの接続設定を参照するようにエイリアスを設定します。</li>
+<li>(3)は、テストデータジェネレータ<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">Fabricate</a>の初期設定です。FabricateもCakePHP3対応されています。</li>
+<li>(4)は、phpunit.xmlのリスナー部分を模して、Behatのシナリオ毎にフィクスチャが動くようにFixtureInjectorのインスタンスを生成しています。</li>
+</ul>
+
+<h4>BehatからCakePHP3のフィクスチャを利用する</h4>
+
+<p>(4)で書いたとおり、FixtureInjectorのインスタンスを生成したので、Behatのフックポイントを使ってシナリオ開始時にフィクスチャをロードし、シナリオ終了時にフィクスチャをアンロードするようにします。</p>
+<pre class="highlight php"><code>    /** @BeforeScenario */
+     public function beforeScenario(BeforeScenarioScope $scope)
+     {
+        $this-&gt;fixtureInjector-&gt;startTest($this-&gt;fixture);
+     }
+
+     /** @AfterScenario */
+     public function afterScenario(AfterScenarioScope $scope)
+     {
+        $this-&gt;fixtureInjector-&gt;endTest($this-&gt;fixture, time());
+     }
+</code></pre>
+
+<p>実際にフィクスチャを利用するためには、<code>$this-&gt;fixture</code>のクラスがCakePHP3のTestCaseでなければならないので、<code>$fixtures</code>という利用するフィクスチャファイルの配列を定義しただけのクラスを用意してFixtureInjectorに渡すようにします。</p>
+<pre class="highlight php"><code>class BddAllFixture extends TestCase {
+    public $fixtures = [
+        'Categories' =&gt; 'app.categories',
+        'Articles'   =&gt; 'app.articles',
+        'Users'      =&gt; 'app.users',
+        'Categories' =&gt; 'app.categories'
+    ];
+}
+</code></pre>
+
+<p>このあたりの話も、書籍<a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1410066610&amp;amp;sr=1-1">CakePHPで学ぶ継続的インテグレーション</a>でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。
+CakePHP3になって、メソッドやクラスが一部変わりましたが、BehatとCakePHPをインテグレーションするためにおさえておかないといけないポイントはほとんど変わっていません。</p>
+
+<p>後はBehat3のドキュメント、CakePHP3のドキュメントを見ながら進めていくと、エンド to エンドのテストが容易に記述できるようになります。</p>
+
+<h3>さいごに</h3>
+
+<p>GithubのREADMEに書いた内容をすべて日本語にした訳ではないのですが、要所をかいつまんで重要な部分を解説しました。
+より詳しい内容などはREADMEを見ていただければと思います。</p>
+
+<p>また、BDDプラグインのサンプルアプリにはあった、日本語のシナリオや、JavaScriptを使ったテストなど、Behat3になって大きく変わってはいませんが、サンプルアプリケーションに少しずつ載せられたらなぁと思っています。
+何かうまく動かないなどあれば、気軽にGithubのissueに投稿お願いします（日本語でOKです）。</p>
+
+
+          
+            
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 のアプリケーションを Behat でテストする" data-url="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html&t=CakePHP3%20%E3%81%AE%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20Behat%20%E3%81%A7%E3%83%86%E3%82%B9%E3%83%88%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015/05/17/cakephp3-behat.html">CakePHP3 のアプリケーションを Behat でテストする</a> <span>2015/05/17</span></li>
+                
+                  <li><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a> <span>2015/05/02</span></li>
+                
+                  <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
+                
+                  <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
+                
+                  <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
+                
+                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
+                
+                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
+                
+                  <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
+                
+                  <li><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a> <span>2014/10/13</span></li>
+                
+                  <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/flex.html">Flex</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/1-2.html">1.2</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size5">
+                      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/rc1.html">RC1</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/fixture.html">fixture</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size4">
+                      <a rel="tag" href="/tags/php.html">PHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/bdd.html">BDD</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/behat.html">Behat</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/spec.html">Spec</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/test.html">Test</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakephp3.html">CakePHP3</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015.html">2015</a> (8)</li>
+                
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

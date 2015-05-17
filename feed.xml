@@ -5,10 +5,364 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-05-02T08:19:00Z</updated>
+  <updated>2015-05-17T08:21:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CakePHP3 のアプリケーションを Behat でテストする</title>
+    <link rel="alternate" href="http://blog.url.com/2015/05/17/cakephp3-behat.html"/>
+    <id>http://blog.url.com/2015/05/17/cakephp3-behat.html</id>
+    <published>2015-05-17T08:21:00Z</published>
+    <updated>2015-05-17T19:08:06+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;img src="/images/blog/cakephp3_behat.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;CakePHP3の変更点として大きく取り上げられるのが、モデル層の変更でしょう。
+しかしそれ以上に私たちが受けられる恩恵で大きいのが、PSR-2の採択です。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="http://bakery.cakephp.org/2014/12/16/CakePHP-3-to-fully-adopt-PSR-2.html"&gt;CakePHP3 is fully adopt PSR-2&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;例えばCakePHP2で単体テストを実行するときは、以下のように&lt;code&gt;cake&lt;/code&gt;コマンドを使って実行する必要がありました。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Console/cake test app Model/Articles
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;cakeコマンド内でPHPUnitへの依存関係を解決し、PHPUnitからCakePHPのクラスが参照可能になるように作られていました。&lt;/p&gt;
+
+&lt;p&gt;ところがCakePHP3からは、以下のように&lt;code&gt;phpunit&lt;/code&gt;コマンドを使って実行します。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;vendor/bin/phpunit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;PSR-0のオートロードに対応したことで、PHPUnitからCakePHP3のクラスが参照可能になるのです。&lt;/p&gt;
+
+&lt;h3&gt;はじめてみよう&lt;/h3&gt;
+
+&lt;p&gt;同様の理由で、CakePHP2のアプリケーションをBehatでテストしたい場合は、私が作成した&lt;a href="https://github.com/sizuhiko/Bdd"&gt;Bdd Plugin&lt;/a&gt;を使ってBehatのステップ記述からCakePHPのクラスを参照可能になるようにしていました。&lt;/p&gt;
+
+&lt;p&gt;しかしBehatにおいても直接実行したステップ定義から、CakePHP3のクラスが参照可能になるのです。&lt;/p&gt;
+
+&lt;p&gt;CakePHP3のアプリケーションをどのようにBehatからアクセスするのか、CakePHP3のブログチュートリアルを例にサンプルアプリを作成しました。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/cakephp3-bdd-example"&gt;cakephp3-bdd-example&lt;/a&gt;    &lt;/p&gt;
+
+&lt;p&gt;サンプルアプリケーションは&lt;a href="/2015/04/19/cakebox-is-awesome.html"&gt;以前記事&lt;/a&gt;にもした&lt;a href="https://github.com/alt3/cakebox"&gt;Cakebox&lt;/a&gt;を使って構築しました。
+またサンプルアプリケーションの実行にもCakeboxを使うと簡単に実行環境を構築することができます。&lt;/p&gt;
+
+&lt;p&gt;サンプルアプリケーションのGithubページに書いてあるとおりの手順で進むことができます。
+本ブログでは日本語で補足します。&lt;/p&gt;
+
+&lt;h4&gt;必要なアプリケーションのインストール&lt;/h4&gt;
+
+&lt;p&gt;以下のアプリケーションをホストOSにインストールします。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;VirtualBox&lt;/li&gt;
+&lt;li&gt;Vagrant&lt;/li&gt;
+&lt;li&gt;Cakebox&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;詳しくは&lt;a href="/2015/04/19/cakebox-is-awesome.html"&gt;Cakebox を使ってCakePHP3アプリケーションを作ってみよう&lt;/a&gt;の記事を参照してください。&lt;/p&gt;
+
+&lt;h4&gt;サンプルアプリケーションのインストール&lt;/h4&gt;
+
+&lt;p&gt;CakeboxのゲストOSにログインして、cakeboxコマンドでアプリケーションをインストールします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;localhost:cakebox $ vagrant ssh
+Welcome to Ubuntu 14.04.1 LTS (GNU/Linux 3.13.0-24-generic x86_64)
+
+vagrant@cakebox $ cakebox application add blog-tutorial.app --source https://github.com/sizuhiko/cakephp3-bdd-example.git --webroot blog-tutorial.app
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;すると、以下のように表示されます。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Creating application http://blog-tutorial.app
+
+Configuring installer
+Creating installation directory
+Git installing user specified application sources
+Creating virtual host
+* Successfully created PHP-FPM virtual host
+Creating databases
+* Successfully created main database
+* Successfully created test database
+Configuring permissions
+Updating configuration files
+Application created using:
+  database =&amp;gt; blog-tutorial_app
+  framework_human =&amp;gt; user specified
+  framework_short =&amp;gt; custom
+  installation_method =&amp;gt; git
+  path =&amp;gt; /home/vagrant/Apps/blog-tutorial.app
+  source =&amp;gt; https://github.com/sizuhiko/cakephp3-bdd-example.git
+  url =&amp;gt; blog-tutorial.app
+  webroot =&amp;gt; blog-tutorial.app
+Please note:
+  =&amp;gt; Configuration files are not automatically updated for user specified applications.
+  =&amp;gt; Make sure to manually update your database credentials, plugins, etc.
+
+Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
+
+Installation completed successfully
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;新規アプリケーションの構築と同じように、データベースやNginxの設定ファイルも生成してくれるので、すぐにアプリケーションを実行できる環境が整います。&lt;/p&gt;
+
+&lt;p&gt;あとはアプリケーションのルートディレクトリに移動して、不足しているディレクトリを作ってcomposerでライブラリをインストールします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;vagrant@cakebox $ cd Apps/blog-tutorial.app
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir tmp 
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir logs
+vagrant@cakebox:~/Apps/blog-tutorial.app$ cp config/app.default.php config/app.php
+vagrant@cakebox:~/Apps/blog-tutorial.app$ composer install 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4&gt;サンプルアプリケーションの環境設定&lt;/h4&gt;
+
+&lt;h5&gt;データベース接続設定の変更&lt;/h5&gt;
+
+&lt;p&gt;&lt;code&gt;config/app.php&lt;/code&gt;のデータベース接続設定をCakeboxで生成された内容に変更します。
+以下のとおり&lt;code&gt;username&lt;/code&gt;と&lt;code&gt;database&lt;/code&gt;の部分のみ変更します（それ以外はそのまま）。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;    'Datasources' =&amp;gt; [
+        'default' =&amp;gt; [
+            // 省略
+            'username' =&amp;gt; 'cakebox',
+            'database' =&amp;gt; 'blog-tutorial_app',
+            // 省略
+        ],
+        'test' =&amp;gt; [
+            // 省略
+            'username' =&amp;gt; 'cakebox',
+            'database' =&amp;gt; 'test_blog-tutorial_app',
+            // 省略
+        ],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5&gt;ホストOSのhostsファイルの変更&lt;/h5&gt;
+
+&lt;p&gt;ホストOSのhostsファイルに指示されたように &lt;code&gt;10.33.10.10 blog-tutorial.app&lt;/code&gt; の行を追加します。&lt;/p&gt;
+
+&lt;h5&gt;Cakebox環境のチューニング&lt;/h5&gt;
+
+&lt;p&gt;Cakeboxのデフォルト設定ではBehatを使ってアプリケーションをテストしようとすると、いくつか動かない箇所があったので、設定値をチューニングします。
+まずボックスファイルのメモリを2048Mにアップします（デフォルトは1024M）。
+次にxdebug.iniのxdebug.max&lt;em&gt;nesting&lt;/em&gt;levelの値を調整します。READMEでは&lt;code&gt;500&lt;/code&gt;を設定しています。もう少し値は小さくても大丈夫かもしれないですが、とりあえず500あれば大丈夫です。&lt;/p&gt;
+
+&lt;p&gt;具体的な設定例は、githubのREADMEを参照してください。&lt;/p&gt;
+
+&lt;h5&gt;Webサーバの設定&lt;/h5&gt;
+
+&lt;p&gt;Behatからアプリケーションをテストするときは、ブラウザから通常操作するのと同じようにWebサーバを通過します。
+そのため、アプリケーションが通常操作としてアクセスされたのか、Behatのテストでアクセスされたのかを識別して環境を切り替えてあげないと、データベースのデータがテストによって変更するので、通常操作のデータが失われてしまいます。&lt;/p&gt;
+
+&lt;p&gt;このあたりの話（理由や手法）は、過去に何度か記事にしていたり、書籍&lt;a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;amp;ie=UTF8&amp;amp;amp;qid=1410066610&amp;amp;amp;sr=1-1"&gt;CakePHPで学ぶ継続的インテグレーション&lt;/a&gt;でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。&lt;/p&gt;
+
+&lt;p&gt;で、このサンプルはnginx用の設定ファイルを&lt;code&gt;blog-tutorial.app.test&lt;/code&gt;というファイルで用意しておいたので、これをCakeboxのnginxの設定ディレクトリにコピーして再起動するだけで大丈夫です。&lt;/p&gt;
+
+&lt;p&gt;環境切り替え用に&lt;code&gt;blog-tutorial.app.test&lt;/code&gt;というホスト名でアクセスされたら、nginxで環境変数&lt;code&gt;CAKE_ENV&lt;/code&gt;に&lt;code&gt;test&lt;/code&gt;という文字列を設定するようにしています。
+CakePHP3のアプリケーションでは&lt;code&gt;config/bootstrap.php&lt;/code&gt;で環境変数の設定値を見てDBの接続先が&lt;code&gt;test&lt;/code&gt;になるように設定します。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;if (getenv('CAKE_ENV') === 'test') {
+    ConnectionManager::alias('test', 'default');
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;CakePHP3ではConnectionManagerのaliasという機能でdefaultへ接続しようとしたときに、実際はtestの接続内容を参照するように設定することができるので、この機能を利用し、間違ってdefaultのテーブルが書き変わらないようにしています。&lt;/p&gt;
+
+&lt;p&gt;より詳しい手順や、設定ファイルの内容はgithubのREADMEや設定ファイルを参照してください。&lt;/p&gt;
+
+&lt;p&gt;Behatから参照可能なホスト名として&lt;code&gt;blog-tutorial.app.test&lt;/code&gt;をCakeboxのVM側の&lt;code&gt;/etc/hosts&lt;/code&gt;に追加します。&lt;/p&gt;
+
+&lt;h4&gt;データベースのマイグレーション&lt;/h4&gt;
+
+&lt;p&gt;データベースの生成はマイグレーションコマンドで一発です。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;bin/cake migrations migrate
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4&gt;Behatのテストを実行する&lt;/h4&gt;
+
+&lt;p&gt;ここまで設定できれば、後はテストを実行するだけです。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;vagrant@cakebox:~/Apps/blog-tutorial.app$ vendor/bin/behat
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;おそらくすべてグリーンで成功するはずです。
+うまくいかなかったら、お気軽にgithubのissueに&lt;code&gt;日本語で&lt;/code&gt;書いてください。&lt;/p&gt;
+
+&lt;h3&gt;どうやったのか？&lt;/h3&gt;
+
+&lt;p&gt;まずCakePHP3で最初に注目したのは、単体テストがPHPUnitのコマンドから実行できるようになっていたことです。
+これは過去に外部の様々なツールやアプリケーションとCakePHPを結合するときに一番悩んでいたところでした。&lt;/p&gt;
+
+&lt;p&gt;PHPUnitからCakePHP3にどのように連動しているのか？を調べることから始めました。
+PHPUnitは実行すると、カレントディレクトリのphpunit.xml（もしくはphpunit.xml.dist）を参照します。&lt;/p&gt;
+
+&lt;h4&gt;PHPUnitがCakePHP3を呼び出す仕組みを知る&lt;/h4&gt;
+
+&lt;p&gt;CakePHP3ではアプリケーションスケルトンを生成すると、ルートディレクトリに&lt;code&gt;phpunit.xml.dist&lt;/code&gt;が生成されます。&lt;/p&gt;
+&lt;pre class="highlight xml"&gt;&lt;code&gt;&lt;span class="c"&gt;&amp;lt;!-- phpunit.xml.dist --&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;phpunit&lt;/span&gt;
+    &lt;span class="na"&gt;colors=&lt;/span&gt;&lt;span class="s"&gt;"true"&lt;/span&gt;
+    &lt;span class="na"&gt;processIsolation=&lt;/span&gt;&lt;span class="s"&gt;"false"&lt;/span&gt;
+    &lt;span class="na"&gt;stopOnFailure=&lt;/span&gt;&lt;span class="s"&gt;"false"&lt;/span&gt;
+    &lt;span class="na"&gt;syntaxCheck=&lt;/span&gt;&lt;span class="s"&gt;"false"&lt;/span&gt;
+    &lt;span class="na"&gt;bootstrap=&lt;/span&gt;&lt;span class="s"&gt;"./tests/bootstrap.php"&lt;/span&gt;  &lt;span class="err"&gt;//&lt;/span&gt; &lt;span class="err"&gt;(1)&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;php&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;ini&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"memory_limit"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"-1"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;ini&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"apc.enable_cli"&lt;/span&gt; &lt;span class="na"&gt;value=&lt;/span&gt;&lt;span class="s"&gt;"1"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/php&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- Add any additional test suites you want to run here --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;testsuites&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;testsuite&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;"App Test Suite"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;directory&amp;gt;&lt;/span&gt;./tests/TestCase&lt;span class="nt"&gt;&amp;lt;/directory&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/testsuite&amp;gt;&lt;/span&gt;
+        &lt;span class="c"&gt;&amp;lt;!-- Add plugin test suites here. --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/testsuites&amp;gt;&lt;/span&gt;
+
+    &lt;span class="c"&gt;&amp;lt;!-- Setup a listener for fixtures (2) --&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;listeners&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;listener&lt;/span&gt;
+        &lt;span class="na"&gt;class=&lt;/span&gt;&lt;span class="s"&gt;"\Cake\TestSuite\Fixture\FixtureInjector"&lt;/span&gt;
+        &lt;span class="na"&gt;file=&lt;/span&gt;&lt;span class="s"&gt;"./vendor/cakephp/cakephp/src/TestSuite/Fixture/FixtureInjector.php"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;arguments&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;object&lt;/span&gt; &lt;span class="na"&gt;class=&lt;/span&gt;&lt;span class="s"&gt;"\Cake\TestSuite\Fixture\FixtureManager"&lt;/span&gt; &lt;span class="nt"&gt;/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/arguments&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/listener&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/listeners&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/phpunit&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このファイルを読むと、2つ重要な箇所があるのに気がつきます。&lt;/p&gt;
+
+&lt;p&gt;まず(1)の &lt;code&gt;bootstrap=&amp;quot;./tests/bootstrap.php&amp;quot;&lt;/code&gt; という部分。
+bootstrap属性にはPHPUnitが実行されるとき呼び出されるPHPコードを指定することができます。
+ここからCakePHP3アプリケーションをテスト用にロードする場合、このファイルを呼び出せば外部ツールからCakePHP3が操作できるようになることがわかります。&lt;/p&gt;
+
+&lt;p&gt;実はこのファイルを実際に見てみると、以下の1行しかありません。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;require dirname(__DIR__) . '/config/bootstrap.php';
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;テストとは関係なく、アプリケーションの&lt;code&gt;config/bootstrap.php&lt;/code&gt;をロードしています。
+おそらく将来テストに関する何か差分が必要になったときに、テスト側にだけ変更が発生すると思うので、テスト用にCakePHP3をロードする場合は&lt;code&gt;tests/bootstrap.php&lt;/code&gt;をロードしておいた方が良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;次に(2)のリスナー設定です。
+PHPUnitのリスナーはPHPUnitのフックポイントでコールバックされる処理を記述できるクラスです。
+CakePHP3ではフィクスチャ（DBのテストテーブルとデータを準備する仕組み）を投入するのに利用しています。
+以下のように&lt;code&gt;FixtureInjector&lt;/code&gt;クラスのstartTestとendTestでテストケース開始／終了ごとにフィクスチャのロードとアンロードが対応するようになっています。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;class FixtureInjector implements PHPUnit_Framework_TestListener
+{
+
+    /**
+     * Adds fixtures to a test case when it starts.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @return void
+     */
+    public function startTest(PHPUnit_Framework_Test $test)
+    {
+        $test-&amp;gt;fixtureManager = $this-&amp;gt;_fixtureManager;
+        if ($test instanceof TestCase) {
+            $this-&amp;gt;_fixtureManager-&amp;gt;fixturize($test);
+            $this-&amp;gt;_fixtureManager-&amp;gt;load($test);
+        }
+    }
+
+    /**
+     * Unloads fixtures from the test case.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @param float $time current time
+     * @return void
+     */
+    public function endTest(PHPUnit_Framework_Test $test, $time)
+    {
+        if ($test instanceof TestCase) {
+            $this-&amp;gt;_fixtureManager-&amp;gt;unload($test);
+        }
+    }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4&gt;BehatからCakePHP3を呼び出す仕組みに流用する&lt;/h4&gt;
+
+&lt;p&gt;ここまでの内容が外部ツールからCakePHP3のアプリケーションをテストするのに重要な部分です。
+PHPUnitがCakePHP3を呼び出すのと同じようにする仕組みをBehatのFeatureContextクラスに用意します。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;features/bootstrap/FeatureContext.php&lt;/code&gt;というBehatが読み込むファイルに記述します。
+CakePHP2とBDDプラグインによるインテグレーションではBehatのバージョンが2系でしたが、CakePHP3との連携では最新の3系を利用しています。
+Behat3からはBehat1系、2系で利用していたファイル構成と異なっています。従来、&lt;code&gt;support/bootstrap.php&lt;/code&gt;や&lt;code&gt;support/hooks.php&lt;/code&gt;あたりに書いていたコードはすべてContextクラス内に記述することになります。&lt;/p&gt;
+
+&lt;p&gt;Behat3からはFeatureContextにブートストラップ記述を、それ以外のコンテキストは用途に応じて別のコンテキストクラスに分割する方がスマートに記述できそうです。
+Behat2では複数のコンテキストクラスを使う場合、FeatureContextでインクルードしないといけなかったのですが、Behat3では&lt;code&gt;behat.yml&lt;/code&gt;上で記述できるのでより簡単になっています。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;class FeatureContext implements Context, SnippetAcceptingContext
+{
+    public function __construct()
+    {
+        require_once dirname(dirname(__DIR__)) . '/tests/bootstrap.php'; // (1)
+
+        // Always connect test database
+        ConnectionManager::alias('test', 'default'); // (2)
+
+        Fabricate::config(function($config) { // (3)
+            $config-&amp;gt;adaptor = new CakeFabricateAdaptor([
+                CakeFabricateAdaptor::OPTION_FILTER_KEY =&amp;gt; true,
+                CakeFabricateAdaptor::OPTION_VALIDATE   =&amp;gt; false
+            ]);
+        });
+
+        $this-&amp;gt;fixtureInjector = new FixtureInjector(new FixtureManager()); //(4)
+        $this-&amp;gt;fixture = new BddAllFixture();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;(1)は、phpunit.xmlのbootstrapと同様にCakePHP3の&lt;code&gt;tests/bootstrap.php&lt;/code&gt;を呼び出します。&lt;/li&gt;
+&lt;li&gt;(2)は、Behatのステップ定義からテストデータを投入するときに、testの接続設定を参照するようにエイリアスを設定します。&lt;/li&gt;
+&lt;li&gt;(3)は、テストデータジェネレータ&lt;a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor"&gt;Fabricate&lt;/a&gt;の初期設定です。FabricateもCakePHP3対応されています。&lt;/li&gt;
+&lt;li&gt;(4)は、phpunit.xmlのリスナー部分を模して、Behatのシナリオ毎にフィクスチャが動くようにFixtureInjectorのインスタンスを生成しています。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;BehatからCakePHP3のフィクスチャを利用する&lt;/h4&gt;
+
+&lt;p&gt;(4)で書いたとおり、FixtureInjectorのインスタンスを生成したので、Behatのフックポイントを使ってシナリオ開始時にフィクスチャをロードし、シナリオ終了時にフィクスチャをアンロードするようにします。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;    /** @BeforeScenario */
+     public function beforeScenario(BeforeScenarioScope $scope)
+     {
+        $this-&amp;gt;fixtureInjector-&amp;gt;startTest($this-&amp;gt;fixture);
+     }
+
+     /** @AfterScenario */
+     public function afterScenario(AfterScenarioScope $scope)
+     {
+        $this-&amp;gt;fixtureInjector-&amp;gt;endTest($this-&amp;gt;fixture, time());
+     }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;実際にフィクスチャを利用するためには、&lt;code&gt;$this-&amp;gt;fixture&lt;/code&gt;のクラスがCakePHP3のTestCaseでなければならないので、&lt;code&gt;$fixtures&lt;/code&gt;という利用するフィクスチャファイルの配列を定義しただけのクラスを用意してFixtureInjectorに渡すようにします。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;class BddAllFixture extends TestCase {
+    public $fixtures = [
+        'Categories' =&amp;gt; 'app.categories',
+        'Articles'   =&amp;gt; 'app.articles',
+        'Users'      =&amp;gt; 'app.users',
+        'Categories' =&amp;gt; 'app.categories'
+    ];
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このあたりの話も、書籍&lt;a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;amp;ie=UTF8&amp;amp;amp;qid=1410066610&amp;amp;amp;sr=1-1"&gt;CakePHPで学ぶ継続的インテグレーション&lt;/a&gt;でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。
+CakePHP3になって、メソッドやクラスが一部変わりましたが、BehatとCakePHPをインテグレーションするためにおさえておかないといけないポイントはほとんど変わっていません。&lt;/p&gt;
+
+&lt;p&gt;後はBehat3のドキュメント、CakePHP3のドキュメントを見ながら進めていくと、エンド to エンドのテストが容易に記述できるようになります。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;GithubのREADMEに書いた内容をすべて日本語にした訳ではないのですが、要所をかいつまんで重要な部分を解説しました。
+より詳しい内容などはREADMEを見ていただければと思います。&lt;/p&gt;
+
+&lt;p&gt;また、BDDプラグインのサンプルアプリにはあった、日本語のシナリオや、JavaScriptを使ったテストなど、Behat3になって大きく変わってはいませんが、サンプルアプリケーションに少しずつ載せられたらなぁと思っています。
+何かうまく動かないなどあれば、気軽にGithubのissueに投稿お願いします（日本語でOKです）。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</title>
     <link rel="alternate" href="http://blog.url.com/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html"/>
@@ -1045,196 +1399,6 @@ CakePHP3では以下の流れでDBへ保存しています。&lt;/p&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;皆様のPull Requestをお待ちしております！！&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>2014年ふりかえり</title>
-    <link rel="alternate" href="http://blog.url.com/2015/01/03/2014-retrospective.html"/>
-    <id>http://blog.url.com/2015/01/03/2014-retrospective.html</id>
-    <published>2015-01-03T07:05:00Z</published>
-    <updated>2015-01-03T18:19:21+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;この投稿は2014年参加／発表したり、運営に携わったイベント、やっていた仕事の内容などについてふりかえるポストです。&lt;/p&gt;
-
-&lt;h3&gt;1月&lt;/h3&gt;
-
-&lt;p&gt;2013年から年末の忘年会が少なめで、2014年から新年会が異常に多いという現象になりました。
-ちなみにこれは2015年も同様で新年会がいっぱいです。新年から1年をなかったこと（忘れる）にできるぐらいです。&lt;/p&gt;
-
-&lt;p&gt;まだタイトルもなく、何も中身も決まっていなかった &lt;code&gt;CakePHPで学ぶ継続的インテグレーション&lt;/code&gt; 本（以降 &lt;code&gt;CI本&lt;/code&gt; ）が動き出したのでした。&lt;/p&gt;
-
-&lt;p&gt;当時のブログサイト My Opera Blogがもうすぐ終わりだ、やべーと言いながら、Co-Edoで何にしたら良いかなーと頭を悩ませていたのでした。&lt;/p&gt;
-
-&lt;h3&gt;2月&lt;/h3&gt;
-
-&lt;p&gt;非常に忙しくCakePHPの案件支援をしており、毎日ピリピリしていた記憶が….。仕事では人材の流動性の高まりを感じでいたのでした。&lt;/p&gt;
-
-&lt;p&gt;バグフィックスに対応した Fabricate 1.1.1 をリリースしました。&lt;/p&gt;
-
-&lt;p&gt;Bddプラグインのインストールをしようと思ったら、php-object-freezerが見つからないエラーで失敗するように
-なんとPHPUnitプロジェクトにあったリポジトリがpearからもgithubからも、世の中の公開リポジトリから一切いなくなったのでした。
-これはforkして使っているSpec for PHPの依存ライブラリなので、しかたなくコードをlibの下に展開してSpec for PHPに同梱するようにしました。&lt;/p&gt;
-
-&lt;p&gt;CI本は主にチャットワークで作業が進み、目次を考えていました（まだ決まってはいない）。&lt;/p&gt;
-
-&lt;p&gt;いよいよ My Operaの終了までカウントダウンということで、ブログをMiddlemanに移行しました。
-記念すべきMiddlemanでの一号記事 &lt;a href="/2014/02/22/hello-world.html"&gt;Hello Middleman!&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3&gt;3月&lt;/h3&gt;
-
-&lt;p&gt;3/12 Web生誕25周年でした。
-またそれに関連して「HTML5 Japan Cup 2014」が開催されることになり、ボランティアスタッフとしてハッカソンや審査などに関わるようになりました。&lt;/p&gt;
-
-&lt;p&gt;3/8 Co-Edoにてたまっていたブログネタを一気に3本投入しました&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="/2014/03/08/middleman-install-memo.html"&gt;Middleman インストールメモ&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2014/03/08/composer-phpunit-windows-vagrant.html"&gt;VagrantでComposerからPHPUnitをインストールするときに注意したいこと&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2014/03/08/cakephp-addprefix-here-problem.html"&gt;CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;3/18 &lt;a href="/2014/03/22/web-testing-2014.html"&gt;テスト駆動web開発勉強会 Vol.1で発表しました&lt;/a&gt;。
-そういえば、Vol.2が開催されないなーとか思うのでした…&lt;/p&gt;
-
-&lt;p&gt;Middlemanに移行してブログ書くぞーと熱が上がっていたので、さらに一本 &lt;a href="/2014/03/30/composer-autoload.html"&gt;Composerのautoloadを使いこなす&lt;/a&gt; を投下。&lt;/p&gt;
-
-&lt;p&gt;3/25 第76回 PHP勉強会 に参加しました。確かHTML5 Japan Cup2014の告知をしたと記憶しています。&lt;/p&gt;
-
-&lt;p&gt;CI本は大筋が決まって、いざ書くぞーというモードになるのでした。&lt;/p&gt;
-
-&lt;h3&gt;4月&lt;/h3&gt;
-
-&lt;p&gt;4/4 今も続くCakePHP3もくもく会#3に参加しました（&lt;a href="/2014/04/19/cake3_mokumoku_3.html"&gt;ブログ記事&lt;/a&gt;）。このとき初めてCakePHP3に触れたのでした。&lt;/p&gt;
-
-&lt;p&gt;4/9 はもちろん4q!カンファレンス。今年も盛り上がりましたー&lt;/p&gt;
-
-&lt;p&gt;4/12 &lt;a href="http://html5j-testing.doorkeeper.jp/events/10161"&gt;Test the Web Forward Meetup (仮), Tokyo #2&lt;/a&gt; に参加しました（&lt;a href="/2014/04/19/twfm_2014_04.html"&gt;ブログ記事&lt;/a&gt;）。私はShadow DOMに興味があったので、そのテストコードを書くチームに参加しました。帰宅後もいくつか作業をすすめ本家にプルリクエストが取り込まれるなど、Contributeしたぞーという気持ちが高まったのですが、その後あまり作業できていません。HTML5の仕様テストに興味はあるので、今年も少しずつ取り組みたいなーと思っています。&lt;/p&gt;
-
-&lt;p&gt;5jCupはスタッフ顔合わせがあったあと、すぐに第一回のアイデアソン／ハッカソンがあり、どちらもスタッフとして参加しました。&lt;/p&gt;
-
-&lt;p&gt;全然活動と関係ないのですが、その頃ちょうどいつも聴いているJ-Waveで流れていたY.I.Mのkonsaiという曲にはまって何日も頭をリピートしていたのでした。今でもたまに聴いてなごみますw&lt;/p&gt;
-
-&lt;iframe width="560" height="315" src="//www.youtube.com/embed/W2euzCQIAfA" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;CI本は5jCupの繁忙期と重ならないように、なるべく早めにと思いちゃくちゃくと原稿を進めるのでした。&lt;/p&gt;
-
-&lt;p&gt;4/28 第77回 PHP勉強会に参加し、もくもく会でCakePHP3に触った話をしました。&lt;/p&gt;
-
-&lt;h3&gt;5月&lt;/h3&gt;
-
-&lt;p&gt;5/19 CakePHP もくもく会 に参加しました。&lt;/p&gt;
-
-&lt;p&gt;5/21 CakeDC/Migration プラグインがアップデートされ、generateコマンドでいろいろごにょごにょできるようになり、とても便利になったのでした。すぐにプロジェクトでもアップデートして記法を取り入れました。&lt;/p&gt;
-
-&lt;p&gt;後はひたすら仕事が忙しく、平日夜中や土日はほぼCI本の原稿を書いていた記憶が….&lt;/p&gt;
-
-&lt;h3&gt;6月&lt;/h3&gt;
-
-&lt;p&gt;イベントにたくさん参加しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;6/12 - 6/13は毎年恒例のInterop&lt;/li&gt;
-&lt;li&gt;6/16 CakePHP 3.0.0 もくもく会（勉強会） #5 （&lt;a href="/2014/06/27/cake3_mokumoku_5.html"&gt;ブログ記事&lt;/a&gt;）&lt;/li&gt;
-&lt;li&gt;6/23 【祝9周年】第79回 PHP勉強会&lt;/li&gt;
-&lt;li&gt;6/28 PHPカンファレンス関西&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Fabricate1.2をリリースしました。主な機能追加は&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;configで主キーを割り振らないようにするオプション&lt;/li&gt;
-&lt;li&gt;Fabricate::define() のクローン&lt;/li&gt;
-&lt;li&gt;Fabricate::association() のクローン&lt;/li&gt;
-&lt;li&gt;Fabricate::trait() のクローン&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらでだいぶFabricator/FactoryGirl の実装に近づきました。&lt;/p&gt;
-
-&lt;p&gt;CI本は書きたい事は書ききって、全体の流れを整える調整が.. &lt;/p&gt;
-
-&lt;h3&gt;7月&lt;/h3&gt;
-
-&lt;p&gt;5jCupはいよいよ審査モード。スタッフが集まって一次審査を行いました。大量に集められた審査用のガジェット（機器）など、作品も沢山寄せられてあっという間に時間が過ぎました。
-そして、7/26 には表彰式が行われ、今年も前半戦イベントの幕が閉じたのでした。&lt;/p&gt;
-
-&lt;p&gt;7/29 CakePHP 3.0.0 もくもく会（勉強会） #6に参加。&lt;/p&gt;
-
-&lt;p&gt;いくつかのバグフィックスをしたFabricate1.2.1をリリースしました。&lt;/p&gt;
-
-&lt;p&gt;CI本は大大リファクタリング大会で、毎週末とても大変だったなぁ〜&lt;/p&gt;
-
-&lt;h3&gt;8月&lt;/h3&gt;
-
-&lt;p&gt;今年もCakeFestに参加しました（&lt;a href="/2014/09/23/cakefest-2014-report.html"&gt;ブログ記事&lt;/a&gt;）。初スペイン（まぁだいたいどこへ行っても初なのですがw）。&lt;/p&gt;
-
-&lt;p&gt;Fabricateを遅まきながらTravis.ci対応したので、CakePHPのプラグインをCIする方法について&lt;a href="/2014/08/17/cakephp2_plugin_travis.html"&gt;ブログ記事&lt;/a&gt;を書きました。&lt;/p&gt;
-
-&lt;p&gt;CI本は校正をしながらいよいよ大詰め！&lt;/p&gt;
-
-&lt;h3&gt;9月&lt;/h3&gt;
-
-&lt;p&gt;原稿からも解放され、たくさんのイベントに参加しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;9/4 CakePHP 3.0.0 もくもく会（勉強会） #7（&lt;a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html"&gt;ブログ記事&lt;/a&gt;）&lt;/li&gt;
-&lt;li&gt;9/6 俺のXP祭り&lt;/li&gt;
-&lt;li&gt;9/19 CakeFest報告会&lt;/li&gt;
-&lt;li&gt;9/25 HTML5とか勉強会&lt;/li&gt;
-&lt;li&gt;9/29 第82回 PHP勉強会&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;そしてついに、9/19 &lt;code&gt;CakePHPで学ぶ継続的インテグレーション&lt;/code&gt;が発売されました（&lt;a href="/2014/09/07/cakephp_ci_book.html"&gt;ブログ記事&lt;/a&gt;）。&lt;/p&gt;
-
-&lt;h3&gt;10月&lt;/h3&gt;
-
-&lt;p&gt;先月同様にイベントに参加したり、発表したり楽しかったー&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;10/9 10q!カンファレンス&lt;/li&gt;
-&lt;li&gt;10/11 PHPカンファレンスで発表（&lt;a href="/2014/10/13/phpconference2014.html"&gt;ブログ記事&lt;/a&gt;）&lt;/li&gt;
-&lt;li&gt;10/25 俺聞け10（急遽空手形で発表、Should Beeをアピール）&lt;/li&gt;
-&lt;li&gt;10/27 第83回 PHP勉強会&lt;/li&gt;
-&lt;li&gt;10/30 HTML5 デバイスAPI勉強会&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;そして毎年恒例のアレ（カレンダー）のイラストが原稿終わった後にあるのでした..&lt;/p&gt;
-
-&lt;h3&gt;11月&lt;/h3&gt;
-
-&lt;p&gt;いよいよ渋谷の支援案件も残りわずかとなりました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;11/17 CakePHP 3.0.0 もくもく会（勉強会） #9 &lt;/li&gt;
-&lt;li&gt;11/25 HTML5とか勉強会&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;カレンダーデザイン終わり！&lt;/p&gt;
-
-&lt;h3&gt;12月&lt;/h3&gt;
-
-&lt;p&gt;12月から半分はJavaの新規案件のお手伝いにも行っていました。&lt;/p&gt;
-
-&lt;p&gt;12/23 に&lt;code&gt;CakePHP 3.0.0 感謝祭 &amp;amp; もくもく会（勉強会） #10&lt;/code&gt;と同時開催（フロア別）で、&lt;code&gt;『CakePHPで学ぶ継続的インテグレーション』ハンズオンセミナー&lt;/code&gt; を開催しました（私はサポート役でしたが…）。&lt;/p&gt;
-
-&lt;p&gt;例のCI本のハンズオンですが、まだ2回目ということでちょっと練度が足りなくて、参加者の皆様は若干消化不足だったかもしれませんが、またリクエストもありますので、ぜひ今年もやりたいと思います。&lt;/p&gt;
-
-&lt;p&gt;12/24 に渋谷の支援を1日残していますが、感謝のLT（&lt;a href="/2015/01/03/cakephp-agile-481-days.html"&gt;ブログ記事&lt;/a&gt;）をしました。&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;たくさんブログ書くぞーと言っていたくせに、14本しか書けませんでした。
-執筆とかイベントスタッフとかあると、なかなかなー。わかってはいるのですが。&lt;/p&gt;
-
-&lt;p&gt;今年はもう少し情報公開できるだろうか。CakePHP3の新しいネタとかイロイロ書けそうですしね。
-そうそう今日CakePHP3はRC1になりましたね。CakeFestもちょっと早めの5月末ニューヨークだそうですよ。ぜひ行かねば。&lt;/p&gt;
-
-&lt;p&gt;直近でいうと1月末にHTML5カンファレンスがあって、今年もスタッフ参加しますので、会場でお会いできればと思います。&lt;/p&gt;
-
-&lt;p&gt;さらには1月末に伊良部大橋が開通するので宮古に行きたいとか（これは完全に趣味ですが）。&lt;/p&gt;
-
-&lt;p&gt;今年もイロイロなイベントに参加したり、橋見に行ったり、また機会に恵まれれば執筆したりと変わらず活動していきたいと思いますので、皆様よろしくお願いいたします。&lt;/p&gt;
 </content>
   </entry>
 </feed>

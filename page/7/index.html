@@ -275,7 +275,311 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2012/08/19/bdd-plugin-for-cakephp2.html">BDD Plugin for CakePHP2を公開しました</a></h2>
+            <h2 class="title"><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2012/09/03.html">Monday, September 03, 2012 01:09:20 AM</a></p>
+  <p class="tags">
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/CakeFest2012logo.png" /> </p>
+
+<p>今年もBakerの祭典CakeFestが（昨年と同じ）マンチェスターで開催されました。  </p>
+
+<p>今年はCFPが通ってスピーカーとして参加することになり、だいぶ準備に時間をかけて&hellip;.と思ったら実質2週間ぐらい前に夏休みの宿題状態で片付けたのでした。。。  </p>
+
+<p>CakeFestのカンファレンスは9/1と9/2の2日間で行われたのですが、私は休暇(30,31の)も含め8/29夜からマンチェスター入りをしていました。
+ヒースローの乗り継ぎ（五輪効果で綺麗になっていた）や空港からの鉄道や徒歩など慣れたもので、飛行機や鉄道が遅れるという英国定番のトラブル（でもないらしい）で疲れての到着となりました。</p>
+
+<h2>カンファレンス1日目</h2>
+
+<p><img src="/images/blog/le2on.jpg" /> 
+簡単に1日目に参加したセッションをふりかえっておきます。</p>
+
+<h3>09:00 - 09:25 Keynote: CakeFest 2012 Introduction</h3>
+
+<p>これは本来グラハムがやる予定だったのですが、 急遽家庭の事情で来れなくなったので、最初のセッションがスキップされるかと心配された。時間になっても始まらないし、特に説明はないのだけれど、まぁCakeのコミュニティっぽいと言えばそうかなと思ったら、9:20になってマークが壇上に上がってなんとかキーノートを開始。</p>
+
+<ul>
+<li>今年は10カ国以上から参加者がいる。世界的に興味を持たれている</li>
+<li>2日間のワークショップと2日間のカンファレンス。2トラック、ライブストリーミングなど見どころがたくさん</li>
+</ul>
+
+<p>実はマークとグラハムはSkypeでやろうと思ったけど、うまくつながらなかったというのを休憩時間に聞きました。</p>
+
+<h3>09:25 - 09:40 Keynote: Hell has Frozen Over</h3>
+
+<ul>
+<li>マイクロソフトのスポンサーセッション</li>
+<li>99.95% SLA</li>
+<li>Linux,Mac,Windowsに対応したツールがある</li>
+<li>言語はASP.NETかNode.jsかPHP</li>
+<li>FTPかGitでデプロイできる</li>
+<li>始めは無料だよ</li>
+<li>サーバを作るときはリージョンとDBが選べる。MySQLが使えるよ</li>
+<li>Gitリポジトリを設定して、ダウンロードできるよ</li>
+<li>sharedインスタンスと、reserved（専用）インスタンスみたいなのがあって良いよ。最初sharedでresercedに移動も可能</li>
+<li>ロードバランサでどこかが止まっても違うインスタンスに自動的に再デプロイされる</li>
+<li>ビッグデータ、データベース、NoSQLストレージ、最適なネットワーク、キャッシュ（Memcacheとかね）、メッセージングなど使えるよ</li>
+<li>3ヶ月は無料</li>
+<li>詳しくは彼に聞いてね（午後のセッションをやる技術者らしい）、てきな振りで終わり w</li>
+</ul>
+
+<h3>09:40 - 10:30 Keynote: Making the most of 2.2</h3>
+
+<p>コアデベロッパーの中心人物であるマークとホセのセッション</p>
+
+<h4>ViewブロックがDRYじゃなくてなんとかしたかった</h4>
+
+<ul>
+<li>Jinja/Twigから影響を受けたよ</li>
+<li>slots/blocksレイアウトがテンプレートで使える</li>
+</ul>
+
+<h4>JSONとかXMLとか面倒だった</h4>
+
+<ul>
+<li>_serializeというset名でビューに特別に使えるようにしたお</li>
+</ul>
+
+<h4>Setの問題があったね</h4>
+
+<ul>
+<li>Set::extractはいいけど、遅いよ</li>
+<li>いくつかのxpathには対応していなかったし、解決できない問題もあった。内部はクレイジーだったぜ</li>
+<li>ハッシュにして1.6倍ぐらい速くなったよ</li>
+<li>ハッシュはsetの90%ぐらいが実装されている</li>
+</ul>
+
+<h4>CakeTimeとCakeNumberの問題があったね</h4>
+
+<ul>
+<li>HelperじゃなくてUtilライブラリで良いよね。HTML以外でも使うし</li>
+<li>良くテストされた datetimeを使っているよ</li>
+</ul>
+
+<h4>ロギングは特に問題だったね</h4>
+
+<ul>
+<li>pythonのscopesからアイデアをもらったよ</li>
+<li>Configで設定すればmongoとかにもストアできる</li>
+</ul>
+
+<h4>イベント</h4>
+
+<ul>
+<li>いろんなところで使えるイベントシステム</li>
+<li>いろいろとイベントが使えるようになっているよ</li>
+<li>コールバックを使って簡単にできるよ</li>
+<li>独自イベントも簡単！</li>
+</ul>
+
+<h4>キャッシュ</h4>
+
+<ul>
+<li>assetコンパイルを使うと、部品をキャッシュできるよ</li>
+<li>beforedispacherとかafterdispacherとか使うといいよ</li>
+<li>Responseオブジェクトを使って設定するよ</li>
+</ul>
+
+<h4>キャッシュグループ</h4>
+
+<ul>
+<li>何それ？</li>
+<li>キャッシュに論理的なグループを作れるよ</li>
+<li>動的にはできないから、自分のstrategyで計画しなくちゃ行けない</li>
+</ul>
+
+<h4>バリデーション</h4>
+
+<ul>
+<li>動的に追加、変更、削除できるようになったよ</li>
+</ul>
+
+<h3>11:00 - 11:30 Lightning Strikes from Windows Azure</h3>
+
+<p>ここから2トラックになる。
+マイクロソフトのスポンサーセッションで技術担当のCoryによるテクニカルセッション     </p>
+
+<ul>
+<li>Macでも開発できるよ（ここ強調しているな）</li>
+<li>数クリックで開始できるよ</li>
+<li>スケールを簡単に管理できるよ</li>
+<li>自動的にロードバランスするし、インスタンスを超えてストレージは共有される</li>
+</ul>
+
+<h4>Hello Worldのデモ</h4>
+
+<ul>
+<li>Macだぜ</li>
+<li>azure site でオプションがいっぱい出る</li>
+<li>azure site create &lsquo;cf-cakegest&rsquo; &ndash;git</li>
+<li>git add/commit/push</li>
+<li>azureの管理画面で cf-cakefestが出ている</li>
+<li>azure site browse &ndash; ブラウザが立ち上がった</li>
+<li>pushすると自動的にdeployment historyがpushされているように見える</li>
+<li>azure site deployment list &ndash; 一覧が見える</li>
+<li>azure site deployment redeploy &lsquo;コミットID&rsquo;</li>
+<li>モニターでいろいろチェックして（404の数とか）追加で見れる</li>
+<li>VMのOS選択はいろいろ選べるよ。もちろんLinuxも</li>
+<li>azure vm コマンド使うよ</li>
+<li>azure vm create -h とか</li>
+<li>azure vm create &lsquo;name&rsquo; &lsquo;vm&rsquo; &lsquo;user&rsquo; &lsquo;password&rsquo; -l &lsquo;リージョン&rsquo;</li>
+<li>composerやgithubが使えるぜー</li>
+</ul>
+
+<h3>11:30 - 12:30 Create a RESTfull api</h3>
+
+<p>@ceeramのほうのマークによるセッション。     </p>
+
+<p>RESTとはの基本にとても時間をかけて説明していた（重要）。基本からPATCH、HATEOASまで全部入りだった。その後CakePHPでの適用方法について</p>
+
+<h4>router に追加するぞ</h4>
+
+<ul>
+<li>Router::parseExtensions(); // all</li>
+<li>Router::parseExtensions(&lsquo;json&rsquo;); // only json</li>
+</ul>
+
+<h4>RequestHandlerコンポーネント使うよ</h4>
+
+<ul>
+<li>viewClassMapを使うと変えられるよ</li>
+<li>&lsquo;RequestHandler&rsquo;=&gt;array(&lsquo;viewClassMap&rsquo;=&gt;array(&lsquo;json&rsquo;=&gt;&lsquo;RestJson&rsquo;,&lsquo;xml&rsquo;=&gt;&lsquo;RestXml&rsquo;))) とか</li>
+</ul>
+
+<h4>その他</h4>
+
+<ul>
+<li>2.x からは _serialize を使って set すれば良いよ</li>
+<li>見つからなかったら NotFoundException とか</li>
+<li>Router::mapResources(array(&lsquo;Cats&rsquo;, &lsquo;Users&rsquo;))とか使うとマップできるよ</li>
+<li>APacheとかでPUTやDELETEを許可しておく必要があるよね</li>
+<li><code>Router::resourceMap(array(array(&#39;action&#39; =&gt; update&#39;,&#39;method&#39;=&gt;&#39;PATCH&#39;. &#39;id&#39;=&gt;true)</code> みたいに書くといいよね</li>
+<li>Router::mapResources(array(&lsquo;Cats&rsquo;, &lsquo;USers&rsquo;, &lsquo;Pizza.Orders&rsquo;),array(&lsquo;prefix&rsquo;=&gt;&lsquo;/api&rsquo;) とか書くといいよ</li>
+<li>Router::connect(&lsquo;url&rsquo;, action&hellip; ) とかでもOK</li>
+<li>CakeRequest::addDetector(&lsquo;patch&rsquo;, array(&lsquo;env&rsquo;=&gt;&lsquo;REQUEST_METHOD&rsquo;, &lsquo;value&rsquo;=&gt;&lsquo;PATCH&rsquo;)); なんて書き方もできるよ（知らなかった）</li>
+<li>CakeResponse 使ってね</li>
+<li>認証もいろいろサポート</li>
+<li>Versioningが重要だよ</li>
+</ul>
+
+<h3>12:30 - 13:30 Lunch</h3>
+
+<p>カンファレンスに来たらランチが美味しいことはとても重要だと感じました。今年は本当においしかった！！<img src="/images/blog/100_2305.JPG" /> </p>
+
+<h3>Random tips that will save your projects life</h3>
+
+<p>マリアーノのセッション。毎年興味深いセッションである。 
+内容はとにかく広範囲にわたっていて、</p>
+
+<ul>
+<li>Git使えやー</li>
+<li>Monitだろー</li>
+<li>サーバ監視しろやー</li>
+<li>PHPログはトラックした方がいいよね</li>
+<li>Duckesboard</li>
+<li>statsdとか</li>
+<li>Google Analyticsもいいよね</li>
+<li>やっぱ Varnishだよね</li>
+<li>PHP -&gt; Redis pub/sub -&gt; Node.js -&gt; soket.io -&gt; Client でいいよね</li>
+<li>Sphinx はスケーラビリティがあるし、PECLかSQL使えるし、リアルタイムインデックスだしいいよね</li>
+</ul>
+
+<p>みたいな感じ。</p>
+
+<h3>How to make your CakePHP website into a Phone app</h3>
+
+<p>ここでは安藤さんのセッションの裏で、関西弁こてこてのリチャードさんによるセッションに参加。</p>
+
+<ul>
+<li>PhoneGap では WebView を使ってappっぽく見せた</li>
+<li>Zendで作ったけどね（笑）</li>
+<li>2,231,400 のユニークユーザを捌いたぜ。さすがBBC&amp;オリンピック</li>
+<li>15,000,000 ページビュー/日だったぜ</li>
+</ul>
+
+<h3>その後</h3>
+
+<p>コアチームによるQ&amp;Aセッションがあり、<img src="/images/blog/100_2310.JPG" /> 
+いろいろ興味深いトークが繰り広げられました。</p>
+
+<p>さらにLTがありの流れでビアタイムに。LTは発表者が何度もやったり、スライドはない方が多かったりドラはなかったり（まぁ当然か）、なんか日本のLTに慣れているとフワフワ感がたまりませんな（笑）</p>
+
+<p>急遽#CakeRadioGaGaをGoogle+でやることになり、日本時間は日曜日の2時ぐらいだったのかな？ゲリラだったのに数名の閲覧者が見てくれました。</p>
+
+<h2>カンファレンス2日目</h2>
+
+<p>今日は発表日なのでなんか寝付きが悪くて、何度も目を覚ます事に。。。</p>
+
+<h3>09:00 - 10:00 Simple search with elastic search</h3>
+
+<p>2日目は最初から2トラックで。メイン会場はマークによりelastic seachのセッション。いわゆる検索エンジンで、よくApache Solrと比較されるやつ。マークのセッションはとてもわかりやすく、Cakeからのインテグレーション方法もよくわかった。これはスライドを見た方が良いね。</p>
+
+<h3>10:00 - 10:30 BDD for CakePHP applications</h3>
+
+<p>さて私のセッションですが、Twitterでの感想はなかなか好評だったみたいで、助かりました。マークからもランチのときにコメントをもらえたし。  </p>
+
+<ul>
+<li><a href="http://twl.sh/NFakdY">スライド:TwileShare</a></li>
+<li><a href="https://github.com/sizuhiko/CakeFest2012">発表用の解説文:Github</a></li>
+</ul>
+
+<p>トラブルが２つあって、</p>
+
+<ul>
+<li>セッション中にレンタルしていた3G Wifiが死亡して、急遽ホテルのWifiへ切り替え。デモの最中に慌ててしまった</li>
+<li>セッションのコンテンツ（英文）をDropboxに入れて、AndroidのMarkdownビューワーで見ながら話していたけど、Androidの自動回転がONのままで頻繁に回転が起きてしまう自体に。そうするとページTOPまでスクロールして、見直したら位置がおかしくなってアワアワしてしまった。自動回転はオフにしておかないとね。後半は記憶に頼って話しました。</li>
+</ul>
+
+<p>で、ネタとしては、BDDのBはBeerだよね、というのは今年も鉄板でこれは世界中で通じる良い導入になります。それとマンチェスターなので香川ですな。和みました。<img src="/images/blog/100_2316.JPG" /> </p>
+
+<h3>その後</h3>
+
+<p>なぜかここからざっくりとしたまとめになりますが、あまりCakeと直結する話題が少なくなったので、軽く。</p>
+
+<ul>
+<li>あのYour code sucks, let&rsquo;s fix itのRafaelによるセッションが。彼は現在アムステルダムに住んでいて、発表の内容からするとSymfonyガイなのかもしれないなと思いました。Composerの発表もしていたし。</li>
+<li>再びmackstarさんのセッションで、Backbone.js。これはCakeと直結しているのですが、まぁmackstarさんのgithubをチェックしましょう。Ember.jsについてはまだPHP界隈では使われていないし知っている人も少ないからBackbone.jsが良いねという話でした。</li>
+<li>グラハムがやる予定だったFablicのセッションをマークが。ちょうど新原さんがTwitterでFablicについてつぶやいたのでストリーミング見ているのかと思ったら偶然だったらしく、びっくりしました</li>
+</ul>
+
+<p>で、この後 PechaKuchaトークをやるまでの間に #CakeRadioGaGaの生放送を再び。日本では明日は月曜日なので早めの時間に。</p>
+
+<p>この間にやっぱり結構帰る人がいて、さらに戻ってみるとラリーが機材を撤去していたり、何だろうと思ったら応募者がいなかったらしい。まぁLTでだいぶ発表があったのでそんなもんかなと。あとグラハムがいなくてイベントの仕切りが終始ふわふわしていたのも影響しているみたいでした。</p>
+
+<p>もちろん定番のリアルケーキも出ましたよ。大きいものはホテルでは作れないということで、小さいものが7周年を記念して7つになったということでした。ランチデザートで出て、各テーブルに配られて行きました。そういえばケーキの前でのコアデベロッパー写真とか、全体の集合写真とかなかったなー<img src="http://p.twimg.com/A1yco62CEAA2zp9.jpg#twimg" /> 
+えっ？レポートが段々尻すぼみだって？。いや、実際イベント全体のテンションもそんな感じで。。。。察してください www</p>
+
+<h2>まとめ</h2>
+
+<p>良かった事、反省点、いろいろあるけど、悪い事はないのでみんな海外のカンファレンスも出るといいね。もちろん発表することが重要で、ボクみたいにあんまり英会話得意じゃないけど発表すれば声もかけてもらえるし、プラグインや発表資料をチェックしてくれたりするので、それでフォローできればOKと思っています。  </p>
+
+<p>来年（こそ？）は、カルフォルニアらしいのでマンチェスターより行きやすい！。みんなで参加しよう！！</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2012で発表＆参加しました" data-url="http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html&t=CakeFest2012%E3%81%A7%E7%99%BA%E8%A1%A8%EF%BC%86%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2012/08/19/bdd-plugin-for-cakephp2.html">BDD Plugin for CakePHP2を公開しました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2012/08/19.html">Sunday, August 19, 2012 04:08:15 PM</a></p>
   <p class="tags">
     
@@ -864,165 +1168,6 @@ php&gt; = $html-&gt;find('#blog .post .entry')-&gt;eq(0)-&gt;text()
     </div>
 
   </div>
-  <h2 class="title"><a href="/2011/12/25/phpquery.html">phpQueryを使ってデザイナーとプログラマーを完全分業できるようにする（導入編）</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/12/25.html">Sunday, December 25, 2011 02:12:34 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;これまで多くのテンプレートエンジンが登場してきましたが、HTMLに全く手を入れないでデザイナーとプログラマーが分業することは困難でした。
-もちろんSmartyのテンプレートが編集できる人がいたり、PHPTALのようにほとんどHTMLには手をつけない方法があったりと、これまでの方法でも分業することは可能だと思います。  </p>
-
-<p>ただHTMLには多少の手を入れなくてはいけない、そういう意味でKwartzのようにプレゼンテーションロジックを分割できるテンプレートシステムはとても良いと思っています。ただセレクターがCSS3セレクターでないのが難点かなぁと思っています。  </p>
-
-<p>そこで目を付けたのが<a href="http://code.google.com/p/phpquery/">phpQuery</a>という、名前からして思い当たるjQueryのセレクター機能を搭載したPHP実装になっています。  </p>
-
-<p>phpQueryは内部的にPHPのDOMDocumentを使っていて、エレメントを探し出すのに便利なセレクター記法を持っています。  </p>
-
-<p>今回はphpQueryを使って静的HTMLの一部をPHPコードに書き換えるという導入をやってみます。  </p>
-
-<p>本当は時間があればViewコンポーネントまで作って、githubに展開したかったのですが、これは2012年早々の目標になる予定です。  </p>
-
-<h3>phpQueryの取得</h3>
-
-<p>phpQueryは</p>
-
-<ol>
-<li>pear</li>
-<li>google-code</li>
-<li>github</li>
-</ol>
-
-<p>のいずれかから導入可能です。この記事ではgithubから取得して進めます。</p>
-<pre class="highlight plaintext"><code>git clone git://github.com/bluelovers/phpQuery.git
-</code></pre>
-
-<h3>サンプルHTMLの取得</h3>
-
-<p>この記事では、みんな大好きWORDPRESSの日本語TOPページのHTMLを使ってみたいと思います。  </p>
-<pre class="highlight plaintext"><code>mkdir templates
-wget http://ja.wordpress.org/
-mv index.html templates
-</code></pre>
-
-<p>ここで注意なのですが、現在DOMDocumentではXHTMLを正しくパースできないようです。そこで、通常のHTMLとして解釈できるように先頭数行を以下のように書き換えます。</p>
-<pre class="highlight html"><code><span class="nt">&lt;html&gt;</span>
-    <span class="nt">&lt;head&gt;</span>
-</code></pre>
-
-<p>DOCTYPEを削除し、htmlとheadにあった属性を削除しています。  </p>
-
-<p>ただXHTMLでなくHTML記法で書かれたページは問題ないので、この課題についてはあまり深入りせず先に進む事にします。  </p>
-
-<p>ただDOCTYPEや属性は、後で追加できるのでViewクラスにしたときに何かサポートできるようにしたいなぁと思っています。  </p>
-
-<p><img src="/images/blog/WordPress.png" /> </p>
-
-<p>の赤枠で囲った部分に関して、PHPの動的コードに変換してみましょう。  </p>
-
-<h3>phpshを使って試す</h3>
-
-<p>簡単に試すにはインタラクティブシェルを使うのが便利なので、今回もphpshを使います。  </p>
-<pre class="highlight plaintext"><code>bash-3.2$ phpsh
-Starting php
-type 'h' or 'help' to see instructions &amp; features
-
-php&gt; require('phpQuery/phpQuery/phpQuery.php');
-php&gt; $file = file_get_contents('template/index.html');
-php&gt; $html = phpQuery::newDocumentHTML($file);
-php&gt; echo $html-&gt;html();
-</code></pre>
-
-<p>最後のhtml()で読み込んだHTMLがそのまま出力されることを確認しましょう。  </p>
-
-<p>ブログ記事の箇所のHTMLは以下のようになっています。  </p>
-<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
-  &lt;div class="main"&gt;
-    &lt;h3&gt;ブログ&lt;/h3&gt;
-    &lt;div class="post" id="post-2057"&gt;
-    &lt;h4&gt;&lt;a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-ja/" rel="bookmark" title="WordPress 3.3 日本語版リリースのお知らせ へのパーマリンク"&gt;WordPress 3.3 日本語版リリースのお知らせ&lt;/a&gt;&lt;/h4&gt;
-    &lt;h6&gt;2011年12月13日&lt;/h6&gt;
-    &lt;div class="entry"&gt;
-      &lt;p&gt;WordPress 3.3 日本語版をリリースしました。&lt;/p&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-  &lt;div class="post" id="post-2042"&gt;
-    &lt;h4&gt;&lt;a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-sonny/" rel="bookmark" title="WordPress 3.3「Sonny」 へのパーマリンク"&gt;WordPress 3.3「Sonny」&lt;/a&gt;&lt;/h4&gt;
-    &lt;h6&gt;2011年12月13日&lt;/h6&gt;
-    &lt;div class="entry"&gt;
-      &lt;p&gt;WordPress 3.3「Sonny」がご利用いただけるようになりました。&lt;/p&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-</code></pre>
-
-<p>ブログ記事は $posts という配列に入っていると仮定します。</p>
-<pre class="highlight plaintext"><code>php&gt; $html['#blog .post:gt(0)']-&gt;remove();
-php&gt; $html['#blog .post']-&gt;wrapPHP('foreach($posts as $post) {', '}');
-php&gt; $html['#blog .post']-&gt;attrPHP('id', 'echo "post-$post-&gt;id;"');
-php&gt; $html['#blog .post h4 a']-&gt;attrPHP('href', 'echo $post-&gt;url;')-&gt;attrPHP('title', 'echo $post-&gt;title;')-&gt;php('echo $post-&gt;title;');
-php&gt; $html['#blog .post h6']-&gt;php('echo $post-&gt;date;');
-php&gt; $html['#blog .post .entry p']-&gt;php('echo $post-&gt;intro;');
-
-php&gt; print $html-&gt;php();                                                                                             
-</code></pre>
-
-<p>のようにphpshで実行すると、先ほどのHTML部分が以下のようになります。</p>
-<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
-  &lt;div class="main"&gt;
-    &lt;h3&gt;ブログ&lt;/h3&gt;
-    &lt;?php  foreach($posts as $post) {  ?&gt;
-      &lt;div class="post" id='&lt;?php  echo "post-$post-&gt;id";  ?&gt;'&gt;
-        &lt;h4&gt;&lt;a href="&lt;?php  echo $post-&gt;url;  ?&gt;" rel="bookmark" title="&lt;?php  echo $post-&gt;title;  ?&gt;"&gt;&lt;?php  echo $post-&gt;title;  ?&gt;&lt;/a&gt;&lt;/h4&gt;
-        &lt;h6&gt;&lt;?php  echo $post-&gt;date;  ?&gt;&lt;/h6&gt;
-        &lt;div class="entry"&gt;
-          &lt;p&gt;&lt;?php  echo $post-&gt;intro;  ?&gt;&lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;?php  }  ?&gt;
-  &lt;/div&gt;
-</code></pre>
-
-<p>どうです？  </p>
-
-<p>jQueryで見慣れたセレクタ記述と、少しのphpQueryの拡張記述で、HTMLを直接変更することなくPHPコードを含んだテンプレートファイルに変換することができました。  </p>
-
-<p>phpQueryが用意している<a href="http://code.google.com/p/phpquery/wiki/Selectors">jQueryポートしたセレクタ</a>や、<a href="http://code.google.com/p/phpquery/wiki/PHPSupport">PHPコードを出力する拡張関数</a>は、<a href="http://code.google.com/p/phpquery/">google-codeの公式ページ</a>を参照するとわかります。</p>
-
-<h3>さいごに</h3>
-
-<p>最初にHTMLファイルを読み込む部分や、最後にphp()関数を使ってPHPを含むコードに変換する部分をモジュール化して、各フレームワーク向けのViewコンポーネントとして提供したいなぁと思っています。  </p>
-
-<p>ただ普段使っているのがCakePHPばかりなので、他のフレームワークについてわかる人に協力してもらえたらなぁと思っています。  </p>
-
-<p>またViewコンポーネントにする際は<a href="http://code.google.com/p/querytemplates/">QueryTemplates</a>というphpQueryを拡張したコードも使おうかなぁと思っています。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="phpQueryを使ってデザイナーとプログラマーを完全分業できるようにする（導入編）" data-url="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/12/25/phpquery.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/12/25/phpquery.html&t=phpQuery%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%87%E3%82%B6%E3%82%A4%E3%83%8A%E3%83%BC%E3%81%A8%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%83%BC%E3%82%92%E5%AE%8C%E5%85%A8%E5%88%86%E6%A5%AD%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%88%E3%81%86%E3%81%AB%E3%81%99%E3%82%8B%EF%BC%88%E5%B0%8E%E5%85%A5%E7%B7%A8%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1092,6 +1237,8 @@ php&gt; print $html-&gt;php();
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/05/17/cakephp3-behat.html">CakePHP3 のアプリケーションを Behat でテストする</a> <span>2015/05/17</span></li>
+                
                   <li><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a> <span>2015/05/02</span></li>
                 
                   <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
@@ -1109,8 +1256,6 @@ php&gt; print $html-&gt;php();
                   <li><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a> <span>2014/10/13</span></li>
                 
                   <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
-                
-                  <li><a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a> <span>2014/09/13</span></li>
                 
               </ul>
             </div>
@@ -1272,7 +1417,7 @@ php&gt; print $html-&gt;php();
                 
                   
                   
-                    <li class="size1">
+                    <li class="size2">
                       <a rel="tag" href="/tags/behat.html">Behat</a>
                     </li>
                   
@@ -1518,7 +1663,7 @@ php&gt; print $html-&gt;php();
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (7)</li>
+                  <li><a href="/2015.html">2015</a> (8)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
