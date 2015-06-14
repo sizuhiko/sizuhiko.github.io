@@ -275,7 +275,159 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2008/04/28/flex2-coverflow-4.html">Flex2でCoverFlowクローンを作る (４) ～鏡面加工する</a></h2>
+            <h2 class="title"><a href="/2008/05/29/flex2-coverflow-5.html">Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/05/29.html">Thursday, May 29, 2008 03:05:21 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第五回は、画像を横に並べて、中央の画像以外は台形表示する手順を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>前回は画像を鏡面効果表示するサンプルを紹介しました。今回はその画像いくつか並べて中央以外は台形加工して表示します。今回は、カスタムコントロール(ImageReflector.as)とmxmlファイルを修正していきます。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_5/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+</ul>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■要素を並べて、繰り返し表示するには</h3>
+
+<p>Flashでは、Boxを使うとBox内に要素を並べることができます。BoxにはHBox（横並び）とVBox（縦並び）の実装があり、CoverFlowでは横並びを利用します。  </p>
+
+<p>HBoxを使って以下のようなコードを書けばよいのですが、</p>
+<pre class="highlight plaintext"><code>&lt;HBox&gt;
+  &lt;local:ImageReflector id="imageReflector0" /&gt;
+  &lt;local:ImageReflector id="imageReflector1" /&gt;
+  &lt;local:ImageReflector id="imageReflector2" /&gt;
+  &lt;local:ImageReflector id="imageReflector3" /&gt;
+&lt;/HBox&gt;
+</code></pre>
+
+<p>これだとImageReflectorを必要な分、記述しなければいけないのでかなり面倒です。そこで、繰り返しを便利にしてくれるRepeaterという要素があります。今回のmxmlでは以下のように記述しています。</p>
+<pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off"&gt;
+    &lt;Repeater id="rp" dataProvider="{dp}"&gt;
+        &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)"/&gt;
+    &lt;/Repeater&gt;
+&lt;/HBox&gt;
+</code></pre>
+
+<p>Repeaterで繰り返したい要素はdataProviderというパラメータで指定することができます。dpは同じmxmlのスクリプト部分に記述しています。</p>
+<pre class="highlight plaintext"><code>[Bindable]
+private var dp:ArrayCollection =  new ArrayCollection(["482228350X", "4774133655", "4274066940", "4822283143", "4839923221", "4873113202", "4797333502", "4822282295"]);
+</code></pre>
+
+<p>配列要素（ArrayCollection）に、amazonのasinidを指定していけば、値が変更になった場合も簡単です。後々XMLファイルに外だしにする場合もそれほど変更が必要になりません。  </p>
+
+<h3>■画面とActionScriptで情報を交換する</h3>
+
+<p>dataProviderで指定した、asinidをActionScriptに引き渡すには、[Bindable]を宣言すれば良いだけです。この宣言は変数でも関数でも、直前に記述すれば、MXMLとActionScriptの間で情報を交換することができます。本サンプルでは、asinIdと、選択表示（今回は中央）のIndexをMXMLからActionScriptに対して引き渡しています。引渡し方法は、タグの中で指定する方法や、MXMLのScriptからID指定で渡す方法があります。  </p>
+
+<p>タグの中で指定するには、</p>
+<pre class="highlight plaintext"><code>&lt;local:ImageReflector asinId="{rp.currentItem}"/&gt;
+</code></pre>
+
+<p>と書くことで、ImageReflectorクラスのasinId変数の初期値として、rp.currentItemの値がセットされます。rp.currentItemはRepeater(idがrp)の現在のdataProvider配列の値です。繰り返している現在の値を引き渡しています。  </p>
+
+<p>スクリプトの中で指定するには、</p>
+<pre class="highlight plaintext"><code>imageReflector[0].selectedIndex = dp.length / 2;
+</code></pre>
+
+<p>と書くことで、idがimageReflectorの要素の0番目のselectedIndex変数に値をセットすることができます。imageReflectorはRepeaterで繰り返しているImageReflector要素のidで同じIDが複数出現すると、自動的に配列要素となってくれます。  </p>
+
+<h3>■measureを修正して、個々の横幅を指定する</h3>
+
+<p>Flashが個々の要素の幅を決定するときに呼ぶmeasure関数で、選択要素は等幅、それ以外は台形変形したときに横幅を指定するようにします。</p>
+<pre class="highlight plaintext"><code>if(selectedIndex == repeaterIndex) {
+    measuredWidth = _content.getExplicitOrMeasuredWidth();
+}
+else {
+    measuredWidth = tiltingWidth;
+}
+</code></pre>
+
+<p>selectedIndexはMXMLとバインディングしている変数ですが、repeaterIndexはどこにも出てきません。これは自分のコントロールがRepeaterの中にある場合に有効な変数で、自分がRepeaterの何番目かを知ることができるのです。ですからMXMLから指定された選択Indexである場合は、画像の幅を指定し、それ以外の場合はtiltingWidthを指定します。このtiltingWidthも変数宣言していませんが、今回追加したコードに関数が記述されています。</p>
+<pre class="highlight plaintext"><code>public function set tiltingWidth(value:Number):void
+{
+    // no set
+}
+public function get tiltingWidth():Number
+{
+    var contentWidth:Number = _content.getExplicitOrMeasuredWidth();
+    var contentHeight:Number = _content.getExplicitOrMeasuredHeight();
+    var radians:Number = Math.atan2(-tiltingMargin, maxTiltingWidth);
+    var rotation:Number = radians * 180 / Math.PI;
+    var w:Number = Math.abs(contentWidth * Math.cos(rotation * 180 / Math.PI));
+    return Math.min(maxTiltingWidth, w);
+}
+</code></pre>
+
+<p>functionの後にset,getと書くとプロパティ値のsetter,getterの意味を持つことができ、あたかもtiltingWidthというメンバ変数があるように見せかけることができます。  </p>
+
+<p><img src="/images/blog/1image01.gif" /> 
+台形変形したときの横幅は、前回も出たMathの三角関数を使って出しています。図のように台形に変形したときに切り落とされる三角形の底辺となる幅を想定すればよいでしょう。最初に上のように高さがtiltingMarginで、幅がmaxTiltingWidthの三角形で斜辺への角度を求めます。  </p>
+
+<p>同じ角度で斜辺の長さが実際の画像幅になった場合に、底辺がどのくらいの幅になるかを求めます。そこで小さいほうの幅を採用すると幅の異なる様々な画像でもうまく幅を指定することができます。  </p>
+
+<h3>■実際に描画する</h3>
+
+<p>updateDisplayListを修正して、ビットマップを台形変形するなどの描画を行います。  </p>
+
+<p>前回まではupdateDisplayListで直接画像を表示していましたが、transformImageという関数に変形後の幅を渡して画像を描画してもらうようにします。今回追加したtransformImage関数では、Kazuhiko Arase氏の<a href="http://www.d-project.com/flex/009_FreeTransform/">四角形の自由変形</a>という記事に掲載されている、TransformUtilクラスを使っています。台形変形すると様々な考慮が必要となるのですが、この変形ツールを指定すれば、４点の座標を指定するだけで良いので便利です。<br>
+<img src="/images/blog/image02.gif" /> 
+transformImage関数では、図のように６つの点を計算しています。位置が計算できたら、drawImageShape関数でTransformUtilを呼び出して、描画領域へ表示するようにします。  </p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>前回も書いたのですが、amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは前回記事を参考にしてください。  </p>
+
+<h3>■次回予告</h3>
+
+<p>アニメーション表示に取り掛かりたいと思います。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる" data-url="http://blog.open.tokyo.jp/2008/05/29/flex2-coverflow-5.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/05/29/flex2-coverflow-5.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/05/29/flex2-coverflow-5.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/05/29/flex2-coverflow-5.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%95)%20%EF%BD%9E%E4%B8%A6%E3%81%B9%E3%81%A6%E5%8F%B0%E5%BD%A2%E5%A4%89%E5%BD%A2%E3%81%95%E3%81%9B%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/05/29/flex2-coverflow-5.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/04/28/flex2-coverflow-4.html">Flex2でCoverFlowクローンを作る (４) ～鏡面加工する</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2008/04/28.html">Monday, April 28, 2008 05:04:40 PM</a></p>
   <p class="tags">
     
@@ -749,71 +901,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/04/11/opera-backstage-tokyo.html">Opera Backstage Tokyo に参加してきた</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/04/11.html">Friday, April 11, 2008 05:04:19 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/backstage.html">Backstage</a>
-    
-      <a rel="tag" href="/tags/lt.html">LT</a>
-    
-      <a rel="tag" href="/tags/opera.html">Opera</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;昨日開催された<a href="http://my.opera.com/chooseopera-Japan/blog/2008/03/17/opera-backstage-tokyo-2008-4-10">Opera Backstage Tokyo</a>へ参加してきました。  </p>
-
-<p>あいにくの雨の中、ライトニングトークスをやるので、ものすごく重いＰＣを抱えてノルウェー大使館へ。  </p>
-
-<p>時間が読めなかったので、現地でランチでいいや、と思ったのですが、良く考えるとそこはセレブな街。ランチがすごく高いです。。。。。  </p>
-
-<p>まぁなんかあるだろう、とお気楽モードで歩いていたら、ラーメン香月がありました。なんとかなるもんです。いつもながらの出たとこ勝負。  </p>
-
-<p>後はEZナビウォークの力を借りて、無事大使館へ到着です。  </p>
-
-<p>そういえば大使館はスウェディッシュスタイルで、スウェーデン大使館に入った以来、というかそれ以外では初めて。なんだかプールがあったりして良い感じでした。ホールはスウェーデン大使館の方が広いかな？  </p>
-
-<p>アジェンダを見たら、ＬＴが先頭バッターじゃないですか・・・  </p>
-
-<p>いくらＬＴ慣れているとはいえ、最初は緊張感が違いました。まぁそんなこんなで時間がたっぷりおして、イベントは終了。その後、広尾の土間土間で懇親会でしたが、翔泳社のかたと神田で飲み会が入っていたので、19:30に抜け出てしまいました。そういえばグループディスカッションの結果は発表したのかなぁ～？  </p>
-
-<p>名刺交換していただいた皆様、ありがとうございました。今後ともよろしくお願いいたします。  </p>
-
-<div style="width:425px;text-align:left" id="__ss_346996">
-<object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slideshare.net/swf/ssplayer2.swf?doc=operawithfonts-1207874636410635-8">
-<param name="allowFullScreen" value="true">
-<param name="allowScriptAccess" value="never">
-<embed src="http://static.slideshare.net/swf/ssplayer2.swf?doc=operawithfonts-1207874636410635-8" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">
-<a href="http://www.slideshare.net/?src=embed" rel="nofollow"><img src="http://static.slideshare.net/swf/logo_embd.png" style="border:0px none;margin-bottom:-5px" alt="SlideShare"></a> | <a href="http://www.slideshare.net/kishida4slideshare/opera-backstage-tokyo-2008?src=embed" title="View 'Opera Backstage Tokyo 2008&amp;#39; ライトニングトークス' on SlideShare" rel="nofollow">View</a> | <a href="http://www.slideshare.net/upload?src=embed" rel="nofollow">Upload your own</a>
-</div>
-
-<p></div></p>
-
-<p>その後、神田から帰る頃には、ほとんど記憶がないくらい呑んでしまい・・・  </p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Opera Backstage Tokyo に参加してきた" data-url="http://blog.open.tokyo.jp/2008/04/11/opera-backstage-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/04/11/opera-backstage-tokyo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/04/11/opera-backstage-tokyo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/04/11/opera-backstage-tokyo.html&t=Opera%20Backstage%20Tokyo%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/04/11/opera-backstage-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -844,6 +931,13 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
         <b>15</b>
       
     
+      
+        
+        <a href="/page/16/">16</a>
+      
+    
+    
+      <a href="/page/16/">Next »</a>
     
   </p>
 <script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
@@ -860,6 +954,8 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                
+                  <li><a href="/2015/06/14/cakefest2015.html">CakeFest2015に参加してきた</a> <span>2015/06/14</span></li>
                 
                   <li><a href="/2015/05/17/cakephp3-behat.html">CakePHP3 のアプリケーションを Behat でテストする</a> <span>2015/05/17</span></li>
                 
@@ -878,8 +974,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
                 
                   <li><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a> <span>2014/10/13</span></li>
-                
-                  <li><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a> <span>2014/09/23</span></li>
                 
               </ul>
             </div>
@@ -1229,7 +1323,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                 
                   
                   
-                    <li class="size0">
+                    <li class="size1">
                       <a rel="tag" href="/tags/cakephp3.html">CakePHP3</a>
                     </li>
                   
@@ -1287,7 +1381,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (8)</li>
+                  <li><a href="/2015.html">2015</a> (9)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
