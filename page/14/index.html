@@ -275,7 +275,125 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html">本日、無事発売されました</a></h2>
+            <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2008/08/25.html">Monday, August 25, 2008 11:08:41 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+    
+      <a rel="tag" href="/tags/flex.html">Flex</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第七回は、マウスイベントを取得する手順を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
+
+<p>前回はスクロール処理とアニメーション効果を付けてみました。今回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して変更していきます。今回は、mxmlファイルのみ修正していきます。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_7/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+</ul>
+
+<p>前回から修正したのは、reflector.mxmlだけです。  </p>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■マウスの基本動作はクリックと移動</h3>
+
+<p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
+<pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
+      paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
+      mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
+      mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
+</code></pre>
+
+<p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
+
+<ol>
+<li><p>mouseUp : マウスのボタンが押された後、放されたときに発生する  </p></li>
+<li><p>mouseDown : マウスとボタンが押されたときに発生する  </p></li>
+<li><p>mouseMove : マウスポインターが動いたときに発生する  </p></li>
+<li><p>mouseOut : マウスポインターがHBOXから出たときに発生する  </p></li>
+</ol>
+
+<p>のような意味を持っています。</p>
+
+<h3>■マウスがどこで操作されたのか調べる</h3>
+
+<p>マウスイベントは表示領域で取得しますが、対象のHBOXには様々な子コントロールが含まれています。本サンプルで使っているのは</p>
+
+<ul>
+<li>カバー写真</li>
+<li>横スクロールバー</li>
+</ul>
+
+<p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
+料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
+<pre class="highlight plaintext"><code>if(event.target.parent is HScrollBar)
+</code></pre>
+
+<p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
+
+<h3>■マウスが領域外に出たときを考慮する</h3>
+
+<p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
+
+<p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
+<pre class="highlight plaintext"><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
+</code></pre>
+
+<p>のように、記述します。  </p>
+
+<p>似たイベントで、MouseEvent.ROLL_OUTがありますが、これはHTMLの:hoverのような実装をする際に使うイベントです。つまり対象のコントロールの上に来た・離れたというのを制御します。</p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは過去記事を参考にしてください。  </p>
+
+<h3>■次回予告</h3>
+
+<p>画像間の隙間をなくして、ホンモノのように画像が重なって表示されている効果を実装してみます。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する" data-url="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%97)%20%EF%BD%9E%E3%83%9E%E3%82%A6%E3%82%B9%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html">本日、無事発売されました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2008/07/25.html">Friday, July 25, 2008 05:07:10 PM</a></p>
   <p class="tags">
     
@@ -645,65 +763,6 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-treebehavior.html">CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/06/09.html">Monday, June 09, 2008 06:06:49 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/1-2.html">1.2</a>
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/rc1.html">RC1</a>
-    
-      <a rel="tag" href="/tags/treebehavior.html">TreeBehavior</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;TreeBehavior自体1.2から追加された機能なのに、変更になるなんて。。。  </p>
-
-<p>1.2βでは</p>
-<pre class="highlight plaintext"><code>$this-&gt;Category-&gt;setScope(array('company_id'=&gt;'1'));
-$categories = $this-&gt;Category-&gt;children();
-</code></pre>
-
-<p>のように書くと、company_idが1のカテゴリだけ階層構造で取得できていたのだが、RC1ではsetScopeがDeprecatedになってしまった。で、上記方法を使っている画面を表示すると、「(TreeBehavior::setScope) Deprecated - Use BehaviorCollection::attach() to re-attach with new settings」というエラーメッセージが出るが、お世辞にもどう変更していいかわかるメッセージじゃないし、ドキュメントにも書いてない。  </p>
-
-<p>なので、ソースを読み込むことに。まぁソース読めばわかります。結果としては、</p>
-<pre class="highlight plaintext"><code>$this-&gt;Category-&gt;$this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;array('company_id'=&gt;'1')));
-$categories = $this-&gt;Category-&gt;children();
-</code></pre>
-
-<p>のように記述するのですが、これを使用箇所で全部変更するのは大変ですね。そこで、Categoryのモデルクラスに以下のようなメソッドを追加してあげました。</p>
-<pre class="highlight plaintext"><code>function setScope($scope = array()) {
-    return $this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;$scope));
-}
-</code></pre>
-
-<p>ま、AppModelに追加しても良かったんですが、全部がTreeBehavior使っている訳ではないと思うので、その場合は、setTreeScopeのような名前に変更した方が良いかな？と思っています。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html&t=CakePHP%201.2%20RC1%E3%81%A7TreeBehavior%E3%81%AE%E7%B5%9E%E8%BE%BC%E3%81%BF%E7%AF%84%E5%9B%B2%E6%8C%87%E5%AE%9A%E3%81%8C%E5%A4%89%E6%9B%B4%E3%81%A8%E3%81%AA%E3%81%A3%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -763,6 +822,8 @@ $categories = $this-&gt;Category-&gt;children();
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
+                
                   <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
                 
                   <li><a href="/2015/06/14/cakefest2015.html">CakeFest2015に参加してきた</a> <span>2015/06/14</span></li>
@@ -780,8 +841,6 @@ $categories = $this-&gt;Category-&gt;children();
                   <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
                 
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
-                
-                  <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
                 
               </ul>
             </div>
@@ -1197,7 +1256,7 @@ $categories = $this-&gt;Category-&gt;children();
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (10)</li>
+                  <li><a href="/2015.html">2015</a> (11)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

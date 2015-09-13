@@ -5,10 +5,114 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-06-14T09:33:00Z</updated>
+  <updated>2015-09-13T07:11:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>正規表現を簡単に作るには</title>
+    <link rel="alternate" href="http://blog.url.com/2015/09/13/verbal-expression-php.html"/>
+    <id>http://blog.url.com/2015/09/13/verbal-expression-php.html</id>
+    <published>2015-09-13T07:11:00Z</published>
+    <updated>2015-09-13T16:57:18+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;皆さんは正規表現好きですか？そして得意ですか？
+私は好きですが、得意とは言えません。&lt;/p&gt;
+
+&lt;h3&gt;VerbalExpressionという選択肢&lt;/h3&gt;
+
+&lt;p&gt;そこでVervalExpressionという正規表現を簡単に組むことができる仕組みがあります。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="http://verbalexpressions.github.io/"&gt;http://verbalexpressions.github.io/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;サイトに「Regular Expressions made easy」と書いてあるように、簡単に正規表現が作れることを表明しています。
+様々な言語にポートされていますが、もちろんPHP版もあります。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/VerbalExpressions/PHPVerbalExpressions"&gt;https://github.com/VerbalExpressions/PHPVerbalExpressions&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;サイトのサンプルにも書いてあるとおり、以下のようなURLにマッチする正規表現が記述できます。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;use VerbalExpressions\PHPVerbalExpressions\VerbalExpressions;
+
+$regex = new VerbalExpressions;
+$regex  -&amp;gt;startOfLine()
+        -&amp;gt;then("http")
+        -&amp;gt;maybe("s")
+        -&amp;gt;then("://")
+        -&amp;gt;maybe("www.")
+        -&amp;gt;anythingBut(" ")
+        -&amp;gt;endOfLine();
+
+echo $regex-&amp;gt;getRegex() ."\n";
+if (preg_match($regex, 'http://github.com')) {
+    echo "valid url\n";
+} else {
+    echo "invalud url\n";
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;1つ目のechoの結果は &lt;code&gt;/^(?:http)(?:s)?(?:\:\/\/)(?:www\.)?(?:[^ ]*)$/m&lt;/code&gt; で、2つ目のechoは &lt;code&gt;valid url&lt;/code&gt; を表示します。
+VerbalExpressionsクラスに &lt;code&gt;toString&lt;/code&gt; メソッドが実装されているので、 &lt;code&gt;preg_match&lt;/code&gt; 関数でそのまま使えます。&lt;/p&gt;
+
+&lt;h3&gt;複雑なことはできるか？&lt;/h3&gt;
+
+&lt;p&gt;例えばRFC3986に書いてあるURLパターンをマッチさせようとすると、どうなるでしょうか？
+一旦スキーマ部分だけ記述してみます。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;$rfc3986 = new VerbalExpressions;
+// scheme
+$scheme = new VerbalExpressions;
+$scheme-&amp;gt;add("http")-&amp;gt;maybe("s")-&amp;gt;_or("ftp");
+
+$rfc3986-&amp;gt;startOfLine()
+        -&amp;gt;add($scheme)
+        -&amp;gt;add("://");
+echo $rfc3986-&amp;gt;getRegex() ."\n";
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果は &lt;code&gt;/^(?:\(\?\:http\)\(\?\:s\)\?\)\|\(\?\:ftp)(?:\:\/\/)/m&lt;/code&gt; のようになってしまい、期待通りではありません。
+この実装は入れ子には対応していないようです。&lt;/p&gt;
+
+&lt;h3&gt;もう１つのVerbalExpression実装&lt;/h3&gt;
+
+&lt;p&gt;PHPにはもう１つ別のVerbalExpression実装があります。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/markwilson/VerbalExpressionsPhp"&gt;https://github.com/markwilson/VerbalExpressionsPhp&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;こちらの実装はREADMEに入れ子について記述されているように、入れ子の対応はされているようです。
+では早速RFC3986の定義を試してみましょう。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;$rfc3986 = new VerbalExpression;
+// scheme
+$scheme = new VerbalExpression;
+$scheme-&amp;gt;then("http", false)-&amp;gt;maybe("s", false)-&amp;gt;orPipe("ftp", false);
+
+$rfc3986-&amp;gt;startOfLine()
+        -&amp;gt;find($scheme)
+        -&amp;gt;find("://")
+        -&amp;gt;endOfLine();
+echo $rfc3986-&amp;gt;compile() ."\n";
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果は &lt;code&gt;^((?:http)(?:s)?()|()(ftp))(\:\/\/)$&lt;/code&gt; のようになってしまい、まぁ不正ではないのですが、かなり無駄があります。&lt;/p&gt;
+
+&lt;h3&gt;現時点結局のところ&lt;/h3&gt;
+
+&lt;p&gt;どちらの実装も簡単なパターンをやるときには良いのですが、ちょっと複雑なパターンを実装しようと思うと微妙です。
+大体、簡単なパターンはそのまま正規表現書けば良いじゃん&amp;hellip; という話ですしね。&lt;/p&gt;
+
+&lt;h3&gt;目指したいところ&lt;/h3&gt;
+
+&lt;p&gt;RubyのVerbalExpressions実装には &lt;a href="http://www.kurtisrainboltgreene.name/hexpress/"&gt;HEXPRESS&lt;/a&gt; があります。
+これはVerbalExpressionsよりさらに便利なヘルパーを備えて &lt;code&gt;Human Expressions, a human way to define regular expressions&lt;/code&gt; という標語のとおりより簡単に実装できるように見えます。&lt;/p&gt;
+
+&lt;p&gt;これをPHPに移植して使えるようにしようというのが、直近やろうとしていることです。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="http://phpcon.php.gr.jp/2015/"&gt;日本PHPカンファレンス2015&lt;/a&gt;が10/3(土)に行われます。
+私もスピーカーとして登壇しますので、もしご都合がつく方はよろしくお願いします。   &lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>htmldayのイベントに参加してきた</title>
     <link rel="alternate" href="http://blog.url.com/2015/06/14/htmlday-2015.html"/>
@@ -874,272 +978,6 @@ gulpのタスク上に、&lt;code&gt;gulp-rev&lt;/code&gt;のREADMEに書いて�
 &lt;p&gt;静的ファイルのリビジョン管理って結構面倒なんですが、gulp使うと便利なライブラリあって簡単に実装できます。
 今回は私が遭遇した特殊なケースかもしれないので、そのままgulp-revだけで完結できることも多々あるでしょう。
 gulp-revや、その関連ライブラリには便利な機能がまだあるので、一度使ってみてください。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Cakebox を使ってCakePHP3アプリケーションを作ってみよう</title>
-    <link rel="alternate" href="http://blog.url.com/2015/04/19/cakebox-is-awesome.html"/>
-    <id>http://blog.url.com/2015/04/19/cakebox-is-awesome.html</id>
-    <published>2015-04-19T06:19:00Z</published>
-    <updated>2015-04-19T17:26:13+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;CakePHP3の開発環境を構築するのは、以前にも書いたとおり &lt;a href="https://github.com/FriendsOfCake/vagrant-chef"&gt;FriendsOfCake/vagrant-chef&lt;/a&gt; を便利に使っていたのですが、先日 Twitter の TL に流れてきた &lt;a href="https://github.com/alt3/cakebox"&gt;Cakebox&lt;/a&gt; というのが気になっていたので、使ってみました。&lt;/p&gt;
-
-&lt;p&gt;結論としては「&lt;code&gt;CakePHPで何かつくってみたいなら、使わない理由がない&lt;/code&gt;」ということです。&lt;/p&gt;
-
-&lt;h3&gt;Cakeboxとは&lt;/h3&gt;
-
-&lt;p&gt;CakeboxはAlt&amp;lt;3 Because projects need loveというオランダのプロジェクトのリポジトリにあり、アムステルダムの&lt;a href="https://github.com/bravo-kernel"&gt;bravo-kernel&lt;/a&gt;氏が中心になって作っているようです。またCakePHPのコアデベロッパでもある&lt;a href="https://github.com/ceeram"&gt;ceeram&lt;/a&gt;氏もcontributeしているので、アムステルダムでは著名なプロジェクトなのかもしれません。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="http://cakebox.readthedocs.org/en/latest/features/"&gt;Cakeboxの詳しいドキュメント&lt;/a&gt;に書いてあるとおり、chefでubuntuベースのboxファイルを生成し、cakeboxではそれを使ってvagrantとvirtualboxで起動する流れです。&lt;/p&gt;
-
-&lt;p&gt;後で説明しますが、便利なコンソールアプリがあり、それ自体がCakePHP3でできているので、CakePHP3のアプリケーションサンプルとしても役立つのではないかと思います。&lt;/p&gt;
-
-&lt;p&gt;boxファイルに入っているソフトウェアは上記ドキュメントに詳しく書いてあるので、そちらを参照してください。&lt;/p&gt;
-
-&lt;h3&gt;なんと簡単、環境構築&lt;/h3&gt;
-
-&lt;h4&gt;Cakeboxのインストール&lt;/h4&gt;
-
-&lt;p&gt;最初にCakeboxをダウンロード（クローン）します。以下はCakeboxのREADMEに書いてあるままの内容です。
-注意点として、以下の前提条件が必要となります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;VirtualBox 4.0 以上&lt;/li&gt;
-&lt;li&gt;Vagrant 1.6.0 以上&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;どちらかが満たされていないと、まったく起動しないので注意してください（私は踏みましたw）。&lt;/p&gt;
-&lt;pre class="highlight shell"&gt;&lt;code&gt;git clone https://github.com/alt3/cakebox.git
-&lt;span class="nb"&gt;cd &lt;/span&gt;cakebox
-cp Cakebox.yaml.default Cakebox.yaml
-vagrant up
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;設定ファイル（yaml）には、詳細な設定を指定できるようですが、いったん何も設定しなくても問題はありませんでした。
-以下のようなログが出力されます。
-最初はCakeboxのboxファイルをCDNからダウンロードするので時間がかかります。
-予め時間があり、回線に余裕があるときにvagrant upだけは済ませておくと良いですね。&lt;/p&gt;
-&lt;pre class="highlight shell"&gt;&lt;code&gt;Bringing machine &lt;span class="s1"&gt;'default'&lt;/span&gt; up with &lt;span class="s1"&gt;'virtualbox'&lt;/span&gt; provider...
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Importing base box &lt;span class="s1"&gt;'cakebox'&lt;/span&gt;...
-&lt;span class="c"&gt;# ... 省略&lt;/span&gt;
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Please wait... installing Cakebox Commands and Dashboard
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Self-updating Composer
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Updating Composer cache permissions
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Creating project
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Composer installing
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Installation completed successfully!
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Running provisioner: shell...
-    default: Running: inline script
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: CakePHP v3.0.0 Console
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Self-updating cakebox
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Self-updating Composer
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Updating cache permissions
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Updating Cakebox Commands and Dashboard
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Detecting branch
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Updating git repository
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Updating composer packages
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Updating CakePHP Code Sniffer
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Composer updating
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Updating HHVM configuration
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Creating system start/stop links
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Correcting HHVM session.save_path
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Restarting service
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Updating Elasticsearch configuration
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Decreasing required memory
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Updating initialization script
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="k"&gt;*&lt;/span&gt; Stopping service
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Self-update completed successfully
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Running provisioner: shell...
-    default: Running: inline script
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: CakePHP v3.0.0 Console
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: ---------------------------------------------------------------
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Setting Cakebox Dashboard protocol to http
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Command completed successfully
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Running provisioner: shell...
-    default: Running: inline script
-&lt;span class="c"&gt;# ... 省略&lt;/span&gt;
-
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Machine &lt;span class="s1"&gt;'default'&lt;/span&gt; has a post &lt;span class="sb"&gt;`&lt;/span&gt;vagrant up&lt;span class="sb"&gt;`&lt;/span&gt; message. This is a message
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: from the creator of the Vagrantfile, and not from Vagrant itself:
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: 
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: Your box is ready and waiting.
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: 
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; Login to your Dashboard by browsing to http://10.33.10.10
-&lt;span class="gp"&gt;==&amp;gt; &lt;/span&gt;default: &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; Login to your virtual machine by running: vagrant ssh
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;boxファイルのインストールが終わると、ダッシュボードアプリをインストールし、そのアプリのCLIを使ってアプリ自身と、各種モジュールを設定するようです。&lt;/p&gt;
-
-&lt;p&gt;ここまで終わったら、指示どおり &lt;code&gt;http://10.33.10.10&lt;/code&gt; にアクセスしてみましょう。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/cakebox_init.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;かっこいいダッシュボード画面が表示されました。こういうのがあるとテンション上がりますよね！&lt;/p&gt;
-
-&lt;h4&gt;アプリケーションの構築&lt;/h4&gt;
-
-&lt;p&gt;Cakeboxを使って開発環境が構築できたら、CakePHP3アプリケーションを構築してみましょう。&lt;code&gt;vagrant ssh&lt;/code&gt;でCakeboxにログインします。&lt;/p&gt;
-&lt;pre class="highlight shell"&gt;&lt;code&gt;localhost:cakebox &lt;span class="nv"&gt;$ &lt;/span&gt;vagrant ssh
-Welcome to Ubuntu 14.04.1 LTS &lt;span class="o"&gt;(&lt;/span&gt;GNU/Linux 3.13.0-24-generic x86_64&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;CakeboxのREADMEに書いてあるとおり、&lt;code&gt;cakebox&lt;/code&gt;コマンドを使ってアプリケーションを生成します。とりあえずCakePHP3のブログチュートリアルを作ってみたいと思います。&lt;/p&gt;
-&lt;pre class="highlight shell"&gt;&lt;code&gt;&lt;span class="gp"&gt;vagrant@cakebox:~$ &lt;/span&gt;cakebox application add blog-tutorial.app
----------------------------------------------------------------
-CakePHP v3.0.0 Console
----------------------------------------------------------------
-Creating application http://blog-tutorial.app
-
-Configuring installer
-Creating installation directory
-Composer installing CakePHP 3.x application sources
-Creating virtual host
-&lt;span class="k"&gt;*&lt;/span&gt; Successfully created PHP-FPM virtual host
-Creating databases
-&lt;span class="k"&gt;*&lt;/span&gt; Successfully created main database
-&lt;span class="k"&gt;*&lt;/span&gt; Successfully created &lt;span class="nb"&gt;test &lt;/span&gt;database
-Configuring permissions
-Updating configuration files
-Application created using:
-  database &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; blog-tutorial_app
-  framework &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; cakephp
-  framework_human &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; CakePHP 3.x
-  framework_short &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; cakephp3
-  installation_method &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; composer
-  majorversion &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; 3
-  path &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; /home/vagrant/Apps/blog-tutorial.app
-  &lt;span class="nb"&gt;source&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; cakephp/app
-  url &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; blog-tutorial.app
-  webroot &lt;span class="o"&gt;=&lt;/span&gt;&amp;gt; /home/vagrant/Apps/blog-tutorial.app/webroot
-
-Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
-
-Installation completed successfully
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;はい、終わり。&lt;code&gt;hostsファイルに追加してね&lt;/code&gt; というメッセージが出ているので、hostsファイルに追加します。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;&lt;code&gt;$ vim /etc/hosts
-
-# この行を追加します
-10.33.10.10 blog-tutorial.app
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;さっそく &lt;code&gt;http://blog-tutorial.app&lt;/code&gt; にアクセスしてみましょう。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/cakebox_createapp.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;うわー、すげー。
-ディレクトリの権限とか、DBの設定とか全部できちゃっているよ。
-CakePHP3で &lt;code&gt;composer create-project&lt;/code&gt; やったことあればわかると思うのですが、ここまで設定するのもちょっと面倒です。&lt;/p&gt;
-
-&lt;p&gt;Cakeboxのダッシュボード画面も見てみましょう。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/cakebox_createdapp_dashbord.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;アプリケーションが1つ、データベースが2つ、バーチャルホストが2つ（最初は1なので1つ増えてます）になっています。
-つまり &lt;code&gt;cakebox application add&lt;/code&gt; 実行すると&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;CakePHP3の &lt;code&gt;composer create-project&lt;/code&gt; でスケルトン作って&lt;/li&gt;
-&lt;li&gt;nginxのsite-availablesにバーチャルホスト追加して&lt;/li&gt;
-&lt;li&gt;DB（mysql）にdefaultとtestの2つのDBを作って&lt;/li&gt;
-&lt;li&gt;CakePHP3のconfigをモロモロ設定、パーミッションも設定&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;してくれるというわけです。なんと便利、そして簡単なんでしょう。
-&lt;a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/blog.html"&gt;blogチュートリアルの1ページ目&lt;/a&gt;のうち、&lt;code&gt;Creating the Blog Database&lt;/code&gt; のテーブル生成以外のステップは（nginxの設定まで）コマンド一つで終わりです。&lt;/p&gt;
-
-&lt;h3&gt;ブログチュートリアルのテーブル作成&lt;/h3&gt;
-
-&lt;p&gt;せっかくなので、マイグレーションプラグインを使って、テーブルを生成します。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;&lt;code&gt;vagrant@cakebox:~$ cd Apps/blog-tutorial.app/
-vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations create CreateArticles
-Welcome to CakePHP v3.0.1 Console
----------------------------------------------------------------
-App : src
-Path: /home/vagrant/Apps/blog-tutorial.app/src/
----------------------------------------------------------------
-using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
-using migration base class Phinx\Migration\AbstractMigration
-using default template
-created ./config/Migrations/20150419074519_create_articles.php
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;upとdownを以下のように記述します。&lt;/p&gt;
-&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?php&lt;/span&gt;
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;up&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nv"&gt;$table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'articles'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-        &lt;span class="nv"&gt;$table&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'title'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'string'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'limit'&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;50&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
-              &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'body'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'text'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-              &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'created'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-              &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;addColumn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'modified'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'datetime'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-              &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;create&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="nf"&gt;down&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="na"&gt;dropTable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'articles'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="cp"&gt;?&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;マイグレーションを実行してテーブルを作成します。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;&lt;code&gt;vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations migrate
-
-Welcome to CakePHP v3.0.1 Console
----------------------------------------------------------------
-App : src
-Path: /home/vagrant/Apps/blog-tutorial.app/src/
----------------------------------------------------------------
-using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
-using environment default
-using adapter mysql
-using database blog-tutorial_app
-
- == 20150419074519 CreateArticles: migrating
- == 20150419074519 CreateArticles: migrated 0.1178s
-
-All Done. Took 0.1780s
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;これでチュートリアルの1ページ目は終了です。&lt;/p&gt;
-
-&lt;h3&gt;ブログチュートリアルを進めよう&lt;/h3&gt;
-
-&lt;p&gt;チュートリアルって環境構築ではまるケースが多い（特に今まで使ったことないフレームワークとか特に）のですが、このように簡単に始められるのは大きいですね。
-あとは&lt;a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/part-two.html"&gt;パート２&lt;/a&gt;の内容を、進めていけば大丈夫です。
-ここではチュートリアルそのものを解説するわけではないので、ワープします。
-指定されたファイルに、そのままコピペしていけば大丈夫です。&lt;/p&gt;
-
-&lt;p&gt;コピペしたあとにテストという投稿を追加してみた結果が以下のとおりです。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/cakebox_tutorial_part2.png" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;Cakeboxを使ってブログチュートリアルを進めてみましたが、もし今までCakePHPを使ったことがなくても、CakePHP2は使っていたけど、3はまだ、という人にも環境構築のステップが簡略されているのは、とても大きいと思います。&lt;/p&gt;
-
-&lt;p&gt;実はCakebox &lt;code&gt;Multi-Framework PHP Development Environment&lt;/code&gt; と書いてあるとおり、CakePHP3だけのためにあるわけではないようです。&lt;/p&gt;
-&lt;pre class="highlight shell"&gt;&lt;code&gt;&lt;span class="c"&gt;# Fresh preconfigured PHP framework applications&lt;/span&gt;
-&lt;span class="gp"&gt;$ &lt;/span&gt;cakebox application add mycake3.app
-&lt;span class="gp"&gt;$ &lt;/span&gt;cakebox application add mycake2.app --majorversion 2
-&lt;span class="gp"&gt;$ &lt;/span&gt;cakebox application add mylaravel.app --framework laravel
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;なんとCakePHP2もいけるし、今話題の laravel5 の環境も作れるみたいですよ！
-これは現時点でのサポート状況ということで、今後増えていくことも想定されます。
-これはもう Cakebox を試してみるしかないですね。&lt;/p&gt;
-
-&lt;p&gt;そんなCakePHP3ですが、&lt;a href="https://coedo-cakephp.doorkeeper.jp/events/23199"&gt;CakePHP3 もくもく会（勉強会） #14&lt;/a&gt; が 2015-04-28（火）19:00 - 21:30　に Co-Edoで開催されます。
-PHP勉強会と日程かぶっていますが、もしCakePHP3に興味があればこちらにも参加してみてください。&lt;/p&gt;
 </content>
   </entry>
 </feed>

@@ -298,7 +298,7 @@
 $this-&gt;Post-&gt;find($conditions);
 </code></pre>
 
-<p>この例は完全一致（=）なので問題はなかったのだが、それ以外の<や>、LIKEやBETWEENなど記述方法が変更となっている。
+<p>この例は完全一致（=）なので問題はなかったのだが、それ以外の&lt;や&gt;、LIKEやBETWEENなど記述方法が変更となっている。
 なおINの場合は、</p>
 <pre class="highlight plaintext"><code>$conditions = array("Post.id" =&gt; array(1,2,3,4,5));
 
@@ -314,7 +314,7 @@ $this-&gt;Post-&gt;find($conditions);
 $this-&gt;Post-&gt;find($conditions);
 </code></pre>
 
-<p>となっていた。しかしこれを1.2 RC1で実行すると、WHERE句は「&#39;Post.title&#39; = &lsquo;LIKE %post%&#39;」のようになってしまう。そこで、dbo_source.phpを見て解析してみた。結果、LIKEなどの記法は</p>
+<p>となっていた。しかしこれを1.2 RC1で実行すると、WHERE句は「&#39;Post.title&rsquo; = &lsquo;LIKE %post%&#39;」のようになってしまう。そこで、dbo_source.phpを見て解析してみた。結果、LIKEなどの記法は</p>
 <pre class="highlight plaintext"><code>$conditions = array("Post.title LIKE" =&gt; "%post%");
 
 //Example usage with a model:
@@ -330,21 +330,21 @@ $this-&gt;Post-&gt;find($conditions);
 $this-&gt;Post-&gt;find($conditions);
 </code></pre>
 
-<p>のように記述していたが、これもそのままだとWHERE句は「&#39;Post.data&rsquo; = &lsquo;BETWEEN 2008-1-1 AND 2009-1-1&#39;」のようになってしまう。ではLIKEと同じようにしてみると、</p>
+<p>のように記述していたが、これもそのままだとWHERE句は「&#39;Post.data&rsquo; = &#39;BETWEEN 2008-1-1 AND 2009-1-1&#39;」のようになってしまう。ではLIKEと同じようにしてみると、</p>
 <pre class="highlight plaintext"><code>$conditions = array("Post.date BETWEEN" =&gt; "2008-1-1 AND 2009-1-1");
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
 </code></pre>
 
-<p>WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1 AND 2009-1-1&#39;」のようになってしまう。これも正しくない。このようなケースはさらに変更されており、以下のようになる。</p>
+<p>WHERE句は「&#39;Post.data&rsquo; BETWEEN &#39;2008-1-1 AND 2009-1-1&#39;」のようになってしまう。これも正しくない。このようなケースはさらに変更されており、以下のようになる。</p>
 <pre class="highlight plaintext"><code>$conditions = array("Post.date BETWEEN ? AND ?" =&gt; array("2008-1-1", "2009-1-1"));
 
 //Example usage with a model:
 $this-&gt;Post-&gt;find($conditions);
 </code></pre>
 
-<p>BETWEENなど値が複数ある場合は、カラム名上で?を使うと配列の値を順番にセットしてくれる。WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1&rsquo; AND &lsquo;2009-1-1&#39;」のように期待通りの結果となる。  </p>
+<p>BETWEENなど値が複数ある場合は、カラム名上で?を使うと配列の値を順番にセットしてくれる。WHERE句は「&#39;Post.data&rsquo; BETWEEN &#39;2008-1-1&rsquo; AND &#39;2009-1-1&#39;」のように期待通りの結果となる。  </p>
 
 <p>なおLIKEなどでも</p>
 <pre class="highlight plaintext"><code>$conditions = array("Post.title LIKE ?" =&gt; array("%post%"));
@@ -386,6 +386,8 @@ $this-&gt;Post-&gt;find($conditions);
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
+                
                   <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
                 
                   <li><a href="/2015/06/14/cakefest2015.html">CakeFest2015に参加してきた</a> <span>2015/06/14</span></li>
@@ -403,8 +405,6 @@ $this-&gt;Post-&gt;find($conditions);
                   <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
                 
                   <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
-                
-                  <li><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a> <span>2015/01/03</span></li>
                 
               </ul>
             </div>
@@ -820,7 +820,7 @@ $this-&gt;Post-&gt;find($conditions);
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (10)</li>
+                  <li><a href="/2015.html">2015</a> (11)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
