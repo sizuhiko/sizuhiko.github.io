@@ -275,7 +275,123 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a></h2>
+            <h2 class="title"><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2015/09/21.html">Monday, September 21, 2015 01:28:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は先日の<a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a>の続編になります。</p>
+
+<p>前回、RFC3986のような複雑な正規表現をVerbal Expressionの既存実装でやろうとすると、うまくできないという問題に直面しました。
+そこでRubyで実装されていた<a href="http://www.kurtisrainboltgreene.name/hexpress/">HEXPRESS</a>をPHPへ移植しようという流れです。</p>
+
+<h3>PHP版Hexpressを作った</h3>
+
+<p>さっそく移植してみました。</p>
+
+<p><a href="https://github.com/sizuhiko/hexpress">hexpress</a></p>
+
+<p>PSR-2の対応が実施中なのですが、Ruby側の機能とテストはすべて移植し、PHP版でいくつか機能追加をしています。</p>
+
+<h3>どんな感じか</h3>
+
+<p>READMEに書いてあるとおりインストールはcomposer経由でできます。</p>
+<pre class="highlight plaintext"><code>composer require sizuhiko/hexpress
+</code></pre>
+
+<p>具体的な利用方法は以下のサンプルのとおりです。</p>
+<pre class="highlight php"><code>use Hexpress\Hexpress;
+
+$pattern = (new Hexpress())
+    -&gt;start("http")
+    -&gt;maybe("s")
+    -&gt;with("://")
+    -&gt;maybe(function($hex) { $hex-&gt;words()-&gt;with("."); })
+    -&gt;find(function($hex) { $hex-&gt;matching(function($hex) {$hex-&gt;word()-&gt;with("-");})-&gt;many(); })
+    -&gt;has(".")
+    -&gt;either(["com", "org"])
+    -&gt;maybe("/")
+    -&gt;ending();
+
+echo $pattern;             #=&gt; "^https?\:\/\/(?:(?:\w)+\.)?([\w\-]+)\.(?:com|org)\/?$"
+echo $pattern-&gt;toRegExp(); #=&gt; "/^https?\:\/\/(?:(?:\w)+\.)?([\w\-]+)\.(?:com|org)\/?$/"
+</code></pre>
+
+<p><code>Hexpress</code>クラスのインスタンスを生成して、メソッドチェインで正規表現を組み立てます。
+ネストしたい場合は、コールバック関数を指定すると、新しい<code>Hexpress</code>のインスタンスがパラメータで渡ってくるので、
+それに対してメソッドチェインでつないていきます。</p>
+
+<p><code>Hexpress</code>は<code>__toString()</code>を実装しており、文字列表現を取得すると指定された定義を展開します。
+実際に正規表現として利用するには<code>toRegExp()</code>を呼び出すと、左右にデリミタを挿入した文字列が取得できるので、<code>preg_match</code>などの関数で利用可能になります。
+例えば以下のような利用方法です。</p>
+<pre class="highlight php"><code>preg_match("http://example.com/", $pattern-&gt;toRegExp());
+</code></pre>
+
+<h3>複雑な正規表現は定義できたのか？</h3>
+
+<p>できました！！</p>
+
+<p>テストコードとして<a href="https://github.com/sizuhiko/hexpress/blob/master/tests/Case/Hexpress/RFC3986Test.php">RFC3986Test.php</a>を作成しました。
+実装は結構長いので、こちらに添付することは省略しますが、RFCの定義に書いてあるとおりそのままメソッドをつないでいくだけで、
+RFCに対応した正規表現を構築することができました。（※IPv6の定義は未実装です、ご了承ください）</p>
+
+<p>PHPUnitのデータプロバイダ<code>exampleUriProvider</code>でマッチさせるパターンをftp,www,mail,news,tel,telnet,urnについて定義してすべて通過しています。</p>
+
+<p>PHP版では、マッチするとき<code>find</code>メソッドで名前付きサブパターンを利用できるようにしました。
+以下の例のように、<code>find</code>の第二引数に<code>port</code>を指定できます。</p>
+<pre class="highlight php"><code>    private function port()
+    {
+        return (new Hexpress())-&gt;has(':')-&gt;find(function ($hex) { $hex-&gt;digits(); }, 'port');
+    }
+</code></pre>
+
+<p>上記を含むパターンを<code>preg_match</code>で処理すると、マッチング結果に名前付きで値を取得できるようになります。</p>
+<pre class="highlight php"><code>preg_match("http://example.com:80/", $pattern-&gt;toRegExp(), $matches);
+echo $matches['port'];   #=&gt; '80'
+</code></pre>
+
+<h3>どうなのか？</h3>
+
+<p>たとえば今回作成したRFC3986の定義を正規表現としてダンプすると、以下のようになります。</p>
+<pre class="highlight plaintext"><code>/^(?P&lt;scheme&gt;[a-zA-Z](?:[a-zA-Z0-9\+\-\.])*)\:(?P&lt;hierPart&gt;(?:\/\/(?P&lt;authority&gt;(?:(?P&lt;userinfo&gt;(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:))*)@)?(?P&lt;host&gt;(?:(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)|(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]))+))(?:\:(?P&lt;port&gt;(?:\d)+))?)(?P&lt;pathAbempty&gt;(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)*)|(?P&lt;pathAbsolute&gt;\/(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))+(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)+)?)|(?P&lt;pathRootless&gt;(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))+(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)*)|(?P&lt;pathEmpty&gt;^(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))))(?:\?(?P&lt;query&gt;(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@)|\/|\?))*))?(?:#(?P&lt;fragment&gt;(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@)|\/|\?))*))?$/
+</code></pre>
+
+<p>私はいきなりこれを空手形で実装することはできそうにないので、今回<code>hexpress</code>を移植して良かったなと思っています。
+何か複雑な正規表現を定義したい場合などに役立てば幸いです。</p>
+
+<h3>さいごに</h3>
+
+<p><a href="http://phpcon.php.gr.jp/2015/">日本PHPカンファレンス2015</a>が10/3(土)に行われます。
+当日のプログラムも公開され、私はトラック3で10:50から11:20まで「Composerではじめるアプリケーション開発」というセッションを担当します。
+他の番組が強力なため私の会場は比較的空いているのではないかと思うので、もしご都合がつく方はよろしくお願いします。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="複雑な正規表現を簡単に作れるようにした" data-url="http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html&t=%E8%A4%87%E9%9B%91%E3%81%AA%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE%E3%82%92%E7%B0%A1%E5%8D%98%E3%81%AB%E4%BD%9C%E3%82%8C%E3%82%8B%E3%82%88%E3%81%86%E3%81%AB%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2015/09/13.html">Sunday, September 13, 2015 04:11:00 PM</a></p>
   <p class="tags">
     
@@ -1076,131 +1192,6 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
     </div>
 
   </div>
-  <h2 class="title"><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2015/05/02.html">Saturday, May 02, 2015 05:19:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
-    
-      <a rel="tag" href="/tags/angularjs.html">AngularJS</a>
-    
-      <a rel="tag" href="/tags/ngdialog.html">ngDialog</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>AngularJS でモーダルダイアログを表示するために、何を使うでしょうか？
-多くの場合 <a href="https://github.com/likeastore/ngDialog">ngDialog</a> というコンポーネントを使うのではないかと思います。</p>
-
-<p>で、ダイアログ上の値は、それを表示したコントローラのスコープにバインドする、という良くあるシナリオを想定してください。</p>
-
-<p>まずうまく<a href="https://jsfiddle.net/sizuhiko/ox73fktc/1/">動作するサンプル</a>を紹介します。</p>
-
-<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
-ダイアログ背景のページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
-<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
-        <span class="nt">&lt;span&gt;</span>check: {{FormData.allcheck}}<span class="nt">&lt;/span&gt;</span>
-    <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;/div&gt;</span>
-</code></pre>
-<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
-
-<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">$scope</span><span class="p">.</span><span class="nx">FormData</span><span class="o">=</span><span class="p">{</span><span class="na">allcheck</span><span class="p">:</span> <span class="kc">false</span><span class="p">};</span>
-    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
-            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="FormData.allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
-            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
-
-        <span class="p">});</span>
-    <span class="p">}</span>    
-<span class="p">});</span>
-</code></pre>
-
-<p>とても簡単な例ですが、AngularJSを使ってモーダルダイアログを表示して、チェックボックスの値をコントローラのスコープ変数 <code>FormData.allcheck</code> にバインドしています。</p>
-
-<h3>なぜか変数だとバインドされない</h3>
-
-<p>一方で、こちらは<a href="http://jsfiddle.net/sizuhiko/ox73fktc/2/">動作しないサンプル</a>です。</p>
-
-<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
-ダイアログ背景のページは <code>check: false</code> のままです。</p>
-<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
-        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
-    <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;/div&gt;</span>
-</code></pre>
-<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
-
-<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
-            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
-            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
-
-        <span class="p">});</span>
-    <span class="p">}</span>    
-<span class="p">});</span>
-</code></pre>
-
-<p>変わったのは、コントローラのスコープ変数にバインドするオブジェクトです。</p>
-
-<p>うまく動作するのは <code>$scope.FormData={allcheck: false};</code> のようにスコープのプロパティはオブジェクトで、オブジェクトに値を保持しているケースです。
-一方うまく動作しないのは <code>$scope.allcheck = false;</code> のようにスコープのプロパティに変数で値を保持しているケースです。</p>
-
-<h3>ngDialogでなければ変数でバインドできる</h3>
-
-<p>ngDialogでなく普通に表示される範囲にある場合は、<a href="http://jsfiddle.net/sizuhiko/ox73fktc/3/">動作するサンプル</a>です。</p>
-
-<p>チェックボックスをON/OFFしてください。ページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
-<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;div&gt;&lt;input</span> <span class="na">type=</span><span class="s">"checkbox"</span> <span class="na">ng-model=</span><span class="s">"allcheck"</span><span class="nt">/&gt;&lt;/div&gt;</span>
-        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
-    <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;/div&gt;</span>
-</code></pre>
-<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
-
-<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-<span class="p">});</span>
-</code></pre>
-
-<h3>まとめ</h3>
-
-<p>ngDialogを使うときのちょっとした小ネタなのですが、解決策を見つけるまで結構時間がかかりました。
-もし、ngDialogを使ってうまくデータバィンディングできない！という人の参考になればと思います。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること" data-url="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html&t=AngularJS%E3%81%A7ngDialog%E4%B8%AD%E3%81%AE%E5%80%A4%E3%82%92ngModel%E3%81%A7%E3%83%90%E3%82%A4%E3%83%B3%E3%83%89%E3%81%97%E3%81%9F%E3%81%84%E3%81%A8%E3%81%8D%E6%B3%A8%E6%84%8F%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1248,6 +1239,8 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a> <span>2015/09/21</span></li>
+                
                   <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
                 
                   <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
@@ -1265,8 +1258,6 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
                 
                   <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
-                
-                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
               </ul>
             </div>
@@ -1682,7 +1673,7 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (11)</li>
+                  <li><a href="/2015.html">2015</a> (12)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

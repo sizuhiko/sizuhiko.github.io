@@ -275,7 +275,132 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a></h2>
+            <h2 class="title"><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2015/05/02.html">Saturday, May 02, 2015 05:19:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+    
+      <a rel="tag" href="/tags/angularjs.html">AngularJS</a>
+    
+      <a rel="tag" href="/tags/ngdialog.html">ngDialog</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>AngularJS でモーダルダイアログを表示するために、何を使うでしょうか？
+多くの場合 <a href="https://github.com/likeastore/ngDialog">ngDialog</a> というコンポーネントを使うのではないかと思います。</p>
+
+<p>で、ダイアログ上の値は、それを表示したコントローラのスコープにバインドする、という良くあるシナリオを想定してください。</p>
+
+<p>まずうまく<a href="https://jsfiddle.net/sizuhiko/ox73fktc/1/">動作するサンプル</a>を紹介します。</p>
+
+<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{FormData.allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">FormData</span><span class="o">=</span><span class="p">{</span><span class="na">allcheck</span><span class="p">:</span> <span class="kc">false</span><span class="p">};</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
+            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="FormData.allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
+            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
+
+        <span class="p">});</span>
+    <span class="p">}</span>    
+<span class="p">});</span>
+</code></pre>
+
+<p>とても簡単な例ですが、AngularJSを使ってモーダルダイアログを表示して、チェックボックスの値をコントローラのスコープ変数 <code>FormData.allcheck</code> にバインドしています。</p>
+
+<h3>なぜか変数だとバインドされない</h3>
+
+<p>一方で、こちらは<a href="http://jsfiddle.net/sizuhiko/ox73fktc/2/">動作しないサンプル</a>です。</p>
+
+<p><code>Open Dialog</code>というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
+ダイアログ背景のページは <code>check: false</code> のままです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">""</span> <span class="na">ng-click=</span><span class="s">"ShowNgDialog()"</span><span class="nt">&gt;</span>Open Dialog<span class="nt">&lt;/a&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">ShowNgDialog</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ngDialog</span><span class="p">.</span><span class="nx">open</span><span class="p">({</span>            
+            <span class="na">template</span><span class="p">:</span> <span class="s1">'&lt;div&gt;&lt;input type="checkbox" ng-model="allcheck"/&gt;&lt;/div&gt;'</span><span class="p">,</span>
+            <span class="na">plain</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="na">scope</span><span class="p">:</span><span class="nx">$scope</span>
+
+        <span class="p">});</span>
+    <span class="p">}</span>    
+<span class="p">});</span>
+</code></pre>
+
+<p>変わったのは、コントローラのスコープ変数にバインドするオブジェクトです。</p>
+
+<p>うまく動作するのは <code>$scope.FormData={allcheck: false};</code> のようにスコープのプロパティはオブジェクトで、オブジェクトに値を保持しているケースです。
+一方うまく動作しないのは <code>$scope.allcheck = false;</code> のようにスコープのプロパティに変数で値を保持しているケースです。</p>
+
+<h3>ngDialogでなければ変数でバインドできる</h3>
+
+<p>ngDialogでなく普通に表示される範囲にある場合は、<a href="http://jsfiddle.net/sizuhiko/ox73fktc/3/">動作するサンプル</a>です。</p>
+
+<p>チェックボックスをON/OFFしてください。ページで <code>check: true</code> と <code>check: false</code> がトグルするはずです。</p>
+<pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">data-ng-app=</span><span class="s">"myApplication"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">data-ng-controller=</span><span class="s">"MainController"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div&gt;&lt;input</span> <span class="na">type=</span><span class="s">"checkbox"</span> <span class="na">ng-model=</span><span class="s">"allcheck"</span><span class="nt">/&gt;&lt;/div&gt;</span>
+        <span class="nt">&lt;span&gt;</span>check: {{allcheck}}<span class="nt">&lt;/span&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre>
+<pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">myApplication</span> <span class="o">=</span> <span class="nx">angular</span><span class="p">.</span><span class="nx">module</span><span class="p">(</span><span class="s1">'myApplication'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'ngDialog'</span><span class="p">]);</span>
+
+<span class="nx">myApplication</span><span class="p">.</span><span class="nx">controller</span><span class="p">(</span><span class="s1">'MainController'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$scope</span><span class="p">,</span> <span class="nx">ngDialog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$scope</span><span class="p">.</span><span class="nx">allcheck</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+
+<h3>まとめ</h3>
+
+<p>ngDialogを使うときのちょっとした小ネタなのですが、解決策を見つけるまで結構時間がかかりました。
+もし、ngDialogを使ってうまくデータバィンディングできない！という人の参考になればと思います。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること" data-url="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html&t=AngularJS%E3%81%A7ngDialog%E4%B8%AD%E3%81%AE%E5%80%A4%E3%82%92ngModel%E3%81%A7%E3%83%90%E3%82%A4%E3%83%B3%E3%83%89%E3%81%97%E3%81%9F%E3%81%84%E3%81%A8%E3%81%8D%E6%B3%A8%E6%84%8F%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2015/05/02.html">Saturday, May 02, 2015 03:51:00 PM</a></p>
   <p class="tags">
     
@@ -1319,215 +1444,6 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2015/01/03.html">Saturday, January 03, 2015 04:05:00 PM</a></p>
-  <p class="tags">
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この投稿は2014年参加／発表したり、運営に携わったイベント、やっていた仕事の内容などについてふりかえるポストです。</p>
-
-<h3>1月</h3>
-
-<p>2013年から年末の忘年会が少なめで、2014年から新年会が異常に多いという現象になりました。
-ちなみにこれは2015年も同様で新年会がいっぱいです。新年から1年をなかったこと（忘れる）にできるぐらいです。</p>
-
-<p>まだタイトルもなく、何も中身も決まっていなかった <code>CakePHPで学ぶ継続的インテグレーション</code> 本（以降 <code>CI本</code> ）が動き出したのでした。</p>
-
-<p>当時のブログサイト My Opera Blogがもうすぐ終わりだ、やべーと言いながら、Co-Edoで何にしたら良いかなーと頭を悩ませていたのでした。</p>
-
-<h3>2月</h3>
-
-<p>非常に忙しくCakePHPの案件支援をしており、毎日ピリピリしていた記憶が….。仕事では人材の流動性の高まりを感じでいたのでした。</p>
-
-<p>バグフィックスに対応した Fabricate 1.1.1 をリリースしました。</p>
-
-<p>Bddプラグインのインストールをしようと思ったら、php-object-freezerが見つからないエラーで失敗するように
-なんとPHPUnitプロジェクトにあったリポジトリがpearからもgithubからも、世の中の公開リポジトリから一切いなくなったのでした。
-これはforkして使っているSpec for PHPの依存ライブラリなので、しかたなくコードをlibの下に展開してSpec for PHPに同梱するようにしました。</p>
-
-<p>CI本は主にチャットワークで作業が進み、目次を考えていました（まだ決まってはいない）。</p>
-
-<p>いよいよ My Operaの終了までカウントダウンということで、ブログをMiddlemanに移行しました。
-記念すべきMiddlemanでの一号記事 <a href="/2014/02/22/hello-world.html">Hello Middleman!</a></p>
-
-<h3>3月</h3>
-
-<p>3/12 Web生誕25周年でした。
-またそれに関連して「HTML5 Japan Cup 2014」が開催されることになり、ボランティアスタッフとしてハッカソンや審査などに関わるようになりました。</p>
-
-<p>3/8 Co-Edoにてたまっていたブログネタを一気に3本投入しました</p>
-
-<ul>
-<li><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></li>
-<li><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></li>
-<li><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></li>
-</ul>
-
-<p>3/18 <a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a>。
-そういえば、Vol.2が開催されないなーとか思うのでした…</p>
-
-<p>Middlemanに移行してブログ書くぞーと熱が上がっていたので、さらに一本 <a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a> を投下。</p>
-
-<p>3/25 第76回 PHP勉強会 に参加しました。確かHTML5 Japan Cup2014の告知をしたと記憶しています。</p>
-
-<p>CI本は大筋が決まって、いざ書くぞーというモードになるのでした。</p>
-
-<h3>4月</h3>
-
-<p>4/4 今も続くCakePHP3もくもく会#3に参加しました（<a href="/2014/04/19/cake3_mokumoku_3.html">ブログ記事</a>）。このとき初めてCakePHP3に触れたのでした。</p>
-
-<p>4/9 はもちろん4q!カンファレンス。今年も盛り上がりましたー</p>
-
-<p>4/12 <a href="http://html5j-testing.doorkeeper.jp/events/10161">Test the Web Forward Meetup (仮), Tokyo #2</a> に参加しました（<a href="/2014/04/19/twfm_2014_04.html">ブログ記事</a>）。私はShadow DOMに興味があったので、そのテストコードを書くチームに参加しました。帰宅後もいくつか作業をすすめ本家にプルリクエストが取り込まれるなど、Contributeしたぞーという気持ちが高まったのですが、その後あまり作業できていません。HTML5の仕様テストに興味はあるので、今年も少しずつ取り組みたいなーと思っています。</p>
-
-<p>5jCupはスタッフ顔合わせがあったあと、すぐに第一回のアイデアソン／ハッカソンがあり、どちらもスタッフとして参加しました。</p>
-
-<p>全然活動と関係ないのですが、その頃ちょうどいつも聴いているJ-Waveで流れていたY.I.Mのkonsaiという曲にはまって何日も頭をリピートしていたのでした。今でもたまに聴いてなごみますw</p>
-
-<iframe width="560" height="315" src="//www.youtube.com/embed/W2euzCQIAfA" frameborder="0" allowfullscreen></iframe>
-
-<p>CI本は5jCupの繁忙期と重ならないように、なるべく早めにと思いちゃくちゃくと原稿を進めるのでした。</p>
-
-<p>4/28 第77回 PHP勉強会に参加し、もくもく会でCakePHP3に触った話をしました。</p>
-
-<h3>5月</h3>
-
-<p>5/19 CakePHP もくもく会 に参加しました。</p>
-
-<p>5/21 CakeDC/Migration プラグインがアップデートされ、generateコマンドでいろいろごにょごにょできるようになり、とても便利になったのでした。すぐにプロジェクトでもアップデートして記法を取り入れました。</p>
-
-<p>後はひたすら仕事が忙しく、平日夜中や土日はほぼCI本の原稿を書いていた記憶が….</p>
-
-<h3>6月</h3>
-
-<p>イベントにたくさん参加しました。</p>
-
-<ul>
-<li>6/12 - 6/13は毎年恒例のInterop</li>
-<li>6/16 CakePHP 3.0.0 もくもく会（勉強会） #5 （<a href="/2014/06/27/cake3_mokumoku_5.html">ブログ記事</a>）</li>
-<li>6/23 【祝9周年】第79回 PHP勉強会</li>
-<li>6/28 PHPカンファレンス関西</li>
-</ul>
-
-<p>Fabricate1.2をリリースしました。主な機能追加は</p>
-
-<ul>
-<li>configで主キーを割り振らないようにするオプション</li>
-<li>Fabricate::define() のクローン</li>
-<li>Fabricate::association() のクローン</li>
-<li>Fabricate::trait() のクローン</li>
-</ul>
-
-<p>これらでだいぶFabricator/FactoryGirl の実装に近づきました。</p>
-
-<p>CI本は書きたい事は書ききって、全体の流れを整える調整が.. </p>
-
-<h3>7月</h3>
-
-<p>5jCupはいよいよ審査モード。スタッフが集まって一次審査を行いました。大量に集められた審査用のガジェット（機器）など、作品も沢山寄せられてあっという間に時間が過ぎました。
-そして、7/26 には表彰式が行われ、今年も前半戦イベントの幕が閉じたのでした。</p>
-
-<p>7/29 CakePHP 3.0.0 もくもく会（勉強会） #6に参加。</p>
-
-<p>いくつかのバグフィックスをしたFabricate1.2.1をリリースしました。</p>
-
-<p>CI本は大大リファクタリング大会で、毎週末とても大変だったなぁ〜</p>
-
-<h3>8月</h3>
-
-<p>今年もCakeFestに参加しました（<a href="/2014/09/23/cakefest-2014-report.html">ブログ記事</a>）。初スペイン（まぁだいたいどこへ行っても初なのですがw）。</p>
-
-<p>Fabricateを遅まきながらTravis.ci対応したので、CakePHPのプラグインをCIする方法について<a href="/2014/08/17/cakephp2_plugin_travis.html">ブログ記事</a>を書きました。</p>
-
-<p>CI本は校正をしながらいよいよ大詰め！</p>
-
-<h3>9月</h3>
-
-<p>原稿からも解放され、たくさんのイベントに参加しました。</p>
-
-<ul>
-<li>9/4 CakePHP 3.0.0 もくもく会（勉強会） #7（<a href="/2014/09/13/cakephp3_debugkit_require_sqlite.html">ブログ記事</a>）</li>
-<li>9/6 俺のXP祭り</li>
-<li>9/19 CakeFest報告会</li>
-<li>9/25 HTML5とか勉強会</li>
-<li>9/29 第82回 PHP勉強会</li>
-</ul>
-
-<p>そしてついに、9/19 <code>CakePHPで学ぶ継続的インテグレーション</code>が発売されました（<a href="/2014/09/07/cakephp_ci_book.html">ブログ記事</a>）。</p>
-
-<h3>10月</h3>
-
-<p>先月同様にイベントに参加したり、発表したり楽しかったー</p>
-
-<ul>
-<li>10/9 10q!カンファレンス</li>
-<li>10/11 PHPカンファレンスで発表（<a href="/2014/10/13/phpconference2014.html">ブログ記事</a>）</li>
-<li>10/25 俺聞け10（急遽空手形で発表、Should Beeをアピール）</li>
-<li>10/27 第83回 PHP勉強会</li>
-<li>10/30 HTML5 デバイスAPI勉強会</li>
-</ul>
-
-<p>そして毎年恒例のアレ（カレンダー）のイラストが原稿終わった後にあるのでした..</p>
-
-<h3>11月</h3>
-
-<p>いよいよ渋谷の支援案件も残りわずかとなりました。</p>
-
-<ul>
-<li>11/17 CakePHP 3.0.0 もくもく会（勉強会） #9 </li>
-<li>11/25 HTML5とか勉強会</li>
-</ul>
-
-<p>カレンダーデザイン終わり！</p>
-
-<h3>12月</h3>
-
-<p>12月から半分はJavaの新規案件のお手伝いにも行っていました。</p>
-
-<p>12/23 に<code>CakePHP 3.0.0 感謝祭 &amp; もくもく会（勉強会） #10</code>と同時開催（フロア別）で、<code>『CakePHPで学ぶ継続的インテグレーション』ハンズオンセミナー</code> を開催しました（私はサポート役でしたが…）。</p>
-
-<p>例のCI本のハンズオンですが、まだ2回目ということでちょっと練度が足りなくて、参加者の皆様は若干消化不足だったかもしれませんが、またリクエストもありますので、ぜひ今年もやりたいと思います。</p>
-
-<p>12/24 に渋谷の支援を1日残していますが、感謝のLT（<a href="/2015/01/03/cakephp-agile-481-days.html">ブログ記事</a>）をしました。</p>
-
-<h3>まとめ</h3>
-
-<p>たくさんブログ書くぞーと言っていたくせに、14本しか書けませんでした。
-執筆とかイベントスタッフとかあると、なかなかなー。わかってはいるのですが。</p>
-
-<p>今年はもう少し情報公開できるだろうか。CakePHP3の新しいネタとかイロイロ書けそうですしね。
-そうそう今日CakePHP3はRC1になりましたね。CakeFestもちょっと早めの5月末ニューヨークだそうですよ。ぜひ行かねば。</p>
-
-<p>直近でいうと1月末にHTML5カンファレンスがあって、今年もスタッフ参加しますので、会場でお会いできればと思います。</p>
-
-<p>さらには1月末に伊良部大橋が開通するので宮古に行きたいとか（これは完全に趣味ですが）。</p>
-
-<p>今年もイロイロなイベントに参加したり、橋見に行ったり、また機会に恵まれれば執筆したりと変わらず活動していきたいと思いますので、皆様よろしくお願いいたします。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="2014年ふりかえり" data-url="http://blog.open.tokyo.jp/2015/01/03/2014-retrospective.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/01/03/2014-retrospective.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/01/03/2014-retrospective.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/01/03/2014-retrospective.html&t=2014%E5%B9%B4%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/01/03/2014-retrospective.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1582,6 +1498,8 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a> <span>2015/09/21</span></li>
+                
                   <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
                 
                   <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
@@ -1599,8 +1517,6 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
                 
                   <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
-                
-                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
               </ul>
             </div>
@@ -2016,7 +1932,7 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (11)</li>
+                  <li><a href="/2015.html">2015</a> (12)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 

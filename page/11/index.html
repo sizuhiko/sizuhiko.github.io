@@ -275,7 +275,269 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2010/10/05/phpmatsuri.html">PHPmatsuri was greatest event for PHP developer.</a></h2>
+            <h2 class="title"><a href="/2010/12/06/plugin.html">バリデーションプラグインと組み合わせて使うと便利な、確認画面を出すjQueryプラグイン</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2010/12/06.html">Monday, December 06, 2010 06:12:51 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/confirm.html">confirm</a>
+    
+      <a rel="tag" href="/tags/form.html">form</a>
+    
+      <a rel="tag" href="/tags/jquery.html">jQuery</a>
+    
+      <a rel="tag" href="/tags/plugin.html">plugin</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;これまで確認画面を出すだけのものや、入力チェックだけをするものはプラグインとして出ていたのですが、どうも組み合わせて使おうとすると不便なことが多かったので、プラグインを自作してみました。</p>
+
+<h3>ダウンロード：</h3>
+
+<p>ソースコードは以下のgithubで公開しています。  </p>
+
+<p><a href="https://github.com/sizuhiko/confirmForm">https://github.com/sizuhiko/confirmForm</a></p>
+
+<h3>デモ：</h3>
+
+<p>まずどのような動作をするのか、デモページで確認したほうがわかりやすいと思います。以下のURLから操作してみてください。  </p>
+
+<p><a href="/demo/confirmForm/demo/">/demo/confirmForm/demo/index.html</a>  </p>
+
+<p>デモサイトでは入力チェックに<a href="http://5509.me/log/exvalidation">ex-valudationプラグイン</a>を使っています。</p>
+
+<h3>必須条件：</h3>
+
+<ul>
+<li><a href="http://jquery.com/">jQuery本体</a> (1.4.2以上を推奨）</li>
+<li><a href="http://dev.iceburg.net/jquery/jqModal/">jqModal</a>プラグイン</li>
+</ul>
+
+<h3>特徴：</h3>
+
+<ul>
+<li>確認画面を出すかどうかは自分で判断します</li>
+<li>確認画面でOKが選択されるまでフォームはSubmitされません</li>
+<li>一般的なフォームの形式であれば、ほとんどカスタマイズ（オプションで指定する）の必要なし</li>
+</ul>
+
+<h3>一般的なフォームって？</h3>
+
+<p>このプラグインでは以下のような構造のHTMLフォームが利用されることを想定しています。</p>
+<pre class="highlight plaintext"><code>&lt;form action="posted.html" method="get" id="inputForm"&gt;
+  &lt;div&gt;
+    &lt;label for="user_id"&gt;ID:&lt;/label&gt;
+    &lt;input type="text" name="id" id="user_id" value=""&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_name"&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" id="user_name" value=""&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_sex"&gt;Sex:&lt;/label&gt;
+    &lt;fieldset id="user_sex"&gt;
+      &lt;input type="radio" name="sex" id="user_sex_male" value="1"&gt;&lt;label for="user_sex_male"&gt;Male&lt;/label&gt;
+      &lt;input type="radio" name="sex" id="user_sex_female" value="2"&gt;&lt;label for="user_sex_female"&gt;Female&lt;/label&gt;
+      &lt;span class="required"&gt;*&lt;/span&gt;
+    &lt;/fieldset&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_lang"&gt;Language:&lt;/label&gt;
+    &lt;select name="lang" id="user_lang"&gt;
+      &lt;option value=""&gt;-- please select --&lt;/option&gt;&lt;option value="jp"&gt;Japanese&lt;/option&gt;&lt;option value="en"&gt;English&lt;/option&gt;
+    &lt;/select&gt;&lt;span class="required"&gt;*&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for="user_receive_news"&gt;Receive News Mail:&lt;/label&gt;
+    &lt;fieldset id="user_receive_news"&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_sports" value="1"&gt;&lt;label for="user_receive_news_sports"&gt;Sports&lt;/label&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_music" value="2"&gt;&lt;label for="user_receive_news_music"&gt;Music&lt;/label&gt;
+      &lt;input type="checkbox" name="news" id="user_reveive_news_computer" value="3"&gt;&lt;label for="user_receive_news_computer"&gt;Computer&lt;/label&gt;
+    &lt;/fieldset&gt;
+  &lt;/div&gt;
+  &lt;div class="buttons"&gt;
+    &lt;input type="submit" value="next" id="submit_ok"&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
+
+<p>これはデモページのフォーム部分そのものなのですが、項目をdivタグで囲い、その中の項目名はlabelで入力フィールドはinputやselectを使うようなデザインです。</p>
+
+<h3>プラグインで必要になる記述</h3>
+
+<p>javascriptファイルをロードします。
+jqModelプラグインを使っているので、jqModal、もちろんjqueryもロードしてください。</p>
+<pre class="highlight plaintext"><code>&lt;script charset="utf-8" type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.js"&gt;&lt;/script&gt;
+&lt;script charset="utf-8" type="text/javascript" src="http://dev.iceburg.net/jquery/jqModal/jqModal.js"&gt;&lt;/script&gt;
+&lt;script src="../src/confirmform.js"&gt;&lt;/script&gt;
+</code></pre>
+
+<p>jqModalのスタイルシートが必要になります。また、jqModalのexampleで記述されているConfirmサンプルのスタイル定義を利用しているので、サンプルHTML上から切り出したスタイルシートをvendorディレクトリに用意しました。これを使うと簡単に利用を開始することができます。</p>
+<pre class="highlight plaintext"><code>&lt;link charset="utf-8" href="../vendor/jqModal/jqmConfirm.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
+&lt;link charset="utf-8" href="http://dev.iceburg.net/jquery/jqModal/jqModal.css" type="text/css" rel="stylesheet"&gt;&lt;/link&gt;
+</code></pre>
+
+<h3>プラグインの初期化</h3>
+
+<p>プラグインを利用するためには、HTML上に１つ確認画面用の空エレメントを追加する必要があります。場所はbody内であればどこでもかまいません。</p>
+<pre class="highlight plaintext"><code>&lt;div id="confirmForm"&gt;&lt;/div&gt;
+</code></pre>
+
+<p>idの値も特に意味はありません。ここではconfirmFormという値にしておきます。  </p>
+
+<p>プラグインのインスタンスを初期化するには、$(&ldquo;入力フォームのセレクタ&rdquo;).confirmForm(&ldquo;確認画面用のセレクタ&rdquo;, オプション) を使います。</p>
+<pre class="highlight plaintext"><code>$(document).ready(function(){
+  ...
+  $("#inputForm").confirmForm("#confirmForm", {});
+  ...
+}
+</code></pre>
+
+<p>ひとまず、このようにシンプルな宣言で動作します。実際に利用する場面では、入力フォームでselectボックスやcheckbox,radioボタンなどを利用していると思います。デフォルトの挙動では値をinputのvalueから取り出して表示するだけなので、コード値を名前に変換する必要があるかもしれません。このあたりのカスタマイズは、オプション節で解説します。</p>
+
+<h3>確認画面を表示する</h3>
+
+<p>このプラグインでは確認画面は自分で表示する必要があります。たとえばバリデーションプラグインの成功時コールバックで呼び出すようなイメージです。</p>
+<pre class="highlight plaintext"><code>$("#inputForm").confirmShow();
+</code></pre>
+
+<p>これはとてもシンプルで、confirmShow関数を呼び出すだけです。</p>
+
+<h3>OKが押されたかどうかチェックする</h3>
+
+<p>このプラグインでは、確認画面でOKが選択されたらもう一度入力フォームでSubmitを実行します。そのため入力チェックが再実行されて、コールバックが呼び出されるかもしれません。そのためにOKが既に選択されていたらそのままreturnするような実装にすることになると思います。</p>
+<pre class="highlight plaintext"><code>validCallback:function() {
+  if($("#inputForm").isConfirmed()) {
+    return;
+  }
+  $("#inputForm").confirmShow();
+}
+</code></pre>
+
+<p>確認済みかどうかはisConfirmed関数を呼び出すだけです。入力内容が問題ないときのコールバックがvalidCallbackだったとすると、上記のような実装になります。</p>
+
+<h3>オプション</h3>
+
+<p>実際に利用する場面では、必ずしもinputのvalue値が確認画面に出れば良い訳ではありません。また、タイトルを変更したりボタンのラベルを変更したりもしたいでしょう。そのためにプラグイン初期化時にオプションを指定できるようにしてあります。  </p>
+
+<p>オプション一覧：</p>
+
+<p>名前意味デフォルト値概要</p>
+
+<p>title
+タイトル
+Are you sure?
+確認画面上部に表示されるタイトルを文字列で指定</p>
+
+<p>yes
+はいボタンのラベル
+Yes
+文字列で指定</p>
+
+<p>no
+いいえボタンのラベル
+no
+文字列で指定</p>
+
+<p>findLavel
+ラベルを探索して文字列を返すためのコールバック
+1つ前の要素のtext部分(一般的なフォームのtextボックスではlabelになる)
+radioやcheckboxのようにラベルがfieldsetの外側にあるようなケースで独自にコールバック関数を実装する</p>
+
+<p>formatValue
+値をカスタマイズするためのコールバック
+inputやselectのvalue値
+value値がコードだが、確認画面では値（名前）で出したい場合に独自にコールバック関数を実装する</p>
+
+<p>separator
+複数選択値の区切り文字
+,(コンマ）
+同一nameがある場合に、値を区切る文字列</p>
+
+<h4>ラベル文字列のコールバック</h4>
+
+<p>デフォルトの挙動は以下のとおりです。</p>
+<pre class="highlight plaintext"><code>'findLabel': function(inputField) {
+    return $(inputField).prev().html();
+}
+</code></pre>
+
+<p>textボックスは直前の要素がlabelであることを想定しているので、すべてが一般的なフォームのレイアウトで、textボックスしか利用していなければ、オプションの指定は必要ありません。しかし実際はlabelが右だったり１つ親の要素だったりすることがあります。
+このような場面ではコールバックを実装してください。  </p>
+
+<p>例えばデモページでは以下のようなコードになっています。</p>
+<pre class="highlight plaintext"><code>'findLabel': function(field) {
+    switch(field.name) {
+    case 'sex':
+        return 'Sex';
+    case 'news':
+        return 'Receive News Mail';
+    default :
+        str = $(field).prev().html();
+        return str.substring(0, str.length-1);
+    }
+}
+</code></pre>
+
+<p>findLabelに関してはformatValurのように項目別ではなく、functionで受け取って独自にカスタマイズする方式を取っています。これは項目名は一括ルールで変換できる場合が想定できるためです。  </p>
+
+<p>※このオプションに関しては、将来formatValueのようにhashでも指定できる（併用）方式に変更する予定です。</p>
+
+<h4>値をカスタマイズするためのコールバック</h4>
+
+<p>inputやselectのvalue値は必ずしも確認表示用には向いていないこともある（例えばコード値になっているなど）ので、このようなケースではコールバック関数を実装してください。  </p>
+
+<p>例えばデモページでは以下のようなコードになっています。</p>
+<pre class="highlight plaintext"><code>'formatValue':{
+  'sex':function(field) {
+    return {1:"Male", 2:"Female"}[$(field).val()];
+  },
+  'lang':function(field) {
+    return {'jp':"Japanese", 'en':"English"}[$(field).val()];
+  },
+  'news':function(field) {
+    return {1:"Sports", 2:"Music", 3:"Computer"}[$(field).val()];
+  }
+}
+</code></pre>
+
+<p>formatValue自体は各入力項目のname属性をキーにしたhashで定義します。</p>
+
+<h3>さいごに</h3>
+
+<p>今後以下の機能について、バージョンアップを予定しています。</p>
+
+<ul>
+<li>yes,noボタンの左右を逆に指定できるようにする</li>
+<li>selectやcheckbox、radioなどタイプごとに推奨フォームを想定してラベル値を取得する</li>
+<li>findLabelをhashでもオプション指定できるようにする</li>
+</ul>
+
+<p>その他カスタマイズ要望などあれば、機能追加していきたいな、と思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="バリデーションプラグインと組み合わせて使うと便利な、確認画面を出すjQueryプラグイン" data-url="http://blog.open.tokyo.jp/2010/12/06/plugin.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2010/12/06/plugin.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2010/12/06/plugin.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2010/12/06/plugin.html&t=%E3%83%90%E3%83%AA%E3%83%87%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%81%A8%E7%B5%84%E3%81%BF%E5%90%88%E3%82%8F%E3%81%9B%E3%81%A6%E4%BD%BF%E3%81%86%E3%81%A8%E4%BE%BF%E5%88%A9%E3%81%AA%E3%80%81%E7%A2%BA%E8%AA%8D%E7%94%BB%E9%9D%A2%E3%82%92%E5%87%BA%E3%81%99jQuery%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2010/12/06/plugin.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2010/10/05/phpmatsuri.html">PHPmatsuri was greatest event for PHP developer.</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2010/10/05.html">Tuesday, October 05, 2010 11:10:28 PM</a></p>
   <p class="tags">
     
@@ -656,272 +918,6 @@ PHPerにはコマンドラインは難しい？というのもあったので、
     </div>
 
   </div>
-  <h2 class="title"><a href="/2009/10/01/cakephp-webtestcase-fixture.html">CakePHPのWebTestCaseでfixtureを使う</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2009/10/01.html">Thursday, October 01, 2009 08:10:02 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/fixture.html">fixture</a>
-    
-      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
-    
-      <a rel="tag" href="/tags/webtestcase.html">WebTestCase</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;９／３０に行われた<a href="http://events.php.gr.jp/events/show/84">第46回PHP勉強会</a>で発表した内容ですが、そのままブログで読めるように展開します。</p>
-
-<hr>
-
-<h3>経緯</h3>
-
-<p>CakePHPはユニットテスト実行時にテストデータを投入するfixture機能をサポートしています。CakePHPのユニットテストはSimpleTestをベースにしており、UnitTestCaseと、それを継承してWebブラウザ動作のテストを行うWebTestCase、２つのテストケースを持っています。CakeではそれぞれCakeTestCase、CakeWebTestCaseという名前になります。
-ただしCakeWebTestCaseはWebTestCaseを継承しているだけで、何も機能拡張をしていません。</p>
-
-<p>cake/tests/lib/cake<em>web</em>test_case.php</p>
-<pre class="highlight plaintext"><code>class CakeWebTestCase extends WebTestCase {
-}
-</code></pre>
-
-<p>CakePHPオフィシャルのCookBookでも、以下のように解説されています。</p>
-
-<blockquote>
-<p>CakeWebTestCase は、SimpleTest の WebTestCase をただ拡張したもので、特に機能追加はありません。SimpleTest の Web testing に関する文書中に記載がある全ての機能は、 CakeWebTestCase で利用できます。これはまた、 SimpleTest が持つ機能以外のものは使えないことを意味します。すなわち、 CakeWebTestCase においてフィクスチャは利用できず、テストケースにデータベースに対する更新や保存が含まれていた場合、恒久的にデータベースの値が変更されることを意味します。テストの結果は、しばしばデータベースが持つ値に基づくので、テスト手順の一部としてデータベースが期待した値を持つことを確認してください。</p>
-</blockquote>
-
-<p>しかし実際に開発の場面では、WebTestCaseを使って、ログインからの操作を試したり、データベースに依存した操作・結果を求めなければならない場面に遭遇します。そこで今回はfixutureを使えるようなWebTestCaseを作ってみます。</p>
-
-<h3>考察</h3>
-
-<p>今回fixtureを使えるWebTestCaseを作る上で、考慮したポイントは以下のとおりです。</p>
-
-<ol>
-<li>なるべく書かない</li>
-<li>Cakeのバージョンが変わっても簡単に移行したい</li>
-<li>いつかは本体に組み込んで欲しい</li>
-</ol>
-
-<p>そこで、今回はUnitTestCaseを継承している、cake<em>test</em>case.php を流用して差分のみ別クラスに作成することにしました。こうすると、後でCakeのバージョンが変わったても問題が少ないし、後で本体に組み込んでもらうときもわかりやすいと思ったからです。</p>
-
-<h3>実施</h3>
-
-<p>実施の手順は以下のとおりです。</p>
-
-<ol>
-<li>cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</li>
-<li>上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</li>
-<li>FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</li>
-<li>FixturableWebTestCase を作成</li>
-<li>bootstrap に初期化コードを追加</li>
-<li>実際のテストケースを記述</li>
-</ol>
-
-<p>それぞれの手順を詳細に解説します。</p>
-
-<h4>1.cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</h4>
-
-<p>まず流用元のテストケースをコピして、継承する元になるクラスを作成します。</p>
-<pre class="highlight plaintext"><code>cd {アプリケーションのHOMEディレクトリ}
-mkdir app/vendors/webtest
-
-cp cake/tests/lib/cake_test_case.php app/vendors/webtest/fixturable_web_base_test_case.php
-</code></pre>
-
-<h4>2.上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</h4>
-
-<p>これはお使いのエディタを開いて、置換機能を使えばあっという間に完了です。
-app/vendors/webtest/ fixturable<em>web</em>base<em>test</em>case.php を編集してください。</p>
-
-<h4>3.FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</h4>
-
-<p>このままでは、単にCakeTestCaseの名前を変更しただけなので、そのスーパークラスをUnitTestCaseからWebTestCaseに変更します。</p>
-<pre class="highlight plaintext"><code>class FixturableWebBaseTestCase extends WebTestCase {
-    // extends を変更する
-}
-</code></pre>
-
-<h4>4.FixturableWebTestCase を作成</h4>
-
-<p>手順3でWebTestCaseを使ったCakeTestCaseと似たものができました。ただしこのままではWebアクセス時にfixtureを読み込むようにはできません。
-FixturableWebBaseTestを継承したクラスを作成します。このクラスでは、Webテスト中なのか、通常動作中なのかを判定するロジック（CakeTestCaseからの差分）を記述します。
-またWebテスト中なのか、そうでないのかを判定するために、以下の方法を検討しました。</p>
-
-<ul>
-<li>tmp/tests 以下のファイルで識別する</li>
-<li>UserAgentを使って識別する</li>
-<li>HTTP独自ヘッダで識別する</li>
-</ul>
-
-<p>まずUserAgentでテスト中か判断する方法を思いついたのですが、Webテストの場合UserAgentそのものを判断してビューを切り替えたり（特に携帯など）するので、これは方法としては最適ではないと判断し却下。
-HTTP独自ヘッダは、やはり通常運用しているときにセキュリティホールを作る事にも繋がるので、微妙なところです。ただし通常（本番）運用する場合はCakeのデバッグレベルを0にして運用すると思うので、独自ヘッダの判定前にデバッグレベルを判定すれば問題ないということも言えます。
-そこで今回は、tmp/tests以下にテンポラリファイルを作って判定するという方法を採用しています。
-app/vendors/webtest/fixturable<em>web</em>test_case.php</p>
-<pre class="highlight plaintext"><code>&lt;?php
-App::import('Vendor', 'webtest' . DS . 'fixturable_web_base_test_case');
-
-/**
- * FixturableWebTestCase class
- */
-class FixturableWebTestCase extends FixturableWebBaseTestCase {
-    /**
-     * @overwrite 
-     */
-    function startCase() {
-        $this-&gt;_lockWebTesting();
-    }
-    /**
-     * @overwrite 
-     */
-    function endCase() {
-        $this-&gt;_unlockWebTesting();
-    }
-    /**
-     * bootstrap.php から呼び出す
-     */
-    function initIfTestMode() {
-        if(file_exists(FixturableWebTestCase::_getLockFileName())) {
-            parent::_initDb();
-            Configure::write('Acl.database', 'test_suite');
-        }
-    }
-    /**
-     * TMPファイルを作成して、Webテスト中であることを宣言
-     */
-    function _lockWebTesting() {
-        touch($this-&gt;_getLockFileName());
-    }
-    /**
-     * TMPファイルを削除して、Webテスト中でなくす
-     */
-    function _unlockWebTesting() {
-        unlink($this-&gt;_getLockFileName());
-    }
-    function _getLockFileName() {
-        return TMP.'tests'.DS.'fixturable.web.test.tmp';
-    }
-}
-</code></pre>
-
-<h4>5.bootstrap に初期化コードを追加</h4>
-
-<p>最後の準備として、bootstrapに初期化コードを追加します。bootstrapはCakePHPで動作するすべてのアクションが必ず通過する最初のポイントなので、ここで利用するデータベースを切り替えるようにします。
-app/config/bootstrap.php</p>
-<pre class="highlight plaintext"><code>if(($_SERVER['PHP_SELF'] != '/webroot/test.php') &amp;&amp; Configure::read() &gt; 0) {
-  if(App::import('Vendor', 'webtest' . DS . 'fixturable_web_test_case')) {
-    FixturableWebTestCase::initIfTestMode();
-  }
-}
-</code></pre>
-
-<p>bootstrapはテストコードをtest.phpから実行しようとした場合も通過してしまうので、このURLはフィルタする必要があります。また通常運用で呼ばれないようにデバッグ値が０より大きい場合にデータベースの切り替えを実行するようにします。</p>
-
-<h4>6.実際のテストケースを記述</h4>
-
-<p>これでWebTestCaseでfixtureが使える準備は整いました。後はテストケースを記述するだけです。
-今回サンプルとして、私の執筆した「<a href="http://www.amazon.co.jp/CakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA-%E5%AE%89%E8%97%A4-%E7%A5%90%E4%BB%8B/dp/4839930651/ref=sr_1_1?ie=UTF8&amp;amp;s=books&amp;amp;qid=1254396747&amp;amp;sr=1-1">CakePHPによる実践Webアプリケーション開発</a>」で作ったCalendarNoteをテストしてみます。</p>
-<pre class="highlight plaintext"><code>&lt;?php 
-App::import('Vendor', 'webtest' . DS . 'fixturable_web_test_case');
-
-class UsersWebTest extends FixturableWebTestCase {
-    var $fixtures = array('app.group', 'app.user', 'app.users_group',     'app.schedule', 'app.schedules_user',
-        'app.aco', 'app.aro', 'app.aros_aco'
-    );
-
-    function startTest($method) {
-        parent::startTest($method);
-        Configure::write('Acl.database', 'test_suite');
-        $this-&gt;addHeader('Accept-Language:ja');
-    }
-    function testLoginAndCheckSchedule() {
-        $this-&gt;assertTrue($this-&gt;get('http://calendarnote.localhost/users/login'));
-        $this-&gt;assertTitle(new PatternExpectation('/CalendarNote/'));
-        $this-&gt;assertSubmit('Login');
-
-        $this-&gt;clickSubmit('Login', array(
-            'data[User][username]'=&gt;'hide',
-            'data[User][password]'=&gt;'password',
-        ));
-        $this-&gt;assertText('Hidetoshi Nakata');
-        $this-&gt;assertLink('ログアウト');
-
-        $this-&gt;assertTrue($this-&gt;get('http://calendarnote.localhost/schedules/index/month/2009/01'));
-        $this-&gt;assertText('2008年12月28日');
-        $this-&gt;assertTrue($this-&gt;clickLink('10:00-12:00 Nengashiki'));
-
-        $this-&gt;assertFieldByName('data[Schedule][title]', 'Nengashiki');
-        $this-&gt;assertFieldByName('data[Schedule][contents]', 'In Japan, there are the New Year holidays and a New-Year's-greetings ceremony is performed to the first day of work.');
-
-    }
-    function endTest($method) {
-        parent::endTest($method);
-        $this-&gt;get('http://calendarnote.localhost/users/logout');
-    }
-}
-</code></pre>
-
-<p>このテストシナリオは以下のとおりです。</p>
-
-<ol>
-<li>ログイン画面にアクセスできるか検証する</li>
-<li>タイトルがCalendarNoteになっているか検証する</li>
-<li>ログインボタンが出ているか検証する</li>
-<li>ユーザ名hide、パスワードpasswordでログイン（サブミット）する</li>
-<li>次の画面に、フルネームが表示されていて、ログアウトリンクがあるか検証する。</li>
-<li>2009年1月の月単位スケジュール一覧に遷移できることを検証する。</li>
-<li>2008年12月28日という文字列の表示を検証する。</li>
-<li>スケジュール詳細へのリンクが表示されることを検証する。</li>
-<li>フォームのタイトルに正しい値が入っていることを検証する。</li>
-<li>フォームのコンテンツに正しい値が入っていることを検証する。</li>
-</ol>
-
-<p>テストコードに目を向けると、最初にApp::importでテストケースの親クラスを取り込んで、テストケースの親クラスをFixturableWebTestCaseに指定する以外、ほとんど通常のモデルなどのテストコードと書き方は同じだということに気がつくでしょう。特にfixtureの記法に関しては、まったく同じです。
-これは「cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更」したために、CakeTestCaseと同じ機能が利用できるようになっているのです。
-もちろん記述方法が同じなら、実行方法も同じで、<a href="http://localhost/test.php">http://localhost/test.php</a>のようにブラウザからの実行や、コンソールからの実行なども問題ありません。CakeMateを使ってTextMate上からもテストが実行できます。もちろんコンソールやTextMateなどCLI環境から実行する場合なども、裏でHTTPアクセスするので、Apacheは動作している必要があります。
-Webテストで、どのようなブラウザ動作ができるのかは、本家のSimpleTestサイトか、こちらも私が執筆に参加した「<a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;amp;s=books&amp;amp;qid=1254396747&amp;amp;sr=1-2">Webアプリケーションテスト手法</a>」にて確認してください。</p>
-
-<h3>最後に</h3>
-
-<p>本カスタマイズはPHP5.2.10、CakePHP1.2.5で検証しています。CakePHP1.2系であれば特に問題なく動作すると思いますが、うまく動作しない場合はコメントいただけると助かります。
-今後の展開としては、まずこの記事を英語にしてBakeryにアップしたいと思います。
-それをきっかけにコア開発者の目にでもとまったら、本体への組み込みなんか検討してくれるかもしれません。
-もしかして一度やろうとしてやめたのかもしれないんですけど、Cake祭り(*1)でコア開発者が日本に来るので、直接聞いてみたいなと思います。</p>
-
-<hr>
-
-<p>(*1) Cake祭り：昨年はCakePHPカンファレンスとして実施した、イベントの第２回目。今年もコア開発者が日本に来るので要注目のイベントです。今すぐ申し込みへ。
-<a href="http://matsuri.cakephp.jp/">http://matsuri.cakephp.jp/</a></p>
-
-<div style="width:425px;text-align:left" id="__ss_2102965">
-<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/cakephpwebtestcasefixture" title="CakePHPのWebTestCaseでfixtureを使う" rel="nofollow">CakePHPのWebTestCaseでfixtureを使う</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture">
-<param name="allowFullScreen" value="true">
-<param name="allowScriptAccess" value="never">
-<embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View more <a style="text-decoration:underline;" href="http://www.slideshare.net/" rel="nofollow">documents</a> from <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
-</div>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのWebTestCaseでfixtureを使う" data-url="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html&t=CakePHP%E3%81%AEWebTestCase%E3%81%A7fixture%E3%82%92%E4%BD%BF%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -991,6 +987,8 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a> <span>2015/09/21</span></li>
+                
                   <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
                 
                   <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
@@ -1008,8 +1006,6 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
                 
                   <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
-                
-                  <li><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a> <span>2015/01/03</span></li>
                 
               </ul>
             </div>
@@ -1425,7 +1421,7 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (11)</li>
+                  <li><a href="/2015.html">2015</a> (12)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
