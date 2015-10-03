@@ -1,0 +1,1023 @@
+<!doctype html>
+<html>
+  <head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - PHPカンファレンス2015で発表しました</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .cd {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          
+            <h2>PHPカンファレンス2015で発表しました</h2>
+            <p class="postdate"><a title="Permanent link" href="/2015/10/03.html">Saturday, October 03, 2015 01:50:00 PM</a></p>
+            <p class="tags">
+              
+                <a rel="tag" href="/tags/php.html">PHP</a>
+              
+                <a rel="tag" href="/tags/phpcon.html">PHPcon</a>
+              
+                <a rel="tag" href="/tags/phpcon2015.html">PHPcon2015</a>
+              
+                <a rel="tag" href="/tags/composer.html">Composer</a>
+              
+                <a rel="tag" href="/tags/datagenerator.html">DataGenerator</a>
+              
+            </p>
+          
+
+          <p>2015/10/03 に行われた<a href="http://phpcon.php.gr.jp/2015/">PHPカンファレンス2014</a>で発表をしてきました。</p>
+
+<p>スライドは以下の内容です。</p>
+
+<script async class="speakerdeck-embed" data-slide="2" data-id="6747f5a70f5444188f8db70b4492736a" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>PHPカンファレンスでは公募セッションは最大30分のため、すべてのページについて話すことができませんした。</p>
+
+<p>セッションはじまるときにComposerの利用状況についてヒアリングしたところ、半数以上の方が「これからComposerを使う人」だったため、
+入門部分を中心に解説しました。   </p>
+
+<p>このブログでは、スライドの共有と共に、話せなかった部分ついて（とうまくいかなかったデモも）書いておきたいと思います。</p>
+
+<h3>Composerと、その歴史</h3>
+
+<p>PHPで開発をするのに、デファクトスタンダードになったといって良いComposer。</p>
+
+<p>Composerは2012年3月1日に生まれました。最初のリリース番号は1.0.0のアルファ1です。
+現在も1.0-devというバージョンで日々アップデートが行われています。
+2012年というのはすごい最近ですよね。たった3年前です。ではその前はどうだったのか？少しふりかえってみたいと思います。</p>
+
+<h4>Composerの前はどうだったのか？</h4>
+
+<p>PHPにはじめて拡張モジュールやライブラリの置き場所ができたのは1999年、pearという名前でした。
+perlのCPANに影響を受けていて、あくまでコードリポジトリという位置づけでした。
+ComposerがDependency Managementであるのとは異なります。2006年にはPHP5.3に対応したpear2とpyrusが登場しました。
+しかしpearは厳密なコードレビューからオープンソースのリポジトリでありながら「誰もが自由に公開できる場所」とはいいづらいものでした。
+そこで2008年にnequalが立ち上げたのがopenpearです。pearパッケージを誰もが自由に公開できるような場所となりました。リポジトリはsvnでした。
+あのsotarokさんのコメントがトップページにあります「夢のような話だ」、まさにそのとおりでした。しかし時代はgit、githubになり、2012年にcomposerが生まれたのです。</p>
+
+<h4>Composerを正しく理解する</h4>
+
+<p>ComposerはDependencyManagementです。
+例えばYumやAptといったパッケージ管理とは違います。pearはこちらに近かったかもしれません。
+npmやbundlerといったものに影響を受けていて、プロジェクト単位で依存関係を管理します。</p>
+
+<h4>Composerが必須になる流れ</h4>
+
+<p>さてpearを使っていた中で、一番インストールしたことがあるパッケージといえば何でしたか？
+私はどんなプロジェクトでも必ず必要だったのはPHPUnitではないかと思います。PHPUnitインストールしたことがありますか？
+pearでやるとかなり面倒なんですよね、複数バージョン入れ分けなくてはいけないなんて事はなかったですか？（地獄でしたよねw）</p>
+
+<p>昨年、PHPUnitはPEARから卒業しました。スライドではそのときのSebastionBergmannのツイートを引用しました。
+つい最近サルベージしたので、アイコンは当時写真だったと思うのですが、今はイラストですね（良く似ていますww）。</p>
+
+<p>具体的には、csvから始まって、pearに移って、2009年にはgithubに移って、今日ではpearから卒業する、長らくありがとうという内容です。
+PHPUnit3.7.0からComposrで取得可能です。</p>
+
+<h4>Composerより昔のやり方</h4>
+
+<p>例えばPHPUnitを例にとって、Composerより前はどんな方法だったか思い出してみましょう。
+スライドではPHPUnitのpearを使った導入方法を掲載しました。1つ1つはもう気にしなくて良いのですが、長いですよね。
+たいてい秘伝のレシピにしているか、ググってコピペするか、会社でドキュメント化しているか、そんなところだったと思います。</p>
+
+<p>秘伝のレシピの場合、もちろんコマンド1つかもしれないですが、初めてプロジェクトに入った人がわかるわけではないですね。
+複数バージョンを同居させるとかになると、pyrus使ったりしてもう少し違う感じにはなるかと思います。
+あと、iniのインクルードパスを設定しないとファイルが読み込めなかったですよね</p>
+
+<h4>Composerになった（今どきの）やり方</h4>
+
+<p>Composerになって、初めて入れるときはrequire、他の人はinstallコマンドを実行するだけで良くなりました。
+なんて簡単なんだろう、環境設定マニュアルとか必要ないレベルですよね。
+composer使ったことあるひとなら、git cloneしたリポジトリにcomposer.jsonがある段階でinstallを実行するはずです。
+（phpunitはrequire &ndash;devじゃないとか？いうのはそのとおりですが、今回は省略しています）</p>
+
+<h3>PHPで正しく開発するには</h3>
+
+<p>今日ではこのようにPHPでもモダンな開発をするベースが整っています。
+PHPでは<a href="http://ja.phptherightway.com">PHP The Right Way</a>というページに、そのすべてがまとまっています。
+もちろんComposerについても書いてあります。
+<code>PHP The Right Way</code> は PHPerが幸せになる為の道しるべを示してくれています。
+もちろん各国の有志によって翻訳されているので、すぐ読めます。かならず読んでみてください。</p>
+
+<p>スライドの高速道路出口は <a href="http://pro10.sakura.ne.jp/kousoku/">高速道路風標識ジェネレーター</a> を使ってみたかっただけで、深い意味はありません。</p>
+
+<h4>オートローディング</h4>
+
+<p>PHP The Right Wayではコーディングスタイルや名前空間といったことにも言及しています。
+どちらにもPSR-4という記述がありますが、PSR-4はオートロードについての標準です。現在はPSR-0を含んでいるので、PSR-0でなくPSR-4を参照するのが良いでしょう。</p>
+
+<h4>オートロードとComposerの関係について</h4>
+
+<p>PHPでクラスをオートロードするには、_<em>autoloadを実装して、クラスが見つからないときに指示してあげるか、spl</em>autoload_registerで予めクラスのパスを登録しておくという２通りのやり方があります。</p>
+
+<p>「ちなみにこの方法でオートロードを実装したことがある人はいますか？」という問いにはどなたも手があがりませんでした。これはそのとおりだと思います。Composer以前ではほぼ気にする人はいなかったでしょう。</p>
+
+<p>もしフレームワークを使ってアプリケーションを実装している人は、フレームワークがオートロードの仕組みを用意してくれていたりするので、より意識しないかなと思います。</p>
+
+<h3>デモ</h3>
+
+<p>本番ではうまくいかなかったのですが、こちらで解説します。（カンファレンスあるあるですね）</p>
+
+<h4>インストール</h4>
+
+<p>スライドの内容を参考にcomposerをインストールします。
+composerはプロジェクトのローカルでなく、パスの通っているところに配置してください。
+Right Wayにも書いてあります。
+Windowsを利用の方は<a href="https://getcomposer.org/doc/00-intro.md#installation-windows">公式ドキュメント</a>を参照ください。</p>
+
+<p><a href="https://github.com/sizuhiko/phpcon2015_demo">GitHubのリポジトリ</a>からソースコードを取得します。</p>
+<pre class="highlight shell"><code>git clone git@github.com:sizuhiko/phpcon2015_demo.git
+</code></pre>
+
+<h4>プロジェクト情報の入力</h4>
+
+<p>まず<code>composer init</code>コマンドでプロジェクト情報を入力します。
+requireやrequire-devは必要ないので、<code>no</code>を入力すれば大丈夫です。</p>
+
+<h4>インストールコマンドの実行</h4>
+
+<p><code>init</code>コマンドを実行したら、<code>composer install</code>コマンドを実行します。最初は何もありません。
+<code>vendor</code>ディレクトリが生成されるはずです。</p>
+
+<h4>実行してみる</h4>
+
+<p><code>php -S localhost:8000 src/router.php</code> というコマンドを実行します。
+ブラウザから<a href="http://localhost:8000">サンプルページ</a>を実行してください。</p>
+
+<p><code>Welcome to PHP</code> と表示されるはずです。</p>
+
+<p>次に<code>Say\Hello</code>クラスを実行してみます。<a href="http://localhost:8000/hello">/hello</a>にアクセスします。</p>
+<pre class="highlight plaintext"><code>Fatal error: Class 'Say\Hello' not found in /phpcon2015_demo/src/router.php on line 19
+</code></pre>
+
+<p>というエラーが表示されるはずです。
+ソースコードでは以下のように指定していますが、オートロードが定義されていないのでクラスは見つかりません。</p>
+<pre class="highlight php"><code>use Say\Hello;
+</code></pre>
+
+<p>そこで、<code>composer.json</code>を編集して、以下のように<code>require</code>の下に追記します。</p>
+<pre class="highlight json"><code><span class="w">    </span><span class="s2">"require"</span><span class="err">:</span><span class="w"> </span><span class="p">{}</span><span class="err">,</span><span class="w">
+    </span><span class="s2">"autoload"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"psr-4"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"Say\\"</span><span class="p">:</span><span class="w"> </span><span class="s2">"src/Say"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+
+</span></code></pre>
+
+<p>変更を保存したら、<code>composer dumpautoload</code> というコマンドを実行します。</p>
+
+<p>再度<code>Say\Hello</code>クラスを実行してみます。<a href="http://localhost:8000/hello">/hello</a>にアクセスします。
+すると、ブラウザに</p>
+<pre class="highlight plaintext"><code>Hello
+</code></pre>
+
+<p>と表示されるはずです。
+今度は<a href="http://localhost:8000/emoji">/emoji</a>にアクセスします。
+先ほどと同じようなエラーが表示されるので、<code>composer.json</code>を編集します。</p>
+<pre class="highlight json"><code><span class="w">    </span><span class="s2">"autoload"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"psr-4"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"Say\\"</span><span class="p">:</span><span class="w"> </span><span class="s2">"src/Say"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"Write\\"</span><span class="p">:</span><span class="w"> </span><span class="s2">"src/Write"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>変更を保存したら、<code>composer dumpautoload</code> というコマンドを実行します。</p>
+
+<p>再度<code>Write/Emoji</code>クラスを実行してみます。<a href="http://localhost:8000/emoji">/emoji</a>にアクセスします。
+すると、ブラウザに</p>
+<pre class="highlight plaintext"><code>(^o^)
+</code></pre>
+
+<p>と表示されるはずです。</p>
+
+<p>このようにオートロードについて自分で記述しなくても、名前空間の宣言を<code>composer.json</code>でおこなうと自動的にクラスをロードしてくれるようになります。</p>
+
+<h3>More Tips</h3>
+
+<p>この先は解説できなかった部分なので補足します。</p>
+
+<h4>リポジトリ管理</h4>
+
+<p>これについては第94回 PHP勉強会＠東京〜PHPカンファレンス2015開催直前スペシャル〜で話しました。<a href="http://www.s-arcana.co.jp/blog/2015/10/01/2899">スタジオアルカナのレポート</a>に詳しいログが残っていますので、そちらを参照ください。</p>
+
+<h4>スクリプト</h4>
+
+<p>Composerの強力な機能にスクリプト（フック）の実行があります。
+<code>install</code>や<code>update</code>など<code>composer</code>のコマンド実行前と実行後に、スクリプトを実行できます。</p>
+
+<ul>
+<li>pre-install-cmd</li>
+<li>post-install-cmd</li>
+</ul>
+
+<p>のようなイベント名です。
+実行できるスクリプトは通常のCLIとPHPのクラスです。</p>
+
+<p>例えば <code>composer.json</code> で以下のように記述します。</p>
+<pre class="highlight json"><code><span class="w">    </span><span class="s2">"post-install-cmd"</span><span class="err">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"MyVendor\\MyClass::warmCache"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"phpunit -c app/"</span><span class="w">
+    </span><span class="p">]</span><span class="err">,</span><span class="w">
+</span></code></pre>
+
+<p>より詳しい情報は<a href="https://getcomposer.org/doc/articles/scripts.md">公式サイト</a>を参照して欲しいのですが、これの使い方は２つ考えられます。</p>
+
+<p>１つ目は、すでに存在するライブラリに対するプロキシとしたい場合です。
+公開されているライブラリをForkしたり、コピーしてくることなく、独自の変更を加えたい場合や、ライブラリをインストールした後で独自のconfigを追加したい場合など、社内で複数のプロジェクトにまたがって同じカスタマイズをしたい場合は有効です。それぞれのプロジェクトではプロキシした<code>composer.json</code>のあるリポジトリを指定するだけで、元のライブラリを修正することなく、同じようにカスタマイズ状態を利用できます。</p>
+
+<p>２つ目は、フレームワークやライブラリを作った場合です。現在多くのフレームワークはアプリケーションテンプレートとして、<code>composer create-project</code>に対応したスケルトンを用意しています。何もなければそれを取得すれば良いのですが、もちろん<code>create-project</code>コマンドにもフックポイントが用意されているので、<code>install</code>後には環境設定ファイルなどがコピーされるようになっています。</p>
+
+<h3>まとめ</h3>
+
+<p>このようにComposerはpearでできていたパッケージ（コードリポジトリ）管理から、より多くの機能を持って、現在のアプリケーション開発になくてはならないものとなっています。</p>
+
+<p>このセッションでComposerを使うようになってくれる人が増えることを期待してまとめとしたいと思います。</p>
+
+<h3>おまけ</h3>
+
+<p>LTのスライドも公開します。</p>
+
+<script async class="speakerdeck-embed" data-slide="2" data-id="3eea01f6480c4c5996cc0c988435a63a" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+          
+            
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2015で発表しました" data-url="http://blog.open.tokyo.jp/2015/10/03/phpconference-tokyo-2015.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/10/03/phpconference-tokyo-2015.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/10/03/phpconference-tokyo-2015.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/10/03/phpconference-tokyo-2015.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92015%E3%81%A7%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/10/03/phpconference-tokyo-2015.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015/10/03/phpconference-tokyo-2015.html">PHPカンファレンス2015で発表しました</a> <span>2015/10/03</span></li>
+                
+                  <li><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a> <span>2015/09/21</span></li>
+                
+                  <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
+                
+                  <li><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a> <span>2015/06/14</span></li>
+                
+                  <li><a href="/2015/06/14/cakefest2015.html">CakeFest2015に参加してきた</a> <span>2015/06/14</span></li>
+                
+                  <li><a href="/2015/05/17/cakephp3-behat.html">CakePHP3 のアプリケーションを Behat でテストする</a> <span>2015/05/17</span></li>
+                
+                  <li><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a> <span>2015/05/02</span></li>
+                
+                  <li><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a> <span>2015/05/02</span></li>
+                
+                  <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
+                
+                  <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                
+              <ul class="nobullets clearfix">
+                
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/flex.html">Flex</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/1-2.html">1.2</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size5">
+                      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/rc1.html">RC1</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/fixture.html">fixture</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size4">
+                      <a rel="tag" href="/tags/php.html">PHP</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpstudy.html">phpstudy</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakematsuri.html">cakematsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/bdd.html">BDD</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size2">
+                      <a rel="tag" href="/tags/behat.html">Behat</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/cakefest.html">CakeFest</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/phpmatsuri.html">phpmatsuri</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/spec.html">Spec</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/test.html">Test</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/javascript.html">JavaScript</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/composer.html">Composer</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/co-edo.html">Co-Edo</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/html5.html">HTML5</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                    <li class="size1">
+                      <a rel="tag" href="/tags/cakephp3.html">CakePHP3</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                
+                  <li><a href="/2008.html">2008</a> (16)</li>
+                
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

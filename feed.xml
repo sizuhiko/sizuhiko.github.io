@@ -5,10 +5,235 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2015-09-21T04:28:00Z</updated>
+  <updated>2015-10-03T04:50:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>PHPカンファレンス2015で発表しました</title>
+    <link rel="alternate" href="http://blog.url.com/2015/10/03/phpconference-tokyo-2015.html"/>
+    <id>http://blog.url.com/2015/10/03/phpconference-tokyo-2015.html</id>
+    <published>2015-10-03T04:50:00Z</published>
+    <updated>2015-10-03T15:12:51+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2015/10/03 に行われた&lt;a href="http://phpcon.php.gr.jp/2015/"&gt;PHPカンファレンス2014&lt;/a&gt;で発表をしてきました。&lt;/p&gt;
+
+&lt;p&gt;スライドは以下の内容です。&lt;/p&gt;
+
+&lt;script async class="speakerdeck-embed" data-slide="2" data-id="6747f5a70f5444188f8db70b4492736a" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
+
+&lt;p&gt;PHPカンファレンスでは公募セッションは最大30分のため、すべてのページについて話すことができませんした。&lt;/p&gt;
+
+&lt;p&gt;セッションはじまるときにComposerの利用状況についてヒアリングしたところ、半数以上の方が「これからComposerを使う人」だったため、
+入門部分を中心に解説しました。   &lt;/p&gt;
+
+&lt;p&gt;このブログでは、スライドの共有と共に、話せなかった部分ついて（とうまくいかなかったデモも）書いておきたいと思います。&lt;/p&gt;
+
+&lt;h3&gt;Composerと、その歴史&lt;/h3&gt;
+
+&lt;p&gt;PHPで開発をするのに、デファクトスタンダードになったといって良いComposer。&lt;/p&gt;
+
+&lt;p&gt;Composerは2012年3月1日に生まれました。最初のリリース番号は1.0.0のアルファ1です。
+現在も1.0-devというバージョンで日々アップデートが行われています。
+2012年というのはすごい最近ですよね。たった3年前です。ではその前はどうだったのか？少しふりかえってみたいと思います。&lt;/p&gt;
+
+&lt;h4&gt;Composerの前はどうだったのか？&lt;/h4&gt;
+
+&lt;p&gt;PHPにはじめて拡張モジュールやライブラリの置き場所ができたのは1999年、pearという名前でした。
+perlのCPANに影響を受けていて、あくまでコードリポジトリという位置づけでした。
+ComposerがDependency Managementであるのとは異なります。2006年にはPHP5.3に対応したpear2とpyrusが登場しました。
+しかしpearは厳密なコードレビューからオープンソースのリポジトリでありながら「誰もが自由に公開できる場所」とはいいづらいものでした。
+そこで2008年にnequalが立ち上げたのがopenpearです。pearパッケージを誰もが自由に公開できるような場所となりました。リポジトリはsvnでした。
+あのsotarokさんのコメントがトップページにあります「夢のような話だ」、まさにそのとおりでした。しかし時代はgit、githubになり、2012年にcomposerが生まれたのです。&lt;/p&gt;
+
+&lt;h4&gt;Composerを正しく理解する&lt;/h4&gt;
+
+&lt;p&gt;ComposerはDependencyManagementです。
+例えばYumやAptといったパッケージ管理とは違います。pearはこちらに近かったかもしれません。
+npmやbundlerといったものに影響を受けていて、プロジェクト単位で依存関係を管理します。&lt;/p&gt;
+
+&lt;h4&gt;Composerが必須になる流れ&lt;/h4&gt;
+
+&lt;p&gt;さてpearを使っていた中で、一番インストールしたことがあるパッケージといえば何でしたか？
+私はどんなプロジェクトでも必ず必要だったのはPHPUnitではないかと思います。PHPUnitインストールしたことがありますか？
+pearでやるとかなり面倒なんですよね、複数バージョン入れ分けなくてはいけないなんて事はなかったですか？（地獄でしたよねw）&lt;/p&gt;
+
+&lt;p&gt;昨年、PHPUnitはPEARから卒業しました。スライドではそのときのSebastionBergmannのツイートを引用しました。
+つい最近サルベージしたので、アイコンは当時写真だったと思うのですが、今はイラストですね（良く似ていますww）。&lt;/p&gt;
+
+&lt;p&gt;具体的には、csvから始まって、pearに移って、2009年にはgithubに移って、今日ではpearから卒業する、長らくありがとうという内容です。
+PHPUnit3.7.0からComposrで取得可能です。&lt;/p&gt;
+
+&lt;h4&gt;Composerより昔のやり方&lt;/h4&gt;
+
+&lt;p&gt;例えばPHPUnitを例にとって、Composerより前はどんな方法だったか思い出してみましょう。
+スライドではPHPUnitのpearを使った導入方法を掲載しました。1つ1つはもう気にしなくて良いのですが、長いですよね。
+たいてい秘伝のレシピにしているか、ググってコピペするか、会社でドキュメント化しているか、そんなところだったと思います。&lt;/p&gt;
+
+&lt;p&gt;秘伝のレシピの場合、もちろんコマンド1つかもしれないですが、初めてプロジェクトに入った人がわかるわけではないですね。
+複数バージョンを同居させるとかになると、pyrus使ったりしてもう少し違う感じにはなるかと思います。
+あと、iniのインクルードパスを設定しないとファイルが読み込めなかったですよね&lt;/p&gt;
+
+&lt;h4&gt;Composerになった（今どきの）やり方&lt;/h4&gt;
+
+&lt;p&gt;Composerになって、初めて入れるときはrequire、他の人はinstallコマンドを実行するだけで良くなりました。
+なんて簡単なんだろう、環境設定マニュアルとか必要ないレベルですよね。
+composer使ったことあるひとなら、git cloneしたリポジトリにcomposer.jsonがある段階でinstallを実行するはずです。
+（phpunitはrequire &amp;ndash;devじゃないとか？いうのはそのとおりですが、今回は省略しています）&lt;/p&gt;
+
+&lt;h3&gt;PHPで正しく開発するには&lt;/h3&gt;
+
+&lt;p&gt;今日ではこのようにPHPでもモダンな開発をするベースが整っています。
+PHPでは&lt;a href="http://ja.phptherightway.com"&gt;PHP The Right Way&lt;/a&gt;というページに、そのすべてがまとまっています。
+もちろんComposerについても書いてあります。
+&lt;code&gt;PHP The Right Way&lt;/code&gt; は PHPerが幸せになる為の道しるべを示してくれています。
+もちろん各国の有志によって翻訳されているので、すぐ読めます。かならず読んでみてください。&lt;/p&gt;
+
+&lt;p&gt;スライドの高速道路出口は &lt;a href="http://pro10.sakura.ne.jp/kousoku/"&gt;高速道路風標識ジェネレーター&lt;/a&gt; を使ってみたかっただけで、深い意味はありません。&lt;/p&gt;
+
+&lt;h4&gt;オートローディング&lt;/h4&gt;
+
+&lt;p&gt;PHP The Right Wayではコーディングスタイルや名前空間といったことにも言及しています。
+どちらにもPSR-4という記述がありますが、PSR-4はオートロードについての標準です。現在はPSR-0を含んでいるので、PSR-0でなくPSR-4を参照するのが良いでしょう。&lt;/p&gt;
+
+&lt;h4&gt;オートロードとComposerの関係について&lt;/h4&gt;
+
+&lt;p&gt;PHPでクラスをオートロードするには、_&lt;em&gt;autoloadを実装して、クラスが見つからないときに指示してあげるか、spl&lt;/em&gt;autoload_registerで予めクラスのパスを登録しておくという２通りのやり方があります。&lt;/p&gt;
+
+&lt;p&gt;「ちなみにこの方法でオートロードを実装したことがある人はいますか？」という問いにはどなたも手があがりませんでした。これはそのとおりだと思います。Composer以前ではほぼ気にする人はいなかったでしょう。&lt;/p&gt;
+
+&lt;p&gt;もしフレームワークを使ってアプリケーションを実装している人は、フレームワークがオートロードの仕組みを用意してくれていたりするので、より意識しないかなと思います。&lt;/p&gt;
+
+&lt;h3&gt;デモ&lt;/h3&gt;
+
+&lt;p&gt;本番ではうまくいかなかったのですが、こちらで解説します。（カンファレンスあるあるですね）&lt;/p&gt;
+
+&lt;h4&gt;インストール&lt;/h4&gt;
+
+&lt;p&gt;スライドの内容を参考にcomposerをインストールします。
+composerはプロジェクトのローカルでなく、パスの通っているところに配置してください。
+Right Wayにも書いてあります。
+Windowsを利用の方は&lt;a href="https://getcomposer.org/doc/00-intro.md#installation-windows"&gt;公式ドキュメント&lt;/a&gt;を参照ください。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/phpcon2015_demo"&gt;GitHubのリポジトリ&lt;/a&gt;からソースコードを取得します。&lt;/p&gt;
+&lt;pre class="highlight shell"&gt;&lt;code&gt;git clone git@github.com:sizuhiko/phpcon2015_demo.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4&gt;プロジェクト情報の入力&lt;/h4&gt;
+
+&lt;p&gt;まず&lt;code&gt;composer init&lt;/code&gt;コマンドでプロジェクト情報を入力します。
+requireやrequire-devは必要ないので、&lt;code&gt;no&lt;/code&gt;を入力すれば大丈夫です。&lt;/p&gt;
+
+&lt;h4&gt;インストールコマンドの実行&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;init&lt;/code&gt;コマンドを実行したら、&lt;code&gt;composer install&lt;/code&gt;コマンドを実行します。最初は何もありません。
+&lt;code&gt;vendor&lt;/code&gt;ディレクトリが生成されるはずです。&lt;/p&gt;
+
+&lt;h4&gt;実行してみる&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;php -S localhost:8000 src/router.php&lt;/code&gt; というコマンドを実行します。
+ブラウザから&lt;a href="http://localhost:8000"&gt;サンプルページ&lt;/a&gt;を実行してください。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Welcome to PHP&lt;/code&gt; と表示されるはずです。&lt;/p&gt;
+
+&lt;p&gt;次に&lt;code&gt;Say\Hello&lt;/code&gt;クラスを実行してみます。&lt;a href="http://localhost:8000/hello"&gt;/hello&lt;/a&gt;にアクセスします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Fatal error: Class 'Say\Hello' not found in /phpcon2015_demo/src/router.php on line 19
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;というエラーが表示されるはずです。
+ソースコードでは以下のように指定していますが、オートロードが定義されていないのでクラスは見つかりません。&lt;/p&gt;
+&lt;pre class="highlight php"&gt;&lt;code&gt;use Say\Hello;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;そこで、&lt;code&gt;composer.json&lt;/code&gt;を編集して、以下のように&lt;code&gt;require&lt;/code&gt;の下に追記します。&lt;/p&gt;
+&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"require"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="s2"&gt;"autoload"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nt"&gt;"psr-4"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="nt"&gt;"Say\\"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"src/Say"&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;変更を保存したら、&lt;code&gt;composer dumpautoload&lt;/code&gt; というコマンドを実行します。&lt;/p&gt;
+
+&lt;p&gt;再度&lt;code&gt;Say\Hello&lt;/code&gt;クラスを実行してみます。&lt;a href="http://localhost:8000/hello"&gt;/hello&lt;/a&gt;にアクセスします。
+すると、ブラウザに&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Hello
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;と表示されるはずです。
+今度は&lt;a href="http://localhost:8000/emoji"&gt;/emoji&lt;/a&gt;にアクセスします。
+先ほどと同じようなエラーが表示されるので、&lt;code&gt;composer.json&lt;/code&gt;を編集します。&lt;/p&gt;
+&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"autoload"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nt"&gt;"psr-4"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="nt"&gt;"Say\\"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"src/Say"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+            &lt;/span&gt;&lt;span class="nt"&gt;"Write\\"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"src/Write"&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;変更を保存したら、&lt;code&gt;composer dumpautoload&lt;/code&gt; というコマンドを実行します。&lt;/p&gt;
+
+&lt;p&gt;再度&lt;code&gt;Write/Emoji&lt;/code&gt;クラスを実行してみます。&lt;a href="http://localhost:8000/emoji"&gt;/emoji&lt;/a&gt;にアクセスします。
+すると、ブラウザに&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;(^o^)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;と表示されるはずです。&lt;/p&gt;
+
+&lt;p&gt;このようにオートロードについて自分で記述しなくても、名前空間の宣言を&lt;code&gt;composer.json&lt;/code&gt;でおこなうと自動的にクラスをロードしてくれるようになります。&lt;/p&gt;
+
+&lt;h3&gt;More Tips&lt;/h3&gt;
+
+&lt;p&gt;この先は解説できなかった部分なので補足します。&lt;/p&gt;
+
+&lt;h4&gt;リポジトリ管理&lt;/h4&gt;
+
+&lt;p&gt;これについては第94回 PHP勉強会＠東京〜PHPカンファレンス2015開催直前スペシャル〜で話しました。&lt;a href="http://www.s-arcana.co.jp/blog/2015/10/01/2899"&gt;スタジオアルカナのレポート&lt;/a&gt;に詳しいログが残っていますので、そちらを参照ください。&lt;/p&gt;
+
+&lt;h4&gt;スクリプト&lt;/h4&gt;
+
+&lt;p&gt;Composerの強力な機能にスクリプト（フック）の実行があります。
+&lt;code&gt;install&lt;/code&gt;や&lt;code&gt;update&lt;/code&gt;など&lt;code&gt;composer&lt;/code&gt;のコマンド実行前と実行後に、スクリプトを実行できます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;pre-install-cmd&lt;/li&gt;
+&lt;li&gt;post-install-cmd&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;のようなイベント名です。
+実行できるスクリプトは通常のCLIとPHPのクラスです。&lt;/p&gt;
+
+&lt;p&gt;例えば &lt;code&gt;composer.json&lt;/code&gt; で以下のように記述します。&lt;/p&gt;
+&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;"post-install-cmd"&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"MyVendor\\MyClass::warmCache"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="s2"&gt;"phpunit -c app/"&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;より詳しい情報は&lt;a href="https://getcomposer.org/doc/articles/scripts.md"&gt;公式サイト&lt;/a&gt;を参照して欲しいのですが、これの使い方は２つ考えられます。&lt;/p&gt;
+
+&lt;p&gt;１つ目は、すでに存在するライブラリに対するプロキシとしたい場合です。
+公開されているライブラリをForkしたり、コピーしてくることなく、独自の変更を加えたい場合や、ライブラリをインストールした後で独自のconfigを追加したい場合など、社内で複数のプロジェクトにまたがって同じカスタマイズをしたい場合は有効です。それぞれのプロジェクトではプロキシした&lt;code&gt;composer.json&lt;/code&gt;のあるリポジトリを指定するだけで、元のライブラリを修正することなく、同じようにカスタマイズ状態を利用できます。&lt;/p&gt;
+
+&lt;p&gt;２つ目は、フレームワークやライブラリを作った場合です。現在多くのフレームワークはアプリケーションテンプレートとして、&lt;code&gt;composer create-project&lt;/code&gt;に対応したスケルトンを用意しています。何もなければそれを取得すれば良いのですが、もちろん&lt;code&gt;create-project&lt;/code&gt;コマンドにもフックポイントが用意されているので、&lt;code&gt;install&lt;/code&gt;後には環境設定ファイルなどがコピーされるようになっています。&lt;/p&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;このようにComposerはpearでできていたパッケージ（コードリポジトリ）管理から、より多くの機能を持って、現在のアプリケーション開発になくてはならないものとなっています。&lt;/p&gt;
+
+&lt;p&gt;このセッションでComposerを使うようになってくれる人が増えることを期待してまとめとしたいと思います。&lt;/p&gt;
+
+&lt;h3&gt;おまけ&lt;/h3&gt;
+
+&lt;p&gt;LTのスライドも公開します。&lt;/p&gt;
+
+&lt;script async class="speakerdeck-embed" data-slide="2" data-id="3eea01f6480c4c5996cc0c988435a63a" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
+</content>
+  </entry>
   <entry>
     <title>複雑な正規表現を簡単に作れるようにした</title>
     <link rel="alternate" href="http://blog.url.com/2015/09/21/hexpress-ported-from-ruby-world.html"/>
@@ -811,106 +1036,6 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
 
 &lt;p&gt;また、BDDプラグインのサンプルアプリにはあった、日本語のシナリオや、JavaScriptを使ったテストなど、Behat3になって大きく変わってはいませんが、サンプルアプリケーションに少しずつ載せられたらなぁと思っています。
 何かうまく動かないなどあれば、気軽にGithubのissueに投稿お願いします（日本語でOKです）。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</title>
-    <link rel="alternate" href="http://blog.url.com/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html"/>
-    <id>http://blog.url.com/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html</id>
-    <published>2015-05-02T08:19:00Z</published>
-    <updated>2015-05-02T17:48:57+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;AngularJS でモーダルダイアログを表示するために、何を使うでしょうか？
-多くの場合 &lt;a href="https://github.com/likeastore/ngDialog"&gt;ngDialog&lt;/a&gt; というコンポーネントを使うのではないかと思います。&lt;/p&gt;
-
-&lt;p&gt;で、ダイアログ上の値は、それを表示したコントローラのスコープにバインドする、という良くあるシナリオを想定してください。&lt;/p&gt;
-
-&lt;p&gt;まずうまく&lt;a href="https://jsfiddle.net/sizuhiko/ox73fktc/1/"&gt;動作するサンプル&lt;/a&gt;を紹介します。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;Open Dialog&lt;/code&gt;というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
-ダイアログ背景のページで &lt;code&gt;check: true&lt;/code&gt; と &lt;code&gt;check: false&lt;/code&gt; がトグルするはずです。&lt;/p&gt;
-&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;a&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;""&lt;/span&gt; &lt;span class="na"&gt;ng-click=&lt;/span&gt;&lt;span class="s"&gt;"ShowNgDialog()"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;Open Dialog&lt;span class="nt"&gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{FormData.allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-
-&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;FormData&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="na"&gt;allcheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;
-    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ShowNgDialog&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;open&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;            
-            &lt;span class="na"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&amp;lt;div&amp;gt;&amp;lt;input type="checkbox" ng-model="FormData.allcheck"/&amp;gt;&amp;lt;/div&amp;gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;
-
-        &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;    
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;とても簡単な例ですが、AngularJSを使ってモーダルダイアログを表示して、チェックボックスの値をコントローラのスコープ変数 &lt;code&gt;FormData.allcheck&lt;/code&gt; にバインドしています。&lt;/p&gt;
-
-&lt;h3&gt;なぜか変数だとバインドされない&lt;/h3&gt;
-
-&lt;p&gt;一方で、こちらは&lt;a href="http://jsfiddle.net/sizuhiko/ox73fktc/2/"&gt;動作しないサンプル&lt;/a&gt;です。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;Open Dialog&lt;/code&gt;というリンクをクリックして、ダイアログを表示したら、チェックボックスをON/OFFしてください。
-ダイアログ背景のページは &lt;code&gt;check: false&lt;/code&gt; のままです。&lt;/p&gt;
-&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;a&lt;/span&gt; &lt;span class="na"&gt;href=&lt;/span&gt;&lt;span class="s"&gt;""&lt;/span&gt; &lt;span class="na"&gt;ng-click=&lt;/span&gt;&lt;span class="s"&gt;"ShowNgDialog()"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;Open Dialog&lt;span class="nt"&gt;&amp;lt;/a&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-
-&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;allcheck&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ShowNgDialog&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;open&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;            
-            &lt;span class="na"&gt;template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&amp;lt;div&amp;gt;&amp;lt;input type="checkbox" ng-model="allcheck"/&amp;gt;&amp;lt;/div&amp;gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;
-
-        &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;    
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;変わったのは、コントローラのスコープ変数にバインドするオブジェクトです。&lt;/p&gt;
-
-&lt;p&gt;うまく動作するのは &lt;code&gt;$scope.FormData={allcheck: false};&lt;/code&gt; のようにスコープのプロパティはオブジェクトで、オブジェクトに値を保持しているケースです。
-一方うまく動作しないのは &lt;code&gt;$scope.allcheck = false;&lt;/code&gt; のようにスコープのプロパティに変数で値を保持しているケースです。&lt;/p&gt;
-
-&lt;h3&gt;ngDialogでなければ変数でバインドできる&lt;/h3&gt;
-
-&lt;p&gt;ngDialogでなく普通に表示される範囲にある場合は、&lt;a href="http://jsfiddle.net/sizuhiko/ox73fktc/3/"&gt;動作するサンプル&lt;/a&gt;です。&lt;/p&gt;
-
-&lt;p&gt;チェックボックスをON/OFFしてください。ページで &lt;code&gt;check: true&lt;/code&gt; と &lt;code&gt;check: false&lt;/code&gt; がトグルするはずです。&lt;/p&gt;
-&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-app=&lt;/span&gt;&lt;span class="s"&gt;"myApplication"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;data-ng-controller=&lt;/span&gt;&lt;span class="s"&gt;"MainController"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;div&amp;gt;&amp;lt;input&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;"checkbox"&lt;/span&gt; &lt;span class="na"&gt;ng-model=&lt;/span&gt;&lt;span class="s"&gt;"allcheck"&lt;/span&gt;&lt;span class="nt"&gt;/&amp;gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-        &lt;span class="nt"&gt;&amp;lt;span&amp;gt;&lt;/span&gt;check: {{allcheck}}&lt;span class="nt"&gt;&amp;lt;/span&amp;gt;&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;myApplication&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;angular&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'myApplication'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'ngDialog'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-
-&lt;span class="nx"&gt;myApplication&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;controller&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'MainController'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;ngDialog&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;$scope&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;allcheck&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;ngDialogを使うときのちょっとした小ネタなのですが、解決策を見つけるまで結構時間がかかりました。
-もし、ngDialogを使ってうまくデータバィンディングできない！という人の参考になればと思います。&lt;/p&gt;
 </content>
   </entry>
 </feed>

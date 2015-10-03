@@ -275,7 +275,166 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2011/12/03/cakebehat-master-cakephp2-0-selenium.html">CakeBehat の master を CakePHP2.0 対応に切り替えました。Seleniumによるテストも簡単に。</a></h2>
+            <h2 class="title"><a href="/2011/12/25/phpquery.html">phpQueryを使ってデザイナーとプログラマーを完全分業できるようにする（導入編）</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2011/12/25.html">Sunday, December 25, 2011 02:12:34 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/phpquery.html">phpQuery</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;これまで多くのテンプレートエンジンが登場してきましたが、HTMLに全く手を入れないでデザイナーとプログラマーが分業することは困難でした。
+もちろんSmartyのテンプレートが編集できる人がいたり、PHPTALのようにほとんどHTMLには手をつけない方法があったりと、これまでの方法でも分業することは可能だと思います。  </p>
+
+<p>ただHTMLには多少の手を入れなくてはいけない、そういう意味でKwartzのようにプレゼンテーションロジックを分割できるテンプレートシステムはとても良いと思っています。ただセレクターがCSS3セレクターでないのが難点かなぁと思っています。  </p>
+
+<p>そこで目を付けたのが<a href="http://code.google.com/p/phpquery/">phpQuery</a>という、名前からして思い当たるjQueryのセレクター機能を搭載したPHP実装になっています。  </p>
+
+<p>phpQueryは内部的にPHPのDOMDocumentを使っていて、エレメントを探し出すのに便利なセレクター記法を持っています。  </p>
+
+<p>今回はphpQueryを使って静的HTMLの一部をPHPコードに書き換えるという導入をやってみます。  </p>
+
+<p>本当は時間があればViewコンポーネントまで作って、githubに展開したかったのですが、これは2012年早々の目標になる予定です。  </p>
+
+<h3>phpQueryの取得</h3>
+
+<p>phpQueryは</p>
+
+<ol>
+<li>pear</li>
+<li>google-code</li>
+<li>github</li>
+</ol>
+
+<p>のいずれかから導入可能です。この記事ではgithubから取得して進めます。</p>
+<pre class="highlight plaintext"><code>git clone git://github.com/bluelovers/phpQuery.git
+</code></pre>
+
+<h3>サンプルHTMLの取得</h3>
+
+<p>この記事では、みんな大好きWORDPRESSの日本語TOPページのHTMLを使ってみたいと思います。  </p>
+<pre class="highlight plaintext"><code>mkdir templates
+wget http://ja.wordpress.org/
+mv index.html templates
+</code></pre>
+
+<p>ここで注意なのですが、現在DOMDocumentではXHTMLを正しくパースできないようです。そこで、通常のHTMLとして解釈できるように先頭数行を以下のように書き換えます。</p>
+<pre class="highlight html"><code><span class="nt">&lt;html&gt;</span>
+    <span class="nt">&lt;head&gt;</span>
+</code></pre>
+
+<p>DOCTYPEを削除し、htmlとheadにあった属性を削除しています。  </p>
+
+<p>ただXHTMLでなくHTML記法で書かれたページは問題ないので、この課題についてはあまり深入りせず先に進む事にします。  </p>
+
+<p>ただDOCTYPEや属性は、後で追加できるのでViewクラスにしたときに何かサポートできるようにしたいなぁと思っています。  </p>
+
+<p><img src="/images/blog/WordPress.png" /> </p>
+
+<p>の赤枠で囲った部分に関して、PHPの動的コードに変換してみましょう。  </p>
+
+<h3>phpshを使って試す</h3>
+
+<p>簡単に試すにはインタラクティブシェルを使うのが便利なので、今回もphpshを使います。  </p>
+<pre class="highlight plaintext"><code>bash-3.2$ phpsh
+Starting php
+type 'h' or 'help' to see instructions &amp; features
+
+php&gt; require('phpQuery/phpQuery/phpQuery.php');
+php&gt; $file = file_get_contents('template/index.html');
+php&gt; $html = phpQuery::newDocumentHTML($file);
+php&gt; echo $html-&gt;html();
+</code></pre>
+
+<p>最後のhtml()で読み込んだHTMLがそのまま出力されることを確認しましょう。  </p>
+
+<p>ブログ記事の箇所のHTMLは以下のようになっています。  </p>
+<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
+  &lt;div class="main"&gt;
+    &lt;h3&gt;ブログ&lt;/h3&gt;
+    &lt;div class="post" id="post-2057"&gt;
+    &lt;h4&gt;&lt;a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-ja/" rel="bookmark" title="WordPress 3.3 日本語版リリースのお知らせ へのパーマリンク"&gt;WordPress 3.3 日本語版リリースのお知らせ&lt;/a&gt;&lt;/h4&gt;
+    &lt;h6&gt;2011年12月13日&lt;/h6&gt;
+    &lt;div class="entry"&gt;
+      &lt;p&gt;WordPress 3.3 日本語版をリリースしました。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="post" id="post-2042"&gt;
+    &lt;h4&gt;&lt;a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-sonny/" rel="bookmark" title="WordPress 3.3「Sonny」 へのパーマリンク"&gt;WordPress 3.3「Sonny」&lt;/a&gt;&lt;/h4&gt;
+    &lt;h6&gt;2011年12月13日&lt;/h6&gt;
+    &lt;div class="entry"&gt;
+      &lt;p&gt;WordPress 3.3「Sonny」がご利用いただけるようになりました。&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+</code></pre>
+
+<p>ブログ記事は $posts という配列に入っていると仮定します。</p>
+<pre class="highlight plaintext"><code>php&gt; $html['#blog .post:gt(0)']-&gt;remove();
+php&gt; $html['#blog .post']-&gt;wrapPHP('foreach($posts as $post) {', '}');
+php&gt; $html['#blog .post']-&gt;attrPHP('id', 'echo "post-$post-&gt;id;"');
+php&gt; $html['#blog .post h4 a']-&gt;attrPHP('href', 'echo $post-&gt;url;')-&gt;attrPHP('title', 'echo $post-&gt;title;')-&gt;php('echo $post-&gt;title;');
+php&gt; $html['#blog .post h6']-&gt;php('echo $post-&gt;date;');
+php&gt; $html['#blog .post .entry p']-&gt;php('echo $post-&gt;intro;');
+
+php&gt; print $html-&gt;php();                                                                                             
+</code></pre>
+
+<p>のようにphpshで実行すると、先ほどのHTML部分が以下のようになります。</p>
+<pre class="highlight plaintext"><code>&lt;div id="blog" class="section"&gt;
+  &lt;div class="main"&gt;
+    &lt;h3&gt;ブログ&lt;/h3&gt;
+    &lt;?php  foreach($posts as $post) {  ?&gt;
+      &lt;div class="post" id='&lt;?php  echo "post-$post-&gt;id";  ?&gt;'&gt;
+        &lt;h4&gt;&lt;a href="&lt;?php  echo $post-&gt;url;  ?&gt;" rel="bookmark" title="&lt;?php  echo $post-&gt;title;  ?&gt;"&gt;&lt;?php  echo $post-&gt;title;  ?&gt;&lt;/a&gt;&lt;/h4&gt;
+        &lt;h6&gt;&lt;?php  echo $post-&gt;date;  ?&gt;&lt;/h6&gt;
+        &lt;div class="entry"&gt;
+          &lt;p&gt;&lt;?php  echo $post-&gt;intro;  ?&gt;&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;?php  }  ?&gt;
+  &lt;/div&gt;
+</code></pre>
+
+<p>どうです？  </p>
+
+<p>jQueryで見慣れたセレクタ記述と、少しのphpQueryの拡張記述で、HTMLを直接変更することなくPHPコードを含んだテンプレートファイルに変換することができました。  </p>
+
+<p>phpQueryが用意している<a href="http://code.google.com/p/phpquery/wiki/Selectors">jQueryポートしたセレクタ</a>や、<a href="http://code.google.com/p/phpquery/wiki/PHPSupport">PHPコードを出力する拡張関数</a>は、<a href="http://code.google.com/p/phpquery/">google-codeの公式ページ</a>を参照するとわかります。</p>
+
+<h3>さいごに</h3>
+
+<p>最初にHTMLファイルを読み込む部分や、最後にphp()関数を使ってPHPを含むコードに変換する部分をモジュール化して、各フレームワーク向けのViewコンポーネントとして提供したいなぁと思っています。  </p>
+
+<p>ただ普段使っているのがCakePHPばかりなので、他のフレームワークについてわかる人に協力してもらえたらなぁと思っています。  </p>
+
+<p>またViewコンポーネントにする際は<a href="http://code.google.com/p/querytemplates/">QueryTemplates</a>というphpQueryを拡張したコードも使おうかなぁと思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="phpQueryを使ってデザイナーとプログラマーを完全分業できるようにする（導入編）" data-url="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/12/25/phpquery.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/12/25/phpquery.html&t=phpQuery%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%87%E3%82%B6%E3%82%A4%E3%83%8A%E3%83%BC%E3%81%A8%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%83%BC%E3%82%92%E5%AE%8C%E5%85%A8%E5%88%86%E6%A5%AD%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%88%E3%81%86%E3%81%AB%E3%81%99%E3%82%8B%EF%BC%88%E5%B0%8E%E5%85%A5%E7%B7%A8%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/12/25/phpquery.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2011/12/03/cakebehat-master-cakephp2-0-selenium.html">CakeBehat の master を CakePHP2.0 対応に切り替えました。Seleniumによるテストも簡単に。</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2011/12/03.html">Saturday, December 03, 2011 05:12:14 PM</a></p>
   <p class="tags">
     
@@ -768,74 +927,6 @@ PHPMatsuriの2日目の午後は大発表会です。  </p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2011/09/14/php-2011.html">PHPカンファレンス2011に参加しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2011/09/15.html">Thursday, September 15, 2011 01:09:56 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;今回のPHPカンファレンスは、久々の1日開催と、マルチトラックということで楽しみにしていました。  </p>
-
-<p>が、前日朝方までBarから帰してもらえない状況 :ko: で、数分遅刻した上にかなり眠い状態&hellip;  </p>
-
-<p>カンファレンスのメイントラックでは5.3, 5.4の話題が多く、若干のネタかぶり？という雰囲気もありましたが、PHPも便利になっていくねという確認ができました。
-マルチトラックはかなりのチャレンジだったと思うのですが、オブラブなどでの経験からすると、事前にどのセッションに参加希望かだけでも聞いておくと違ったかなぁと。そのセッションに必ず参加しないといけない、という訳ではないのですが、そのセッションをどの会場でやるか、といった目安にはなるかなぁと。ただメイン会場に通訳さんがいたので、それほど柔軟にはできない事情もあったとは思いますが。  </p>
-
-<p>私は3つの目的でカンファレンスに参加しました。</p>
-
-<ol>
-<li>カンファレンスのセッションを聴きに</li>
-<li>LTでCakeBehatを紹介するために</li>
-<li>PHP Matsuri青年団として、Matsuriの宣伝を！</li>
-</ol>
-
-<h3>カンファレンスの感想</h3>
-
-<p><a href="http://phpcon.php.gr.jp/2011/"><img src="http://phpcon.php.gr.jp/2011/images/phpcon2011-logo.png" /></a></p>
-
-<p>カンファレンスに関してはアジャイルやTDDのセッションがあったので参加してみようと思ったのですが、どうも「参考にならない人」条件に入っているようだったし、かなりの満員御礼状態で会場に入れないということで、ずっとメイン会場にいました。あ、フレームワークアップデートだけは6Fに移動して見ていました。フレームワークアップデートではLithiumやEthena（こちらはLTでsotarokがやっていましたが）がなくちょっと残念でした。あと昨年のフレームワークアップデートはもうちょっとバリエーション豊かだった気が（気のせいかもしれませんが）。<br>
-あと興味を持ったのはHadoopをPHPから操作できるHadooPHPかなぁ。プロトタイプ用ということだったけど、ちょっと試してみたいと思いました。  </p>
-
-<h3>CakeBehatの紹介LT</h3>
-
-<p><a href="http://twl.sh/q1ULvr"><img src="/images/blog/CakeBehatAtPhpcon2011.png" /></a></p>
-
-<p>スライドをアップしました。
-Behat自体の認知度はだいぶ上がって来たと思うので、後はPHPMatsuriで背中を押せば使う人が増えるんじゃないかなぁ？LTの後でSymfony,Cake以外のフレームワークからも使いたいという書き込みがあったので、Matsuriで誰かチャレンジしないかな？と期待しています。  </p>
-
-<h3>PHPMatsuriの宣伝</h3>
-
-<p><a href="http://2011.phpmatsuri.net/"><img src="http://2010.phpmatsuri.net/uploads/phpmatsuri_logo.jpg" /></a></p>
-
-<p>LTを5分ちょうどで終えて、3回の紹介、懇親会LTでくどいくらい宣伝させていただきました。  </p>
-
-<p>PHPcon当日はまだ申込ができなかったのですが、すでに<a href="http://2011.phpmatsuri.net/">PHPMatsuriサイト</a>では参加申込が可能となっています。海外から豪華ゲストもやってきますし、開発するも講演を聴くも、いろんな方向から楽しいイベントにしたいと思っていますのでぜひ参加の検討をお願いします。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2011に参加しました" data-url="http://blog.open.tokyo.jp/2011/09/14/php-2011.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2011/09/14/php-2011.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2011/09/14/php-2011.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/09/14/php-2011.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92011%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/09/14/php-2011.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -905,6 +996,8 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2015/10/03/phpconference-tokyo-2015.html">PHPカンファレンス2015で発表しました</a> <span>2015/10/03</span></li>
+                
                   <li><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a> <span>2015/09/21</span></li>
                 
                   <li><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a> <span>2015/09/13</span></li>
@@ -922,8 +1015,6 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
                   <li><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a> <span>2015/04/19</span></li>
                 
                   <li><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a> <span>2015/03/14</span></li>
-                
-                  <li><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a> <span>2015/03/14</span></li>
                 
               </ul>
             </div>
@@ -1241,6 +1332,10 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/composer.html">Composer</a>
+                    </li>
+                  
                   
                 
                   
@@ -1331,6 +1426,18 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1339,7 +1446,7 @@ Behat自体の認知度はだいぶ上がって来たと思うので、後はPHP
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2015.html">2015</a> (12)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
                 
                   <li><a href="/2014.html">2014</a> (14)</li>
                 
