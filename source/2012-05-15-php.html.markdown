@@ -1,0 +1,248 @@
+---
+author: sizuhiko
+comments: true
+date: 2012-05-15 17:05:22+00:00
+slug: php
+title: PHPのスペックフレームワーク
+wordpress_id: 47
+categories:
+- 未分類
+tags:
+- BDD
+- PHP
+- xSpec
+---
+
+<!-- more -->![](/images/blog/phpspec_cover.png) 
+  
+
+PHPでのBDDについては、何度か取り上げてきましたがほとんどがストーリフレームワークであるBehatについてで、スペックフレームワークについてはあまりふれてきませんでした。せっかく今回はPHPカンファレンス関西のLTで2種類のBDDフレームワークについて話したので、スペックフレームワークについてまとめてみたいと思います。  
+
+  
+
+
+
+### 最初にたどり着くのはPHPSpec
+
+
+  
+
+LTのスライドでも紹介したのはPHPといえばまず最初に思いつく [PHPSpec](http://www.phpspec.net/) です。大抵はまず「言語プレフィクス+Spec」で検索してみますよね。PHPはユニットテストがPHPUnitだからPHPSpecだよね、と誰もが連想できます。  
+
+で、PHPSpecの書き方としては、
+
+    
+    
+    class DescribeNewBowlingGame extends PHPSpecContext {  
+        private $_bowling = null;  
+        public function before() {  
+            $this->_bowling = $this->spec(new Bowling);  
+        }  
+        public function itShouldScore0ForGutterGame() {  
+            for ($i=1; $i<=20; $i++) {  
+                // someone is really bad at bowling!  
+                $this->_bowling->hit(0);  
+            }  
+            $this->_bowling->score->should->equal(0);  
+        }  
+    }  
+    
+
+
+のように、まぁPHPのコードだとすれば読むのはそれほど困難ではないわけですが、やっぱりSpec（仕様）という視点で眺めると、ちょっと無駄な記述が目立ちますよね。それは言語の文法だからしょうがない、そうなんですが。  
+
+  
+
+
+
+### その他のスペックフレームワーク
+
+
+  
+
+で、試しにGitHubで他にないのかと探すと、意外とスペックフレームワークがある事に気がつきました。  
+
+
+
+
+
+
+名前所感
+
+
+[PHPSpec](http://www.phpspec.net/)
+最初に出てくる有名どころ
+
+
+
+[pecs](https://github.com/noonat/pecs)
+JSpecに影響を受けている。しばらくメンテされていない...
+
+
+
+[spectrum](https://github.com/mkharitonov/spectrum)
+まだα版でドキュメントもロシア語しかないが、設計の筋が良くいろいろできそう。今後に期待
+
+
+
+[speciphy](https://github.com/speciphy/speciphy)
+yuya-takeyamaさん(@yuya_takeyama)がRspecに影響を受けて作成。subjectが使える。コアはPHPSpecを利用している
+
+
+
+[Spec for PHP](https://github.com/drslump/Spec-PHP)
+Hamcrestライブラリとtoken_get_all関数を使って、自然に英語として読める文章として記述が可能。解析した結果をPHPUnitのテストケースとして生成して実行している
+
+
+  
+
+以下のコードは、Speciphy を例にPHPSpec以外でどのように書けるかをあらわしています。pecsもspectrumもほぼ同じような記述になります。
+
+    
+    
+    namespace SpeciphyDSL;
+    return
+    describe('Bowling',
+        describe('->score',
+            context('all gutter game',
+                subject(function () {
+                    $bowling = new Bowling;
+                    for ($i = 1; $i <= 20; $i++) {
+                        $bowling->hit(0);
+                    }
+                    return $bowling;
+                }),
+                it('should equal 0', function ($bowling) {
+                    $bowling->score->should->equal(0);
+                })
+            )
+        )
+    );
+    
+
+
+
+  
+
+だいぶ読みやすくなりました。ではRSpecと比較してみま....す？えっ、やっちゃうの、それは....
+
+    
+    
+    describe Bowling, "#score" do
+      it "returns 0 for all gutter game" do
+        bowling = Bowling.new
+        20.times { bowling.hit(0) }
+        bowling.score.should eq(0)
+      end
+    end
+    
+
+
+こんな感じです。subjectやcontext使っている違いとかありますが、PHPの場合はどうしても無名関数を使うのに 
+
+> function () {...}
+
+を使わなくてはならないので、そこが惜しいのです。  
+
+  
+
+
+
+### 変態PHPスペックフレームワーク Spec for PHP
+
+
+  
+
+そこで Spec for PHP ということなのですが、こいつはだいぶ変態です（ごめんなさい。良い意味です）。まず先程紹介したような funcition(){ ... } の無名関数で書いたような記法も使えます。それはほぼ同じように書く事が可能です。で、何が変態かと言うと Hamcrestライブラリとtoken_get_all関数を使って構文解析することで、以下のようなSpecが書けちゃいます。
+
+    
+    
+    describe "Bowling"
+      describe "#score"
+        it "returns 0 for all gutter game"
+          $bowling = new Bowling;
+          for ($i = 1; $i <= 20; $i++) {
+            $bowling->hit(0);
+          }
+          $bowling->score should equal 0
+        end
+      end
+    end
+    
+
+
+  
+
+it ブロックの内容は、Hamcrestを使って$bowling->score should equal 0 のように書いていますが、基本的にはPHPのソースコードであるとわかるでしょう。ただしdescribeやitなどの構文からはfunctionが消えて見通しが良くなっています。  
+
+  
+
+
+
+#### では早速試してみましょう
+
+
+  
+
+Spec for PHP は以下の依存関係を持っています。
+
+
+  * PHP 5.3
+  * PHPUnit 3.5
+  * Hamcrest matchers library（ベータ版のときに作成されたらしい）
+  * PHP Object_Freezer 1.0.0
+
+この記事の執筆時点で最新版の依存関係を適用すると、PHPUnitとHamcrestを利用している箇所で一部エラーになってしまいます。そこで、これらを修正し本家にPull Requestを送付しています。  
+![](/images/blog/spec4php_pr.png) 
+このため、本家に取り込まれるまでは、私のforkリポジトリから取得することを推奨します。  
+
+[https://github.com/sizuhiko/Spec-PHP](https://github.com/sizuhiko/Spec-PHP)  
+
+上記問題に対応するための修正と、日本語関連でPHP関数名の正規表現に x7f-xff の範囲を追加した修正が、 **develop ブランチ**に入っていますので、こちらでお試しください。  
+
+まず必要なpearパッケージをインストールします。すでにインストール済みならスキップして構いません。
+
+    
+    
+    pear channel-discover pear.phpunit.de
+    pear install phpunit/PHPUnit
+    pear install phpunit/Object_Freezer
+    pear install Console_CommandLine
+    
+    Install Hamcrest matchers library
+    pear channel-discover hamcrest.googlecode.com/svn/pear
+    pear install hamcrest/Hamcrest
+    
+
+
+  
+
+つづいて、githubからcloneしてdevelopにスイッチします。
+
+    
+    
+    git clone git@github.com:sizuhiko/Spec-PHP.git
+    git checkout origin/develop -b develop
+    
+
+
+  
+
+Spec for PHPはPHPUnit経由の実行方法と、Cliランナーも持っています。
+
+
+  * phpunit tests/AllTests.php
+  * ./spec4php.php tests
+
+  
+
+
+
+### さいごに
+
+
+Spec for PHP はテストコードを書いていて楽しい気分になれるような気がします。まだまだ奥がありそうなので、ちょっと追いかけてみようと思っています。また本家にPRが取り込まれたときなどに、インストール方法など更新予定です。  
+
+  
+
+また、PHPのスペックフレームワークについて「もくもく会」か「勉強会」をやろうと思っていますので、こちらは[@sizuhiko](http://twitter.com/sizuhiko)のTwitterなどをチェックしておいていただければと思います。

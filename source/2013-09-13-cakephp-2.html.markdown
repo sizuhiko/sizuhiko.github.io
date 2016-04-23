@@ -1,0 +1,128 @@
+---
+author: sizuhiko
+comments: true
+date: 2013-09-13 05:09:19+00:00
+slug: cakephp-2
+title: CakePHPのコントローラテストで注意すること
+wordpress_id: 54
+categories:
+- 未分類
+tags:
+- CakePHP
+- Controller
+- PHPUnit
+- Test
+---
+
+<!-- more -->
+
+### コントローラのテストは難解である
+
+  
+  
+とは言え、テストを書かないというのも何なのでテストを書くわけですが。  
+  
+CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  
+  
+
+    
+    
+    class PostsTestController extends PostsController {
+    // モックしたい処理
+    ....
+    }
+    class PostsControllerTest extends ControllerTestCase {
+    
+        public function testアクションをテストする() {
+            $this->testAction('url', array('controller'=>'PostsTestController'));
+        }
+    }
+    
+    
+
+  
+  
+ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  
+  
+  
+
+
+### なぜモックが必要？
+
+  
+  
+もしこの記事を読んでいる方で、testActionがブラウザからも、コンソールからも成功するよ、という場合は依存関係が少ないか、たまたまなのかもしれません。  
+  
+Webアプリケーションのコントローラは様々な依存関係があり、簡単にテストを通過させることができません。特にSessionComponentを使ったactionをテストする場合、問題が発生します。  
+Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  
+  
+  
+しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  
+  
+
+    
+    
+    // 実際のコントローラ
+        $components = ['Session', 'Auth'];
+    
+        public function index() {
+            $hoge = $this->Session->read('hoge');
+            .....
+        }
+    
+    // テストケース
+        public function testIndex() {
+            CakeSession::write('hoge', 'fuga');
+            $this->testAction('/posts/index');
+            ......
+        }
+    
+
+  
+  
+みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  
+  
+
+
+### どうやってモックを使うのか
+
+  
+  
+で、調べてみたら意外と解説してある部分がない。こういうときはCakePHPのコアテストコードを見るのが一番です。  
+具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/...でないところがミソ）。  
+  
+で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  
+  
+
+    
+    
+        public function testIndex() {
+            $this->controller = $this->generate("Posts", ['components' => ['Session']]);
+            $this->controller->Session->expects($this->any())
+                 ->method('read')
+                 ->will($this->returnValueMap([['hoge', 'fuga']]));
+            $this->testAction('/posts/index');
+    
+
+  
+  
+$this->generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。  
+このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  
+  
+generate()の戻り値はコントローラのモックオブジェクトになっています。さらにSessionもモックしているので、 $this->controller->Session に対して、read('hoge')はいつでも'fuga'を返すという記述をすることが可能です。  
+モック自体はPHPUnitのモックオブジェクトなので、詳しい記法はPHPUnitのマニュアルからモックオブジェクトの章を参照してください。  
+  
+[PHPUnit3.7のモックオブジェクト解説](http://phpunit.de/manual/3.7/ja/test-doubles.html#test-doubles.mock-objects)  
+  
+
+
+### 最後に
+
+  
+  
+コントローラのテストは本当に難解です。ただコアのテストコードを見るだけでもだいぶ理解が深まります。一度自分のアプリでテストを書く前に、その親クラス(ModelとかControllerなど)やテストケースのテストコードを見ると、これまでにテストの書き方がわからなかったところも、腑に落ちることがあるはずです。  
+  
+  
+  
+  
+

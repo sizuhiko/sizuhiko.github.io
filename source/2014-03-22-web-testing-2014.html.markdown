@@ -1,0 +1,122 @@
+---
+title: テスト駆動web開発勉強会 Vol.1で発表しました    
+date: 2014-03-22 15:24:00+09:00
+slug: web-testing-2014
+tags:
+- CakePHP
+- JavaScript
+- TDD
+- BDD
+---
+
+2014/3/18に[コワーキングスペース茅場町Co-Edo](http://blog.coworking.tokyo.jp/)で開催された「[テスト駆動web開発勉強会 Vol.1](http://tdd-web.doorkeeper.jp/events/9439)」で「Webアプリケーションテスト手法2014」の発表をしました。
+
+第一回目ということと、1時間枠と限られた時間の中でCakePHPとJavaScriptについてのテストの話をしたので、ざっくりした内容となっています。
+
+今後ハンズオンなども計画しているようなので、DoorKeeperのページをチェックしておくと良いかなーと思います。
+また当日は「[Java,PHPエンジニアの派遣、求人を探すならJapheego（ジャフィーゴ）](https://japheego.jp/)」さんに懇親会スポンサーになっていただき、美味いビールとSUBWAYのサンドイッチをいただきました。感謝!
+勉強会の懇親会はピザが多いのですが、連続すると飽きるのでたまには[SUBWAYのデリバリー](http://demae-can.com/shop/menu/3007411/)とか良いと思いますよ！（SUBWAY大好きです）
+
+<div id="file_embed">
+    <div id="embedded_doc"><p class="no_javascript">To see files inline you need to enable JavaScript.<br />Yahoo has some <a href="http://help.yahoo.com/l/us/yahoo/help/faq/browsers/browsers-63474.html" target="_blank">instructions for enabling JavaScript</a> if you're unsure how to do it.</p></div>
+
+    <script type="text/javascript">
+    var scribd_doc = scribd.Document.getDoc(213088053, 'key-c8og2igawuh9o7wx4j7');
+
+    var onDocReady = function(e){
+        // scribd_doc.api.setPage(3);
+    }
+
+    scribd_doc.addParam('jsapi_version', 2);
+    scribd_doc.addEventListener('docReady', onDocReady);
+    scribd_doc.addParam('height', 494);
+    scribd_doc.addParam('width', 600);
+    scribd_doc.write('embedded_doc');
+    </script>
+
+    <p class="download"><a href="http://twileshare.com/uploads/WebTest201403_pub.pdf" class="big_green_button_link" title="Filename: WebTest201403_pub.pdf">Download this file</a></p>
+</div>
+
+最後に、当日紹介したサンプルのCakePHPテストコードを掲載しておきます。
+
+
+##### モデルのテスト例：
+
+```php
+<?php
+class PostTest extends CakeTestCase {
+    public $fixture = ['app.Post', 'app.Comment'];
+
+    public function setUp() {
+        $this->model = ClassRegistry::init('Post');
+        $this->model = $this->getMockForModel('Post');
+        $this->model = $this->getMockForModel('Post', ['save']);
+    }
+
+    public function testタイトルがない場合はバリデーションエラーになること() {
+
+    }
+    public function testデータベースへの保存に失敗した場合はfalseが戻ること() {
+
+    }
+    public function testデータベースへの保存に成功した場合はtrueが戻ること() {
+
+    }
+    public function testデータベースに新規登録できること() {
+
+    }
+}
+```
+
+モデルの初期化方法には3つのやり方があり、通常は`ClassRegistry::init()`で良いのですが、モデルをモックしたい場合は`getMockForModel()`というCakeTestCaseが用意してくれているモデル専用のモックジェネレータを使います。第二引数にメソッドの配列を指定するとパーシャルモックとなり、特定のメソッドのみモックします。
+
+##### コントローラのテスト例:
+
+```php
+<?php
+class PostsControllerTest extends ControllerTestCase {
+    public function setUp() {
+        $this->controller = $this->generate('Posts',[
+            'components' => [
+                'Session',
+                'RequestHandler'=>['isPost'],
+            ],
+            'models' => [
+                'Post' => ['findById','delete'],
+            ],
+            'methods' => [
+                'redirect', 'render',
+            ],
+        ]);
+    }
+
+    /**
+     * @expectedException NotFoundException
+     */
+    public function test存在しない記事を表示するとNotFound例外になること() {
+        $this->testAction('/posts/view/999');
+    }
+    /**
+     * @expectedException BadRequestException
+     */
+    public function test保存がPOST以外で呼び出されたらBadResuest例外になること() {
+        $this->testAction('/posts/save/1', ['method' => 'get']);
+    }
+    public function test削除が成功したらindexにリダイレクトする() {
+        $this->controller->Post->expects($this->once())->method('delete')
+                ->with($this->equalTo(1))->will($this->returnValue(true));
+        $this->controller->expects($this->once())->method('redirect')
+                ->with($this->equalTo('index'));
+        $this->testAction('/posts/delete/1', ['method' => 'delete']);
+    }
+    public function test新しいトピックを追加できたら画面にメッセージが戻ること() {
+
+    }
+}
+```
+
+コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには`ControllerTestCase`が用意してくれているコントローラ専用のモックジェネレータである`generate()`を利用します。generateで作成したインスタンスをテストケースクラスの`controller`メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。
+
+コントローラから依存関係にある、コンポーネント、モデルについてそれぞれサンプルのようにモックでき、コントローラ自体のメソッドも`methods`に列挙することでモックできます。例えば`redirect()`や`render()`などがよく使われると思います。
+
+

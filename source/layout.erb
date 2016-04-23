@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <% Time.zone = 'Tokyo' %>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote<%= ' - ' + current_article.title unless current_article.nil? %></title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <%= feed_tag :atom, "#{blog.options.prefix.to_s}/feed.xml", title: "Atom Feed" %>
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      <%= Rouge::Themes::Github.render(:scope => '.highlight') %>
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          <% unless current_article.nil? %>
+            <h2><%= current_article.title %></h2>
+            <p class="postdate"><%= link_to current_article.date.localtime.strftime('%A, %B %d, %Y %I:%M:%S %p'), current_article.date.localtime.strftime('/%Y/%m/%d.html'), title:"Permanent link" %></p>
+            <p class="tags">
+              <% current_article.tags.each do |tag| %>
+                <%= link_to tag, tag_path(tag), rel:'tag' %>
+              <% end %>
+            </p>
+          <% end %>
+
+          <%= yield %>
+
+          <% unless current_article.nil? %>
+            <% permalink_url = "http://blog.open.tokyo.jp#{current_article.url}" %>
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="<%= current_article.title %>" data-url="<%= permalink_url %>" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="https://plus.google.com/share?url=<%= permalink_url %>" class="socialite googleplus-one" data-size="tall" data-href="<%= permalink_url %>" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=<%= permalink_url %>&t=<%= URI.encode(current_article.title) %>" class="socialite facebook-like" data-href="<%= permalink_url %>" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          <% end %>
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                <% blog.articles[0...10].each do |article| %>
+                  <li><%= link_to article.title, article %> <span><%= article.date.strftime('%Y/%m/%d') %></span></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+                <% require 'PP' %>
+              <ul class="nobullets clearfix">
+                <% 
+                  weights = blog.tags.map {|tag, articles| articles.size }
+                  if (weights.max - weights.min) == 0
+                    weights.fill(0.5)
+                  else
+                    sqrtMax = Math.sqrt(weights.max)
+                    sqrtMin = Math.sqrt(weights.min)
+ 
+                    weights = weights.map do |weight| 
+                      sqrtCount = Math.sqrt(weight)
+                      val = (sqrtCount - sqrtMin) / (sqrtMax - sqrtMin)
+                      val
+                    end
+                  end
+                  i = 0
+                %>
+                <% blog.tags.each do |tag, articles| %>
+                  <% size = weights[i] * 5 %>
+                  <% if size > 0.4 %>
+                    <li class="size<%= size.to_i %>">
+                      <%= link_to tag, tag_path(tag), rel:'tag' %>
+                    </li>
+                  <% end %>
+                  <% i = i + 1 %>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                <% blog.articles.group_by {|a| a.date.year }.each do |year, articles| %>
+                  <li><%= link_to year, blog_year_path(year) %> (<%= articles.size %>)</li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

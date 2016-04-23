@@ -1,0 +1,124 @@
+---
+author: sizuhiko
+comments: true
+date: 2011-03-26 09:03:31+00:00
+slug: behat
+title: Behatのインストールについての注意事項
+wordpress_id: 35
+categories:
+- 未分類
+tags:
+- BDD
+- Behat
+- PHP
+---
+
+<!-- more -->4/2 に行われる[PHPカンファレンス関西](http://phpcon.php.gr.jp/kansai/)にて、BehatについてLTをすることになりました。  
+  
+そこで最近Behatをダウンロードしてみたのですが、git submoduleでのSymfonyコンポーネントのインストールで問題がありますので、解決策を書いておきます。  
+  
+1. Behat 本体のインストール  
+  
+
+    
+    
+    git clone git://github.com/Behat/Behat.git
+    
+
+  
+  
+2. サブモジュールのインストール  
+  
+
+    
+    
+    cd Behat
+    git submodule update --init
+    
+
+  
+  
+とくに問題がなければ、しばらくして終了しますが、本稿執筆次点では以下のようなエラーで中断してしまいます。  
+  
+
+    
+    
+    Initialized empty Git repository in /Behat/vendor/Symfony/Component/Translation/.git/
+    remote: Counting objects: 220, done.
+    remote: Compressing objects: 100% (124/124), done.
+    remote: Total 220 (delta 147), reused 141 (delta 94)
+    Receiving objects: 100% (220/220), 52.61 KiB, done.
+    Resolving deltas: 100% (147/147), done.
+    fatal: reference is not a tree: d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
+    Unable to checkout 'd5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c' in submodule path 'vendor/Symfony/Component/Translation'
+    
+
+  
+  
+そこで、エラーになったサブモジュールの変更ログを確認します。  
+  
+
+    
+    
+    git log --oneline -p -- vendor/Symfony/Component/Translation
+    
+
+  
+  
+上記コマンドを実行すると、以下のように表示されます。  
+  
+
+    
+    
+    85d8dac updated vendors
+    diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
+    index f70e0ba..d5cdaba 160000
+    --- a/vendor/Symfony/Component/Translation
+    +++ b/vendor/Symfony/Component/Translation
+    @@ -1 +1 @@
+    -Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
+    +Subproject commit d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
+    da2503a updated submodules
+    diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
+    new file mode 160000
+    index 0000000..f70e0ba
+    --- /dev/null
+    +++ b/vendor/Symfony/Component/Translation
+    @@ -0,0 +1 @@
+    +Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
+    
+
+  
+  
+ここで表示されたログの１行目「85d8dac updated vendors」の85d8dacを使ってチェックアウトします。  
+  
+
+    
+    
+    git checkout 85d8dac~ -- vendor/Symfony/Component/Translation
+    git submodule update
+    
+
+  
+  
+こうすることで、サブモジュールのインストールが継続できます。  
+  
+3. 実行する  
+  
+
+    
+    
+    bash-3.2$ ./bin/behat.php 
+    ......................................................................
+    ......................................................................
+    ..................................................................................
+    
+    36 scenarios (36 passed)
+    222 steps (222 passed)
+    0m7.045s
+    
+
+  
+  
+成功したら、インストールは完了です。  
+

@@ -1,0 +1,223 @@
+---
+author: sizuhiko
+comments: true
+date: 2011-12-25 05:12:34+00:00
+slug: phpquery
+title: phpQueryを使ってデザイナーとプログラマーを完全分業できるようにする（導入編）
+wordpress_id: 44
+categories:
+- 未分類
+tags:
+- PHP
+- phpQuery
+---
+
+<!-- more -->これまで多くのテンプレートエンジンが登場してきましたが、HTMLに全く手を入れないでデザイナーとプログラマーが分業することは困難でした。
+もちろんSmartyのテンプレートが編集できる人がいたり、PHPTALのようにほとんどHTMLには手をつけない方法があったりと、これまでの方法でも分業することは可能だと思います。  
+
+ただHTMLには多少の手を入れなくてはいけない、そういう意味でKwartzのようにプレゼンテーションロジックを分割できるテンプレートシステムはとても良いと思っています。ただセレクターがCSS3セレクターでないのが難点かなぁと思っています。  
+
+  
+
+そこで目を付けたのが[phpQuery](http://code.google.com/p/phpquery/)という、名前からして思い当たるjQueryのセレクター機能を搭載したPHP実装になっています。  
+
+phpQueryは内部的にPHPのDOMDocumentを使っていて、エレメントを探し出すのに便利なセレクター記法を持っています。  
+
+  
+
+今回はphpQueryを使って静的HTMLの一部をPHPコードに書き換えるという導入をやってみます。  
+
+本当は時間があればViewコンポーネントまで作って、githubに展開したかったのですが、これは2012年早々の目標になる予定です。  
+
+  
+
+
+
+### phpQueryの取得
+
+
+  
+
+phpQueryは
+
+
+  1. pear
+  2. google-code
+  3. github
+
+のいずれかから導入可能です。この記事ではgithubから取得して進めます。
+  
+
+
+    
+    
+    git clone git://github.com/bluelovers/phpQuery.git
+    
+
+
+  
+
+
+
+### サンプルHTMLの取得
+
+
+  
+
+この記事では、みんな大好きWORDPRESSの日本語TOPページのHTMLを使ってみたいと思います。  
+
+
+    
+    
+    mkdir templates
+    wget http://ja.wordpress.org/
+    mv index.html templates
+    
+
+
+  
+
+ここで注意なのですが、現在DOMDocumentではXHTMLを正しくパースできないようです。そこで、通常のHTMLとして解釈できるように先頭数行を以下のように書き換えます。
+
+    
+    
+    <html>
+        <head>
+    
+
+
+DOCTYPEを削除し、htmlとheadにあった属性を削除しています。  
+
+ただXHTMLでなくHTML記法で書かれたページは問題ないので、この課題についてはあまり深入りせず先に進む事にします。  
+
+ただDOCTYPEや属性は、後で追加できるのでViewクラスにしたときに何かサポートできるようにしたいなぁと思っています。  
+
+  
+
+![](/images/blog/WordPress.png) 
+  
+
+の赤枠で囲った部分に関して、PHPの動的コードに変換してみましょう。  
+
+  
+
+
+
+### phpshを使って試す
+
+
+  
+
+簡単に試すにはインタラクティブシェルを使うのが便利なので、今回もphpshを使います。  
+
+  
+
+
+    
+    
+    bash-3.2$ phpsh
+    Starting php
+    type 'h' or 'help' to see instructions & features
+    
+    php> require('phpQuery/phpQuery/phpQuery.php');
+    php> $file = file_get_contents('template/index.html');
+    php> $html = phpQuery::newDocumentHTML($file);
+    php> echo $html->html();
+    
+
+
+  
+
+最後のhtml()で読み込んだHTMLがそのまま出力されることを確認しましょう。  
+
+ブログ記事の箇所のHTMLは以下のようになっています。  
+
+  
+
+
+    
+    
+    <div id="blog" class="section">
+      <div class="main">
+        <h3>ブログ</h3>
+        <div class="post" id="post-2057">
+        <h4><a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-ja/" rel="bookmark" title="WordPress 3.3 日本語版リリースのお知らせ へのパーマリンク">WordPress 3.3 日本語版リリースのお知らせ</a></h4>
+        <h6>2011年12月13日</h6>
+        <div class="entry">
+          <p>WordPress 3.3 日本語版をリリースしました。</p>
+        </div>
+      </div>
+      <div class="post" id="post-2042">
+        <h4><a href="http://ja.wordpress.org/2011/12/13/wordpress-3-3-sonny/" rel="bookmark" title="WordPress 3.3「Sonny」 へのパーマリンク">WordPress 3.3「Sonny」</a></h4>
+        <h6>2011年12月13日</h6>
+        <div class="entry">
+          <p>WordPress 3.3「Sonny」がご利用いただけるようになりました。</p>
+        </div>
+      </div>
+    
+
+
+  
+
+ブログ記事は $posts という配列に入っていると仮定します。
+  
+
+
+    
+    
+    php> $html['#blog .post:gt(0)']->remove();
+    php> $html['#blog .post']->wrapPHP('foreach($posts as $post) {', '}');
+    php> $html['#blog .post']->attrPHP('id', 'echo "post-$post->id;"');
+    php> $html['#blog .post h4 a']->attrPHP('href', 'echo $post->url;')->attrPHP('title', 'echo $post->title;')->php('echo $post->title;');
+    php> $html['#blog .post h6']->php('echo $post->date;');
+    php> $html['#blog .post .entry p']->php('echo $post->intro;');
+    
+    php> print $html->php();                                                                                             
+    
+
+
+  
+
+のようにphpshで実行すると、先ほどのHTML部分が以下のようになります。
+  
+
+
+    
+    
+    <div id="blog" class="section">
+      <div class="main">
+        <h3>ブログ</h3>
+        <?php  foreach($posts as $post) {  ?>
+          <div class="post" id='<?php  echo "post-$post->id";  ?>'>
+            <h4><a href="<?php  echo $post->url;  ?>" rel="bookmark" title="<?php  echo $post->title;  ?>"><?php  echo $post->title;  ?></a></h4>
+            <h6><?php  echo $post->date;  ?></h6>
+            <div class="entry">
+              <p><?php  echo $post->intro;  ?></p>
+            </div>
+          </div>
+        <?php  }  ?>
+      </div>
+    
+
+
+  
+
+どうです？  
+
+jQueryで見慣れたセレクタ記述と、少しのphpQueryの拡張記述で、HTMLを直接変更することなくPHPコードを含んだテンプレートファイルに変換することができました。  
+
+phpQueryが用意している[jQueryポートしたセレクタ](http://code.google.com/p/phpquery/wiki/Selectors)や、[PHPコードを出力する拡張関数](http://code.google.com/p/phpquery/wiki/PHPSupport)は、[google-codeの公式ページ](http://code.google.com/p/phpquery/)を参照するとわかります。
+  
+
+
+
+### さいごに
+
+
+  
+
+最初にHTMLファイルを読み込む部分や、最後にphp()関数を使ってPHPを含むコードに変換する部分をモジュール化して、各フレームワーク向けのViewコンポーネントとして提供したいなぁと思っています。  
+
+ただ普段使っているのがCakePHPばかりなので、他のフレームワークについてわかる人に協力してもらえたらなぁと思っています。  
+
+またViewコンポーネントにする際は[QueryTemplates](http://code.google.com/p/querytemplates/)というphpQueryを拡張したコードも使おうかなぁと思っています。

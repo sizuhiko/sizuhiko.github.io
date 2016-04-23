@@ -1,0 +1,62 @@
+---
+pageable: true
+per_page: 5
+---
+<% page_articles.each_with_index do |article, i| %>
+  <h2 class="title"><%= link_to article.title, article %></h2>
+  <p class="postdate"><%= link_to article.date.localtime.strftime('%A, %B %d, %Y %I:%M:%S %p'), article.date.localtime.strftime('/%Y/%m/%d.html'), title:"Permanent link" %></p>
+  <p class="tags">
+    <% article.tags.each do |tag| %>
+      <%= link_to tag, tag_path(tag), rel:'tag' %>
+    <% end %>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <%= article.body %>
+
+
+    <% permalink_url = "http://blog.open.tokyo.jp#{article.url}" %>
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="<%= article.title %>" data-url="<%= permalink_url %>" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=<%= permalink_url %>" class="socialite googleplus-one" data-size="tall" data-href="<%= permalink_url %>" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=<%= permalink_url %>&t=<%= URI.encode(article.title) %>" class="socialite facebook-like" data-href="<%= permalink_url %>" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+<% end %>
+
+<% if paginate && num_pages > 1 %>
+  <p class="pagenav">
+    <% if prev_page %>
+      <%= link_to '« Prev', prev_page %>
+    <% end %>
+    <% (page_number - 4 .. page_number + 4).select{|i| i > 0 && i <= num_pages}.each do |i| %>
+      <% if i == page_number %>
+        <b><%= i %></b>
+      <% else %>
+        <% 
+          p = nil;
+          (i ... page_number).each do p = p ? p.metadata[:locals]['prev_page'] : prev_page; end
+          (page_number ... i).each do p = p ? p.metadata[:locals]['next_page'] : next_page; end
+        %>
+        <%= link_to "#{i}", p && p.url %>
+      <% end %>
+    <% end %>
+    <% if next_page %>
+      <%= link_to 'Next »', next_page %>
+    <% end %>
+  </p>
+<% end %>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
