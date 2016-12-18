@@ -46,7 +46,7 @@ Polymerに関連したものをハンズオン形式で進めていこうと思�
     - FirebaseとPolymerでプログレッシブWebアプリを作ってみよう
 - [Build an ES2015/ES6 app with the Polymer Starter Kit](https://codelabs.developers.google.com/codelabs/polymer-es2015/index.html?index=..%2F..%2Findex#0)
     - PolymerでES2015/ES6アプリを作ってみよう
-- [Build an Offline Weather Web App with <platinum-sw>](https://codelabs.developers.google.com/codelabs/polymer-offline-weather/index.html?index=..%2F..%2Findex#0)
+- [Build an Offline Weather Web App with &lt;platinum-sw&gt;](https://codelabs.developers.google.com/codelabs/polymer-offline-weather/index.html?index=..%2F..%2Findex#0)
     - `platinum-sw` タグを使ってオフライン天気アプリを作ってみよう
 - [Build your first Polymer element](https://codelabs.developers.google.com/codelabs/polymer-first-elements/index.html?index=..%2F..%2Findex#0)
     - Polymerエレメントを作ってみよう
@@ -58,11 +58,11 @@ Polymerに関連したものをハンズオン形式で進めていこうと思�
     - Chromecastエレメントを使ってみよう
 - [Data Visualization Using Polymer and WebGL](https://codelabs.developers.google.com/codelabs/polymer-webgl/index.html?index=..%2F..%2Findex#0)
     - PolymerとWebGLを使ってデータを見える化する
-- [Easy Checkout Forms with Autofill & <gold-elements>](https://codelabs.developers.google.com/codelabs/polymer-checkout-form/index.html?index=..%2F..%2Findex#0)
+- [Easy Checkout Forms with Autofill &amp; &lt;gold-elements&gt;](https://codelabs.developers.google.com/codelabs/polymer-checkout-form/index.html?index=..%2F..%2Findex#0)
     - `gold-elements` とオートフィル機能を使って、チェックアウトフォームを簡単に作る
 - [Interact with Bluetooth devices on the Web with Polymer](https://codelabs.developers.google.com/codelabs/polymer-bluetooth/index.html?index=..%2F..%2Findex#0)
     - Polymerを使ってWeb上でBluetoothデバイスを操作する
-- [Interacting with data using the <firebase-element>](https://codelabs.developers.google.com/codelabs/polymer-firebase/index.html?index=..%2F..%2Findex#0)
+- [Interacting with data using the &lt;firebase-element&gt;](https://codelabs.developers.google.com/codelabs/polymer-firebase/index.html?index=..%2F..%2Findex#0)
     - `firebase-element` を使ってTODOアプリを作ってみる
 
 
