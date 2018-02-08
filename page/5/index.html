@@ -275,7 +275,386 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a></h2>
+            <h2 class="title"><a href="/2015/05/17/cakephp3-behat.html">CakePHP3 のアプリケーションを Behat でテストする</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2015/05/17.html">Sunday, May 17, 2015 05:21:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp3.html">CakePHP3</a>
+    
+      <a rel="tag" href="/tags/bdd.html">BDD</a>
+    
+      <a rel="tag" href="/tags/behat.html">Behat</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><img src="/images/blog/cakephp3_behat.png" /></p>
+
+<p>CakePHP3の変更点として大きく取り上げられるのが、モデル層の変更でしょう。
+しかしそれ以上に私たちが受けられる恩恵で大きいのが、PSR-2の採択です。</p>
+
+<p><a href="http://bakery.cakephp.org/2014/12/16/CakePHP-3-to-fully-adopt-PSR-2.html">CakePHP3 is fully adopt PSR-2</a></p>
+
+<p>例えばCakePHP2で単体テストを実行するときは、以下のように<code>cake</code>コマンドを使って実行する必要がありました。</p>
+<pre class="highlight plaintext"><code>Console/cake test app Model/Articles
+</code></pre>
+
+<p>cakeコマンド内でPHPUnitへの依存関係を解決し、PHPUnitからCakePHPのクラスが参照可能になるように作られていました。</p>
+
+<p>ところがCakePHP3からは、以下のように<code>phpunit</code>コマンドを使って実行します。</p>
+<pre class="highlight plaintext"><code>vendor/bin/phpunit
+</code></pre>
+
+<p>PSR-0のオートロードに対応したことで、PHPUnitからCakePHP3のクラスが参照可能になるのです。</p>
+
+<h3>はじめてみよう</h3>
+
+<p>同様の理由で、CakePHP2のアプリケーションをBehatでテストしたい場合は、私が作成した<a href="https://github.com/sizuhiko/Bdd">Bdd Plugin</a>を使ってBehatのステップ記述からCakePHPのクラスを参照可能になるようにしていました。</p>
+
+<p>しかしBehatにおいても直接実行したステップ定義から、CakePHP3のクラスが参照可能になるのです。</p>
+
+<p>CakePHP3のアプリケーションをどのようにBehatからアクセスするのか、CakePHP3のブログチュートリアルを例にサンプルアプリを作成しました。</p>
+
+<p><a href="https://github.com/sizuhiko/cakephp3-bdd-example">cakephp3-bdd-example</a>    </p>
+
+<p>サンプルアプリケーションは<a href="/2015/04/19/cakebox-is-awesome.html">以前記事</a>にもした<a href="https://github.com/alt3/cakebox">Cakebox</a>を使って構築しました。
+またサンプルアプリケーションの実行にもCakeboxを使うと簡単に実行環境を構築することができます。</p>
+
+<p>サンプルアプリケーションのGithubページに書いてあるとおりの手順で進むことができます。
+本ブログでは日本語で補足します。</p>
+
+<h4>必要なアプリケーションのインストール</h4>
+
+<p>以下のアプリケーションをホストOSにインストールします。</p>
+
+<ul>
+<li>VirtualBox</li>
+<li>Vagrant</li>
+<li>Cakebox</li>
+</ul>
+
+<p>詳しくは<a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a>の記事を参照してください。</p>
+
+<h4>サンプルアプリケーションのインストール</h4>
+
+<p>CakeboxのゲストOSにログインして、cakeboxコマンドでアプリケーションをインストールします。</p>
+<pre class="highlight plaintext"><code>localhost:cakebox $ vagrant ssh
+Welcome to Ubuntu 14.04.1 LTS (GNU/Linux 3.13.0-24-generic x86_64)
+
+vagrant@cakebox $ cakebox application add blog-tutorial.app --source https://github.com/sizuhiko/cakephp3-bdd-example.git --webroot blog-tutorial.app
+</code></pre>
+
+<p>すると、以下のように表示されます。</p>
+<pre class="highlight plaintext"><code>Creating application http://blog-tutorial.app
+
+Configuring installer
+Creating installation directory
+Git installing user specified application sources
+Creating virtual host
+* Successfully created PHP-FPM virtual host
+Creating databases
+* Successfully created main database
+* Successfully created test database
+Configuring permissions
+Updating configuration files
+Application created using:
+  database =&gt; blog-tutorial_app
+  framework_human =&gt; user specified
+  framework_short =&gt; custom
+  installation_method =&gt; git
+  path =&gt; /home/vagrant/Apps/blog-tutorial.app
+  source =&gt; https://github.com/sizuhiko/cakephp3-bdd-example.git
+  url =&gt; blog-tutorial.app
+  webroot =&gt; blog-tutorial.app
+Please note:
+  =&gt; Configuration files are not automatically updated for user specified applications.
+  =&gt; Make sure to manually update your database credentials, plugins, etc.
+
+Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
+
+Installation completed successfully
+</code></pre>
+
+<p>新規アプリケーションの構築と同じように、データベースやNginxの設定ファイルも生成してくれるので、すぐにアプリケーションを実行できる環境が整います。</p>
+
+<p>あとはアプリケーションのルートディレクトリに移動して、不足しているディレクトリを作ってcomposerでライブラリをインストールします。</p>
+<pre class="highlight plaintext"><code>vagrant@cakebox $ cd Apps/blog-tutorial.app
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir tmp 
+vagrant@cakebox:~/Apps/blog-tutorial.app$ mkdir logs
+vagrant@cakebox:~/Apps/blog-tutorial.app$ cp config/app.default.php config/app.php
+vagrant@cakebox:~/Apps/blog-tutorial.app$ composer install 
+</code></pre>
+
+<h4>サンプルアプリケーションの環境設定</h4>
+
+<h5>データベース接続設定の変更</h5>
+
+<p><code>config/app.php</code>のデータベース接続設定をCakeboxで生成された内容に変更します。
+以下のとおり<code>username</code>と<code>database</code>の部分のみ変更します（それ以外はそのまま）。</p>
+<pre class="highlight php"><code>    'Datasources' =&gt; [
+        'default' =&gt; [
+            // 省略
+            'username' =&gt; 'cakebox',
+            'database' =&gt; 'blog-tutorial_app',
+            // 省略
+        ],
+        'test' =&gt; [
+            // 省略
+            'username' =&gt; 'cakebox',
+            'database' =&gt; 'test_blog-tutorial_app',
+            // 省略
+        ],
+</code></pre>
+
+<h5>ホストOSのhostsファイルの変更</h5>
+
+<p>ホストOSのhostsファイルに指示されたように <code>10.33.10.10 blog-tutorial.app</code> の行を追加します。</p>
+
+<h5>Cakebox環境のチューニング</h5>
+
+<p>Cakeboxのデフォルト設定ではBehatを使ってアプリケーションをテストしようとすると、いくつか動かない箇所があったので、設定値をチューニングします。
+まずボックスファイルのメモリを2048Mにアップします（デフォルトは1024M）。
+次にxdebug.iniのxdebug.max<em>nesting</em>levelの値を調整します。READMEでは<code>500</code>を設定しています。もう少し値は小さくても大丈夫かもしれないですが、とりあえず500あれば大丈夫です。</p>
+
+<p>具体的な設定例は、githubのREADMEを参照してください。</p>
+
+<h5>Webサーバの設定</h5>
+
+<p>Behatからアプリケーションをテストするときは、ブラウザから通常操作するのと同じようにWebサーバを通過します。
+そのため、アプリケーションが通常操作としてアクセスされたのか、Behatのテストでアクセスされたのかを識別して環境を切り替えてあげないと、データベースのデータがテストによって変更するので、通常操作のデータが失われてしまいます。</p>
+
+<p>このあたりの話（理由や手法）は、過去に何度か記事にしていたり、書籍<a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1410066610&amp;amp;sr=1-1">CakePHPで学ぶ継続的インテグレーション</a>でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。</p>
+
+<p>で、このサンプルはnginx用の設定ファイルを<code>blog-tutorial.app.test</code>というファイルで用意しておいたので、これをCakeboxのnginxの設定ディレクトリにコピーして再起動するだけで大丈夫です。</p>
+
+<p>環境切り替え用に<code>blog-tutorial.app.test</code>というホスト名でアクセスされたら、nginxで環境変数<code>CAKE_ENV</code>に<code>test</code>という文字列を設定するようにしています。
+CakePHP3のアプリケーションでは<code>config/bootstrap.php</code>で環境変数の設定値を見てDBの接続先が<code>test</code>になるように設定します。</p>
+<pre class="highlight php"><code>if (getenv('CAKE_ENV') === 'test') {
+    ConnectionManager::alias('test', 'default');
+}
+</code></pre>
+
+<p>CakePHP3ではConnectionManagerのaliasという機能でdefaultへ接続しようとしたときに、実際はtestの接続内容を参照するように設定することができるので、この機能を利用し、間違ってdefaultのテーブルが書き変わらないようにしています。</p>
+
+<p>より詳しい手順や、設定ファイルの内容はgithubのREADMEや設定ファイルを参照してください。</p>
+
+<p>Behatから参照可能なホスト名として<code>blog-tutorial.app.test</code>をCakeboxのVM側の<code>/etc/hosts</code>に追加します。</p>
+
+<h4>データベースのマイグレーション</h4>
+
+<p>データベースの生成はマイグレーションコマンドで一発です。</p>
+<pre class="highlight plaintext"><code>bin/cake migrations migrate
+</code></pre>
+
+<h4>Behatのテストを実行する</h4>
+
+<p>ここまで設定できれば、後はテストを実行するだけです。</p>
+<pre class="highlight plaintext"><code>vagrant@cakebox:~/Apps/blog-tutorial.app$ vendor/bin/behat
+</code></pre>
+
+<p>おそらくすべてグリーンで成功するはずです。
+うまくいかなかったら、お気軽にgithubのissueに<code>日本語で</code>書いてください。</p>
+
+<h3>どうやったのか？</h3>
+
+<p>まずCakePHP3で最初に注目したのは、単体テストがPHPUnitのコマンドから実行できるようになっていたことです。
+これは過去に外部の様々なツールやアプリケーションとCakePHPを結合するときに一番悩んでいたところでした。</p>
+
+<p>PHPUnitからCakePHP3にどのように連動しているのか？を調べることから始めました。
+PHPUnitは実行すると、カレントディレクトリのphpunit.xml（もしくはphpunit.xml.dist）を参照します。</p>
+
+<h4>PHPUnitがCakePHP3を呼び出す仕組みを知る</h4>
+
+<p>CakePHP3ではアプリケーションスケルトンを生成すると、ルートディレクトリに<code>phpunit.xml.dist</code>が生成されます。</p>
+<pre class="highlight xml"><code><span class="c">&lt;!-- phpunit.xml.dist --&gt;</span>
+<span class="nt">&lt;phpunit</span>
+    <span class="na">colors=</span><span class="s">"true"</span>
+    <span class="na">processIsolation=</span><span class="s">"false"</span>
+    <span class="na">stopOnFailure=</span><span class="s">"false"</span>
+    <span class="na">syntaxCheck=</span><span class="s">"false"</span>
+    <span class="na">bootstrap=</span><span class="s">"./tests/bootstrap.php"</span>  <span class="err">//</span> <span class="err">(1)</span>
+    <span class="nt">&gt;</span>
+    <span class="nt">&lt;php&gt;</span>
+        <span class="nt">&lt;ini</span> <span class="na">name=</span><span class="s">"memory_limit"</span> <span class="na">value=</span><span class="s">"-1"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;ini</span> <span class="na">name=</span><span class="s">"apc.enable_cli"</span> <span class="na">value=</span><span class="s">"1"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/php&gt;</span>
+
+    <span class="c">&lt;!-- Add any additional test suites you want to run here --&gt;</span>
+    <span class="nt">&lt;testsuites&gt;</span>
+        <span class="nt">&lt;testsuite</span> <span class="na">name=</span><span class="s">"App Test Suite"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;directory&gt;</span>./tests/TestCase<span class="nt">&lt;/directory&gt;</span>
+        <span class="nt">&lt;/testsuite&gt;</span>
+        <span class="c">&lt;!-- Add plugin test suites here. --&gt;</span>
+    <span class="nt">&lt;/testsuites&gt;</span>
+
+    <span class="c">&lt;!-- Setup a listener for fixtures (2) --&gt;</span>
+    <span class="nt">&lt;listeners&gt;</span>
+        <span class="nt">&lt;listener</span>
+        <span class="na">class=</span><span class="s">"\Cake\TestSuite\Fixture\FixtureInjector"</span>
+        <span class="na">file=</span><span class="s">"./vendor/cakephp/cakephp/src/TestSuite/Fixture/FixtureInjector.php"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;arguments&gt;</span>
+                <span class="nt">&lt;object</span> <span class="na">class=</span><span class="s">"\Cake\TestSuite\Fixture\FixtureManager"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/arguments&gt;</span>
+        <span class="nt">&lt;/listener&gt;</span>
+    <span class="nt">&lt;/listeners&gt;</span>
+<span class="nt">&lt;/phpunit&gt;</span>
+</code></pre>
+
+<p>このファイルを読むと、2つ重要な箇所があるのに気がつきます。</p>
+
+<p>まず(1)の <code>bootstrap=&quot;./tests/bootstrap.php&quot;</code> という部分。
+bootstrap属性にはPHPUnitが実行されるとき呼び出されるPHPコードを指定することができます。
+ここからCakePHP3アプリケーションをテスト用にロードする場合、このファイルを呼び出せば外部ツールからCakePHP3が操作できるようになることがわかります。</p>
+
+<p>実はこのファイルを実際に見てみると、以下の1行しかありません。</p>
+<pre class="highlight php"><code>require dirname(__DIR__) . '/config/bootstrap.php';
+</code></pre>
+
+<p>テストとは関係なく、アプリケーションの<code>config/bootstrap.php</code>をロードしています。
+おそらく将来テストに関する何か差分が必要になったときに、テスト側にだけ変更が発生すると思うので、テスト用にCakePHP3をロードする場合は<code>tests/bootstrap.php</code>をロードしておいた方が良いでしょう。</p>
+
+<p>次に(2)のリスナー設定です。
+PHPUnitのリスナーはPHPUnitのフックポイントでコールバックされる処理を記述できるクラスです。
+CakePHP3ではフィクスチャ（DBのテストテーブルとデータを準備する仕組み）を投入するのに利用しています。
+以下のように<code>FixtureInjector</code>クラスのstartTestとendTestでテストケース開始／終了ごとにフィクスチャのロードとアンロードが対応するようになっています。</p>
+<pre class="highlight php"><code>class FixtureInjector implements PHPUnit_Framework_TestListener
+{
+
+    /**
+     * Adds fixtures to a test case when it starts.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @return void
+     */
+    public function startTest(PHPUnit_Framework_Test $test)
+    {
+        $test-&gt;fixtureManager = $this-&gt;_fixtureManager;
+        if ($test instanceof TestCase) {
+            $this-&gt;_fixtureManager-&gt;fixturize($test);
+            $this-&gt;_fixtureManager-&gt;load($test);
+        }
+    }
+
+    /**
+     * Unloads fixtures from the test case.
+     *
+     * @param \PHPUnit_Framework_Test $test The test case
+     * @param float $time current time
+     * @return void
+     */
+    public function endTest(PHPUnit_Framework_Test $test, $time)
+    {
+        if ($test instanceof TestCase) {
+            $this-&gt;_fixtureManager-&gt;unload($test);
+        }
+    }
+
+}
+</code></pre>
+
+<h4>BehatからCakePHP3を呼び出す仕組みに流用する</h4>
+
+<p>ここまでの内容が外部ツールからCakePHP3のアプリケーションをテストするのに重要な部分です。
+PHPUnitがCakePHP3を呼び出すのと同じようにする仕組みをBehatのFeatureContextクラスに用意します。</p>
+
+<p><code>features/bootstrap/FeatureContext.php</code>というBehatが読み込むファイルに記述します。
+CakePHP2とBDDプラグインによるインテグレーションではBehatのバージョンが2系でしたが、CakePHP3との連携では最新の3系を利用しています。
+Behat3からはBehat1系、2系で利用していたファイル構成と異なっています。従来、<code>support/bootstrap.php</code>や<code>support/hooks.php</code>あたりに書いていたコードはすべてContextクラス内に記述することになります。</p>
+
+<p>Behat3からはFeatureContextにブートストラップ記述を、それ以外のコンテキストは用途に応じて別のコンテキストクラスに分割する方がスマートに記述できそうです。
+Behat2では複数のコンテキストクラスを使う場合、FeatureContextでインクルードしないといけなかったのですが、Behat3では<code>behat.yml</code>上で記述できるのでより簡単になっています。</p>
+<pre class="highlight php"><code>class FeatureContext implements Context, SnippetAcceptingContext
+{
+    public function __construct()
+    {
+        require_once dirname(dirname(__DIR__)) . '/tests/bootstrap.php'; // (1)
+
+        // Always connect test database
+        ConnectionManager::alias('test', 'default'); // (2)
+
+        Fabricate::config(function($config) { // (3)
+            $config-&gt;adaptor = new CakeFabricateAdaptor([
+                CakeFabricateAdaptor::OPTION_FILTER_KEY =&gt; true,
+                CakeFabricateAdaptor::OPTION_VALIDATE   =&gt; false
+            ]);
+        });
+
+        $this-&gt;fixtureInjector = new FixtureInjector(new FixtureManager()); //(4)
+        $this-&gt;fixture = new BddAllFixture();
+    }
+}
+</code></pre>
+
+<ul>
+<li>(1)は、phpunit.xmlのbootstrapと同様にCakePHP3の<code>tests/bootstrap.php</code>を呼び出します。</li>
+<li>(2)は、Behatのステップ定義からテストデータを投入するときに、testの接続設定を参照するようにエイリアスを設定します。</li>
+<li>(3)は、テストデータジェネレータ<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">Fabricate</a>の初期設定です。FabricateもCakePHP3対応されています。</li>
+<li>(4)は、phpunit.xmlのリスナー部分を模して、Behatのシナリオ毎にフィクスチャが動くようにFixtureInjectorのインスタンスを生成しています。</li>
+</ul>
+
+<h4>BehatからCakePHP3のフィクスチャを利用する</h4>
+
+<p>(4)で書いたとおり、FixtureInjectorのインスタンスを生成したので、Behatのフックポイントを使ってシナリオ開始時にフィクスチャをロードし、シナリオ終了時にフィクスチャをアンロードするようにします。</p>
+<pre class="highlight php"><code>    /** @BeforeScenario */
+     public function beforeScenario(BeforeScenarioScope $scope)
+     {
+        $this-&gt;fixtureInjector-&gt;startTest($this-&gt;fixture);
+     }
+
+     /** @AfterScenario */
+     public function afterScenario(AfterScenarioScope $scope)
+     {
+        $this-&gt;fixtureInjector-&gt;endTest($this-&gt;fixture, time());
+     }
+</code></pre>
+
+<p>実際にフィクスチャを利用するためには、<code>$this-&gt;fixture</code>のクラスがCakePHP3のTestCaseでなければならないので、<code>$fixtures</code>という利用するフィクスチャファイルの配列を定義しただけのクラスを用意してFixtureInjectorに渡すようにします。</p>
+<pre class="highlight php"><code>class BddAllFixture extends TestCase {
+    public $fixtures = [
+        'Categories' =&gt; 'app.categories',
+        'Articles'   =&gt; 'app.articles',
+        'Users'      =&gt; 'app.users',
+        'Categories' =&gt; 'app.categories'
+    ];
+}
+</code></pre>
+
+<p>このあたりの話も、書籍<a href="http://www.amazon.co.jp/CakePHP%E3%81%A7%E5%AD%A6%E3%81%B6%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3-%E6%B8%A1%E8%BE%BA-%E4%B8%80%E5%AE%8F/dp/4844336789/ref=la_B004LVAF8Q_1_1?s=books&amp;amp;ie=UTF8&amp;amp;qid=1410066610&amp;amp;sr=1-1">CakePHPで学ぶ継続的インテグレーション</a>でも詳しく解説していますので、CakePHP2の内容ですが、一度手に取ってみてください。
+CakePHP3になって、メソッドやクラスが一部変わりましたが、BehatとCakePHPをインテグレーションするためにおさえておかないといけないポイントはほとんど変わっていません。</p>
+
+<p>後はBehat3のドキュメント、CakePHP3のドキュメントを見ながら進めていくと、エンド to エンドのテストが容易に記述できるようになります。</p>
+
+<h3>さいごに</h3>
+
+<p>GithubのREADMEに書いた内容をすべて日本語にした訳ではないのですが、要所をかいつまんで重要な部分を解説しました。
+より詳しい内容などはREADMEを見ていただければと思います。</p>
+
+<p>また、BDDプラグインのサンプルアプリにはあった、日本語のシナリオや、JavaScriptを使ったテストなど、Behat3になって大きく変わってはいませんが、サンプルアプリケーションに少しずつ載せられたらなぁと思っています。
+何かうまく動かないなどあれば、気軽にGithubのissueに投稿お願いします（日本語でOKです）。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 のアプリケーションを Behat でテストする" data-url="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html&t=CakePHP3%20%E3%81%AE%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20Behat%20%E3%81%A7%E3%83%86%E3%82%B9%E3%83%88%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/05/17/cakephp3-behat.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/05/02/angularjs-ngdialog-ngmodel-not-bind.html">AngularJSでngDialog中の値をngModelでバインドしたいとき注意すること</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2015/05/02.html">Saturday, May 02, 2015 05:19:00 PM</a></p>
   <p class="tags">
     
@@ -1165,285 +1544,6 @@ Bambooの通知プラグインモジュールで得た経験は以下のよう�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2015/03/14.html">Saturday, March 14, 2015 03:44:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/fablicator.html">fablicator</a>
-    
-      <a rel="tag" href="/tags/fixture.html">fixture</a>
-    
-      <a rel="tag" href="/tags/test.html">Test</a>
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>これまでCakePHP2用のデータジェネレータプラグインとして開発を続けてきた<a href="https://github.com/sizuhiko/Fabricate">Fabricate</a>を<code>V2</code>として各種ORMへ対応するようなコアモジュールへと変更しました。
-またFabiricateリポジトリのmasterブランチへは統合されていませんが、CakePHP3のリリース時期を合わせて、V2ブランチを本流にする予定です。
-これまでのCakePHP2用ライブラリはcakephp2ブランチでメンテナンスを続ける予定です。</p>
-
-<p>データジェネレータって何？誰得？という方は、以下の投稿を一読していただけると理解が深まります。</p>
-
-<ul>
-<li><a href="http://twileshare.com/bgrg">テストデータの作り方 - 第73回 PHP勉強会</a></li>
-</ul>
-
-<p>FabricateはRubyのFabricationとFactory_Girlに影響された「fixtureはDRYではないので、Fixture replacement を使おう」という流れに乗ったPHPクローンです。</p>
-
-<h3>Version2を作成するきっかけ</h3>
-
-<p>このキッカケはいくつかあります。
-1つには昨年の CakeFest2014 で Fabricate の LT をした後で、 CodeIgniter の開発者だったことでも知られる<a href="https://github.com/philsturgeon">Phil Sturgeon</a> から、「これいいね、他のフレームワークでも使えるようにしてよ」と言われたことでした。
-他のフレームワークでも使えるようにしたいという思いは、少しあったのですがまだ確約できなかったので「maybe」と返しただけでした。（このときPhilはかなり酔っていたので、私に話した事を覚えているのかどうかも怪しいですがw）</p>
-
-<p>さらにもう1つおおきなキッカケがCakePHP3でのPSR対応によって、namespaceなど外部ライブラリを使いやすくなり、さらに外部ライブラリからフレームワーク本体のコードへのアクセスしやすくなったということがあります。
-CakePHP2ではフレームワークへアクセスするにはアプリケーションまたはプラグインでないと困難で、特にORMに依存したライブラリをフレームワークをまたいで作成するのは困難でした。これがPSRの対応でやりやすくなったということ、CakePHP3への対応に合わせてV2を作って、他のフレームワークにも対応できるようにしようと思ったのです。</p>
-
-<h3>Fabricate V2の主な変更点</h3>
-
-<p>Fabricateの利用方法はほとんど変わっていませんが、各ORM用にアダプターと呼ばれるORMの差分を吸収するクラスを準備する必要があります。
-Fabricateの本体には<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/FabricateArrayAdaptor.php">Fabricate\Adaptor\FabricateArrayAdaptor</a>という連想配列構造を返すサンプル用のアダプターを用意しています。これを参考にアダプターを実装すれば<a href="http://www.doctrine-project.org/">Doctrine</a>や<a href="https://github.com/propelorm/Propel">Propel</a>、<a href="http://www.yiiframework.com/">Yii</a>や<a href="http://www.codeigniter.com/">CodeIgniter</a>でも利用可能になります。</p>
-
-<h3>アダプターの実装方法</h3>
-
-<p>とはいえ実際にORMに接続するアダプターもないと、ということでCakePHP3用のアダプター<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">CakePHP Fabricate Adaptor</a>も作成しました。</p>
-
-<p>ここではCakePHP3のアダプター実装を例に、アダプターで何を実装しなくてはいけないのかを解説したいと思います。</p>
-
-<h4>作成するクラス</h4>
-
-<p>アダプタークラスは<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/AbstractFabricateAdaptor.php">Fabricate\Adaptor\AbstractFabricateAdaptor</a>クラスを継承します。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">Fabricate\Adaptor\AbstractFabricateAdaptor</span><span class="p">;</span>
-
-<span class="k">class</span> <span class="nc">CakeFabricateAdaptor</span> <span class="k">extends</span> <span class="nx">AbstractFabricateAdaptor</span>
-<span class="p">{</span>
-    <span class="o">...</span>
-<span class="p">}</span>
-</code></pre>
-
-<h4>実装するメソッド</h4>
-
-<p>アダプターとして実装する必要があるメソッドは以下の3つです。</p>
-
-<ul>
-<li>getModel</li>
-<li>create</li>
-<li>build</li>
-</ul>
-
-<p>それぞれのメソッドの実装を確認しましょう。</p>
-
-<h5>getModel</h5>
-
-<p>getModelメソッドは各ORMの差分を吸収するためのモデルインスタンスを返却するデータジェネレータの定義部分です。
-データジェネレータとしては最も重要な機能です。   </p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">use</span> <span class="nx">Fabricate\Model\FabricateModel</span><span class="p">;</span>
-
-<span class="k">public</span> <span class="k">function</span> <span class="nf">getModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="nv">$model</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FabricateModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
-    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
-    <span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">schema</span><span class="p">();</span>
-    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$schema</span><span class="o">-&gt;</span><span class="na">columns</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">filterKey</span><span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$name</span><span class="p">))</span> <span class="p">{</span>
-            <span class="k">continue</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="nv">$attrs</span> <span class="o">=</span> <span class="nv">$schema</span><span class="o">-&gt;</span><span class="na">column</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
-        <span class="nv">$options</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'length'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nv">$options</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'length'</span><span class="p">];</span>
-        <span class="p">}</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'null'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
-            <span class="nv">$options</span><span class="p">[</span><span class="s1">'null'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'null'</span><span class="p">];</span>
-        <span class="p">}</span>
-        <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'type'</span><span class="p">],</span> <span class="nv">$options</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$table</span><span class="o">-&gt;</span><span class="na">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">keys</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$association</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
-        <span class="nv">$target</span> <span class="o">=</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">target</span><span class="p">();</span>
-        <span class="nv">$className</span> <span class="o">=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$target</span><span class="p">);</span>
-        <span class="nv">$alias</span> <span class="o">=</span> <span class="nv">$target</span><span class="o">-&gt;</span><span class="na">alias</span><span class="p">();</span>
-        <span class="k">switch</span> <span class="p">(</span><span class="nv">$association</span><span class="o">-&gt;</span><span class="na">type</span><span class="p">())</span> <span class="p">{</span>
-            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">ONE_TO_ONE</span><span class="o">:</span>
-                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">hasOne</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
-                <span class="k">break</span><span class="p">;</span>
-            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">ONE_TO_MANY</span><span class="o">:</span>
-                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">hasMany</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
-                <span class="k">break</span><span class="p">;</span>
-            <span class="k">case</span> <span class="nx">Association</span><span class="o">::</span><span class="na">MANY_TO_ONE</span><span class="o">:</span>
-                <span class="nv">$model</span><span class="o">-&gt;</span><span class="na">belongsTo</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="na">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
-                <span class="k">break</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nv">$model</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-
-<p>getModelはFabricateModelクラスのインスタンスを生成する責務があります。
-FabricateModelはPHPのマイグレーションツールである<a href="https://phinx.org/">Phinx</a>に影響を受けていて、スキーマの定義方法が似ています。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="c1">// Phinx
-</span><span class="nv">$users</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">table</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
-<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
-
-<span class="c1">// FabricateModel
-</span><span class="nv">$users</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FabricateModel</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
-<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
-      <span class="o">-&gt;</span><span class="na">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
-</code></pre>
-
-<p>利用できるカラム型はPhinxと同様で、オプションについて現時点ではlimit(長さ)のみ対応しています。</p>
-
-<p>CakePHP3では</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-
-<span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
-<span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">schema</span><span class="p">();</span>
-</code></pre>
-
-<p>という記述でスキーマ情報が連想配列で取得できるので、それを繰り返して<code>addColumn</code>を呼び出しています。</p>
-
-<p>スキーマ定義を作成したら、次にモデルの関連を定義します。
-モデルの関連定義は、以下のようにassociationを使って関連構造を一度に作成する場合に必要となります。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="nx">Fabricate</span><span class="o">::</span><span class="na">create</span><span class="p">(</span><span class="s1">'Users'</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="nv">$world</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'taro'</span><span class="p">,</span>
-        <span class="s1">'posts'</span> <span class="o">=&gt;</span> <span class="nv">$world</span><span class="o">-&gt;</span><span class="na">association</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-    <span class="p">];</span>
-<span class="p">});</span>
-</code></pre>
-
-<p>この例のように関連を設定するには、以下のようにFabricateModel::hasMany()やbelongsTo()を使います。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="nv">$users</span><span class="o">-&gt;</span><span class="na">hasMany</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Posts'</span><span class="p">);</span>
-<span class="nv">$posts</span><span class="o">-&gt;</span><span class="na">belongsTo</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Users'</span><span class="p">);</span>
-</code></pre>
-
-<p>パラメータの指定方法は、hasManyもhasOneもbelongsToも同じで、(別名、外部キーカラム名、モデル名）を指定します。</p>
-
-<h5>create</h5>
-
-<p>createメソッドは、Fabricateによって生成された連想配列構造のデータを、ORMを使ってDBに保存する機能を実装します。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">create</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$attributes</span><span class="p">,</span> <span class="nv">$recordCount</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
-    <span class="nv">$entities</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">newEntities</span><span class="p">(</span><span class="nv">$attributes</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">options</span><span class="p">[</span><span class="nx">self</span><span class="o">::</span><span class="na">OPTION_VALIDATE</span><span class="p">]]);</span>
-    <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">connection</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">transactional</span><span class="p">(</span><span class="k">function</span> <span class="p">()</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$entities</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$entities</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$ret</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">save</span><span class="p">(</span><span class="nv">$entity</span><span class="p">);</span>
-            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$ret</span><span class="p">)</span> <span class="p">{</span>
-                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="p">});</span>
-    <span class="k">return</span> <span class="nv">$entities</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-
-<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
-<code>$attributes</code>には生成された連想配列が渡ります。例えば以下のとおりです。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">array</span> <span class="p">(</span>
-  <span class="mi">0</span> <span class="o">=&gt;</span> 
-  <span class="k">array</span> <span class="p">(</span>
-    <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
-    <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
-    <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
-    <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
-  <span class="p">),</span>
-  <span class="mi">1</span> <span class="o">=&gt;</span> 
-  <span class="k">array</span> <span class="p">(</span>
-  <span class="o">....</span>
-</code></pre>
-
-<p><code>$recordCount</code>は生成する件数ですが、この値は<code>count($attributes)</code>の値と一致します。
-CakePHP3では以下の流れでDBへ保存しています。</p>
-
-<ul>
-<li>TableRegistry::get()でテーブルインスタンスを取得</li>
-<li>Table::newEntities()で連想配列からエンティティを生成</li>
-<li>Table::save()でエンティティをDBに保存</li>
-</ul>
-
-<h5>build</h5>
-
-<p>buildメソッドは、Fabricateによって生成された連想配列構造のデータから生成したエンティティを返却する機能を実装します。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">public</span> <span class="k">function</span> <span class="nf">build</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$data</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="nv">$table</span> <span class="o">=</span> <span class="nx">TableRegistry</span><span class="o">::</span><span class="na">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
-    <span class="nv">$entity</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="na">newEntity</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">options</span><span class="p">[</span><span class="nx">self</span><span class="o">::</span><span class="na">OPTION_VALIDATE</span><span class="p">]]);</span>
-    <span class="k">return</span> <span class="nv">$entity</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre>
-
-<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
-<code>$data</code>には生成された連想配列が1インスタンス分だけ渡ります。例えば以下のとおりです。</p>
-<pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">array</span> <span class="p">(</span>
-  <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
-  <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
-  <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
-  <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre>
-
-<h3>さいごに</h3>
-
-<p>現在CakePHP3用のアダプターしかないので「xxxx ORMについてアダプター実装したよ！」という連絡を待っています。
-<a href="https://github.com/sizuhiko/Fabricate/blob/v2/composer.json">Fabricateのcomposer.json</a>のsuggestに追加してPull Requestをもらえるととても助かります。</p>
-<pre class="highlight json"><code><span class="w">    </span><span class="s2">"suggest"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"sizuhiko/cake_fabricate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"for integration with CakePHP3"</span><span class="w">
-        </span><span class="err">//</span><span class="w"> </span><span class="err">ここに追加したPRをお待ちしています</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>皆様のPull Requestをお待ちしております！！</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Fabricateのversion2を作成しました" data-url="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html&t=Fabricate%E3%81%AEversion2%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1513,6 +1613,8 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2018/02/06/dialogflow-v2.html">Dialogflow V1 API Webhook アプリを V2 対応できるミドルウェアを作った</a> <span>2018/02/06</span></li>
+                
                   <li><a href="/2018/01/30/polymer-co-edo-meetup-10.html">Polymer.co-edo meetup ＃10 を開催しました</a> <span>2018/01/30</span></li>
                 
                   <li><a href="/2018/01/23/the-solution-if-your-mac-crashed-due-to-overheating.html">MACが熱暴走したときの原因と対応策</a> <span>2018/01/23</span></li>
@@ -1530,8 +1632,6 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
                   <li><a href="/2017/02/12/polymer-coedo-1-pub.html">Polymer.coedo#1 を開催します</a> <span>2017/02/12</span></li>
                 
                   <li><a href="/2017/01/01/2016-2017.html">2016ふりかえり と 2017抱負</a> <span>2017/01/01</span></li>
-                
-                  <li><a href="/2016/12/18/polymer-co-edo-0.html">Polymer.co-edo 第0回を開催しました</a> <span>2016/12/18</span></li>
                 
               </ul>
             </div>
@@ -2051,6 +2151,18 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
                   
                   
                 
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -2059,7 +2171,7 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2018.html">2018</a> (2)</li>
+                  <li><a href="/2018.html">2018</a> (3)</li>
                 
                   <li><a href="/2017.html">2017</a> (7)</li>
                 
