@@ -18,7 +18,7 @@ tags:
 - Custom Elements が HTML5.3に入る見込み
 - Polymer で Custom Elements を作るとき、どのスタイル（バージョン）で記述するか
 
-## 最近のPolymer/Web Components を取り巻く状況
+### 最近のPolymer/Web Components を取り巻く状況
 
 
 まずHTML5.3に入るかどうかについては [suikawiki - HTML 5.3](https://wiki.suikawiki.org/n/HTML%205.3$27802) からリンクされている2つのissueに注目してみることができます。
@@ -56,7 +56,7 @@ Polymer での記述スタイルについては、先日Polymer公式ブログ�
 
 つまり私たちが Custom Elements を作るときも同様に、ハイブリッド形式で開発し、3.0へは modulizer を使って変換したコードを用意することでコードベースを1つに保つことができます。
 
-## 私たちは何を作るのか？
+### 私たちは何を作るのか？
 
 Custom Elements の作成は旧来でいうと jQuery のプラグインや UI ウィジェットを作る作業に似ていると思います。
 そこで今回参加したメンバーからは以下のようなアイデアが出ました
@@ -78,7 +78,7 @@ Custom Elements の作成は旧来でいうと jQuery のプラグインや UI �
 
 みたいなアイデアが出ているので、実際のエレメントを作る段階で決めたいなと思っています。
 
-## How To
+### How To
 
 ちょっと時間がなくなってしまったので、簡単におさらいしました。
 
@@ -87,7 +87,7 @@ Custom Elements の作成は旧来でいうと jQuery のプラグインや UI �
 - webcomponents.org に登録する
   - 手順は [Publish element](https://www.webcomponents.org/publish) を参考にする
 
-## 次回は
+### 次回は
 
 2/26(月) の予定です。[Doorkeeperのコミュニティページ](https://polymercoedo.doorkeeper.jp/)に今年の予定も書いてあるので参考にしてください。
 
@@ -100,7 +100,7 @@ Custom Elements の作成は旧来でいうと jQuery のプラグインや UI �
 の作り方もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
 新しいエレメントのアイデアも募集しています。
 
-## さいごに
+### さいごに
 
 写真撮り忘れたので、次回からは最初に撮ろう...
 

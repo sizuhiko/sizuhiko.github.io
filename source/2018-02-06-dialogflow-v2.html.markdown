@@ -35,7 +35,7 @@ tags:
 後者はガチで、前者は簡単にサービスを開始できます。
 この記事は、前者のDialogflowについて書いていきます。
 
-## Dialogflow
+### Dialogflow
 
 もともとは `Api.ai` というサービスで Google が買収しました。
 
@@ -60,7 +60,7 @@ Dialogflow単体でいうと、Googleアシスタントだけではなく、LINE
 
 ※より詳しく何ができるのかは [QiitaのDialogflowタグ記事一覧](https://qiita.com/tags/dialogflow) を参照ください。
 
-## Dialogflow API
+### Dialogflow API
 
 DialogflowにはAPIがあり、主な利用用途は以下のとおりです。
 
@@ -81,7 +81,7 @@ DialogflowにはAPIがあり、主な利用用途は以下のとおりです。
 
 Googleアシスタント経由で使っている分には、Standard Editionでも制限はないということです。
 
-## なぜV2を使うのか
+### なぜV2を使うのか
 
 たとえば以下のような作業はV1ではできません
 
@@ -101,7 +101,7 @@ Googleアシスタント経由で使っている分には、Standard Editionで�
 
 ということです。
 
-## とりあえず作ってみた
+### とりあえず作ってみた
 
 いろいろなことがあって、現時点V2使わないといけないかもしれない。
 でもV1にも簡単に戻れるようにしたい、みたいな「ふわっとした」状況ってあるじゃないですか。
@@ -156,7 +156,7 @@ app(request, dialogflowV2.v1to2(response));
 
 2つのAPIがPublicになっています。
 
-## さいごに
+### さいごに
 
 JSONを変換するだけの簡単な実装ですが、手元のアプリではV2に切り替えてもうまく動作しました。
 
