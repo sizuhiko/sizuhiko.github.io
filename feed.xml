@@ -5,10 +5,203 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2018-02-16T03:36:00Z</updated>
+  <updated>2018-02-27T06:24:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Polymer.co-edo meetup ＃11 を開催しました</title>
+    <link rel="alternate" href="http://blog.url.com/2018/02/27/polymer-co-edo-meetup-11.html"/>
+    <id>http://blog.url.com/2018/02/27/polymer-co-edo-meetup-11.html</id>
+    <published>2018-02-27T06:24:00Z</published>
+    <updated>2018-02-28T08:43:23+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;今年2回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/70895"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
+
+&lt;p&gt;今回の議題は&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Web Componentsを作るにあたり、いくつか必要な開発ツールがあるので、その解説と体験がメインになります。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;ということで、必要なツールと、その使い方／書き方について学習しました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;polymer-cli の使い方&lt;/li&gt;
+&lt;li&gt;polymer test を使ってみよう&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;開発環境をととのえる&lt;/h3&gt;
+
+&lt;p&gt;ちょうど少し前に&lt;a href="https://www.youtube.com/user/ChromeDevelopers/"&gt;YouTubeのGoogle Chrome Developersチャンネル&lt;/a&gt;に&lt;a href="https://www.youtube.com/user/ChromeDevelopers/search?query=Building+an+Element+in+Polymer2"&gt;Building an Element in Polymer 2という動画シリーズ1から5&lt;/a&gt;がアップされました。
+こちらの動画は英語ですが、字幕をONにして日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください。&lt;/p&gt;
+
+&lt;p&gt;今回は&lt;a href="https://www.youtube.com/watch?v=NU4TGxYZEjs"&gt;Building an Element in Polymer 2: Install Tools &amp;amp; Initialize Project (Part 1 of 5)&lt;/a&gt;が議題とマッチしていたので、一旦ビデオを見ならが進めました。&lt;/p&gt;
+
+&lt;p&gt;はじめに &lt;code&gt;polymer-cli&lt;/code&gt; をインストールしましょう。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;$ npm install -g polymer-cli
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;動画の中でも言っていますが、いろいろなものが入るので、結構時間がかかります。&lt;/p&gt;
+
+&lt;p&gt;次に &lt;code&gt;bower&lt;/code&gt; をインストールします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;$ npm install -g bower
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;polymer help&lt;/code&gt; や &lt;code&gt;bower help&lt;/code&gt; などを実行して、コマンドが正常にインストールされているか確認しましょう。&lt;/p&gt;
+
+&lt;h3&gt;自動テストのしくみ&lt;/h3&gt;
+
+&lt;p&gt;Polymer はテストコマンドとして &lt;code&gt;polymer test&lt;/code&gt; を用意しています。
+このコマンドは、&lt;a href="https://github.com/Polymer/polymer-cli"&gt;polymer-cliのリポジトリ&lt;/a&gt;で&lt;a href="https://github.com/Polymer/polymer-cli/blob/master/src/commands/test.ts"&gt;ソースコード&lt;/a&gt;を読むとわかりますが、このコマンドは&lt;a href="https://github.com/Polymer/web-component-tester"&gt;web-component-tester&lt;/a&gt;へのエイリアスとなっています。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;web-component-tester&lt;/code&gt; は Polymerチームによって開発されていますが、Polymer用というわけではなく、Web Components をテストするために既存のテスティングフレームワークを統合したものです。
+&lt;a href="https://github.com/Polymer/web-component-tester/blob/master/README.md"&gt;README&lt;/a&gt;にも書いてあるとおり、フロントエンドやNode.jsでは馴染みのある、以下のようなツールを使って構成されています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a title="Mocha Test Framework" href="http://mochajs.org/"&gt;Mocha&lt;/a&gt; as a test framework.&lt;/li&gt;
+&lt;li&gt;&lt;a title="Chai Assertion Library" href="http://chaijs.com/"&gt;Chai&lt;/a&gt; assertions.&lt;/li&gt;
+&lt;li&gt;&lt;a title="Async.js" href="https://github.com/caolan/async"&gt;Async&lt;/a&gt; to keep your sanity.&lt;/li&gt;
+&lt;li&gt;&lt;a title="Lo-Dash" href="https://lodash.com/"&gt;Lodash&lt;/a&gt; (3.0) to repeat fewer things.&lt;/li&gt;
+&lt;li&gt;&lt;a title="Sinon.JS" href="http://sinonjs.org/"&gt;Sinon&lt;/a&gt; and &lt;a title="Chai assertions for Sinon" href="https://github.com/domenic/sinon-chai"&gt;sinon-chai&lt;/a&gt; to test just your things.&lt;/li&gt;
+&lt;li&gt;&lt;a title="Easy DOM fixture testing" href="https://github.com/PolymerElements/test-fixture"&gt;test-fixture&lt;/a&gt; for easy fixture testing with &lt;code&gt;&amp;lt;template&amp;gt;&lt;/code&gt; tags.&lt;/li&gt;
+&lt;li&gt;&lt;a title="A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page." href="https://github.com/GoogleChrome/accessibility-developer-tools"&gt;accessibility-developer-tools&lt;/a&gt; through &lt;code&gt;a11ySuite&lt;/code&gt; for simple, automated Accessibility testing.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;テストスイートの書き方は、Mocha でテストを書いたことがあれば、それほど違和感はないと思います。
+Web Components をテストするのに、追加されているのが test-fixture で、テストするエレメントのテンプレートを複数定義しておき、テストで必要な時だけDOMへ追加できます。&lt;/p&gt;
+
+&lt;p&gt;またWebサイトはアクセシビリティにも配慮すべきなので、a11ySuite で自動的に問題がないかどうかを検証できます。
+参考サイト：&lt;a href="https://html5experts.jp/shumpei-shiraishi/24671/"&gt;Webアプリのアクセシビリティを追求せよ！「インクルーシブ」なマークアップを議論しながら学んでみた&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;web-component-tester はブラウザを起動してテストを行います。Web Componentsはブラウザの上で動作することを確認することが重要だからです。
+しかし、さまざまなブラウザやOSのバージョンマトリクスを用意するのは困難です。
+そこで&lt;a href="https://saucelabs.com/"&gt;Sauce Labs&lt;/a&gt;のようなマルチOS/マルチブラウザで動作できるSaaSを利用するのが良いでしょう。
+テスト困難はお金で解決できます。
+web-component-testerでは、そのためのプラグインが標準で用意されているので、Sauce Labsならすぐに利用できます。
+私は&lt;a href="http://www.browserstack.com/"&gt;Browserstack&lt;/a&gt;を使いたい！、という場合は、&lt;a href="https://github.com/hotforfeature/wct-browserstack"&gt;Browserstack用プラグイン&lt;/a&gt;がOSSで公開されているので、試してみてください。&lt;/p&gt;
+
+&lt;p&gt;また、テストで起動するブラウザは、自動的に判定されるので、特定のブラウザだけ実行したい場合などは、&lt;code&gt;wct.conf.json&lt;/code&gt; というファイルを作ってREADMEを参考に設定します。&lt;/p&gt;
+
+&lt;p&gt;もちろんCIでの実行にも配慮されていて、 Gulp や Grunt から実行するインターフェースも用意されています。&lt;/p&gt;
+
+&lt;h3&gt;テストを実行してみる&lt;/h3&gt;
+
+&lt;p&gt;実際にどうやってテストが実行されるのか、既存のエレメントで確認しました。
+利用したエレメントは、以下の2つです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/PolymerElements/paper-progress"&gt;PolymerElements/paper-progress&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/PolymerElements/gold-email-input"&gt;PolymerElements/gold-email-input&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;どちらも、以下の手順でテストを実行できます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git clone&lt;/code&gt; する&lt;/li&gt;
+&lt;li&gt;clone 先にディレクトリを移動&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bower install&lt;/code&gt; を実行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;polymer test&lt;/code&gt; を実行&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;端末にインストールされているブラウザが自動的に起動して、テストが実行されます。
+起動したブラウザは、2ペインになっていて、左側にテスト中のDOM、右側にはテスト結果が表示されます。&lt;/p&gt;
+
+&lt;h3&gt;既存のエレメントから、基本的なテストの書き方を学ぼう&lt;/h3&gt;
+
+&lt;p&gt;それぞれのリポジトリのテストコードを読んで、テストコードの書き方を学びます。&lt;/p&gt;
+
+&lt;p&gt;まず、どちらのリポジトリも、ルートディレクトリに &lt;code&gt;test&lt;/code&gt; というディレクトリがあります。
+web-component-testerはデフォルトで、このディレクトリ名を利用するので、よほどのことがない限りこの名前を利用します。&lt;/p&gt;
+
+&lt;p&gt;次に test ディレクトリには index.html と、それ以外のテストファイル（複数でも、サブディレクトリでも）を配置します。
+まず index.html が読み込まれるので、テストスイートを初期化します。
+ほとんどの Web Components で書き方はコピペで良く、変更が必要なのは title タグと、以下のテストスイートに列挙するファイルの一覧だけです。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="nx"&gt;WCT&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;loadSuites&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
+      &lt;span class="s1"&gt;'basic.html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="s1"&gt;'basic.html?dom=shadow'&lt;/span&gt;
+    &lt;span class="p"&gt;]);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;重要なこととして、web-component-testerは、デフォルトでは Shadow DOM をOFFにしてテストを実行します。つまり 1行目の &lt;code&gt;basic.html&lt;/code&gt; は Shady DOM でテストが実行されます。
+もし、Shadow DOM でもテストしたい場合は、2行目のようにパラメータを追加する必要があります。&lt;/p&gt;
+
+&lt;h4&gt;テストヘルパーの役割&lt;/h4&gt;
+
+&lt;p&gt;実際のテストコードを見ると、以下のようなテストヘルパーをインクルードしています。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"../../iron-test-helpers/test-helpers.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"../../iron-test-helpers/mock-interactions.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;テストヘルパーを導入すると、テストコードを書くのが容易になります。
+代表的なヘルパーメソッドを紹介します。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;flushAsynchronousOperations : Custom Elements のライフサイクルコールバックを強制的に実行します&lt;/li&gt;
+&lt;li&gt;forceXIfStamp : &lt;code&gt;dom-if&lt;/code&gt; を利用しているとき、データバインディングで変更された値の再描画を強制的に実行します。通常はライフサイクルコールバックに入り、非同期で書き換わります&lt;/li&gt;
+&lt;li&gt;pressSpace : 指定したエレメント上でスペースキーが押されたことをエミュレーションします&lt;/li&gt;
+&lt;li&gt;tap : 指定したエレメントでタップ操作をエミュレーションします&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;これらの操作は、ヘルパーなしに書くと冗長だったり、それだけで疲れてしまうものですが、ヘルパーを利用することでタグ本来の挙動を確認することに集中できます。&lt;/p&gt;
+
+&lt;p&gt;また、paper-progress のようにCSSアニメーションを利用する Web Components のテストでは、asyncPlatformFlush を使っています。
+&lt;a href="https://github.com/Polymer/web-component-tester/blob/ed21e16c1b91da0e9a64b32af7f726b3c8613a0d/browser/environment/helpers.ts#L162"&gt;このメソッドは web-component-tester で定義されています&lt;/a&gt;が、現時点では DEPRECATED なので、 &lt;code&gt;flush&lt;/code&gt; を利用することが推奨されています。&lt;/p&gt;
+
+&lt;p&gt;flush は flushAsynchronousOperations と似ていますが、コールバックで呼び出されるか、同期実行になるかが異なります。
+&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#hybrid-elements-test-local-dom"&gt;公式ドキュメントでは flush を利用するように書いている&lt;/a&gt;ので、flushを使って書いた方が良いでしょう。
+&lt;code&gt;dom-if&lt;/code&gt; や &lt;code&gt;dom-repeat&lt;/code&gt; などデータバインディングの結果としてDOMの構造が書き換わる場合、変更は非同期で実行されるため、必ず flush が必要です。
+私もプロダクション開発のテストコードでは、頻繁に flush を使うことがあります。&lt;/p&gt;
+
+&lt;h4&gt;それ以外のテストのTIPS&lt;/h4&gt;
+
+&lt;p&gt;今回はこのあたりで終了時間が少なくなったので、公式ドキュメントで案内されているテストの書き方について、いくつか解説しました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-methods"&gt;エレメントのメソッドをスタブする方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-elements"&gt;エレメント自体をスタブする方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#ajax"&gt;Ajaxのテスト方法&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;これらは実際にテストを書くと必要になるので、TIPSとしてリンクを残しておきます。&lt;/p&gt;
+
+&lt;h3&gt;FAQ&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;サーバーサイド言語の単体テストは、メソッドを実行して戻り値などを検証するけど、Web Components はプロパティで値を指定して、描画後の状態を取得して検証するの？&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;基本的には、そのような解釈でも問題ないです。
+ただし Web Components にはメソッドも定義できるので、こちらはサーバサイドのテストと同様に記述することも可能です（実際そういう需要があるかは別として）。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;仮想環境を使っていると面倒&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;たしかに web-component-tester はブラウザを起動して Selenium(Web Driver)を使ってテストするので Vagrant や Virtualbox を使った開発環境ではやりずらいです。
+なるべくホストOSの環境で開発するのがオススメです。&lt;/p&gt;
+
+&lt;h3&gt;次回は&lt;/h3&gt;
+
+&lt;p&gt;3/26(月) の予定です。&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;に今年の予定も書いてあるので参考にしてください。&lt;/p&gt;
+
+&lt;p&gt;いよいよ、実際に今回アイデア出ししたエレメントを作っていきたいと思います。
+今後もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
+新しいエレメントのアイデアも募集しています。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;写真忘れなかったw！&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/20180226_211052344.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;ワークショップの解説をしている私と参加者、という雰囲気です。&lt;/p&gt;
+
+&lt;!-- References --&gt;
+</content>
+  </entry>
   <entry>
     <title>Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS</title>
     <link rel="alternate" href="http://blog.url.com/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html"/>
@@ -566,25 +759,6 @@ Windows をお使いの方だと &lt;code&gt;砂時計&lt;/code&gt; なわけで
 &lt;h3&gt;さいごに&lt;/h3&gt;
 
 &lt;p&gt;今年もPHPカンファレンス関西楽しかったし、たくさんの刺激をもらいました。ありがとうございました。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>CHIRIMEN &amp; IEEE Tokyo Young Professionals hackthon</title>
-    <link rel="alternate" href="http://blog.url.com/2017/07/17/chirimen-ieee-young-hackason.html"/>
-    <id>http://blog.url.com/2017/07/17/chirimen-ieee-young-hackason.html</id>
-    <published>2017-07-17T10:45:00Z</published>
-    <updated>2017-07-17T19:54:27+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;7/8と7/9に開催された &lt;a href="http://sites.ieee.org/sb-keio/ieee-hackathons-2017/"&gt;IEEE Tokyo Young Professionals hackthon&lt;/a&gt; で &lt;a href="https://chirimen.org"&gt;CHIRIMEN&lt;/a&gt; コミュニティとして協力してきました。&lt;/p&gt;
-
-&lt;p&gt;CHIRIMEN コミュニティでは、このような活動に興味のある方の参加をお待ちしております！
-チューターの方が事前講習会でやった内容を十分に把握していてくれたので、私たちはほとんど座っているだけでした。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://togetter.com/li/1129642"&gt;2日間のtwitterまとめ&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;アイデアソンのやり方や、今の学生がどんなことを考えているかなど知れて、とても楽しかったです（日本酒も美味しかったなーw）&lt;/p&gt;
 </content>
   </entry>
 </feed>
