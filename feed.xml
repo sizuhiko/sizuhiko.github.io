@@ -5,661 +5,323 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2018-05-06T07:45:00Z</updated>
+  <updated>2018-06-11T04:49:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
   <entry>
-    <title>Polymer.co-edo day 2018 春 を開催しました</title>
-    <link rel="alternate" href="http://blog.url.com/2018/05/06/polymer-co-edo-day-2018.html"/>
-    <id>http://blog.url.com/2018/05/06/polymer-co-edo-day-2018.html</id>
-    <published>2018-05-06T07:45:00Z</published>
-    <updated>2018-05-06T17:07:58+09:00</updated>
+    <title>Brackets prettier 拡張を作ってみた</title>
+    <link rel="alternate" href="http://blog.url.com/2018/06/11/brackets-prettier-extention.html"/>
+    <id>http://blog.url.com/2018/06/11/brackets-prettier-extention.html</id>
+    <published>2018-06-11T04:49:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;p&gt;4月に予定していた今年4回目(通算で13回目)となるMeetupは、Polymer Japan主催の &lt;a href="https://polymer-japan.connpass.com/event/84638/"&gt;Web Components Cafe by Polymer Japan&lt;/a&gt; と重なってしまったため中止となり、このG/Wに &lt;a href="https://polymercoedo.doorkeeper.jp/events/73944"&gt;Polymer.co-edo day 2018 春&lt;/a&gt;として開催することになりました。&lt;/p&gt;
-
-&lt;p&gt;Web Components Cafeでは「PolymerによるWeb Componentsの開発」というタイトルで発表もしましたので、スライドをリンクしておきますね。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="a79e61c934c24a8b9b97830f625c3b20" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;&lt;code&gt;Polymer.co-edo day&lt;/code&gt; &lt;strong&gt;&lt;em&gt;春&lt;/em&gt;&lt;/strong&gt;って付くと、秋もやりそうじゃないですか！？（もしかしてやるかもね）&lt;/p&gt;
-
-&lt;h3&gt;Polymer.co-edo day とは&lt;/h3&gt;
+    <content type="html">&lt;p&gt;JavaScriptでコードを書くときは &lt;a href="https://www.npmjs.com/package/js-beautify"&gt;JS Beautifier&lt;/a&gt; を使ってフォーマットしていたのですが、
+&lt;a href="http://mizchi.hatenablog.com/"&gt;mizchi&amp;rsquo;s blog&lt;/a&gt;の&lt;a href="http://mizchi.hatenablog.com/entry/2018/05/31/233220"&gt;最近のフロントエンドのエディタ事情&lt;/a&gt;で&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;私が1日 Co-Edoにいるので、Polymerのことについて話したり、質問受け付けたり、ワークショップやったり、一緒にお酒飲んだりw、Polymer/Web Componentsについて、何でもやるよ！の1日です。気軽に参加ください。&lt;/p&gt;
-
-&lt;p&gt;お好きな時間に来て、帰って も大丈夫です。
-GW予定ないけど、もくもくしたい、Web Componentsさわってみたいなど、私と一緒に作業をしませんか？&lt;/p&gt;
+&lt;p&gt;フォーマッタは当然のように prettier が入る。もう選択肢はなくて、猫も杓子もprettier。すでに勝負は決している。&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;ということで、連休にもかかわらず2名の方が参加してくれました。ありがたい！&lt;/p&gt;
+&lt;p&gt;と書かれていたので、じゃぁ&lt;a href="https://prettier.io/"&gt;prettier&lt;/a&gt;入れようと思ったのがきっかけです。&lt;/p&gt;
 
-&lt;p&gt;非エンジニアの方ですが、コミュニティにもJOINしてもらった午前中の参加者と、Polymer.co-edoの常連さんが午後に来てくれて、ぼっちの時間も少なく楽しい1日でした。&lt;/p&gt;
+&lt;h3&gt;prettier を使うには&lt;/h3&gt;
 
-&lt;p&gt;やった/話した内容は以下のようなことです&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Polymerとは？のプレゼン&lt;/li&gt;
-&lt;li&gt;どのように現在のビジネスにマッチさせるか&lt;/li&gt;
-&lt;li&gt;Wordpress の Polymer プラグインがあるらしい？！&lt;/li&gt;
-&lt;li&gt;どこから学んでいけば良いか？
+&lt;p&gt;私がメインで使っているエディタは &lt;a href="http://brackets.io"&gt;Adobe Brackets&lt;/a&gt; です。
+vs-code にも atom にも拡張があるので、Bracketsでも誰か作ってるだろう&amp;hellip; と思ったらありませんでした。
+ここで考えたのが、以下アイデアです。&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;Google Mapとか Codelabs にあるのが良いね！&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Polymer 3がリリースされるってよ&lt;/li&gt;
-&lt;li&gt;CMS構想&lt;/li&gt;
-&lt;li&gt;次回Polymer.co-edoはリリース記念イベント！？
-
-&lt;ul&gt;
-&lt;li&gt;Google I/O 終わったあとだし、動画見ながらのイベントになるかも&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;そろそろハンズオンやりたい（3系でやる？）&lt;/li&gt;
+&lt;li&gt;gulp-watch 使って、ファイルに変更があったら自動的に変換する&lt;/li&gt;
+&lt;li&gt;git の commit フックに仕込む&lt;/li&gt;
+&lt;li&gt;Bracketsの拡張作る&lt;/li&gt;
+&lt;li&gt;vs-code にエディタを変える&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3&gt;次回の Polymer.co-edo は&lt;/h3&gt;
+&lt;h3&gt;Brackets 愛が強すぎて拡張を作ってみることにした&lt;/h3&gt;
 
-&lt;p&gt;5/21(月)を予定しています。&lt;/p&gt;
+&lt;p&gt;まぁアレですよ。エディタの機能拡張といえば古くは（これはものすごく古い話）Emacsの拡張作ったり、Sublime使っていたころはpython使って拡張書いたりしていたので「エディタ拡張を作るとは」みたいな流儀はわかっていたつもり、でした。
+そもそもBracketsの拡張ってatomやvs-codeとどう違うのか？と思って、&lt;a href="https://github.com/prettier/prettier-atom"&gt;atom版&lt;/a&gt;と&lt;a href="https://github.com/prettier/prettier-vscode"&gt;vs-code版&lt;/a&gt;のコードを見比べましたが「お・おぅ」となって、断念しました。
+まぁBracketsって&lt;a href="https://bitbucket.org/chromiumembedded/cef"&gt;CEF&lt;/a&gt;ベースだからなー（&lt;a href="https://electronjs.org"&gt;electron&lt;/a&gt;ベースではない）、そもそもコードを流用とか考えない方が良さそうだ。&lt;/p&gt;
 
-&lt;p&gt;&lt;a href="#"&gt;Polymer 3のリリースはGoogle I/O の翌週と告知されている&lt;/a&gt;ので、ナイスタイミングだと思っています。
-みなさまの参加をお待ちしております。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>明日の開発カンファレンス2018を開催します</title>
-    <link rel="alternate" href="http://blog.url.com/2018/04/10/asucon-2018.html"/>
-    <id>http://blog.url.com/2018/04/10/asucon-2018.html</id>
-    <published>2018-04-10T01:33:00Z</published>
-    <updated>2018-04-10T23:55:41+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;昨年に続き &lt;a href="http://asucon.alleyoop.jp/"&gt;明日の開発カンファレンス&lt;/a&gt; を1週間後の &lt;strong&gt;4/17(火)&lt;/strong&gt; に開催します。&lt;/p&gt;
+&lt;h4&gt;Brackets 拡張を作るのに参考になるサイト&lt;/h4&gt;
 
-&lt;p&gt;&lt;img src="/images/blog/asucon2018.jpeg" /&gt;&lt;/p&gt;
+&lt;p&gt;とりあえず調べられた範囲が以下のとおり&lt;/p&gt;
 
-&lt;h3&gt;明日の開発カンファレンスとは？&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.adobe.com/jp/devnet/edge-code/articles/building-your-first-brackets-extension.html"&gt;初めてのBRACKETS拡張機能の作成&lt;/a&gt;
 
-&lt;p&gt;公式サイトの開催趣旨を引用します。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;記事が2012年で大丈夫かぁ？と思ったが、終わってみれば何も変わっていなかった&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/adobe/brackets/wiki/How-to-write-extensions"&gt;How to write extensions&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;こちらは2015年に更新されていて、情報のメンテはされているようだ&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://brackets.io/docs/current/index.html"&gt;Brackets API&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;詳しいAPIの使い方が書いてある &lt;code&gt;Show code&lt;/code&gt; が便利というか、それ見ないとわからないよ！&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;どうやって作るか&lt;/h4&gt;
+
+&lt;p&gt;公式サイトにも書いてあります&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;「明日の開発カンファレンス」では、開発の効率化に取り組むエキスパートの生の声を伝えます。そして、一歩、二歩、三歩先にどのような事ができるか、実際の現場にどのように導入するか。開発リーダのみなさまや開発リーダを目指すエンジニアのみなさまに、実現可能な情報を共有できる場を提供したいと考えています。&lt;/p&gt;
+&lt;p&gt;For a quick start, you can paste in the Simple &amp;ldquo;Hello World&amp;rdquo; extension or the code from an existing extension that is similar to what you want to do.&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;プログラムも、各分野に精通した運営メンバーが「今現場に求められているもの」の中で &lt;strong&gt;もっとも聞きたい話&lt;/strong&gt; を、各分野のエキスパートに登壇を快諾いただきました。
-昨年に続き、参加したみなさまが &lt;strong&gt;明日からのヒント&lt;/strong&gt; を持ち帰って、現場の改善に役立つようなイベントになると信じています。&lt;/p&gt;
+&lt;p&gt;「既存の機能が似ている拡張のコードを参考にすると良いよ！」（おまえドキュメントを書くということを放棄しているんじゃないだろうな&amp;hellip;&lt;/p&gt;
 
-&lt;p&gt;なお、名前が長いので、通称は &lt;strong&gt;アスカン&lt;/strong&gt; という名前になっています。みなさまも愛着をもって「アスカン」と読んでもらえると嬉しいです。&lt;/p&gt;
+&lt;h4&gt;参考にするもの&lt;/h4&gt;
 
-&lt;h3&gt;2018年のみどころ&lt;/h3&gt;
+&lt;p&gt;&lt;a href="https://github.com/brackets-beautify/brackets-beautify"&gt;Brackets Beautify&lt;/a&gt;という、最初にも紹介した &lt;a href="https://www.npmjs.com/package/js-beautify"&gt;JS Beautifier&lt;/a&gt; を使えるようにする Brackets拡張です。
+普段この拡張を使っているので、参考にするにはもってこいです（機能もコードフォーマットという部分では似ている）。&lt;/p&gt;
 
-&lt;h4&gt;ものづくりを変える開発者ファーストの４つのカイゼン&lt;/h4&gt;
+&lt;h4&gt;いくつかの壁&lt;/h4&gt;
 
-&lt;p&gt;デンソーさんのアジャイル開発事例は、今年の&lt;a href="https://event.shoeisha.jp/devsumi/20180215"&gt;デブサミ2018&lt;/a&gt;や、他のイベント、Webの記事などで見たり聞いたりしたことがあるのではないかと思います。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/brackets-beautify/brackets-beautify"&gt;Brackets Beautify&lt;/a&gt;のコードは難しくなく、簡単に読めたのですが&lt;/p&gt;
 
-&lt;p&gt;ですが、ここはアスカンです。より現場の声が聞きたいんです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;これテストコードとか書けないの？（まぁ書けないに近い&lt;/li&gt;
+&lt;li&gt;ES6とか使えないの？&lt;/li&gt;
+&lt;li&gt;ファイル分割するベストプラクティスとかないの？&lt;/li&gt;
+&lt;/ul&gt;
 
-&lt;p&gt;そこで、今回は現場のチーフエンジニアである、&lt;a href="http://asucon.alleyoop.jp/speaker/sato/"&gt;佐藤 義永さん&lt;/a&gt;に登壇いただき &lt;strong&gt;開発者の視点から具体的な取り組みとその効果&lt;/strong&gt; を紹介していだたけることになりました。
-楽しみですね。&lt;/p&gt;
+&lt;p&gt;という部分が気になりました。
+他の拡張のコードをいくつかみたりしましたが、まぁエディタの拡張って、ちょこっとした機能だから分割するまでもないんですよね、「わかる」みたいな感じ。&lt;/p&gt;
 
-&lt;h4&gt;クラウド労務サービス「SmartHR」を支える開発チームの作り方&lt;/h4&gt;
+&lt;p&gt;結果として&lt;/p&gt;
 
-&lt;p&gt;急成長中のクラウド労務サービス「SmartHR」。
-プログラム選定をした神戸さん曰く &lt;strong&gt;まだ他で話を聞いたことがないが、絶対に話を聞きたい人&lt;/strong&gt; &lt;a href="http://asucon.alleyoop.jp/speaker/masato_serizawa/"&gt;芹澤 雅人さん&lt;/a&gt;に登壇いただきます。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;テストコードは諦めた（モックのテストになりそうだったので&lt;/li&gt;
+&lt;li&gt;ES6というとアレですが、 &lt;code&gt;const&lt;/code&gt; &lt;code&gt;let&lt;/code&gt; あたりは使えた。allow functionはエラーになってしまった&lt;/li&gt;
+&lt;li&gt;ファイル分割してみた！（ベストではないかもしれないが!!&lt;/li&gt;
+&lt;/ul&gt;
 
-&lt;p&gt;&lt;strong&gt;成長するサービスの中で、どのように対応してきたか、また、今後どのような開発チームを作っていきたいか&lt;/strong&gt; について発表していただきます。
-自社サービスを作っている人にとって、とても参考になる話、見逃せないですね。&lt;/p&gt;
+&lt;h3&gt;Brackets Prettier 作ったよ！&lt;/h3&gt;
 
-&lt;h4&gt;新卒3年目のぼくが、でぶおぷす???なオジサンだらけのエンプラ金融PJにAnsibleを導入してみた&lt;/h4&gt;
+&lt;p&gt;そんなこんなで、&lt;a href="https://github.com/brackets-beautify/brackets-beautify"&gt;Brackets Beautify&lt;/a&gt;のコードを &lt;del&gt;パクって&lt;/del&gt; 参考に、&lt;a href="https://github.com/sizuhiko/brackets-prettier"&gt;Brackets Prettier&lt;/a&gt; を作りました。&lt;/p&gt;
 
-&lt;p&gt;フューチャー株式会社の&lt;a href="http://asucon.alleyoop.jp/speaker/syuntaro_saiba/"&gt;齋場 俊太朗さん&lt;/a&gt;には、エンタープライズ開発の現場で
-&lt;strong&gt;先進的なツール&lt;/strong&gt; と &lt;strong&gt;今までのやり方や文化&lt;/strong&gt; をうまく結びつけるために、どのような工夫をしたかを発表していただきます。
-これから開発リーダーを目指すエンジニアがとおる現場の改善。
-エンタープライズの現場の、こういった発表は他ではなかなか聞くことができない内容になっています。&lt;/p&gt;
+&lt;h4&gt;Brackets 拡張を作ったらやること&lt;/h4&gt;
 
-&lt;h4&gt;カイゼン・ジャーニー 〜たった一人からはじめて、「越境」するチームをつくるまで〜&lt;/h4&gt;
+&lt;p&gt;&lt;a href="http://brackets-registry.aboutweb.com/"&gt;Brackets Extension Registry&lt;/a&gt;というところに登録しておくと、エディタの &lt;code&gt;拡張機能マネージャ&lt;/code&gt; からインストールできるので、世界中のBracketsユーザーが &lt;code&gt;prettier&lt;/code&gt; と検索したら出てくるようになります。
+で、レジストリへの登録方法は、&lt;a href="https://github.com/adobe/brackets/wiki/Extension-Registry-Help"&gt;公式WikiのExtension Registry Help&lt;/a&gt;に書いてあるので、そのとおり作業を進めます。&lt;/p&gt;
 
-&lt;p&gt;午後最初のセッションは &lt;a href="http://amzn.asia/5AMX5Xq"&gt;カイゼン・ジャーニー&lt;/a&gt; の著者である &lt;a href="http://asucon.alleyoop.jp/speaker/toshihiro_ichitani/"&gt;市谷 聡啓さん&lt;/a&gt; に、
-&lt;strong&gt;どのようにして自分の場所（開発現場）を変えていくのか&lt;/strong&gt; について発表していただきます。
-会社のトップダウンでアジャイルを導入できるケース、スタートアップで改善を続けていけるケース、などありますが、
- &lt;strong&gt;一人から&lt;/strong&gt; 改善をはじめなくてはいけないケースが多いのではないか？と思っています。
- このセッションのテーマは &lt;strong&gt;そう、変化は「たった一人から」でも始められます&lt;/strong&gt; です。&lt;/p&gt;
+&lt;p&gt;で、登録するとBrackets拡張のBotアカウントがツイートしてくるんですね。知らなかった。&lt;/p&gt;
 
-&lt;p&gt;こちらも、今年の&lt;a href="https://event.shoeisha.jp/devsumi/20180215"&gt;デブサミ2018&lt;/a&gt;や他のイベントなどで、見たり聞いたりしたことがあるのではないかと思います。
-アスカンでは他のイベントよりも発表時間をドーンと拡大して80分枠で、ジャーニーを語ってもらいます。&lt;/p&gt;
+&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="en" dir="ltr"&gt;Brackets Prettier - 1.0.0 (NEW) &lt;a href="https://t.co/axTV7nu5xB"&gt;https://t.co/axTV7nu5xB&lt;/a&gt; &lt;a href="https://t.co/3KQ31k1dED"&gt;https://t.co/3KQ31k1dED&lt;/a&gt; &lt;a href="https://twitter.com/brackets?ref_src=twsrc%5Etfw"&gt;@brackets&lt;/a&gt;&lt;/p&gt;&amp;mdash; Brackets Extensions (@brktsextensions) &lt;a href="https://twitter.com/brktsextensions/status/1004603877402873856?ref_src=twsrc%5Etfw"&gt;7 June 2018&lt;/a&gt;&lt;/blockquote&gt;
 
-&lt;h4&gt;サーバーレスいいとこどり&lt;/h4&gt;
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
 
-&lt;p&gt;&lt;strong&gt;サーバーレス&lt;/strong&gt; という言葉で最初に思いつくことは何でしょうか？
-多くの現場で導入が進められていたり、導入が検討されているのではないかと思います。&lt;/p&gt;
+&lt;h3&gt;今後は&lt;/h3&gt;
 
-&lt;p&gt;AWSのコミュニティでは知らない人はいない、株式会社セクションナイン &lt;a href="http://asucon.alleyoop.jp/speaker/shingo_yoshida/"&gt;吉田 真吾さん&lt;/a&gt; を中心に、
-サーバーレスの現場で活躍する 中山 桂一さんと(サーバーレス薄い本でも有名な)仲山 昌宏さんに登壇いただき、
-&lt;strong&gt;サーバーレスを現場に導入するにあたり直面する課題について、対策のアイデアや視座&lt;/strong&gt; を紹介していただきます。
-ここだけの話が聴けるチャンスです！&lt;/p&gt;
-
-&lt;h4&gt;リアルストーリー：「うちのカイハツ、セキュリティやばい」からの脱却シナリオ&lt;/h4&gt;
-
-&lt;p&gt;最後のセッションは、セキュリティです。
-OWASP Japanチャプターリーダーでもある&lt;a href="http://asucon.alleyoop.jp/speaker/okada/"&gt;岡田 良太郎さん&lt;/a&gt;、
-サイボウズ株式会社 &lt;a href="http://asucon.alleyoop.jp/speaker/ito/"&gt;伊藤 彰嗣さん&lt;/a&gt;、
-&lt;a href="https://github.com/future-architect/vuls"&gt;Vuls&lt;/a&gt;の開発者でもある&lt;a href="http://asucon.alleyoop.jp/speaker/kanbe/"&gt;神戸 康多さん&lt;/a&gt;が、
-ゲストを迎えて &lt;strong&gt;現場の生々しい話を根掘り葉掘り聞きまくる&lt;/strong&gt; トークセッションです。
-&lt;strong&gt;どうすればセキュア開発・運用など実現しうるのか&lt;/strong&gt; について、アスカンでしか聞けない深イイ話、見逃せません。&lt;/p&gt;
-
-&lt;h3&gt;最後に&lt;/h3&gt;
-
-&lt;p&gt;もうすでに 119名(4/10 23:00現在) の方に申し込みをいただいていますが、まだ残席あります。
-イベント後には懇親会 &lt;strong&gt;アスカンナイト&lt;/strong&gt; も開催されますので、登壇者／参加者でイベントの感想や、明日からどうやっていくかを議論するのも良いと思います。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://asucon2018.peatix.com/"&gt;Peatixイベントサイト&lt;/a&gt; よりイベントチケットを購入できます。&lt;/p&gt;
-
-&lt;p&gt;アスカンまであと一週間。
-よろしくお願いします。&lt;/p&gt;
+&lt;p&gt;Brackets拡張の作り方わかったので、これからは俺得な拡張をもっと作っていこうと思います！
+とりあえずPolymer関係を作ろうかなー&lt;/p&gt;
 </content>
   </entry>
   <entry>
-    <title>Polymer.co-edo meetup ＃12 を開催しました</title>
-    <link rel="alternate" href="http://blog.url.com/2018/03/27/polymer-co-edo-meetup-12.html"/>
-    <id>http://blog.url.com/2018/03/27/polymer-co-edo-meetup-12.html</id>
-    <published>2018-03-27T05:47:00Z</published>
-    <updated>2018-03-28T07:31:32+09:00</updated>
+    <title>cakephp-fabricate-adaptor を CakePHP3.6 対応しました</title>
+    <link rel="alternate" href="http://blog.url.com/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html"/>
+    <id>http://blog.url.com/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html</id>
+    <published>2018-06-10T03:51:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;p&gt;今年3回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/71980"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
+    <content type="html">&lt;p&gt;&lt;img src="/images/blog/cakephp-fabricate-adaptor-3.6.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;CakePHPのコア開発のメンバーでもある dakota が南アからPRをくれました。
+最近は普段からCakePHP使っていないので、PRはとても助かります。
+テストコードなかったので、たくさんビルドエラーになっていましたが、マージして、私の方で対応しておきました。&lt;/p&gt;
+
+&lt;p&gt;デフォルトの&lt;a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor"&gt;developブランチ&lt;/a&gt;から取得すると、CakePHP3.6の開発でも利用できます。&lt;/p&gt;
+
+&lt;p&gt;まだリリース切ってないけど、3.6以前と互換性なくなるので、バージョン番号の規則から言うと 0.x → 1.x にするしかないのかな。
+もう少し見直してから（結果として何も変わらないかもしれないけど）1.0にしたいと思っていますので、しばらくお待ちください。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました</title>
+    <link rel="alternate" href="http://blog.url.com/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html"/>
+    <id>http://blog.url.com/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html</id>
+    <published>2018-06-09T04:00:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Polymerそのものと、Polumer.co-edoでの活動（取り組み）について、LTをしました。&lt;/p&gt;
+
+&lt;p&gt;co-edoに集う人の中から参加者が増えると良いなーと思っています。&lt;/p&gt;
+
+&lt;p&gt;今月は6/25に PWA starter kit のハンズオンを予定しています。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました</title>
+    <link rel="alternate" href="http://blog.url.com/2018/05/30/vivaldi-kaeremasen.html"/>
+    <id>http://blog.url.com/2018/05/30/vivaldi-kaeremasen.html</id>
+    <published>2018-05-30T03:39:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://vivaldi2018tokyo.peatix.com/"&gt;5/29に開催された Vivaldiジャパンツアー2018 #Vivaldi帰れま千 に参加しました&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/381967/cover-O8QmxcnsXjNd9jFXEZqEXum1KIL5qaQc.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;古くからのOperaユーザーがほとんどでした。
+中には母親から与えられたPCにOperaが入っていたという若手もいて、年齢を感じましたがw&lt;/p&gt;
+
+&lt;p&gt;Peatixのオフィスは恵比寿の、月に2度以上は目の前を通る場所でした（そこに入っているの知らなかった）。&lt;/p&gt;
+
+&lt;p&gt;みんないろんなTIPSを持っていて、すごいなーと思う反面、私はヘビータブ使い（500タブとか当たり前）なので、タブの話（要望）を。
+標準でタブスタックできて、検索もできるんだけど、ウィンドウ横断でタブ検索できるようにしてほしい！というLTでした。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet" data-lang="ja"&gt;&lt;p lang="ja" dir="ltr"&gt;昨夜、東京でのミートアップも大盛り上がりでした。登壇いただいた方、ご参加いただいた方、みなさまありがとうございました！！&lt;a href="https://twitter.com/hashtag/Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#Vivaldi帰れま千&lt;/a&gt; &lt;a href="https://t.co/OL4qSbIzHo"&gt;pic.twitter.com/OL4qSbIzHo&lt;/a&gt;&lt;/p&gt;&amp;mdash; Vivaldiブラウザー (@vivaldi_jp) &lt;a href="https://twitter.com/vivaldi_jp/status/1001713776117370886?ref_src=twsrc%5Etfw"&gt;2018年5月30日&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;p&gt;1年に一回ぐらいなのかな、ユーザーの集いがあるブラウザって良いですね。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Polymer.co-edo meetup</title>
+    <link rel="alternate" href="http://blog.url.com/2018/05/29/polymer-co-edo-meetup-14.html"/>
+    <id>http://blog.url.com/2018/05/29/polymer-co-edo-meetup-14.html</id>
+    <published>2018-05-29T02:55:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;今年5回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/74678"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
 
 &lt;p&gt;今回の議題は&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;日本発！？のWeb Componentsを作ろう！ということで、一度ブレストした内容を詰めていきたい&lt;/p&gt;
+&lt;p&gt;今回は先日開催された Google I/O &amp;lsquo;18 から Polymer のセッション動画を見ながら Polymer3 のリリース記念パーティとして、食べ飲みしながら情報共有したいと思っています。&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;ということで&lt;a href="http://blog.open.tokyo.jp/2018/01/30/polymer-co-edo-meetup-10.html"&gt;Polymer.co-edo meetup ＃10 を開催しました&lt;/a&gt;で、一度上がった案をベースに議論をしました。&lt;/p&gt;
+&lt;p&gt;ということで、ピザとビールを片手に Polymer 談義が盛り上がりました。&lt;/p&gt;
 
-&lt;h3&gt;本題の前に&lt;/h3&gt;
+&lt;h3&gt;Google I/O で発表された内容のリンク集&lt;/h3&gt;
 
-&lt;p&gt;ちょうど少し前、Polymerの公式ブログに&lt;a href="https://www.polymer-project.org/blog/2018-03-23-polymer-3-latest-preview.html"&gt;Polymer 3.0: Latest preview&lt;/a&gt;という記事がアップされました。
-こちらの記事は英語ですが、Chromeで開いて日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください（最近の自動翻訳すごい！）。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.facebook.com/groups/416344608738146/"&gt;Polymer Japan の Facebook グループ&lt;/a&gt;には、Google I/Oの翌日に貼りましたが、こちらにもまとめておきます。&lt;/p&gt;
 
-&lt;p&gt;ちょうど1つ前の記事が &lt;code&gt;preview-12&lt;/code&gt; では、こうなるよ、という話だったのを前回の #11 で話していたので「Polymer.co-edo の開催に合わせて記事がアップされるなんて、なんて親切なんだ」と勝手に妄想してますw&lt;/p&gt;
-
-&lt;p&gt;また、先日行われた &lt;a href="https://web-study.connpass.com/event/80198/"&gt;template&lt;em&gt;instantiation&lt;/em&gt;study&lt;/a&gt; のハイライトや感想も話しました。&lt;/p&gt;
-
-&lt;h3&gt;Polymer.co-edo では何をやっていきたいか&lt;/h3&gt;
-
-&lt;p&gt;ということで、本題に戻るのですが、始めて参加される方がいたので、コミュニティ/勉強会として何をやっていきたいか、というのをおさらい。&lt;/p&gt;
+&lt;h4&gt;セッション動画&lt;/h4&gt;
 
 &lt;ul&gt;
-&lt;li&gt;日本発の Web Components を開発/発信したい&lt;/li&gt;
-&lt;li&gt;Web Components の開発フレームワークとして Polymer を推したい&lt;/li&gt;
-&lt;li&gt;Polymer を学ぶ人が気軽に来て学習/相談できるコミュニティにしたい（ハンズオンするとかも）&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=7CUO7PyD5zA&amp;amp;amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf&amp;amp;amp;index=13&amp;amp;amp;t=4s"&gt;Web Components and the Polymer Project: Polymer 3.0 and beyond&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=we3lLo-UFtk&amp;amp;amp;index=16&amp;amp;amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf"&gt;PWA starter kit: build fast, scalable, modern apps with Web Components&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;Polymer で Web Components を作る意味として、個人的な想いを少し話しました。&lt;/p&gt;
+&lt;h4&gt;セッションで紹介されたサイトなど&lt;/h4&gt;
 
-&lt;p&gt;Webサイトを作るとき、昔からフレームワークやライブラリは、どんどん変わってきました。
-その中でライブラリの中心にいたのが jQuery だと思っています。もちろん今でも使われているし、
-サイトに簡単な部品を設置するには jQuery だったり、それをベースとした Bootstrap ライブラリを使ったりします。
-しかし、それらはモバイル端末で見ると十分なパフォーマンスを得られなかったり、他のフレームワークと衝突してしまう、といったことがおきたりします。&lt;/p&gt;
+&lt;h5&gt;Web Components and the Polymer Project: Polymer 3.0 and beyond&lt;/h5&gt;
 
-&lt;p&gt;Web Components は、ブラウザの低レベルのAPIを使うことで、フレームワークを超えて部品を共通化することが可能だと思っています。
-もちろん部品を組み合わせることでアプリケーションになることも可能です。
-今日 Shadow DOMなどのWeb Componentsの要素単位で見れば、主要フレームワークで利用可能な（標準サポートされている）ものもあります。
-ですので、そこでPolymerがという話ではなく、同じ会社でもプロジェクトによっては使うフレームワークが違っていたりすることはあるし、
-OSSでUI部品を公開するとき多くの人に使ってもらうには、特定のフレームワークに依存した形でなく webcomponents.org で共有するエコシステムみたいなのができたら良いなと思っています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://tabatkins.github.io/specs/css-shadow-parts/"&gt;CSS Shadow Parts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/w3c/webcomponents/issues/716"&gt;Custom Element Registers&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/domenic/package-name-maps"&gt;Package name maps&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;HTML Modules
 
-&lt;p&gt;このような視点で考えると、作るもののアイデアが jQueryやBootstrap であったものを置き換えたり、どこかのサイトで表示されているものを模したものだったりするなぁというのは、自然な流れに感じています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/w3c/webcomponents/issues/645"&gt;https://github.com/w3c/webcomponents/issues/645&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/PolymerLabs/html-modules-toolkit"&gt;https://github.com/PolymerLabs/html-modules-toolkit&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/…/gh…/proposals/Template-Instantiation.md"&gt;HTML Template Instantiation&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 
-&lt;h3&gt;#10で出たアイデアのおさらいと、新しいタグのブレスト&lt;/h3&gt;
+&lt;h5&gt;PWA starter kit: build fast, scalable, modern apps with Web Components&lt;/h5&gt;
 
-&lt;p&gt;&lt;code&gt;#10&lt;/code&gt; で出たアイデア以外に何かないか、新しい人も来ていたので、もう一度ブレストしました。
-まずあたりをつけたのが、日本のサービスでAPIを公開しているところはないか？それを使ってタグが作れないか？というところです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/Polymer/pwa-starter-kit"&gt;PWA Starter Kit&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/Polymer/pwa-helpers"&gt;pwa-helpers&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/…/pwa…/wiki/4.-Redux-and-state-management"&gt;Redux and state management&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/…/pwa-starte…/wiki/7.-Application-testing"&gt;Application testing&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/…/pwa-start…/wiki/5.-Building-&amp;amp;amp;-Deploying"&gt;Building &amp;amp; Deploying&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 
-&lt;p&gt;そうすると意外とAPIって開いてなかったり、開いていてもサイト上で使うものだったりして、利用規約が Web Components に向いていない（サイトにバナーなどを埋め込んでくださいなど）ことがありました。
-こういった利用規約は、Web Components 自体に入ってなくても良いような気がしますが、カスタムタグを利用する人に、どうやって守ってもらうかとか難しいなぁと。&lt;/p&gt;
+&lt;h3&gt;Polymer の過去/現在&lt;/h3&gt;
 
-&lt;p&gt;で、LINEの共有ボタンとかないねーとか、有り体な話題で終わるかと思っていたころ、1つの発想転換がありました。&lt;/p&gt;
+&lt;p&gt;Polymer 3.0 のリリースに関して、Polymer がいつ発案されて、どうやって進んできたのか、という話から始まりました。
+とても古いGoogle I/Oの写真を使ったりして、Web Components がどんな問題を解決しようとしていて、Chromeチームとしてどのように取り組んできたか、がわかります。&lt;/p&gt;
 
-&lt;h3&gt;今回採用した新しいアイデア&lt;/h3&gt;
+&lt;p&gt;ブラウザ/JavaScriptを中心としたフロントエンドのトレンドは変化が大きく、最初にWeb Componentsを発案したころと、現在では細かいところに問題が多く残っていたのは事実です。
+ただ一方でPWAに代表されるように、モバイルアプリでできることをブラウザでもできるようにする取り組みも、大きな進歩を遂げています。&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;埋め込みタグ&lt;/strong&gt; です。昔 jQuery とかでリンクにホバーすると、サイトの概要がポップアップされるようなものがあったのは覚えています。
-また、hatena とか使うとき、他の hatena 記事へリンクを貼ると、埋め込みタグ表示にできたりするじゃないですか。
-埋め込みタグがあるサービス、例えばTwitterやSlide系のサイトは良いのですが、自分のブログなどに埋め込みタグがないサイトのリンクとして &lt;strong&gt;埋め込みタグをつけれたら便利&lt;/strong&gt; というものです。&lt;/p&gt;
+&lt;p&gt;PolymerがGoogle内部でどのような位置付けになっているのかを図るのは難しいのですが、少なくとも多くのプロジェクトで利用されていることは間違いないです。&lt;/p&gt;
 
-&lt;p&gt;旅行に行ったブログを書くとき、レストラン行ったら食べログサイトの埋め込みタグを入れたいかもしれないし、ホテルや観光スポットの公式サイトの埋め込みタグを入れたいかもしれないです。
-単なるリンクよりも良いですよね！&lt;/p&gt;
+&lt;p&gt;そして「現在の最適解」がPolymer3であるわけです。
+動画の中でも &lt;code&gt;Too weird&lt;/code&gt; として紹介されていた、 polyfill/perceived silo/bower/HTML imports の解決に取り組んできたということです。&lt;/p&gt;
 
-&lt;p&gt;まずはじめにプロトタイプとしては、直接サイトのHTMLをもってきて meta タグの OGP を埋め込みタグ風に表示する（つまり自分のサイトに Facebook の共有表示を埋め込む感じ）のを目指します。
-HTMLだけならテキストでそれほど容量もないし、画像ほど重くはないと思っていますが、サービスとして探して見たら意外となかったりしたので、OGP情報だけをキャッシュするサービスを併せて作っても良いかなーとも思っています。&lt;/p&gt;
+&lt;p&gt;polyfill については、モバイルブラウザ（iPhoneならsafari/Androidならchrome）では、Polymer3.0の仕様であればpolyfillを必要としない対応状況です。
+perceived silo （自己中心的、というかWeb Components == Polymer みたいに受け取られていた批判みたいなもの）については、 
+&lt;a href="https://custom-elements-everywhere.com/"&gt;Custom Elements Everywhere&lt;/a&gt;でも公開されているとおり、AngularやVueなどPolymer以外のJavaScriptフレームワークでも利用できることがわかります。
+bowerについては、発案当時はフロントエンドでは非常に流行っていた、けど今はということで npm に。
+HTML importsの仕様化はあきらめ、多くのブラウザが実装する ES Module Import へと。&lt;/p&gt;
 
-&lt;p&gt;これ自分のブログにも埋め込みたいし、早く使いたいですw&lt;/p&gt;
+&lt;p&gt;そう、Web Components は、今日ではメインストリームになるのです。&lt;/p&gt;
+
+&lt;p&gt;一部のツールはまだPreviewですが、フィードバックを待っているということで、特に何もなければ大きな変化はなく、リリースになるのではないでしょうか？&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://custom-elements-everywhere.com/"&gt;lit-html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/Polymer/polymer-modulizer"&gt;polymer-modulizer&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;未来&lt;/h3&gt;
+
+&lt;p&gt;PWA Starter Kitで作れるアプリのコードを見るとわかるのですが、 lit-html を使うことで Polymer 感？みたいなのは非常に薄まります。PolymerElementじゃなくなるし。
+ただ lit-html は Polymer3 をベースに作られているし（互換性は少ないけど）、Polymerチームは多くの Web Components を公開しています。
+Polymerは、Web Components を使って課題を解決するのに役立つ下回りを整備してくれるライブラリやフレームワークとしてまだまだ価値があると思っています。&lt;/p&gt;
+
+&lt;p&gt;あとは、Polyemrチームが取り組んでいる、上記で紹介した今後の仕様に期待しています。
+特に &lt;code&gt;HTML Modules&lt;/code&gt; について、ES Module Import によって HTML部分が HTML in JavaScript になるわけです。
+「どうしてもHTMLで書けた方が良いじゃん！」というPolymerチームの意思というか（私もそうですが）HTML Importsはダメだったけど、これなら良いでしょ！私たちはHTMLで書きたいんですよ！愛が溢れています。&lt;/p&gt;
 
 &lt;h3&gt;次回は&lt;/h3&gt;
 
-&lt;p&gt;4/23(月) の予定です。&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;に今年の予定も書いてあるので参考にしてください。&lt;/p&gt;
+&lt;p&gt;6/25(月) の予定です。&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;に今年の予定も書いてあるので参考にしてください。&lt;/p&gt;
 
-&lt;p&gt;また、春と秋に1回ずつハンズオンもやりたいと思っています。
-&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt; のメールか、Facebookグループ &lt;a href="https://www.facebook.com/groups/416344608738146/"&gt;Polymer Japan&lt;/a&gt; などでのアナウンスをお待ちください。&lt;/p&gt;
+&lt;p&gt;PWA starter kit のハンズオンをやって、Polymer3 や lit-html を体験してみたいな、と思っています。&lt;/p&gt;
 </content>
   </entry>
   <entry>
-    <title>Polymer.co-edo meetup ＃11 を開催しました</title>
-    <link rel="alternate" href="http://blog.url.com/2018/02/27/polymer-co-edo-meetup-11.html"/>
-    <id>http://blog.url.com/2018/02/27/polymer-co-edo-meetup-11.html</id>
-    <published>2018-02-27T06:24:00Z</published>
-    <updated>2018-02-28T08:43:23+09:00</updated>
+    <title>初夏のJavaScript祭 in サーキュレーションビル ForPro で Polymer3.0 の LT をしました</title>
+    <link rel="alternate" href="http://blog.url.com/2018/05/20/jsfest-2018-spring.html"/>
+    <id>http://blog.url.com/2018/05/20/jsfest-2018-spring.html</id>
+    <published>2018-05-20T02:34:00Z</published>
+    <updated>2018-06-23T15:39:24+09:00</updated>
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;p&gt;今年2回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/70895"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
+    <content type="html">&lt;p&gt;&lt;a href="https://javascript-fes.doorkeeper.jp/events/73314"&gt;5/19に開催されたJavaScript祭りに参加しました&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;今回の議題は&lt;/p&gt;
+&lt;p&gt;&lt;img src="/images/blog/jsfes_2018_spring.png" /&gt;&lt;/p&gt;
 
-&lt;blockquote&gt;
-&lt;p&gt;Web Componentsを作るにあたり、いくつか必要な開発ツールがあるので、その解説と体験がメインになります。&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;p&gt;今回もためになるセッションが多く、とても良いイベントでした。
+いつもと同様にLT枠へ申し込み、この半年でおきたPolymerのアップデートを発表しました。&lt;/p&gt;
 
-&lt;p&gt;ということで、必要なツールと、その使い方／書き方について学習しました。&lt;/p&gt;
+&lt;p&gt;通常のセッションで &lt;code&gt;実践ES Modules&lt;/code&gt; というのがあったのですが、予想外に Web Components の話をたくさんしてもらえたので、LTでは基本的な話には触れずにスムーズにできたのは助かりました。&lt;/p&gt;
 
-&lt;ul&gt;
-&lt;li&gt;polymer-cli の使い方&lt;/li&gt;
-&lt;li&gt;polymer test を使ってみよう&lt;/li&gt;
-&lt;/ul&gt;
+&lt;script async class="speakerdeck-embed" data-id="7c0eabdcbfb14b24bf29e7258cc6f1e2" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
 
-&lt;h3&gt;開発環境をととのえる&lt;/h3&gt;
+&lt;p&gt;今年もGoogle I/O 2018が終わった後（昨年もGoogle I/Oの直後）だったということもあり、その発表をふまえた内容にできました。
+Polymerとはどうなるのか？Polymer3.0はどういった課題を解決するのか？ということを中心に話しました。&lt;/p&gt;
 
-&lt;p&gt;ちょうど少し前に&lt;a href="https://www.youtube.com/user/ChromeDevelopers/"&gt;YouTubeのGoogle Chrome Developersチャンネル&lt;/a&gt;に&lt;a href="https://www.youtube.com/user/ChromeDevelopers/search?query=Building+an+Element+in+Polymer2"&gt;Building an Element in Polymer 2という動画シリーズ1から5&lt;/a&gt;がアップされました。
-こちらの動画は英語ですが、字幕をONにして日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください。&lt;/p&gt;
+&lt;script async class="speakerdeck-embed" data-id="49d21395e0fe4edd9d038b760c5de894" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
 
-&lt;p&gt;今回は&lt;a href="https://www.youtube.com/watch?v=NU4TGxYZEjs"&gt;Building an Element in Polymer 2: Install Tools &amp;amp; Initialize Project (Part 1 of 5)&lt;/a&gt;が議題とマッチしていたので、一旦ビデオを見ならが進めました。&lt;/p&gt;
+&lt;p&gt;Polymer はどこへ向かうのか、5/28 には &lt;code&gt;Polymer.co-edo&lt;/code&gt; で、Google I/O の動画を見ながら語る会をやります（予定）ので、ぜひ参加ください！&lt;/p&gt;
 
-&lt;p&gt;はじめに &lt;code&gt;polymer-cli&lt;/code&gt; をインストールしましょう。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;&lt;code&gt;$ npm install -g polymer-cli
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;動画の中でも言っていますが、いろいろなものが入るので、結構時間がかかります。&lt;/p&gt;
-
-&lt;p&gt;次に &lt;code&gt;bower&lt;/code&gt; をインストールします。&lt;/p&gt;
-&lt;pre class="highlight plaintext"&gt;&lt;code&gt;$ npm install -g bower
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;polymer help&lt;/code&gt; や &lt;code&gt;bower help&lt;/code&gt; などを実行して、コマンドが正常にインストールされているか確認しましょう。&lt;/p&gt;
-
-&lt;h3&gt;自動テストのしくみ&lt;/h3&gt;
-
-&lt;p&gt;Polymer はテストコマンドとして &lt;code&gt;polymer test&lt;/code&gt; を用意しています。
-このコマンドは、&lt;a href="https://github.com/Polymer/polymer-cli"&gt;polymer-cliのリポジトリ&lt;/a&gt;で&lt;a href="https://github.com/Polymer/polymer-cli/blob/master/src/commands/test.ts"&gt;ソースコード&lt;/a&gt;を読むとわかりますが、このコマンドは&lt;a href="https://github.com/Polymer/web-component-tester"&gt;web-component-tester&lt;/a&gt;へのエイリアスとなっています。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;web-component-tester&lt;/code&gt; は Polymerチームによって開発されていますが、Polymer用というわけではなく、Web Components をテストするために既存のテスティングフレームワークを統合したものです。
-&lt;a href="https://github.com/Polymer/web-component-tester/blob/master/README.md"&gt;README&lt;/a&gt;にも書いてあるとおり、フロントエンドやNode.jsでは馴染みのある、以下のようなツールを使って構成されています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a title="Mocha Test Framework" href="http://mochajs.org/"&gt;Mocha&lt;/a&gt; as a test framework.&lt;/li&gt;
-&lt;li&gt;&lt;a title="Chai Assertion Library" href="http://chaijs.com/"&gt;Chai&lt;/a&gt; assertions.&lt;/li&gt;
-&lt;li&gt;&lt;a title="Async.js" href="https://github.com/caolan/async"&gt;Async&lt;/a&gt; to keep your sanity.&lt;/li&gt;
-&lt;li&gt;&lt;a title="Lo-Dash" href="https://lodash.com/"&gt;Lodash&lt;/a&gt; (3.0) to repeat fewer things.&lt;/li&gt;
-&lt;li&gt;&lt;a title="Sinon.JS" href="http://sinonjs.org/"&gt;Sinon&lt;/a&gt; and &lt;a title="Chai assertions for Sinon" href="https://github.com/domenic/sinon-chai"&gt;sinon-chai&lt;/a&gt; to test just your things.&lt;/li&gt;
-&lt;li&gt;&lt;a title="Easy DOM fixture testing" href="https://github.com/PolymerElements/test-fixture"&gt;test-fixture&lt;/a&gt; for easy fixture testing with &lt;code&gt;&amp;lt;template&amp;gt;&lt;/code&gt; tags.&lt;/li&gt;
-&lt;li&gt;&lt;a title="A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page." href="https://github.com/GoogleChrome/accessibility-developer-tools"&gt;accessibility-developer-tools&lt;/a&gt; through &lt;code&gt;a11ySuite&lt;/code&gt; for simple, automated Accessibility testing.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;テストスイートの書き方は、Mocha でテストを書いたことがあれば、それほど違和感はないと思います。
-Web Components をテストするのに、追加されているのが test-fixture で、テストするエレメントのテンプレートを複数定義しておき、テストで必要な時だけDOMへ追加できます。&lt;/p&gt;
-
-&lt;p&gt;またWebサイトはアクセシビリティにも配慮すべきなので、a11ySuite で自動的に問題がないかどうかを検証できます。
-参考サイト：&lt;a href="https://html5experts.jp/shumpei-shiraishi/24671/"&gt;Webアプリのアクセシビリティを追求せよ！「インクルーシブ」なマークアップを議論しながら学んでみた&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;web-component-tester はブラウザを起動してテストを行います。Web Componentsはブラウザの上で動作することを確認することが重要だからです。
-しかし、さまざまなブラウザやOSのバージョンマトリクスを用意するのは困難です。
-そこで&lt;a href="https://saucelabs.com/"&gt;Sauce Labs&lt;/a&gt;のようなマルチOS/マルチブラウザで動作できるSaaSを利用するのが良いでしょう。
-テスト困難はお金で解決できます。
-web-component-testerでは、そのためのプラグインが標準で用意されているので、Sauce Labsならすぐに利用できます。
-私は&lt;a href="http://www.browserstack.com/"&gt;Browserstack&lt;/a&gt;を使いたい！、という場合は、&lt;a href="https://github.com/hotforfeature/wct-browserstack"&gt;Browserstack用プラグイン&lt;/a&gt;がOSSで公開されているので、試してみてください。&lt;/p&gt;
-
-&lt;p&gt;また、テストで起動するブラウザは、自動的に判定されるので、特定のブラウザだけ実行したい場合などは、&lt;code&gt;wct.conf.json&lt;/code&gt; というファイルを作ってREADMEを参考に設定します。&lt;/p&gt;
-
-&lt;p&gt;もちろんCIでの実行にも配慮されていて、 Gulp や Grunt から実行するインターフェースも用意されています。&lt;/p&gt;
-
-&lt;h3&gt;テストを実行してみる&lt;/h3&gt;
-
-&lt;p&gt;実際にどうやってテストが実行されるのか、既存のエレメントで確認しました。
-利用したエレメントは、以下の2つです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://github.com/PolymerElements/paper-progress"&gt;PolymerElements/paper-progress&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/PolymerElements/gold-email-input"&gt;PolymerElements/gold-email-input&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;どちらも、以下の手順でテストを実行できます。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;git clone&lt;/code&gt; する&lt;/li&gt;
-&lt;li&gt;clone 先にディレクトリを移動&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;bower install&lt;/code&gt; を実行&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;polymer test&lt;/code&gt; を実行&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;端末にインストールされているブラウザが自動的に起動して、テストが実行されます。
-起動したブラウザは、2ペインになっていて、左側にテスト中のDOM、右側にはテスト結果が表示されます。&lt;/p&gt;
-
-&lt;h3&gt;既存のエレメントから、基本的なテストの書き方を学ぼう&lt;/h3&gt;
-
-&lt;p&gt;それぞれのリポジトリのテストコードを読んで、テストコードの書き方を学びます。&lt;/p&gt;
-
-&lt;p&gt;まず、どちらのリポジトリも、ルートディレクトリに &lt;code&gt;test&lt;/code&gt; というディレクトリがあります。
-web-component-testerはデフォルトで、このディレクトリ名を利用するので、よほどのことがない限りこの名前を利用します。&lt;/p&gt;
-
-&lt;p&gt;次に test ディレクトリには index.html と、それ以外のテストファイル（複数でも、サブディレクトリでも）を配置します。
-まず index.html が読み込まれるので、テストスイートを初期化します。
-ほとんどの Web Components で書き方はコピペで良く、変更が必要なのは title タグと、以下のテストスイートに列挙するファイルの一覧だけです。&lt;/p&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="nx"&gt;WCT&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;loadSuites&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
-      &lt;span class="s1"&gt;'basic.html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="s1"&gt;'basic.html?dom=shadow'&lt;/span&gt;
-    &lt;span class="p"&gt;]);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;重要なこととして、web-component-testerは、デフォルトでは Shadow DOM をOFFにしてテストを実行します。つまり 1行目の &lt;code&gt;basic.html&lt;/code&gt; は Shady DOM でテストが実行されます。
-もし、Shadow DOM でもテストしたい場合は、2行目のようにパラメータを追加する必要があります。&lt;/p&gt;
-
-&lt;h4&gt;テストヘルパーの役割&lt;/h4&gt;
-
-&lt;p&gt;実際のテストコードを見ると、以下のようなテストヘルパーをインクルードしています。&lt;/p&gt;
-&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"../../iron-test-helpers/test-helpers.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"../../iron-test-helpers/mock-interactions.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;テストヘルパーを導入すると、テストコードを書くのが容易になります。
-代表的なヘルパーメソッドを紹介します。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;flushAsynchronousOperations : Custom Elements のライフサイクルコールバックを強制的に実行します&lt;/li&gt;
-&lt;li&gt;forceXIfStamp : &lt;code&gt;dom-if&lt;/code&gt; を利用しているとき、データバインディングで変更された値の再描画を強制的に実行します。通常はライフサイクルコールバックに入り、非同期で書き換わります&lt;/li&gt;
-&lt;li&gt;pressSpace : 指定したエレメント上でスペースキーが押されたことをエミュレーションします&lt;/li&gt;
-&lt;li&gt;tap : 指定したエレメントでタップ操作をエミュレーションします&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらの操作は、ヘルパーなしに書くと冗長だったり、それだけで疲れてしまうものですが、ヘルパーを利用することでタグ本来の挙動を確認することに集中できます。&lt;/p&gt;
-
-&lt;p&gt;また、paper-progress のようにCSSアニメーションを利用する Web Components のテストでは、asyncPlatformFlush を使っています。
-&lt;a href="https://github.com/Polymer/web-component-tester/blob/ed21e16c1b91da0e9a64b32af7f726b3c8613a0d/browser/environment/helpers.ts#L162"&gt;このメソッドは web-component-tester で定義されています&lt;/a&gt;が、現時点では DEPRECATED なので、 &lt;code&gt;flush&lt;/code&gt; を利用することが推奨されています。&lt;/p&gt;
-
-&lt;p&gt;flush は flushAsynchronousOperations と似ていますが、コールバックで呼び出されるか、同期実行になるかが異なります。
-&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#hybrid-elements-test-local-dom"&gt;公式ドキュメントでは flush を利用するように書いている&lt;/a&gt;ので、flushを使って書いた方が良いでしょう。
-&lt;code&gt;dom-if&lt;/code&gt; や &lt;code&gt;dom-repeat&lt;/code&gt; などデータバインディングの結果としてDOMの構造が書き換わる場合、変更は非同期で実行されるため、必ず flush が必要です。
-私もプロダクション開発のテストコードでは、頻繁に flush を使うことがあります。&lt;/p&gt;
-
-&lt;h4&gt;それ以外のテストのTIPS&lt;/h4&gt;
-
-&lt;p&gt;今回はこのあたりで終了時間が少なくなったので、公式ドキュメントで案内されているテストの書き方について、いくつか解説しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-methods"&gt;エレメントのメソッドをスタブする方法&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-elements"&gt;エレメント自体をスタブする方法&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.polymer-project.org/2.0/docs/tools/tests#ajax"&gt;Ajaxのテスト方法&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらは実際にテストを書くと必要になるので、TIPSとしてリンクを残しておきます。&lt;/p&gt;
-
-&lt;h3&gt;FAQ&lt;/h3&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;サーバーサイド言語の単体テストは、メソッドを実行して戻り値などを検証するけど、Web Components はプロパティで値を指定して、描画後の状態を取得して検証するの？&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;基本的には、そのような解釈でも問題ないです。
-ただし Web Components にはメソッドも定義できるので、こちらはサーバサイドのテストと同様に記述することも可能です（実際そういう需要があるかは別として）。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;仮想環境を使っていると面倒&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;たしかに web-component-tester はブラウザを起動して Selenium(Web Driver)を使ってテストするので Vagrant や Virtualbox を使った開発環境ではやりずらいです。
-なるべくホストOSの環境で開発するのがオススメです。&lt;/p&gt;
-
-&lt;h3&gt;次回は&lt;/h3&gt;
-
-&lt;p&gt;3/26(月) の予定です。&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;に今年の予定も書いてあるので参考にしてください。&lt;/p&gt;
-
-&lt;p&gt;いよいよ、実際に今回アイデア出ししたエレメントを作っていきたいと思います。
-今後もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
-新しいエレメントのアイデアも募集しています。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;写真忘れなかったw！&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/20180226_211052344.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;ワークショップの解説をしている私と参加者、という雰囲気です。&lt;/p&gt;
-
-&lt;!-- References --&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS</title>
-    <link rel="alternate" href="http://blog.url.com/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html"/>
-    <id>http://blog.url.com/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html</id>
-    <published>2018-02-16T03:36:00Z</published>
-    <updated>2018-02-18T17:43:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://qiita.com/sizuhiko/items/6d3f2c356303b75cb86c"&gt;Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS&lt;/a&gt;をいう記事をQiitaに投稿しました。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Dialogflow V1 API Webhook アプリを V2 対応できるミドルウェアを作った</title>
-    <link rel="alternate" href="http://blog.url.com/2018/02/06/dialogflow-v2.html"/>
-    <id>http://blog.url.com/2018/02/06/dialogflow-v2.html</id>
-    <published>2018-02-06T03:41:00Z</published>
-    <updated>2018-02-18T17:43:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;みなさんスマートホーム使っていますか？
-これからはスマートホームの時代ですね（棒）&lt;/p&gt;
-
-&lt;p&gt;ということで、今日本では一番売れているというGoogleHomeのアプリを(Actions on Googleを使って)作ってみようと思うと以下の選択肢があります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Dialogflow
-
-&lt;ul&gt;
-&lt;li&gt;GUIから音声対話を構築してアシスタントアプリを作成する&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Smart home
-
-&lt;ul&gt;
-&lt;li&gt;IoT機器（家電）を操作するアシスタントアプリを作成する（昔の呼び名で言うところのダイレクトアクション）&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Actions SDK
-
-&lt;ul&gt;
-&lt;li&gt;SDKとコマンドラインを使ってアシスタントアプリを作成する&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Converse.AI
-
-&lt;ul&gt;
-&lt;li&gt;Dialogflowと似ているけど違うサービスでアシスタントアプリを作成する&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Trivia
-
-&lt;ul&gt;
-&lt;li&gt;トリビアアプリを作るためのテンプレート&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Personality Quiz
-
-&lt;ul&gt;
-&lt;li&gt;クイズアプリを作るためのテンプレート&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Flash Cards
-
-&lt;ul&gt;
-&lt;li&gt;アシスタントアプリ学習用のフラッシュカードテンプレート&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;まぁおおよそは、以下から選択するわけですが、違いがあります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Dialogflow（構文解析/機械学習機能がある）&lt;/li&gt;
-&lt;li&gt;Actions SDK（構文解析などは自分でやる必要がある）&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;後者はガチで、前者は簡単にサービスを開始できます。
-この記事は、前者のDialogflowについて書いていきます。&lt;/p&gt;
-
-&lt;h3&gt;Dialogflow&lt;/h3&gt;
-
-&lt;p&gt;もともとは &lt;code&gt;Api.ai&lt;/code&gt; というサービスで Google が買収しました。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;参考記事：&lt;a href="https://robotstart.info/2017/10/17/google-dialogflow-api-ai.html"&gt;Googleに買収された自然言語対話プラットフォーム「API.AI」が「Dialogflow」に名称変更！&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;GoogleHomeのアプリは以下のような流れで実行されます。&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;GoogleHome（マイク）&lt;/li&gt;
-&lt;li&gt;Googleアシスタント（音声→テキスト = Speach to Texxt = STT）&lt;/li&gt;
-&lt;li&gt;Dialogflow（構文解析/学習）&lt;/li&gt;
-&lt;li&gt;Webhook（必須ではないけど、独自のロジックを書くなら呼べる）&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;で、来た道を戻り、&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;WebhookまたはDialogflowからテキストを返却&lt;/li&gt;
-&lt;li&gt;Googleアシスタント（テキスト→音声 = Text to Speach = TTS）&lt;/li&gt;
-&lt;li&gt;GoogleHome（スピーカー）&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;で私たちは音声を聞くことができるのです。&lt;/p&gt;
-
-&lt;p&gt;Dialogflow単体でいうと、Googleアシスタントだけではなく、LINEやSlackのBOTも作れます。&lt;/p&gt;
-
-&lt;p&gt;※より詳しく何ができるのかは &lt;a href="https://qiita.com/tags/dialogflow"&gt;QiitaのDialogflowタグ記事一覧&lt;/a&gt; を参照ください。&lt;/p&gt;
-
-&lt;h3&gt;Dialogflow API&lt;/h3&gt;
-
-&lt;p&gt;DialogflowにはAPIがあり、主な利用用途は以下のとおりです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;GUIを使わずにCLIから操作できる
-
-&lt;ul&gt;
-&lt;li&gt;クライアントアプリを作る&lt;/li&gt;
-&lt;li&gt;アプリの設定を自動化する&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Webhookのインターフェース&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;現在の安定板はV1ですが、V2がbeta1として存在しています。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://dialogflow.com/docs/reference/v2-comparison"&gt;V1とV2の違いは公式サイトに書かれています&lt;/a&gt;。&lt;/p&gt;
-
-&lt;p&gt;また、DialogflowにはEnterprise Edition(現在はベータ版)というのがあって、商用アプリを作る人にはきになるところです。
-&lt;a href="https://cloud.google.com/dialogflow-enterprise/quotas?hl=ja"&gt;Dialogflowの割り当てと制限&lt;/a&gt;を見るとわかるように、Standard Edition（無料版）には制限があります。
-ただし制限だけに限っていうと、先ほどのV1とV2の違いページに書かれているのですが、&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Note: These quotas are not applied to requests coming from Google Assistant integration used with Standard Edition agents.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Googleアシスタント経由で使っている分には、Standard Editionでも制限はないということです。&lt;/p&gt;
-
-&lt;h3&gt;なぜV2を使うのか&lt;/h3&gt;
-
-&lt;p&gt;たとえば以下のような作業はV1ではできません&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Dialogflowプロジェクト設定のimport/exportを自動化する（デプロイを自動化するのに必要）&lt;/li&gt;
-&lt;li&gt;Enterprise Editionにとにかく加入して安心したい？（Enterprise Editionは V2 API が必須です）&lt;/li&gt;
-&lt;li&gt;LINEやSlackのBOTを作りたいけど、制限を解除したい&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;また、DialogflowのWebhookアプリを作るのには、以下の2つから選択します。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;JSONを直接やりとりする&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/actions-on-google/actions-on-google-nodejs"&gt;Node.jsの公式ライブラリ&lt;/a&gt;を使う&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;当然、後者の方が簡単にアプリを作成できるので、宗教上の理由でNode.js使いたくないという理由がなければ後者の方が良いですね。
-ただしリンク先のGitHubみればわかりますが、現時点は &lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Please note that Dialogflow v2 is not currently supported by this client library.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;ということです。&lt;/p&gt;
-
-&lt;h3&gt;とりあえず作ってみた&lt;/h3&gt;
-
-&lt;p&gt;いろいろなことがあって、現時点V2使わないといけないかもしれない。
-でもV1にも簡単に戻れるようにしたい、みたいな「ふわっとした」状況ってあるじゃないですか。&lt;/p&gt;
-
-&lt;p&gt;Dialogflowのデプロイも自動化したいよね、とか。&lt;/p&gt;
-
-&lt;p&gt;ということで簡単に「お試し」できるように、リクエストとレスポンスのJSONをV2/V1変換するミドルウェアを作りました。
-ミドルウェアにしたのは簡単に取り外せるようにするためです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://www.npmjs.com/package/dialogflow-fulfillment-v2-middleware"&gt;NPM: dialogflow-fulfillment-v2-middleware&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/sizuhiko/dialogflow-fulfillment-v2-middleware"&gt;GitHub: dialogflow-fulfillment-v2-middleware&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;V1のアプリは以下のようなコードになります。&lt;/p&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;DialogflowApp&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'actions-on-google'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;welcome&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./actions/welcome'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;actionMap&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Map&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;actionMap&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'input.welcome'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;welcome&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;dialogflow&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;DialogflowApp&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="na"&gt;request&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;response&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="nx"&gt;dialogflow&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;handleRequest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;actionMap&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;V2のアプリにしたい場合は、エントリポイントのJSだけを変更して、以下のようにすることを想定しています。&lt;/p&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;DialogflowApp&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'actions-on-google'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;connect&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'connect'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;dialogflowV2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./dialogflow-fulfillment-v2-middleware'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;welcome&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./actions/welcome'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;actionMap&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Map&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;actionMap&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'input.welcome'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;welcome&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;use&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;dialogflowV2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;v2to1&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;use&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;dialogflow&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;DialogflowApp&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;&lt;span class="na"&gt;request&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;response&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="nx"&gt;dialogflow&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;handleRequest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;actionMap&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-
-&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;dialogflowV2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;v1to2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;response&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;a href="https://www.npmjs.com/package/connect"&gt;connect&lt;/a&gt;というミドルウェアレイヤーを使って、DialogflowのWebhookアプリでミドルウェアを使えるようにしています。
-これはGoogle Cloud Functionsを使った場合の想定で、AWS Lambdaを使った場合は、expressとか使うと思うので、expressのミドルウェアとして差し込んでもらえれば大丈夫です。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;v2to1() V2リクエストをV1リクエストに変換するミドルウェア&lt;/li&gt;
-&lt;li&gt;v1to2(response) V1レスポンスをV2レスポンスに変換するラッパー&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;2つのAPIがPublicになっています。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;JSONを変換するだけの簡単な実装ですが、手元のアプリではV2に切り替えてもうまく動作しました。&lt;/p&gt;
-
-&lt;p&gt;まだテストコードとかないので、Pull Requestお待ちしております（もちろんそのうち書く予定ですが&amp;hellip;）。&lt;/p&gt;
-
-&lt;p&gt;うまく動作しない！などあれば、Issueで報告ください（日本語でOK）。&lt;/p&gt;
+&lt;p&gt;会場の サーキュレーションビル ForPro は、BEAMS のオフィスを射抜きで使わせてもらったということで、オシャレ感が半端なかったのですが、
+原宿駅からの移動が竹下通りを抜けていくので、ライフが半端なく削られました。
+おっさんに原宿はつらい&amp;hellip;&lt;/p&gt;
 </content>
   </entry>
 </feed>
