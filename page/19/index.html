@@ -275,7 +275,114 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2008/11/11/flex2-coverflow-8-amazon.html">Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する</a></h2>
+            <h2 class="title"><a href="/2009/03/07/cakephp-tokyo.html">CakePHPハンズオン＠Tokyo#2が実施されました。</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/03/07.html">Saturday, March 07, 2009 11:03:25 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://events.php.gr.jp/events/show/70">CakePHPハンズオン＠Tokyo#2</a>にサポーターとして参加してきました。  </p>
+
+<p>えーXAMPP方面でいくらかヘルプできたかな？と。  </p>
+
+<p>後は皆さん以外とスムーズに進んでいたようで、感心が高く事前に予習している感がありました。すごーい。  </p>
+
+<p>反省としては、あんまり本のCMができなかったことでしょうか:ko:   </p>
+
+<p>来週九州でCakePHP勉強会があるので、共著の皆様に宣伝をお願いする事にします・・・</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPハンズオン＠Tokyo#2が実施されました。" data-url="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html&t=CakePHP%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%EF%BC%A0Tokyo%232%E3%81%8C%E5%AE%9F%E6%96%BD%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2009/02/04.html">Wednesday, February 04, 2009 10:02:22 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/authcomponent.html">AuthComponent</a>
+    
+      <a rel="tag" href="/tags/cakephp1-2-1.html">CakePHP1.2.1</a>
+    
+      <a rel="tag" href="/tags/scaffold.html">Scaffold</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;先日セキュリティアップデートとして、1.2.0から1.2.1に更新されたのは、皆さんご存知のことと思います。  </p>
+
+<p>で、昨日やっとこさ1.2.1を使い始めたら、なんとAuthでログインしてなくてもscaffoldのアクションが動いちゃうじゃないですか！！。これはまずい。。  </p>
+
+<p>なお肝心のセキュリティアップデートは、<a href="http://cakephp.jp/modules/newbb/viewtopic.php?topic_id=1696&amp;amp;forum=1&amp;amp;post_id=4032#forumpost4032">CakePHP 1.2.1.8004へアップデート推奨</a>からリンクされている「<a href="https://trac.cakephp.org/changeset/7979">Changeset 7979</a>」の差分のようなので、今回の回避策を使っても、問題なさそうだと判断しています。まぁscaffold使ってなければ関係ないのですけどね。  </p>
+
+<p>で、問題の箇所はAuthComponent::startup()で</p>
+<pre class="highlight plaintext"><code>$isErrorOrTests = (
+    strtolower($controller-&gt;name) == 'cakeerror' ||
+    (strtolower($controller-&gt;name) == 'tests' &amp;&amp; Configure::read() &gt; 0) ||
+    !in_array($controller-&gt;params['action'], $controller-&gt;methods)
+);
+if ($isErrorOrTests) {
+    return true;
+}
+</code></pre>
+
+<p>という箇所があるのですが、</p>
+<pre class="highlight plaintext"><code>!in_array($controller-&gt;params['action'], $controller-&gt;methods)
+</code></pre>
+
+<p>というコードの「$controller-&gt;methods」にはscaffoldのアクションが含まれていないんですよね。なんでコントローラにそんなメソッドないよエラーページに遷移しようとして、ログイン画面には遷移しないんですが、ほんとのところはscaffoldに遷移して、一覧・追加・変更・削除ができちゃうというトホホな感じです。  </p>
+
+<p>なのでscaffoldをAuthのログイン傘下で使っている人は、Authから$controller-&gt;methodsに含まれているかどうかチェックは外してしまいましょう。  </p>
+
+<p>これから本家のTracにチケットを書くとします。。。  </p>
+
+<p>その後、あっさり本家から「Bakeしてね」とやんわり修正を断られてしまったので、Auth使う人はscaffold使わないか、$controller-&gt;methodsにbeforeFilterでscaffoldAction追加するとか（たぶんこれは良くないけど）、Authを継承して変えちゃう（startupの前でscaffoldActionをarray_mergeして、戻ってきたら元の値に戻せば・・・まぁ、どうか？というのもありますけど）とか、まぁいろいろ策はあるかな？と思います。  </p>
+
+<p>PS: この、$controller-&gt;methodsですが、どこで使ってんの？と調べてみたら、dispatcherとauthだけでした。dispatcherは当然として、なんでauthが！？？という不思議な感は否めないのですが、こればっかりは仕方ないですね。今後使うところ増えるかもしれないし。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項" data-url="http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html&t=CakePHP1.2.1.8004%20%E3%81%A7%20Auth%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%A8Scaffold%E3%82%92%E4%BD%B5%E7%94%A8%E3%81%99%E3%82%8B%E9%9A%9B%E3%81%AE%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/11/11/flex2-coverflow-8-amazon.html">Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2008/11/11.html">Tuesday, November 11, 2008 11:11:39 AM</a></p>
   <p class="tags">
     
@@ -780,179 +887,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/08/25.html">Monday, August 25, 2008 11:08:41 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/coverflow.html">CoverFlow</a>
-    
-      <a rel="tag" href="/tags/flex.html">Flex</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第七回は、マウスイベントを取得する手順を整理します。  </p>
-
-<h3>■今回サンプルの完成イメージ</h3>
-
-<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
-
-<p>前回はスクロール処理とアニメーション効果を付けてみました。今回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して変更していきます。今回は、mxmlファイルのみ修正していきます。  </p>
-
-<h3>■ファイルの準備</h3>
-
-<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_7/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
-
-<ul>
-<li>reflector.as3proj</li>
-<li>reflector.mxml</li>
-<li>ImageReflector.as</li>
-<li>TransformUtil.as</li>
-</ul>
-
-<p>前回から修正したのは、reflector.mxmlだけです。  </p>
-
-<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
-
-<h3>■マウスの基本動作はクリックと移動</h3>
-
-<p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
-<pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
-      paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
-      mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
-      mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
-</code></pre>
-
-<p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
-
-<ol>
-<li><p>mouseUp : マウスのボタンが押された後、放されたときに発生する  </p></li>
-<li><p>mouseDown : マウスとボタンが押されたときに発生する  </p></li>
-<li><p>mouseMove : マウスポインターが動いたときに発生する  </p></li>
-<li><p>mouseOut : マウスポインターがHBOXから出たときに発生する  </p></li>
-</ol>
-
-<p>のような意味を持っています。</p>
-
-<h3>■マウスがどこで操作されたのか調べる</h3>
-
-<p>マウスイベントは表示領域で取得しますが、対象のHBOXには様々な子コントロールが含まれています。本サンプルで使っているのは</p>
-
-<ul>
-<li>カバー写真</li>
-<li>横スクロールバー</li>
-</ul>
-
-<p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
-料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
-<pre class="highlight plaintext"><code>if(event.target.parent is HScrollBar)
-</code></pre>
-
-<p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
-
-<h3>■マウスが領域外に出たときを考慮する</h3>
-
-<p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
-
-<p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
-<pre class="highlight plaintext"><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
-</code></pre>
-
-<p>のように、記述します。  </p>
-
-<p>似たイベントで、MouseEvent.ROLL_OUTがありますが、これはHTMLの:hoverのような実装をする際に使うイベントです。つまり対象のコントロールの上に来た・離れたというのを制御します。</p>
-
-<h3>■クロスドメインの注意事項</h3>
-
-<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
-
-<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
-
-<p>まずPHPのコードは過去記事を参考にしてください。  </p>
-
-<h3>■次回予告</h3>
-
-<p>画像間の隙間をなくして、ホンモノのように画像が重なって表示されている効果を実装してみます。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する" data-url="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%97)%20%EF%BD%9E%E3%83%9E%E3%82%A6%E3%82%B9%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html">本日、無事発売されました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2008/07/25.html">Friday, July 25, 2008 05:07:10 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
-    
-      <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;「Webアプリケーションテスト手法」という本を共著しました。「SimpleTestによるPHPのテスト」というお題で、PHPの自動テストについて書きました。実はこの本は紆余曲折あったのですが、まさに”無事”という言葉が当てはまります。何はともあれ拍手！パチパチ　:cheers:   </p>
-
-<p><a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;amp;s=books&amp;amp;qid=1216973795&amp;amp;sr=8-2"><img src="http://images.amazon.com/images/P/4839924309.09._PC_SCMZZZZZZZ_.jpg" /></a></p>
-
-<p>で、SimpleTestとはxUnit系のテスティングフレームワークなんで。assertEqual()とかあるわけですが、本家のWebサイトや自身のテストコードが</p>
-<pre class="highlight plaintext"><code>assertEqual($hoge, 'Hello');
-</code></pre>
-
-<p>みたいになってるんで、本もそのとおりにしています。  </p>
-
-<p>本当なら、</p>
-<pre class="highlight plaintext"><code>assertEqual('Hello', $hoge);
-</code></pre>
-
-<p>とassertEqual(期待値, 戻り値);みたいに書きたいわけですが、まぁ大きな問題ではないです。  </p>
-
-<p>と、思ってCakePHPのテストコードを見てみたら、やっぱりassertEqual(戻り値, 期待値);のほうになってるんですね。SimpleTestベースに使っているから、そのままなんだと思います。  </p>
-
-<p>PHPUnitは、assertEqual(期待値, 戻り値);になってますね。テストコード見ると、SimpleTestベースなのかPHPUnitベースなのかわかるという副作用もありますが。。。。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="本日、無事発売されました" data-url="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html&t=%E6%9C%AC%E6%97%A5%E3%80%81%E7%84%A1%E4%BA%8B%E7%99%BA%E5%A3%B2%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1017,6 +951,10 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a> <span>2018/07/28</span></li>
+                
+                  <li><a href="/2018/07/02/polymer-co-edo-meetup-15.html">Polymer.co-edo meetup</a> <span>2018/07/02</span></li>
+                
                   <li><a href="/2018/06/11/brackets-prettier-extention.html">Brackets prettier 拡張を作ってみた</a> <span>2018/06/11</span></li>
                 
                   <li><a href="/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">cakephp-fabricate-adaptor を CakePHP3.6 対応しました</a> <span>2018/06/10</span></li>
@@ -1032,10 +970,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                   <li><a href="/2018/05/06/polymer-co-edo-day-2018.html">Polymer.co-edo day 2018 春 を開催しました</a> <span>2018/05/06</span></li>
                 
                   <li><a href="/2018/04/10/asucon-2018.html">明日の開発カンファレンス2018を開催します</a> <span>2018/04/10</span></li>
-                
-                  <li><a href="/2018/03/27/polymer-co-edo-meetup-12.html">Polymer.co-edo meetup ＃12 を開催しました</a> <span>2018/03/27</span></li>
-                
-                  <li><a href="/2018/02/27/polymer-co-edo-meetup-11.html">Polymer.co-edo meetup ＃11 を開催しました</a> <span>2018/02/27</span></li>
                 
               </ul>
             </div>
@@ -1509,7 +1443,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                 
                   
                   
-                    <li class="size1">
+                    <li class="size2">
                       <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
                     </li>
                   
@@ -1533,13 +1467,25 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
+                    </li>
+                  
                   
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/iot.html">IoT</a>
+                    </li>
+                  
                   
                 
                   
+                  
+                    <li class="size0">
+                      <a rel="tag" href="/tags/wot.html">WoT</a>
+                    </li>
                   
                   
                 
@@ -1607,6 +1553,10 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                   
                   
                 
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1615,7 +1565,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2018.html">2018</a> (14)</li>
+                  <li><a href="/2018.html">2018</a> (16)</li>
                 
                   <li><a href="/2017.html">2017</a> (7)</li>
                 
