@@ -1,5 +1,5 @@
 ---
-title: Polymer.co-edo meetup #14
+title: Polymer.co-edo meetup ＃14 を開催しました
 date: 2018-05-29 02:55 UTC
 tags:
 - Polymer
