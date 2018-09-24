@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8" />
     <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
-    <title>sizuhiko - Technote - 本日、無事発売されました</title>
+    <title>sizuhiko - Technote - web-i2cエレメントをより使いやすくしました。</title>
     <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
@@ -274,38 +274,149 @@
       <div id="mainwrap">
         <div id="main">
           
-            <h2>本日、無事発売されました</h2>
-            <p class="postdate"><a title="Permanent link" href="/2008/07/25.html">Friday, July 25, 2008 05:07:10 PM</a></p>
+            <h2>web-i2cエレメントをより使いやすくしました。</h2>
+            <p class="postdate"><a title="Permanent link" href="/2018/09/24.html">Monday, September 24, 2018 03:41:00 PM</a></p>
             <p class="tags">
               
-                <a rel="tag" href="/tags/php.html">PHP</a>
+                <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
               
-                <a rel="tag" href="/tags/simpletest.html">SimpleTest</a>
-              
-                <a rel="tag" href="/tags/webアプリケーションテスト手法.html">Webアプリケーションテスト手法</a>
+                <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
               
             </p>
           
 
-          <p>&lt;!&ndash; more &ndash;&gt;「Webアプリケーションテスト手法」という本を共著しました。「SimpleTestによるPHPのテスト」というお題で、PHPの自動テストについて書きました。実はこの本は紆余曲折あったのですが、まさに”無事”という言葉が当てはまります。何はともあれ拍手！パチパチ　:cheers:   </p>
+          <p>先日の<a href="/2018/08/13/maker-faire-tokyo-2018.html">Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました</a>で <code>web-i2c-element はどうなの？</code> 
+に記述した改良ポイントを使った<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>をアップしました。</p>
 
-<p><a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;amp;s=books&amp;amp;qid=1216973795&amp;amp;sr=8-2"><img src="http://images.amazon.com/images/P/4839924309.09._PC_SCMZZZZZZZ_.jpg" /></a></p>
+<h3>変更したポイント：</h3>
 
-<p>で、SimpleTestとはxUnit系のテスティングフレームワークなんで。assertEqual()とかあるわけですが、本家のWebサイトや自身のテストコードが</p>
-<pre class="highlight plaintext"><code>assertEqual($hoge, 'Hello');
+<p>変更の概要は以下のとおりです。</p>
+
+<ul>
+<li><code>no-web-i2c</code> スロットを指定すると、非対応メッセージを表示できるようになった</li>
+<li><code>WebI2cSensorElement</code> を使って、センサー毎の共通実装をなくし、より簡単にセンサーのカスタムエレメントが実装できるようになった</li>
+<li>Polymer使ってなくても、タグだけを使ってセンサーの値が取得できるようなサンプルに変更した</li>
+</ul>
+
+<p>では、それぞれの変更を詳しく見ていきましょう。</p>
+
+<h3>非対応メッセージの表示</h3>
+
+<p><a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
+<pre class="highlight html"><code><span class="nt">&lt;web-i2c&gt;</span>
+  <span class="nt">&lt;grove-touch</span> <span class="na">slave-address=</span><span class="s">"0x5a"</span><span class="nt">&gt;&lt;/grove-touch&gt;</span>
+  <span class="nt">&lt;grove-gesture</span> <span class="na">slave-address=</span><span class="s">"0x73"</span><span class="nt">&gt;&lt;/grove-gesture&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">slot=</span><span class="s">"no-web-i2c"</span><span class="nt">&gt;</span>
+    このデバイスはCHIRIMENではありませんが、ピアノ演奏はお楽しみいただけます。
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/web-i2c&gt;</span>
 </code></pre>
 
-<p>みたいになってるんで、本もそのとおりにしています。  </p>
+<p><code>web-i2c</code> タグの内側に <code>no-web-i2c</code> というslot名のタグを記述することで、
+もしCHIRIMEN以外のデバイス（例えばPCなど）から、このページを表示するとメッセージを表示することができるようになります。
+試しに、PCから<a href="http://blog.open.tokyo.jp/chirimen-piano/">chirimen-pianoのデモページ</a>にアクセスしてみてください。</p>
 
-<p>本当なら、</p>
-<pre class="highlight plaintext"><code>assertEqual('Hello', $hoge);
+<h3>WebI2cSensorElementを利用したカスタムエレメントの記述</h3>
+
+<p>最初のバージョンでは、 <code>PolymerElement</code> を使っていたため共通的な実装が多くなっていたのですが、
+いくつかのセンサー実装をしてみて共通化できそうな箇所もわかってきたので、I2C用の親クラスを作ることにしました。</p>
+
+<p><code>WebI2cSensorElement</code> を使ったセンサーのクラスとして、GROVEタッチとGROVEジェスチャーのカスタムエレメントを作りました。</p>
+
+<p>例として<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/src/chirimen-piano-app/grove-touch.js">grove-touch.js</a>ファイルを見てましょう。</p>
+<pre class="highlight javascript"><code><span class="kr">class</span> <span class="nx">GroveTouch</span> <span class="kr">extends</span> <span class="nx">WebI2cSensorElement</span> <span class="p">{</span>
+  <span class="nx">async</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_autoRead</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2b</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2c</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2d</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2e</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2f</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x30</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x31</span><span class="p">,</span><span class="mh">0xff</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x32</span><span class="p">,</span><span class="mh">0x02</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="mi">12</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span><span class="nx">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+      <span class="c1">// console.log(i);</span>
+      <span class="kd">var</span> <span class="nx">address</span> <span class="o">=</span> <span class="mh">0x41</span><span class="o">+</span><span class="nx">i</span><span class="p">;</span>
+      <span class="c1">// console.log(address);</span>
+      <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="p">,</span><span class="mh">0x0f</span><span class="p">);</span>
+      <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x0a</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5d</span><span class="p">,</span><span class="mh">0x04</span><span class="p">);</span>
+    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5e</span><span class="p">,</span><span class="mh">0x0c</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">async</span> <span class="nx">read</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">read16</span><span class="p">(</span><span class="mh">0x00</span><span class="p">);</span>
+    <span class="c1">// console.log(value);</span>
+    <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">++</span><span class="p">){</span>
+      <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(((</span><span class="nx">value</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="nx">cnt</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)?</span><span class="kc">true</span><span class="p">:</span><span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">)))</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_setValue</span><span class="p">(</span><span class="nx">array</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nb">window</span><span class="p">.</span><span class="nx">customElements</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s1">'grove-touch'</span><span class="p">,</span> <span class="nx">GroveTouch</span><span class="p">);</span>
 </code></pre>
 
-<p>とassertEqual(期待値, 戻り値);みたいに書きたいわけですが、まぁ大きな問題ではないです。  </p>
+<p>まず <code>WebI2cSensorElement</code> を継承したクラスを定義します。
+このクラスには2つのオーバライド可能なメソッドがあります。</p>
 
-<p>と、思ってCakePHPのテストコードを見てみたら、やっぱりassertEqual(戻り値, 期待値);のほうになってるんですね。SimpleTestベースに使っているから、そのままなんだと思います。  </p>
+<ul>
+<li>init</li>
+<li>read</li>
+</ul>
 
-<p>PHPUnitは、assertEqual(期待値, 戻り値);になってますね。テストコード見ると、SimpleTestベースなのかPHPUnitベースなのかわかるという副作用もありますが。。。。</p>
+<p>どちらも <code>async</code> メソッドにすることで I2Cスレーブデバイスからの応答を待ち合わせる(<code>await</code>)ことができるようになっています。</p>
+
+<p><code>WebI2cSensorElement</code> は、 <code>init</code> 呼び出し時にメンバー変数として <code>_i2cSlave</code> が利用可能になっています。
+これはWeb I2Cのスレーブオブジェクトで、どんなメソッドが使えるかは<a href="https://rawgit.com/browserobo/WebI2C/master/index.html">Web I2C API Specification</a>の <code>4.6 Reading the value</code> や <code>4.8 Writing a value</code> を参照ください。
+サンプルコードの <code>slaveDevice</code> が <code>_i2cSlave</code> と同じものになります。</p>
+
+<h4>init を実装する</h4>
+
+<p>init ではI2Cデバイスの初期化コードを記述します。
+とくに戻り値は必要ありません。</p>
+
+<p>もしセンサーが読み取り可能なら、 <code>this._autoRead = true;</code> のように設定してください。
+これを設定すると、インターバル間隔(デフォルトは100ミリ秒)ごとに <code>read</code> メソッドを呼び出してくれます。</p>
+
+<h4>read を実装する</h4>
+
+<p>init で <code>_autoRead</code> を <code>true</code> に設定した場合、インターバル間隔ごとに呼び出されます。
+センサーの値を読み取って、値が変わった場合は <code>this._setValue(value)</code> を呼び出してください。
+エレメントの <code>value</code> プロパティに値が保持されると同時に、 <code>value-changed</code> イベントが発行されます。</p>
+
+<h3>普通のHTMLからセンサーを取り扱う</h3>
+
+<p>ふたたび<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
+<pre class="highlight html"><code><span class="nt">&lt;script&gt;</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'grove-touch'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">'value-changed'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'chirimen-piano-app'</span><span class="p">).</span><span class="nx">touchChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">});</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'grove-gesture'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">'value-changed'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'chirimen-piano-app'</span><span class="p">).</span><span class="nx">gestureChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+</code></pre>
+
+<p>センサー値の変更を受け取るには、センサーエレメントに対して <code>value-changed</code> イベントのリスナーを設定します。
+値はイベントオブジェクトの <code>detail.value</code> に入っていて、センサーによってセットされる値（型も含め）が違います。</p>
+
+<p>たとえば <code>grouve-touch</code> エレメントは、タッチセンサーの数分のBoolean配列がセットされ、 <code>grove-gesture</code> エレメントは、発生したジェスチャー名がセットされます。</p>
+
+<h3>さいごに</h3>
+
+<p>このようにHTMLからセンサーの値をコントロールできたり、センサーのエレメントを簡単に実装できるようになりました。
+今後は、それぞれのエレメントやベースクラスを <code>npm install</code> で取得できるようにしたいと思っています。</p>
+
+<p>また、以前作った <code>WebGpioElement</code> も <code>Polymer3</code> で書き換えていきたいなと思っています。</p>
+
+<p>WebComponents と CHIRIMEN の融合は、私がそれぞれのコミュニティに参加して得られたもののアウトプットです。
+もしこれらの活動に興味がありましたら、<a href="https://polymer-jp.org/">Polymer Japan</a> <a href="https://chirimen.org/">CHIRIMEN Open Hardware</a> <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> などの活動に参加ください。</p>
 
 
           
@@ -314,13 +425,13 @@
               <div class="small-12 medium-5 large-5 small-centered columns blog-social">
                 <ul class="social-buttons cf">
                   <li>
-                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="本日、無事発売されました" data-url="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="web-i2cエレメントをより使いやすくしました。" data-url="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
                   </li>
                   <li>
-                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+                    <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
                   </li>
                   <li>
-                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html&t=%E6%9C%AC%E6%97%A5%E3%80%81%E7%84%A1%E4%BA%8B%E7%99%BA%E5%A3%B2%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/07/25/%e6%9c%ac%e6%97%a5%e3%80%81%e7%84%a1%e4%ba%8b%e7%99%ba%e5%a3%b2%e3%81%95%e3%82%8c%e3%81%be%e3%81%97%e3%81%9f.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html&t=web-i2c%E3%82%A8%E3%83%AC%E3%83%A1%E3%83%B3%E3%83%88%E3%82%92%E3%82%88%E3%82%8A%E4%BD%BF%E3%81%84%E3%82%84%E3%81%99%E3%81%8F%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
                   </li>
                 </ul>
               </div>
