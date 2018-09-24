@@ -275,7 +275,42 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2013/12/31/2013.html">2013年ふりかえり</a></h2>
+            <h2 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2014/02/22.html">Saturday, February 22, 2014 08:13:26 PM</a></p>
+  <p class="tags">
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら <a href="https://github.com/sizuhiko/sizuhiko.github.io/issues">github の issue ページ</a> にてお知らせいただければ幸いです。</p>
+
+<p>このブログは <a href="http://middlemanapp.com/">Middleman</a> にて構築しています。Middlemanの導入に関する記事もアップしたいと思っていますので、興味ある方はしばらくお待ちください。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Hello Middleman!" data-url="http://blog.open.tokyo.jp/2014/02/22/hello-world.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2014/02/22/hello-world.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2014/02/22/hello-world.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/02/22/hello-world.html&t=Hello%20Middleman!" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/02/22/hello-world.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/12/31/2013.html">2013年ふりかえり</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2013/12/31.html">Tuesday, December 31, 2013 05:12:51 PM</a></p>
   <p class="tags">
     
@@ -804,137 +839,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2013/02/19.html">Tuesday, February 19, 2013 02:02:05 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/bdd.html">BDD</a>
-    
-      <a rel="tag" href="/tags/bddplugin.html">BddPlugin</a>
-    
-      <a rel="tag" href="/tags/cakephp.html">CakePHP</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/spec.html">Spec</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3>v0.9.3リリース</h3>
-
-<p>本日バージョン0.9.3をリリースしました。  </p>
-
-<p>機能面での修正というわけではなく、今回は Composer の <strong>A Multi-Framework Composer Library Installer</strong> (<a href="https://github.com/composer/installers">https://github.com/composer/installers</a>) という仕組みに対応したものです。  </p>
-
-<p>なのでpluginsディレクトリでgit cloneして引き続きご利用の皆様は、今回のアップデートは無視してもらっても大丈夫です。  </p>
-
-<h3>なにが嬉しいのか</h3>
-
-<p>Composerのフレームワークプラグインを管理する機能については、ちょっと前から知っていたのですが、まぁCakePHPでは3以降中心かな？と思っていたところ <a href="http://twitter.com/abe4tawa8">@abe4tawa8</a> さんから Pull Request をいただきまして、修正を始めたといういきさつです。  </p>
-
-<p>このComposerの仕組みを使うと、appディレクトリの下に利用するプラグインとかPHPUnitとかのrequireを指定したcomposer.jsonを置いておくことでプロジェクトで必要なモジュールの依存関係を解決しようというものです。  </p>
-
-<p>例えば</p>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-    </span><span class="nt">"config"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"vendor-dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Vendor"</span><span class="w">
-    </span><span class="p">},</span><span class="w">
-    </span><span class="nt">"minimum-stability"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"repositories"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pear"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://pear.phpunit.de"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-
-        </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcs"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://github.com/sizuhiko/CommonContexts.git"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcs"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://github.com/sizuhiko/Spec-PHP.git"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-
-        </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vcs"</span><span class="p">,</span><span class="w">
-            </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git://github.com/sizuhiko/Bdd.git"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nt">"require-dev"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"sizuhiko/Bdd"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev-develop"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"behat/mink-goutte-driver"</span><span class="p">:</span><span class="w"> </span><span class="s2">"*"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"behat/mink-selenium-driver"</span><span class="p">:</span><span class="w"> </span><span class="s2">"*"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"behat/mink-selenium2-driver"</span><span class="p">:</span><span class="w"> </span><span class="s2">"*"</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>のように書くと、Bddプラグインを app/Plugins ディレクトリにインストールすることが可能になります。  </p>
-
-<p>あとは app/Config/bootstrap.php に</p>
-<pre class="highlight plaintext"><code>CakePlugin::load('Bdd');
-require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
-</code></pre>
-
-<p>BddPluginの利用と、依存関係のライブラリ群のautoloadをrequireすれば大丈夫です。  </p>
-
-<h3>残念なお知らせ</h3>
-
-<p>Composerでは依存先のライブラリのrepositories指定を参照してくれません。</p>
-
-<blockquote>
-<p>Repositories are not resolved recursively. You can only add them to your main composer.json. Repository declarations of dependencies&rsquo; composer.jsons are ignored.  </p>
-</blockquote>
-
-<p><a href="http://getcomposer.org/doc/04-schema.md#repositories">http://getcomposer.org/doc/04-schema.md#repositories</a> より  </p>
-
-<p>BddPluginではPullRequest中のCommonContextやforkしてカスタマイズしているSpec-PHPを使っており、それらのリポジトリを指定する必要があります。  </p>
-
-<p>他の依存関係はどうなっているの？と、気付いた方はするどいわけですが、Composerは<a href="https://packagist.org/">Packagist</a>というリポジトリサイトを使っており、ここに必要なリポジトリを追加すれば良い訳です。登録は無料です。  </p>
-
-<p>で、これらforkしたプロジェクトについても登録してしまえば良いと思って作業を進めていたのですが、いざ手元でも動作確認がほぼOKになったところでPackagistのサイトでSubmitしようとすると</p>
-
-<blockquote>
-<p>Do not submit forks of existing packages. If you need to test changes to a package that you forked to patch, use VCS Repositories instead. If however it is a real long-term fork you intend on maintaining feel free to submit it.  </p>
-</blockquote>
-
-<p>特に「*<em>Do not submit forks of existing packages. *</em>」の部分は太字になっていまして、他を受け付けない雰囲気を醸し出しています。まぁ要はメンテナンスを続けるならフォークしたプロジェクトでも登録可能だよ、と書いてあるわけですが、あまりの警告にビビってしまい各アプリケーションのcomposer.jsonにrepositoriesを追加してもらう方針としました。必要な部分は上記サンプルのとおりになっています。  </p>
-
-<h3>さいごに</h3>
-
-<p>そういえばBddPlugin自体はPackagistに登録しても問題ないのだった！、と今Blogを書いていて気がついたので、それはこれから実施します。そうするとBddPluginのリポジトリ宣言は必要なくなりますね（汗  </p>
-
-<p>今のcomposer.jsonではnameがsizuhiko/Bddになっていて、BddをスモールケースにしろとPackagistに怒られているので、少々時間がかかります  </p>
-
-<p>それと先日Co-Edoで行われたCakeBeerTalkの飛び入りLTでも話しましたが、使っていての不明点など何でもgithubのissueで質問ください。よろしくおねがいします。  </p>
-
-<p>BddPluginを使った勉強会もやりたいですなー</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP BddPlugin updates (2013/2/19)" data-url="http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="https://plus.google.com/share?url=http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html" class="socialite googleplus-one" data-size="tall" data-href="http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html" rel="nofollow" target="_blank"><span class="vhidden">Share on Google+</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html&t=CakePHP%20BddPlugin%20updates%20(2013/2/19)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -1004,6 +908,8 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2018/09/24/google-cloud-builder-php72.html">Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする</a> <span>2018/09/24</span></li>
+                
                   <li><a href="/2018/09/24/web-i2c-element-update.html">web-i2cエレメントをより使いやすくしました。</a> <span>2018/09/24</span></li>
                 
                   <li><a href="/2018/09/24/polymer-co-edo-meetup-17.html">Polymer.co-edo meetup ＃17 を開催しました</a> <span>2018/09/24</span></li>
@@ -1021,8 +927,6 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
                   <li><a href="/2018/06/11/brackets-prettier-extention.html">Brackets prettier 拡張を作ってみた</a> <span>2018/06/11</span></li>
                 
                   <li><a href="/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">cakephp-fabricate-adaptor を CakePHP3.6 対応しました</a> <span>2018/06/10</span></li>
-                
-                  <li><a href="/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html">Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました</a> <span>2018/06/09</span></li>
                 
               </ul>
             </div>
@@ -1612,6 +1516,14 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/gae.html">GAE</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
                   
                 
                   
@@ -1634,7 +1546,7 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2018.html">2018</a> (21)</li>
+                  <li><a href="/2018.html">2018</a> (22)</li>
                 
                   <li><a href="/2017.html">2017</a> (7)</li>
                 
