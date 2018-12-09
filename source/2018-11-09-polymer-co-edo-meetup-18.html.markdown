@@ -1,5 +1,5 @@
 ---
-title: Polymer.coedo #18を開催しました
+title: Polymer.coedo ＃18を開催しました
 date: 2018-11-09 08:35 UTC
 tags:
 - Polymer
