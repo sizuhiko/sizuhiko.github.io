@@ -5,10 +5,203 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2018-12-31T05:36:00Z</updated>
+  <updated>2019-01-07T02:26:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>GCPにBitnamiでmemcachedサーバーを作る</title>
+    <link rel="alternate" href="http://blog.url.com/2019/01/07/gcp-bitnami-memcached-server.html"/>
+    <id>http://blog.url.com/2019/01/07/gcp-bitnami-memcached-server.html</id>
+    <published>2019-01-07T02:26:00Z</published>
+    <updated>2019-01-08T07:46:28+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2019年最初の記事はmemcachedのサーバーを作ることからです。&lt;/p&gt;
+
+&lt;h3&gt;なんで今さらサーバーを？&lt;/h3&gt;
+
+&lt;p&gt;私は現在&lt;a href="https://toiletevolution.space/"&gt;Toilet Evolution&lt;/a&gt;というサービスを作っていて、まぁ特に流行ってもいないのですが、トイレ監視のIoTプラットフォームをやっています。
+これはGAE(Google App Engine)で動いていて、PHP5.5で作られています。&lt;/p&gt;
+
+&lt;p&gt;GAEには&lt;a href="https://github.com/google/gvisor"&gt;gVisor&lt;/a&gt;というコンテナ技術をベースにした第二世代( &lt;code&gt;2nd Gen&lt;/code&gt; と呼ばれている )があるのですが、PHP7.2が使えるようになります。
+しかしこれに伴い、これまで使えていたmemcachedサーバーが使えなくなります。
+通常のGCPアプリと一緒となり、&lt;a href="https://cloud.google.com/memorystore/?hl=ja"&gt;Cloud Memorystore&lt;/a&gt;を使えということですね。
+ただ、これには無料枠がなくて、（なんとか低額でやっていきたい層だけが）ぬーんとなるので、今回 GCP の無料インスタンス &lt;code&gt;f1-micro&lt;/code&gt; にmemcachedサーバー(SASL付き)を構築してみようという試みです（&lt;code&gt;f1-micro&lt;/code&gt; が無料で使えるのは米国リージョンだけです）。&lt;/p&gt;
+
+&lt;h3&gt;Bitnami&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://bitnami.com"&gt;Bitnami&lt;/a&gt;とは、アプリケーションをインストールするのを支援するサービスで、クラウドにも対応しています。
+memcachedサーバーをGCP上に構築するのも、GUIからポチポチと実行できます。
+もちろん自力でやっても問題はないので、&lt;a href="https://blog.couchbase.com/sasl-memcached-now-available/"&gt;SASL memcached now available!&lt;/a&gt;みたいな記事を読んでやってもOKです。&lt;/p&gt;
+
+&lt;p&gt;Bitnamiの画面遷移とかざっくりした説明は書きません。
+&lt;a href="https://stpost.net/se/web-se/server/gcp-redmine-environment"&gt;GCPにRedmine環境を作ってみた&lt;/a&gt;というBlogが、Bitnamiを使ってGCPにRedmine環境を作るという内容で、スクショもたくさんあってわかりやすいです。
+まぁ使ってみてそんなにハマりどころはないので、読まなくてもだいたい大丈夫です（ただし英語アレルギーとかない人）。&lt;/p&gt;
+
+&lt;h3&gt;プロジェクトを作る&lt;/h3&gt;
+
+&lt;p&gt;GCPでプロジェクトを作って（もしくは既存のプロジェクトで）以下のAPIを有効化しておくと、Bitnamiからのデプロイが簡単に進みます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://console.cloud.google.com/apis/api/compute.googleapis.com/overview"&gt;Compute Engine API&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://console.cloud.google.com/apis/api/deploymentmanager.googleapis.com/overview"&gt;Google Cloud Deployment Manager V2 API&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;あとは課金の設定。&lt;/p&gt;
+
+&lt;h3&gt;memcachedサーバーを作る&lt;/h3&gt;
+
+&lt;p&gt;米国リージョンを選択するのですが、App Engine と同じリージョンに配置したいので、 &lt;code&gt;gcloud app regions list&lt;/code&gt; で利用できるリージョンを確認しておきましょう（GAEからはインターネット越しになるので、それほど意味があるかはわかりませんが、気分的な問題ですw）。&lt;/p&gt;
+
+&lt;p&gt;memcachedを選択して、プロジェクトを選んでいくと &lt;code&gt;us-xxxx&lt;/code&gt; のリージョンで &lt;code&gt;f1-micro&lt;/code&gt; を選択したのに、料金が表示（$4.28ぐらい）されるかもしれませんが、
+&lt;a href="https://cloud.google.com/free/docs/always-free-usage-limits"&gt;f1-micro インスタンス使用量は、最初の 744 時間分が無料&lt;/a&gt; なので、744時間 == 31日 ということで実質月額無料です。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Application Info&lt;/code&gt; にユーザー名 &lt;code&gt;user&lt;/code&gt; とパスワードがあるので、PHPから接続する情報として記録しておきます。
+&lt;code&gt;Server Info&lt;/code&gt; にアクセスするときのIPアドレスがあるので記録しておきます。また、SSHするときのキーがあるので、何かのときのためにダウンロードしておきます。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://console.cloud.google.com/compute/instances"&gt;Cloud ConsoleのVMインスタンス&lt;/a&gt;に、memcachedサーバーができているのを確認しておきます。&lt;/p&gt;
+
+&lt;h4&gt;App Engine からアクセスできるようにする&lt;/h4&gt;
+
+&lt;p&gt;このままでは App Engine からアクセスできない（App Engine はインターネット経由でGCPのVMにアクセスするため）ので、ファイヤーウォールの設定を行います。
+Bitnamiのドキュメント&lt;a href="https://docs.bitnami.com/google/infrastructure/memcached/administration/connect-remotely/"&gt;Connect To Memcached From A Different Machine&lt;/a&gt;によると、ポート &lt;code&gt;11211&lt;/code&gt; を解放するよう書いてあります。
+BitnamiからインストールされるmemcachedはデフォルトでSASL認証がonになっているので、PaaSのようにIP制限できない環境からクラウド越しに利用するときは安心ですね。&lt;/p&gt;
+
+&lt;p&gt;もし、GCPでのファイヤーウォール設定のやり方がわからない場合は、上記ページの &lt;code&gt;the FAQ&lt;/code&gt; の遷移先 &lt;a href="https://docs.bitnami.com/google/faq/administration/use-firewall/"&gt;Open Or Close Server Ports&lt;/a&gt;が参考になります。&lt;/p&gt;
+
+&lt;h3&gt;サンプルプログラム&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/gae-php7-memcache-sample"&gt;GAE 2nd Gen で動くPHP7.2のサンプルプログラム&lt;/a&gt;を用意しました。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;app.yaml&lt;/code&gt; ファイルの環境変数を3つ設定します。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;MEMCACHED&lt;em&gt;SERVER&lt;/em&gt;ADDR: memcached サーバーのIP&lt;/li&gt;
+&lt;li&gt;MEMCACHED_USERNAME: ユーザー名。これはデフォルトで &lt;code&gt;user&lt;/code&gt; になっているので、変更不要&lt;/li&gt;
+&lt;li&gt;MEMCACHED_PASSWORD: &lt;code&gt;Application Info&lt;/code&gt; で表示できるパスワード&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以下のコマンドでプロジェクトにApp Engineを作ります。例えば &lt;code&gt;us-west2&lt;/code&gt; に memcached サーバーを構築したら以下のような感じです。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;gcloud app create --region=us-west2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;続いて、アプリケーションをデプロイします。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;gcloud app deploy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;実行してみる&lt;/h3&gt;
+
+&lt;p&gt;GAEのエンドポイントに接続すると、以下のように表示され、memcached と接続し読み書きできていることがわかります。&lt;/p&gt;
+&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Array
+(
+    [xxx.xxx.xxx.xxx:11211] =&amp;gt; Array
+        (
+            [pid] =&amp;gt; 1786
+            [uptime] =&amp;gt; 4689
+            [time] =&amp;gt; 1546843636
+            [version] =&amp;gt; 1.5.12
+            [libevent] =&amp;gt; 2.0.17-stable
+            [pointer_size] =&amp;gt; 64
+            [rusage_user] =&amp;gt; 0.46
+            [rusage_system] =&amp;gt; 0.188
+            [max_connections] =&amp;gt; 1024
+            [curr_connections] =&amp;gt; 2
+            [total_connections] =&amp;gt; 5
+            [rejected_connections] =&amp;gt; 0
+            [connection_structures] =&amp;gt; 3
+            [reserved_fds] =&amp;gt; 20
+            [cmd_get] =&amp;gt; 2
+            [cmd_set] =&amp;gt; 2
+            [cmd_flush] =&amp;gt; 0
+            [cmd_touch] =&amp;gt; 0
+            [get_hits] =&amp;gt; 2
+            [get_misses] =&amp;gt; 0
+            [get_expired] =&amp;gt; 0
+            [get_flushed] =&amp;gt; 0
+            [delete_misses] =&amp;gt; 0
+            [delete_hits] =&amp;gt; 0
+            [incr_misses] =&amp;gt; 0
+            [incr_hits] =&amp;gt; 0
+            [decr_misses] =&amp;gt; 0
+            [decr_hits] =&amp;gt; 0
+            [cas_misses] =&amp;gt; 0
+            [cas_hits] =&amp;gt; 0
+            [cas_badval] =&amp;gt; 0
+            [touch_hits] =&amp;gt; 0
+            [touch_misses] =&amp;gt; 0
+            [auth_cmds] =&amp;gt; 3
+            [auth_errors] =&amp;gt; 0
+            [bytes_read] =&amp;gt; 607
+            [bytes_written] =&amp;gt; 6855
+            [limit_maxbytes] =&amp;gt; 67108864
+            [accepting_conns] =&amp;gt; 1
+            [listen_disabled_num] =&amp;gt; 0
+            [time_in_listen_disabled_us] =&amp;gt; 0
+            [threads] =&amp;gt; 4
+            [conn_yields] =&amp;gt; 0
+            [hash_power_level] =&amp;gt; 16
+            [hash_bytes] =&amp;gt; 524288
+            [hash_is_expanding] =&amp;gt; 0
+            [slab_reassign_rescues] =&amp;gt; 0
+            [slab_reassign_chunk_rescues] =&amp;gt; 0
+            [slab_reassign_evictions_nomem] =&amp;gt; 0
+            [slab_reassign_inline_reclaim] =&amp;gt; 0
+            [slab_reassign_busy_items] =&amp;gt; 0
+            [slab_reassign_busy_deletes] =&amp;gt; 0
+            [slab_reassign_running] =&amp;gt; 0
+            [slabs_moved] =&amp;gt; 0
+            [lru_crawler_running] =&amp;gt; 0
+            [lru_crawler_starts] =&amp;gt; 3060
+            [lru_maintainer_juggles] =&amp;gt; 4979
+            [malloc_fails] =&amp;gt; 0
+            [log_worker_dropped] =&amp;gt; 0
+            [log_worker_written] =&amp;gt; 0
+            [log_watcher_skipped] =&amp;gt; 0
+            [log_watcher_sent] =&amp;gt; 0
+            [bytes] =&amp;gt; 69
+            [curr_items] =&amp;gt; 1
+            [total_items] =&amp;gt; 2
+            [slab_global_page_pool] =&amp;gt; 0
+            [expired_unfetched] =&amp;gt; 0
+            [evicted_unfetched] =&amp;gt; 0
+            [evicted_active] =&amp;gt; 0
+            [evictions] =&amp;gt; 0
+            [reclaimed] =&amp;gt; 0
+            [crawler_reclaimed] =&amp;gt; 0
+            [crawler_items_checked] =&amp;gt; 0
+            [lrutail_reflocked] =&amp;gt; 0
+            [moves_to_cold] =&amp;gt; 2
+            [moves_to_warm] =&amp;gt; 0
+            [moves_within_lru] =&amp;gt; 0
+            [direct_reclaims] =&amp;gt; 0
+            [lru_bumps_dropped] =&amp;gt; 0
+        )
+
+)
+Hello World
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;数回アクセスしてみると、以下のようなスペックになります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;99 パーセンタイル: 90.24ms&lt;/li&gt;
+&lt;li&gt;95 パーセンタイル: 89.18ms&lt;/li&gt;
+&lt;li&gt;50 パーセンタイル: 77.25ms&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;私のサービスは &lt;code&gt;Cloud Datastore&lt;/code&gt; のキャッシュとしてmemcacheを使っているので、キャッシュになければ、
+永続化しているところから直接ロードするだけなので、堅牢さはそれほど必要ないです。
+できれば &lt;code&gt;Cloud Datastore&lt;/code&gt; へのI/O回数を減らして低額でやりたいなぁという程度なので、&lt;code&gt;f1-micro&lt;/code&gt; に1つサーバーを起動する程度で良いという割り切りです。&lt;/p&gt;
+
+&lt;p&gt;あとは&lt;a href="https://redislabs.com"&gt;redislabs&lt;/a&gt;が30MBまでなら無料で使えるので、そういうのも選択肢としてあるかもしれないですね（実際に&lt;a href="https://cloud.google.com/appengine/docs/standard/python3/using-redislabs-redis?hl=ja"&gt;GAE Python3のドキュメント&lt;/a&gt;からはリンクされていたりする）。&lt;/p&gt;
+
+&lt;p&gt;もし同様にやってみたいなぁと思う方がいたら参考になれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>2018年を締めくくる最後の投稿</title>
     <link rel="alternate" href="http://blog.url.com/2018/12/31/final-2018.html"/>
@@ -239,25 +432,6 @@ PolymerチームはVS Code使っているし、&lt;a href="https://github.com/Po
 
 &lt;p&gt;学生向けハッカソンへの参加はとても新鮮で楽しかったです。
 また機会があればイベントに協力していきたいなと思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Assistant Developer Conference vol.1で仕事でやっていることの発表をしました</title>
-    <link rel="alternate" href="http://blog.url.com/2018/12/09/assistant-developer-conference-vol-1.html"/>
-    <id>http://blog.url.com/2018/12/09/assistant-developer-conference-vol-1.html</id>
-    <published>2018-12-09T09:00:00Z</published>
-    <updated>2018-12-09T18:07:04+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;Assistant Developer Community JapanのSlack(assistant-dev-ja.slack.com)に入って情報収集したり、
-普段仕事で得たTipsなどを共有したりしているのですが、
-そこで運用の話で盛り上がったところ、セッションのお誘いをいただいたので、開発チームのメンバーと一緒に発表してきました。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://aogdevsja.connpass.com/event/107408/"&gt;Assistant Developer Conference vol.1&lt;/a&gt;の2番目で「家電操作の発話ログ収集と今後の展望」というタイトルです。&lt;/p&gt;
-
-&lt;p&gt;発表資料はまだOKが出てないので公開できないのですが、いわゆるスマートホームアクションの話をしてきました。
-資料公開できたら追加でリンクします。&lt;/p&gt;
 </content>
   </entry>
 </feed>
