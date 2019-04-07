@@ -1,0 +1,101 @@
+---
+title: PHPer Kaigi 2019に参加しました
+date: 2019-04-07 04:00 UTC
+tags:
+- PHP
+- PHPerKaigi
+---
+
+![](/images/blog/phperkaigi2019.jpg)
+
+初めてのPHPerKaigi参加です。
+これまで予定が重なっていて参加できなかったのですが、今年は年度末開催ということで、他の予定もなく参加することができました。
+
+どうせなら何か話さないと、ということで
+
+- Day2 の IRT: テスト〜CI/CD相談会 で、 [@kaz_29](https://twitter.com/kaz_29) のテーブルトークの賑やかしに
+- Day3 のアンカンファレンスで [ブラウザの次に来る（かも？しれない）仕様を知ってフロントエンドチョットデキル人になろう](https://twitter.com/phperkaigi/status/1112168095261429761)というテーマで話す
+- Day3 の IRT: フロントエンド相談会 で、 [@FruitRiin](https://twitter.com/FruitRiin) のテーブルトークの賑やかしに
+- Day3 の [出張版PHP勉強会@東京](https://fortee.jp/phperkaigi-2019/proposal/180747ce-2451-4958-9b18-42f218ce61b3)で、メインセッションを担当
+
+他はセッションを聞いていました。
+
+### CI/CDとは...
+
+CI/CD相談会で受けた印象は、CI == 自動テストやってます、CD == ツール使ってデプロイしてます（完全手動ではない）という雰囲気の人が多く、ほんとうのCI/CDにはまだまだ遠いなぁという感じ。それでも私がテストやろうね、といってほとんどの人が書いてない時代からは大きな変化で、いつかほんとうの意味に近づいてくれることを期待しています。
+
+### import maps と HTML Template Instantiation について
+
+アンカンファレンスではWeb Componentsの周辺仕様の動きについて、話しました。
+
+- [CSS Shadow Parts](https://drafts.csswg.org/css-shadow-parts/)
+- [import maps](https://github.com/WICG/import-maps)
+- [Custom Element Register](https://github.com/w3c/webcomponents/issues/716)
+- [HTML Modules](https://github.com/w3c/webcomponents/issues/645)
+- [HTML Template Instantiation](https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md)
+
+このうち[CSS Shadow Parts](https://drafts.csswg.org/css-shadow-parts/)はCSSWGのドラフトになっていることもあり、概要をさらっと説明。
+[Custom Element Register](https://github.com/w3c/webcomponents/issues/716)と[HTML Modules](https://github.com/w3c/webcomponents/issues/645)は、Web Components色が強いので、これも概要をさらっと。
+で、[import maps](https://github.com/WICG/import-maps)と[HTML Template Instantiation](https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md)について、少し深く話しました。
+
+#### import maps
+
+これは過去のブログ記事でも登場した `Package name maps` の最新の名前です。過去のリンクからは自動的にリダイレクトされます。
+`bower` によるJavaScript依存ライブラリのインストールが、npm中心のエコシステムに変わり、ブラウザからそのモジュールを利用するには Webpack のようなもので依存解決をする必要がありました。
+しかし今日では ESModule Import がブラウザでもサポートされているので、以下のようなコードでライブラリを利用したくなります。
+
+```js
+import moment from "moment";
+import { partition } from "lodash";
+```
+
+しかしブラウザは `from` から読み取るときURIとして識別するので、当然サーバーからJavaScriptファイルを取れないし、Node.jsと違って `package.json` から `main` のスクリプトファイルをロードすることもできません。
+そこで `import maps` では以下のようなマッピング定義を使います。
+
+```js
+{
+  "imports": {
+    "moment": "/node_modules/moment/src/moment.js",
+    "lodash": "/node_modules/lodash-es/lodash.js"
+  }
+}
+```
+
+するとブラウザはマッピングファイルから以下のように記述されたものとして解釈します。
+
+```js
+import moment from "/node_modules/moment/src/moment.js";
+import { partition } from "/node_modules/lodash-es/lodash.js";
+```
+
+これはWeb Componentsに関係なく、普通にHTMLからjQueryを使おうとしていた人にとってもわかりやすくなるし、Webpackからも解放されるので、はやくブラウザ実装になってほしいなぁと思っています。
+
+#### HTML Template Instantiation
+
+「テンプレートエンジンをブラウザ自体に」というのがこの仕様なわけですが、様々なフレームワークや handlebars のようなライブラリまで、テンプレートエンジンは数多くあります。ブラウザでやることは車輪の再開発なのか？という点については、RawレベルのAPIが利用可能になることでDOMの書き換えをブラウザがやってくれることはスピードアップにつながるし、ぜひとも進んでほしい仕様の一つです。
+PolymerチームのJustinなど、各ブラウザベンダーの人も議論に参加しているので、期待できます。
+
+### フロントエンド相談会
+
+Reactを使う人、Vueを使う人、Web Componetsを推進したい人（私）など、様々なお悩み、SSRの話しなども出ました。
+技術ワードに踊らされるのではなく、それぞれの課題に対して議論できたのがとても良かったです。
+IRT楽しかったですね。
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">IRTフロントエンド相談会、なんとかいい感じに終わったかと思います。 <a href="https://twitter.com/sizuhiko?ref_src=twsrc%5Etfw">@sizuhiko</a> さん回すの手伝ってくれてありがとでした！<a href="https://twitter.com/hashtag/phperkaigi?src=hash&amp;ref_src=twsrc%5Etfw">#phperkaigi</a></p>&mdash; 果物リン (@FruitRiin) <a href="https://twitter.com/FruitRiin/status/1112203030282133504?ref_src=twsrc%5Etfw">31 March 2019</a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+### 出張版PHP勉強会@東京で話しました。
+
+「PHPを学ぶということ」というタイトルで初心者セッションをやりました。
+
+<script async class="speakerdeck-embed" data-id="ff6bd5cb036b48af9cf18ac85fdd8b31" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+最近PHP勉強会で初心者の人多いなーと感じることが多いのと、開発チームでもプログラミングこれから！みたいな人にどうしたら良いのかなーと思うことがあって、まずは勉強の入り口にどうしたら良いかというキッカケを作ることができれば良いと思いました。
+
+PHPコミュニティのSlackへの参加者が、このセッションをきっかけに結構増えたので、良かった！
+
+### さいごに
+
+PHPerKaigi とても楽しかった。
+交流がメインのカンファレンスらしく、多くの人と、様々な話題について議論できました。
+さぁ、次は[福岡](https://phpcon.fukuoka.jp/2019/)に行きますよ！
