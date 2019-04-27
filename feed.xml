@@ -5,10 +5,312 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2019-04-07T04:47:00Z</updated>
+  <updated>2019-04-27T10:16:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Toilet EvolutionのフロントエンドをPolymer3対応する(3)</title>
+    <link rel="alternate" href="http://blog.url.com/2019/04/27/toilet-evolution-polymer3-vol3.html"/>
+    <id>http://blog.url.com/2019/04/27/toilet-evolution-polymer3-vol3.html</id>
+    <published>2019-04-27T10:16:00Z</published>
+    <updated>2019-04-27T20:46:01+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は&lt;a href="/2019/04/26/toilet-evolution-polymer3-vol2.html"&gt;Toilet EvolutionのフロントエンドをPolymer3対応する(2)&lt;/a&gt;の続編です。&lt;/p&gt;
+
+&lt;p&gt;今回も&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498"&gt;mozlier適用だけでは動かないので、ローカルで動作するように修正&lt;/a&gt;というコミットにおける試行錯誤を書いていきます。&lt;/p&gt;
+
+&lt;p&gt;前回は多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所について解説しましたが、ここからはアプリケーションで使っている機能やエレメントについて、修正が必要だった箇所について解説していきます。&lt;/p&gt;
+
+&lt;h3&gt;ES Module対応になっていないエレメントを使う&lt;/h3&gt;
+
+&lt;p&gt;前回の記事で「&lt;code&gt;bower_components を使わないようにする&lt;/code&gt;」について解説しました。
+PolymerチームやVaadinチームなどが作っているコンポーネントについては、ほとんど &lt;code&gt;ES Module&lt;/code&gt; に対応しているのですが、場合によっては対応してないモジュールを使っていることがあるかもしれません。&lt;/p&gt;
+
+&lt;p&gt;Toilet Evolutionでは以下のエレメントが &lt;code&gt;ES Module&lt;/code&gt; に対応していませんでした。&lt;code&gt;iron-signals&lt;/code&gt; は &lt;code&gt;toast-er&lt;/code&gt; の依存に関連しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/atotic/excess-router"&gt;excess-router&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.webcomponents.org/element/ebidel/geo-location"&gt;geo-location&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.webcomponents.org/element/GeoloeG/gold-password-input"&gt;gold-password-input&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.webcomponents.org/element/GoogleWebComponents/google-map"&gt;google-map&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.webcomponents.org/element/googlearchive/paper-menu"&gt;paper-menu&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/masonlouchart/toast-er"&gt;toast-er&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.webcomponents.org/element/googlearchive/iron-signals"&gt;iron-signals&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;そこで、これらのエレメントは modulizer で変換されたものを、そのまま利用することにしました。
+また変換されたエレメントについては、前回の記事同様に共通的な修正箇所が必要になります。
+つまり自分で作ったエレメントと同様に、そのエレメントが依存している（bower.jsonに含まれている）エレメントやライブラリについても、 &lt;code&gt;npm install&lt;/code&gt; で取得するように変更する必要があります。&lt;/p&gt;
+
+&lt;p&gt;またPolymer1用のライブラリだったりする場合は、&lt;a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade"&gt;Polymer1から2へのアップグレードガイド&lt;/a&gt;に書いてある &lt;code&gt;slot&lt;/code&gt; の対応なども必要だったので、そのライブラリが最新版だとPolymerのどのバージョンに対応したものなのかを確認しておくことが重要です。&lt;/p&gt;
+
+&lt;p&gt;そして、これらの作業が結構やっかいです（自分で作ったものでないので、ソースを理解する必要があります）。&lt;/p&gt;
+
+&lt;h3&gt;以前のPolymerのビヘイビアは個別にインストールする必要がある&lt;/h3&gt;
+
+&lt;p&gt;HTMLインポートで利用していた、Polymerチームが作っていたようなカスタムエレメントのビヘイビアは、個別に &lt;code&gt;import&lt;/code&gt; するか、場合によっては &lt;code&gt;npm install&lt;/code&gt; で導入する必要があります。
+自分で作ったエレメントでは、ビヘイビアを使っていなかったので、この段階で初めて知りました（これは意外にもドキュメントに書いていません）。&lt;/p&gt;
+
+&lt;p&gt;例えば &lt;code&gt;&amp;lt;gold-password-input&amp;gt;&lt;/code&gt; では、&lt;code&gt;PaperInputAddonBehavior&lt;/code&gt; という &lt;code&gt;paper-input&lt;/code&gt; に含まれていたビヘイビアを使っています。
+これは以下のように、&lt;code&gt;import&lt;/code&gt; を追加してあげる必要があります。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;PaperInputAddonBehavior&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/paper-input/paper-input-addon-behavior.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;ES Module&lt;/code&gt;対応しているエレメントであれば、&lt;a href="https://www.webcomponents.org"&gt;webcomponents.org&lt;/a&gt;のビヘイビアを参照すると解説が書いてあります。
+上記の &lt;code&gt;PaperInputAddonBehavior&lt;/code&gt; であれば、&lt;a href="https://www.webcomponents.org/element/@polymer/paper-input/behaviors/PaperInputAddonBehavior"&gt;こちら&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;h3&gt;Polymer.dom を変更する&lt;/h3&gt;
+
+&lt;p&gt;これも自分のエレメントでは使っていなかったので気付かなかったのですが、使っているエレメントがあったので修正の必要がありました。
+まず &lt;code&gt;dom&lt;/code&gt; をインポートします。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;dom&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/polymer/lib/legacy/polymer.dom.js'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;で、&lt;code&gt;Polymer.dom&lt;/code&gt; を使っている箇所を &lt;code&gt;dom&lt;/code&gt; に変更します。例えば以下のような感じです。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;dom&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;parentNode&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;bowerでカスタムエレメント以外のライブラリに依存している&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;&amp;lt;gold-password-input&amp;gt;&lt;/code&gt; は&lt;a href="https://github.com/dropbox/zxcvbn"&gt;zxcvbn&lt;/a&gt;というパスワードストレングスエミュレータを使っています。
+Node.jsなどにも対応しているのですが、今回はbowerでインストールしたフォルダをそのままコピーして、リポジトリに追加しました。
+このようにカスタムエレメント以外のライブラリを使っている場合は、npmでインストールしてビルドする方法以外の検討も必要となります。
+特に&lt;code&gt;&amp;lt;gold-password-input&amp;gt;&lt;/code&gt;では、以下のように &lt;code&gt;script&lt;/code&gt; タグを動的に追加してライブラリをインポートしていたため、npmを利用するのに適していなかったという理由があります。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="nx"&gt;ready&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;isZxcvbnLoaded&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;zxcvbn&lt;/span&gt; &lt;span class="o"&gt;!==&lt;/span&gt; &lt;span class="s2"&gt;"undefined"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;isZxcvbnLoaded&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nx"&gt;isZxcvbnLoaded&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;oScript&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;document&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createElement&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"script"&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="nx"&gt;oScript&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;"text\/javascript"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="nx"&gt;oScript&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;onerror&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nx"&gt;isZxcvbnLoaded&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="k"&gt;throw&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;URIError&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"The script "&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;target&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s2"&gt;" is not accessible."&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="p"&gt;};&lt;/span&gt;
+      &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parentNode&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;insertBefore&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;oScript&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="nx"&gt;oScript&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;resolveUrl&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"../zxcvbn/dist/zxcvbn.js"&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このぐらいまで対応が進むと、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなります。
+ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
+これは今回の &lt;code&gt;ES Modules&lt;/code&gt; に対応してなかったエレメントに関連するところなのですが、
+これらの対応方法については次回解説していきます。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Toilet EvolutionのフロントエンドをPolymer3対応する(2)</title>
+    <link rel="alternate" href="http://blog.url.com/2019/04/26/toilet-evolution-polymer3-vol2.html"/>
+    <id>http://blog.url.com/2019/04/26/toilet-evolution-polymer3-vol2.html</id>
+    <published>2019-04-26T07:47:00Z</published>
+    <updated>2019-04-27T20:45:47+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は&lt;a href="/2019/04/25/toilet-evolution-polymer3-vol1.html"&gt;Toilet EvolutionのフロントエンドをPolymer3対応する(1)&lt;/a&gt;の続編です。&lt;/p&gt;
+
+&lt;p&gt;今回からは&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498"&gt;mozlier適用だけでは動かないので、ローカルで動作するように修正&lt;/a&gt;というコミットにおける試行錯誤を書いていきます。&lt;/p&gt;
+
+&lt;p&gt;うまく動作させるために試行錯誤して変更したファイル、実に110。1回では書ききれない予感が&amp;hellip;&lt;/p&gt;
+
+&lt;h3&gt;不要になったファイルを削除&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;bower.json&lt;/code&gt; や &lt;code&gt;.bowerrc&lt;/code&gt; ファイルは、Polymer3でnpmに移行したので、削除します。&lt;/p&gt;
+
+&lt;h3&gt;linterを追加&lt;/h3&gt;
+
+&lt;p&gt;lintは &lt;code&gt;polymer-cli&lt;/code&gt; にも付いているのですが、エディタで編集中にも状況は知りたいので、eslintを導入します。
+Polymer1のころはHTMLファイルだったので、特に不要でしたね。&lt;/p&gt;
+
+&lt;h3&gt;ビルドを変更&lt;/h3&gt;
+
+&lt;p&gt;これまでbuildは独自にgulpで実装していたのですが、Polymer3対応をするに伴い&lt;a href="https://www.npmjs.com/package/polymer-build"&gt;polymer-build&lt;/a&gt;を使うようにしました。
+これは &lt;code&gt;polymer CLI&lt;/code&gt; でも使っているビルドライブラリです。ビルドについては、この連載で触れていきます。&lt;/p&gt;
+
+&lt;h3&gt;polymer.jsonの変更&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;shell&lt;/code&gt; や &lt;code&gt;fragments&lt;/code&gt; で指定したファイルの拡張子を &lt;code&gt;html&lt;/code&gt; から &lt;code&gt;js&lt;/code&gt; に変更します。
+これは自動的に変換されないので注意しましょう。
+&lt;code&gt;extraDependencies&lt;/code&gt; や、そのほかの定義も変わっていますが、このあたりは&lt;a href="https://polymer-library.polymer-project.org/3.0/docs/tools/polymer-json"&gt;polymer.json specification&lt;/a&gt;を参考にPolymer3形式に1から記述するぐらいの気持ちでいましょう。&lt;/p&gt;
+
+&lt;h3&gt;変換された自作のカスタムエレメントを修正する&lt;/h3&gt;
+
+&lt;p&gt;まずmodulizerで変換すると、Polymer本体のimportが &lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="s1"&gt;'../bower_components/polymer/polymer-legacy.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;のようになっているので、これを &lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/polymer/polymer-legacy.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Polymer&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/polymer/lib/legacy/polymer-fn.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;html&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/polymer/lib/utils/html-tag.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;のように変更しました。&lt;/p&gt;
+
+&lt;p&gt;なお、公式ドキュメントによると &lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;PolymerElement&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;html&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="nx"&gt;from&lt;/span&gt; &lt;span class="s1"&gt;'@polymer/polymer/polymer-element.js'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;にしていますが、これは &lt;code&gt;PolymerElement&lt;/code&gt; 使っている場合なので、ハイブリッドモードの書き方の場合は、私のようにlegacyを使ってください。&lt;/p&gt;
+
+&lt;p&gt;続いてテンプレートが以下のように &lt;code&gt;Polymer.html&lt;/code&gt; を参照するようになっています。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="nx"&gt;Polymer&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;_template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Polymer&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;html&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;この記述は利用できないので、以下のように &lt;code&gt;import&lt;/code&gt; した &lt;code&gt;html&lt;/code&gt; を利用するように変更します。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="nx"&gt;Polymer&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;_template&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;html&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;bower_components を使わないようにする&lt;/h3&gt;
+
+&lt;p&gt;変換されたjsファイルは、bower_components上に変換されたモジュールを参照しにいきます。
+そこで各々のパッケージがnpmに公開されているか調べて、npmに移行していきます。&lt;/p&gt;
+
+&lt;p&gt;すでに上記で &lt;code&gt;bower_components/polymer&lt;/code&gt; を変更していますが、これを例に説明します。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;まず&lt;a href="https://www.webcomponents.org"&gt;webcomponents.org&lt;/a&gt;のサイトでWebComponentsを検索します。&lt;/li&gt;
+&lt;li&gt;この例では &lt;code&gt;polymer&lt;/code&gt; を入力して検索すると、該当のものが見つかるので、&lt;a href="https://www.webcomponents.org/element/@polymer/polymer"&gt;詳細ページ&lt;/a&gt;を開きます。&lt;img src="/images/blog/2019-04-27-www.webcomponents.org-78097a3d36c6.png" /&gt;&lt;/li&gt;
+&lt;li&gt;もし &lt;code&gt;ES Modiles&lt;/code&gt; に対応していれば、左側に &lt;code&gt;View on NPM&lt;/code&gt; が表示されます。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;INSTALLED VIA NPM&lt;/code&gt; のリンクをクリックすると &lt;code&gt;npm install --save Polymer/polymer&lt;/code&gt; のように表示されるので、CLIからインストールします。&lt;/li&gt;
+&lt;li&gt;bower_componentsから、参照しなくなったjsファイルを削除します。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3&gt;WebComponents V1対応に追従する&lt;/h3&gt;
+
+&lt;p&gt;自分が記述したCustomElementsには利用していなかった &lt;code&gt;&amp;lt;content&amp;gt;&lt;/code&gt; も、依存関係のタグでは利用している場合があります。
+例えば&lt;a href="https://www.webcomponents.org/element/@polymer/app-layout"&gt;@polymer/app-layout&lt;/a&gt;は、レイアウトないのコンポーネントを識別するときに利用しているので、slot対応を行います。たとえば以下のドロワー記述は&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;      &lt;span class="nt"&gt;&amp;lt;app-drawer&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;次のように &lt;code&gt;slot&lt;/code&gt; 識別を追加します。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;      &lt;span class="nt"&gt;&amp;lt;app-drawer&lt;/span&gt;  &lt;span class="na"&gt;slot=&lt;/span&gt;&lt;span class="s"&gt;"drawer"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このあたりの修正ポイントは、タグが表示されなくなることで気がつきますが、アップデートしたら最新のドキュメントを一読することをオススメします。
+他にも修正箇所があるかもしれませんので。&lt;/p&gt;
+
+&lt;h3&gt;importHref を修正する&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;iron-pages&lt;/code&gt; でページを切り替えるとき、Polymer1では動的に HTML import を実行していました。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="nx"&gt;_pageChanged&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;page&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;importHref&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/elements/te-'&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;page&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;'.html'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;ES Module&lt;/code&gt;を使うPolymer3では以下のように書き換えます。&lt;/p&gt;
+&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="k"&gt;switch&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;page&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s1"&gt;'admin'&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;
+        &lt;span class="kr"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./te-admin.js'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s1"&gt;'devices'&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;
+        &lt;span class="kr"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./te-devices.js'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s1"&gt;'login'&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;
+        &lt;span class="kr"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./te-login.js'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="k"&gt;case&lt;/span&gt; &lt;span class="s1"&gt;'about'&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;
+        &lt;span class="kr"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'./te-about.js'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+        &lt;span class="k"&gt;break&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;import&lt;/code&gt; の引数には変数が利用できないので注意してください。&lt;/p&gt;
+
+&lt;h3&gt;Polyfillを変更する。&lt;/h3&gt;
+
+&lt;p&gt;HTMLファイルではpolyfillLをインポートしています。
+Polymer1では &lt;code&gt;/bower_components/webcomponentsjs/webcomponents-lite.min.js&lt;/code&gt; を使いましたが、Polymer3では以下のpolyfillに変更します。
+これもnpmを使ってインストールするように変更します。&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;script &lt;/span&gt;&lt;span class="na"&gt;src=&lt;/span&gt;&lt;span class="s"&gt;"node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このように修正を重ねていくことで、徐々に動作するエレメントが増えてきます。
+ここまでは多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所です。
+Toilet Evolutionでは、まだまだ修正箇所がありましたので、続きは&lt;a href="/2019/04/27/toilet-evolution-polymer3-vol3.html"&gt;次回&lt;/a&gt;で。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Toilet EvolutionのフロントエンドをPolymer3対応する(1)</title>
+    <link rel="alternate" href="http://blog.url.com/2019/04/25/toilet-evolution-polymer3-vol1.html"/>
+    <id>http://blog.url.com/2019/04/25/toilet-evolution-polymer3-vol1.html</id>
+    <published>2019-04-25T06:42:00Z</published>
+    <updated>2019-04-27T20:45:37+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;私が開発運用している&lt;a href="https://toiletevolution.space/"&gt;Toilet Evolution&lt;/a&gt;は、フロントエンドをPolymer(v1)で構築していました。
+これは古いWebComponentsの仕組みを使っているので、常々アップデートしないとなーと思いながらも、長いこと重い腰があがりませんでした。&lt;/p&gt;
+
+&lt;p&gt;しかし以下のツイートを見て「よしやるぞ」という気持ちにスイッチが入り、移行を実施しました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="en" dir="ltr"&gt;PSA: The latest Chrome Canary has removed support for web components v0, per the deprecation plan announced last year.&lt;br&gt;&lt;br&gt;If you have a site built with Polymer 1.x (or web components v0), check it against Canary now to make sure you&amp;rsquo;re properly serving the polyfills. &lt;a href="https://t.co/IElNjGGZbI"&gt;https://t.co/IElNjGGZbI&lt;/a&gt;&lt;/p&gt;&amp;mdash; Polymer Project (@polymer) &lt;a href="https://twitter.com/polymer/status/1102664720891301888?ref_src=twsrc%5Etfw"&gt;4 March 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;p&gt;実際&lt;a href="https://toiletevolution.space/"&gt;Toilet Evolution&lt;/a&gt;のサイトはもう最新に置き換わっております。
+その様子は&lt;a href="https://github.com/toiletevolution/toiletevolution-server"&gt;Toilet EvolutionのGitHubリポジトリ&lt;/a&gt;のコミットログを追うことでもわかったりしますが、かなり頑張ったので、その過程を連載でブログにまとめようと思いました。&lt;/p&gt;
+
+&lt;p&gt;この記事はその1回目です。&lt;/p&gt;
+
+&lt;h3&gt;Polymer1プロジェクトをPolymer3へ移行するには&lt;/h3&gt;
+
+&lt;p&gt;マイグレーションガイドは1から2、2から3に向けてあります。
+1から3のガイドがあるわけではないので、両方を事前に読んでおくと良いです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade"&gt;Polymer1から2へのアップグレードガイド&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;dom-module&amp;gt;&lt;/code&gt; で &lt;code&gt;name&lt;/code&gt; を使っていたら &lt;code&gt;id&lt;/code&gt; に変更。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;styles&lt;/code&gt; タグは &lt;code&gt;template&lt;/code&gt; タグの内側へ&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;content&amp;gt;&lt;/code&gt; タグは &lt;code&gt;&amp;lt;slot&amp;gt;&lt;/code&gt; タグへ&lt;/li&gt;
+&lt;li&gt;CSSの &lt;code&gt;::content&lt;/code&gt; セレクタは &lt;code&gt;::slotted()&lt;/code&gt; セレクタへ&lt;/li&gt;
+&lt;li&gt;CSSの &lt;code&gt;/deep/&lt;/code&gt; や &lt;code&gt;::shadow&lt;/code&gt; は使えなくなる&lt;/li&gt;
+&lt;li&gt;などなど&amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade"&gt;Polymer2から3へのアップグレードガイド&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/Polymer/tools/tree/master/packages/modulizer"&gt;modulizer&lt;/a&gt;使うと簡単にできるよ！&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Polymer2は1の記法が使えるハイブリッドモードがあるのと、そもそも1から2で変更が必要な記述を使っていないので、実際はmodulizer一発でいけるんでは？と考えました。
+なので、1から2の手順は気にせず、進むことにしました。&lt;/p&gt;
+
+&lt;h3&gt;何はともあれアップデート&lt;/h3&gt;
+
+&lt;p&gt;npmのライブラリもだいぶ古くなっていたので、まずは&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/bfcea2e380d1744012dee064e949a8cced64fe3d"&gt;最新に更新しました&lt;/a&gt;。
+Gulpを3から4にあげたので &lt;code&gt;gulpfile.js&lt;/code&gt; もモリモリと変えていきます。&lt;/p&gt;
+
+&lt;p&gt;続いて、bowerに入っているパッケージも新しくしていきます。これは &lt;a href="https://github.com/Polymer/tools/tree/master/packages/modulizer#local-package-mode"&gt;modulizerのガイド&lt;/a&gt;に書いてあるので、そのまま実施します。&lt;/p&gt;
+
+&lt;p&gt;続いてmodulizerを実行しますが、commitログではそこまでの手順で迷走しています。あまり気にしないでくださいw&lt;/p&gt;
+
+&lt;h3&gt;modulizerで変換する&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;modulizer --out .&lt;/code&gt; を実行します。すると html で記述していたカスタムエレメントが js ファイルに変更されます。
+&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/da5a4aba7f40463731b467e3be7d6c856b6a918c"&gt;ここまでのコミット&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;変換するとだいたい良い感じになっています。
+でも変換だけでは動きません。ここで以下のような箇所が変換されないことがわかります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;polymerの公式エレメントなど、変換されたbower_componentsを参照していて、npmに切り替わらない&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade#less-common-upgrade-tasks"&gt;変換後に手動で書き換えること&lt;/a&gt;に書いてある手順の実施&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;これらの手順は&lt;a href="/2019/04/26/toilet-evolution-polymer3-vol2.html"&gt;次回&lt;/a&gt;へ続きます。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>esm LTでブラウザの最新動向について話しました</title>
     <link rel="alternate" href="http://blog.url.com/2019/04/07/esm-lt-2019-04.html"/>
@@ -164,120 +466,6 @@ IRT楽しかったですね。&lt;/p&gt;
 皆様の参加をお待ちしております。&lt;/p&gt;
 
 &lt;p&gt;&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】にチューター参加してきました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/03/05/webiotmakers-day3-day4.html"/>
-    <id>http://blog.url.com/2019/03/05/webiotmakers-day3-day4.html</id>
-    <published>2019-03-05T03:00:00Z</published>
-    <updated>2019-03-08T00:05:53+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;1ヶ月前に始まった東京ステージ、&lt;a href="2019/02/11/webiotmakers-day1-day2.html"&gt;Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました&lt;/a&gt;の続きです。&lt;/p&gt;
-
-&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/webiotmakers?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#webiotmakers&lt;/a&gt; ハッカソン本番です (@ KDDI DIGITAL GATE in 港区, 東京都) &lt;a href="https://t.co/jccpWTyR9w"&gt;https://t.co/jccpWTyR9w&lt;/a&gt; &lt;a href="https://t.co/909OnobTL7"&gt;pic.twitter.com/909OnobTL7&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1101639711683235840?ref_src=twsrc%5Etfw"&gt;March 2, 2019&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;チューターも、デモに向けて各チームの完成を全力で応援します。
-工作からプログラムまで、その道の凄腕が揃っています。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/2019-03-02.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;最後はバタバタとしましたが、みんな何かしらデモできる状態になって、デモからの審査。
-最優秀作品（と予定になかった優秀賞3つ）も決まりました。&lt;/p&gt;
-
-&lt;p&gt;最優秀作品は今週末に開催される&lt;a href="https://smartiot-forum.jp/"&gt;スマートIoT推進フォーラム&lt;/a&gt;に展示されますので、興味がある人はぜひ見学にいってみてください。
-（それまでに完成度が上がっていると良いなー）&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/2019-03-03.jpg" /&gt;&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Polymer Japan Cafe ＃4 もくもく会が開催されました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/02/24/polymer-japan-cafe-4.html"/>
-    <id>http://blog.url.com/2019/02/24/polymer-japan-cafe-4.html</id>
-    <published>2019-02-24T02:32:00Z</published>
-    <updated>2019-03-08T00:05:53+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;今月のPolymer/Web Components のもくもく会は、Polymer Japan との共催になったので、Co-Edoではなく渋谷にて開催となりました。&lt;/p&gt;
-
-&lt;p&gt;Lit Elementが2.0リリースになったので、
-&lt;a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html"&gt;はじめての LitElement エレメントの作り方&lt;/a&gt;のバージョンを最新に更新しました。&lt;/p&gt;
-
-&lt;p&gt;Lit Elementではスタイル定義を以下のように、記述することが推奨されています。&lt;/p&gt;
-&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kr"&gt;class&lt;/span&gt; &lt;span class="nx"&gt;MyElement&lt;/span&gt; &lt;span class="kr"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;LitElement&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kr"&gt;static&lt;/span&gt; &lt;span class="nx"&gt;get&lt;/span&gt; &lt;span class="nx"&gt;styles&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;css&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;
-    &lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="nx"&gt;host&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nl"&gt;display&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;block&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;`&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;これは&lt;a href="https://wicg.github.io/construct-stylesheets/"&gt;Constructable Stylesheets&lt;/a&gt;として2019/1/24にGoogleから提出されたアイデアで、
-エレメントのスタイルを &lt;code&gt;static getter&lt;/code&gt; で返すことで、ページ内に同一エレメントが複数回あるとき１回だけスタイルを評価するようになるというものです。
-高速化には役立ちそうですが、現時点サポートしているブラウザあるのか？（Chromeはもうサポートしてるかも）という状況です。&lt;/p&gt;
-
-&lt;p&gt;なので前述のCodeLabとか、私の好きな&lt;a href="https://github.com/PolymerX/lit-loader"&gt;LitLoader&lt;/a&gt;とかは、まだ&lt;a href="https://wicg.github.io/construct-stylesheets/"&gt;Constructable Stylesheets&lt;/a&gt;の記法には対応していません
-（もちろん従来の書き方でも動きます）。
-でも注目していきたい仕様の1つではあるので、今後組み込むこともあるかもな、とは思っています。&lt;/p&gt;
-
-&lt;p&gt;詳しくは&lt;a href="https://lit-element.polymer-project.org/guide/styles"&gt;LitElementの公式ドキュメントのStyles&lt;/a&gt;を参照ください。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/02/11/webiotmakers-day1-day2.html"/>
-    <id>http://blog.url.com/2019/02/11/webiotmakers-day1-day2.html</id>
-    <published>2019-02-11T01:43:00Z</published>
-    <updated>2019-03-08T00:05:53+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://webiotmakers.github.io/"&gt;Web×IoT メイカーズチャレンジ&lt;/a&gt;は全国各地で実施されていて、今年度の最後は東京で実施されます。
-まず最初の2日間は、ほとんどの参加者はふれたことがない&lt;a href="https://tutorial.chirimen.org/raspi3/ja/section0#chirimen-for-raspberry-pi-3-%E3%81%A8%E3%81%AF"&gt;CHIRIMEN for Raspberry Pi 3&lt;/a&gt;
-について、ハンズオン講習会とアイデアワークショップが行われます。&lt;/p&gt;
-
-&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/webiotmakers?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#webiotmakers&lt;/a&gt; スタッフで参加しています (@ KDDI DIGITAL GATE in 港区, 東京都) &lt;a href="https://t.co/INIoSU3i9b"&gt;https://t.co/INIoSU3i9b&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1094038291899469824?ref_src=twsrc%5Etfw"&gt;February 9, 2019&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
-
-&lt;h3&gt;なんでチューター参加したか&lt;/h3&gt;
-
-&lt;p&gt;私は&lt;a href="https://chirimen.org/"&gt;CHIRIMENコミュニティ&lt;/a&gt;の一員なので、中の人としてハンズオン講習会のサポート役をしてきました。
-&lt;a href="http://blog.open.tokyo.jp/2018/08/13/maker-faire-tokyo-2018.html"&gt;Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました&lt;/a&gt;といった記事も書いています。&lt;/p&gt;
-
-&lt;h3&gt;どんな雰囲気だったか&lt;/h3&gt;
-
-&lt;p&gt;以下に列挙します。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;最初に総務省のテキストをベースにした &lt;code&gt;IoT や電波や無線通信に関する基礎知識の座学講習&lt;/code&gt; があるが、これがとても面白くタメになった&lt;/li&gt;
-&lt;li&gt;高校生から社会人まで幅広い年齢層の参加者がいる（学生と社会人は半々ぐらいだったかな？&lt;/li&gt;
-&lt;li&gt;チュートリアルの雰囲気からハード/Webアプリそれぞれに強い人はいるけど、両方に強い人は少ない（CHIRIMENは両方とも必要になる&lt;/li&gt;
-&lt;li&gt;みんな初対面で運営側が決めたチーム構成だけど、アイデアワークショップ盛り上がった&lt;/li&gt;
-&lt;li&gt;KDDI DIGITAL DATEがキレイ！&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/2019-02-09.jpg" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;CHIRIMENとは？&lt;/h3&gt;
-
-&lt;p&gt;さて、今回のハッカソンで利用するCHIRIMENですが、紆余曲折あって現在では&lt;a href="https://tutorial.chirimen.org/raspi3/ja/section0#chirimen-for-raspberry-pi-3-%E3%81%A8%E3%81%AF"&gt;CHIRIMEN for Raspberry Pi 3&lt;/a&gt;がアクティブな活動になっています。
-ベースはブラウザから物理デバイスを操作するためのAPIである&lt;a href="https://rawgit.com/browserobo/WebGPIO/master/index.html"&gt;Web GPIO&lt;/a&gt;や&lt;a href="https://rawgit.com/browserobo/WebI2C/master/index.html"&gt;Web I2C&lt;/a&gt;といった仕様を進めてことにあるのですが、
-フィードバックを受ける手段としてハードを作ったり、Polyfillやドライバーを実装したりしています。&lt;/p&gt;
-
-&lt;p&gt;もっと多くの人がコミュニティに参加してもらえるとうれしいです（公式ページからSlackにアクセスできます）。&lt;/p&gt;
-
-&lt;h3&gt;本番は1ヶ月後&lt;/h3&gt;
-
-&lt;p&gt;ハッカソン本番は3/2と3/3の2日間。
-アイデアソンの内容がどのぐらい実装されてきて、デモに向けて完成度をあげていくのかが、楽しみです。
-参加者の皆様、1ヶ月後にまた会いましょう！&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/2019-02-10.jpg" /&gt;&lt;/p&gt;
 </content>
   </entry>
 </feed>
