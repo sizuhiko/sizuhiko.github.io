@@ -5,10 +5,168 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2019-04-29T05:43:00Z</updated>
+  <updated>2019-05-01T11:15:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>PSR-17 HTTP Factories のライブラリ</title>
+    <link rel="alternate" href="http://blog.url.com/2019/05/01/psr-17-libraries.html"/>
+    <id>http://blog.url.com/2019/05/01/psr-17-libraries.html</id>
+    <published>2019-05-01T11:15:00Z</published>
+    <updated>2019-05-02T21:02:18+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;令和最初の記事も、PHP。
+この記事は&lt;a href="/2019/04/30/psr-15-libraries.html"&gt;PSR-15リクエストハンドラーのライブラリ比較&lt;/a&gt;の続編です。&lt;/p&gt;
+
+&lt;p&gt;前回のサンプルプログラムでは &lt;a href="https://github.com/zendframework/zend-diactoros"&gt;zendframework/zend-diactoros&lt;/a&gt; の &lt;a href="https://docs.zendframework.com/zend-diactoros/v2/factories/"&gt;HTTP Message Factories&lt;/a&gt; を使って PSR-7のHTTPレスポンス(&lt;code&gt;Psr\Http\Message\ResponseInterface&lt;/code&gt;)を作っていました。&lt;/p&gt;
+
+&lt;p&gt;今回は、他のライブラリを使っても大丈夫か考えてみたいと思います。&lt;/p&gt;
+
+&lt;h3&gt;PHP-17 の HTTP Factories に対応したライブラリ&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://packagist.org/?query=factory&amp;amp;amp;tags=psr-17"&gt;PackagistでPSR-17を検索&lt;/a&gt;してみました。
+PSR-15ほどはないようです。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
+なお「フレームワーク」と書いてあるものや、特定のPSR-7ライブラリ &lt;strong&gt;だけ&lt;/strong&gt; に依存したもの（たとえば&lt;code&gt;http-factory-guzzle&lt;/code&gt;など）は除外しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/tuupola/http-factory"&gt;tuupola/http-factory&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/tbreuss/http-factory"&gt;tebe/http-factory&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;それぞれのライブラリの説明を読んで気づくでしょう。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;PSR-17 HTTP-Factory with auto-discovery support&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;そう先ほど「特定のPSR-7ライブラリ &lt;strong&gt;だけ&lt;/strong&gt; に依存したもの」と書きましたが、実は特定のライブラリに依存します。
+それはそうですよね。PSR-7のHTTPレスポンスインターフェースの実装インスタンスを &lt;strong&gt;生成&lt;/strong&gt; しないといけないので、何かしらに依存します。&lt;/p&gt;
+
+&lt;p&gt;ただ、こういった &lt;code&gt;auto-discovery&lt;/code&gt; してくれるライブラリを使っておくと、PSR-7のライブラリを変更したときも影響が少ないですね。
+でもそれ、さっきのサンプルで DI してたから、それで良くない？というのは、まさにそのとおりです。&lt;/p&gt;
+
+&lt;h3&gt;で、結局どうすると良いの？&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PSR-7/PSR-11/PSR-15/PSR-17 を使うアーキテクチャにするなら、FactoryInterfaceをDIすれば影響範囲は設定箇所だけになります&lt;/li&gt;
+&lt;li&gt;PSR-7/PSR-15/PSR-17 を使う(PSR-11を使わない)アーキテクチャにするなら、上記のような PSR-7 を自動判定してくれるライブラリを使うと良い&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ということになると思います。&lt;/p&gt;
+
+&lt;p&gt;それならPSR-7のライブラリも使い分けたサンプルが見たかった！とかあるかもしれませんが、それはまた今度！（機会があれば）&lt;/p&gt;
+
+&lt;h3&gt;おまけ&lt;/h3&gt;
+
+&lt;p&gt;さて、PSR-7/PSR-15/PSR-17 の話は面白かったですか？
+これに加えて、フロントエンドも含めてフレームワークに依存しないアプリケーションとは？
+みたいな話を&lt;a href="http://phpcon.fukuoka.jp/2019"&gt;PHPカンファレンス福岡2019&lt;/a&gt;でします。
+午後一のセッション。また &lt;a href="https://twitter.com/soudai1025"&gt;@soudai1025&lt;/a&gt; の裏になりましたが、私の方がマニアックな話なのかな。&lt;/p&gt;
+
+&lt;p&gt;では6月に福岡でお会いしましょう！&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>PSR-15リクエストハンドラーのライブラリ比較</title>
+    <link rel="alternate" href="http://blog.url.com/2019/04/30/psr-15-libraries.html"/>
+    <id>http://blog.url.com/2019/04/30/psr-15-libraries.html</id>
+    <published>2019-04-30T12:28:00Z</published>
+    <updated>2019-05-02T20:50:56+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;平成最後の記事は、PHP。
+久々のPHP記事ですが、&lt;a href="https://www.php-fig.org/psr/psr-15"&gt;PSR-15&lt;/a&gt;に準拠したリクエストハンドラーライブラリの実装を比較してみようと思います。&lt;/p&gt;
+
+&lt;h3&gt;PSR-15とは？&lt;/h3&gt;
+
+&lt;p&gt;HTTPメッセージを使用するリクエストハンドラーと、ミドルウェアコンポーネントの共通インターフェースです。&lt;/p&gt;
+
+&lt;p&gt;それ&lt;a href="http://www.php-fig.org/psr/psr-7/"&gt;PSR-7&lt;/a&gt;なのでは？という鋭い人は、
+&lt;a href="https://twitter.com/tanakahisateru"&gt;@tanakahisateru&lt;/a&gt;さんのスライド
+&lt;a href="https://speakerdeck.com/tanakahisateru/17ninatutafalseka"&gt;PHP-FIGのHTTP処理標準の設計はなぜPSR-7/15/17になったのか&lt;/a&gt;を参照ください。&lt;/p&gt;
+
+&lt;p&gt;PSR-7については、だいぶ知れ渡っていると思うので、PSR-15のリクエストハンドラーに着目していきます。&lt;/p&gt;
+
+&lt;h3&gt;PHP-15のリクエストハンドラーに対応したライブラリ&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://packagist.org/?query=PSR-15&amp;amp;amp;tags=psr-15"&gt;PackagistでPSR-15を検索&lt;/a&gt;してみました。
+たくさんありますね。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
+なお「フレームワーク」と書いてあるものは除外しています。
+例えば &lt;a href="https://github.com/zendframework/zend-expressive"&gt;zend-expressive&lt;/a&gt;は &lt;code&gt;minimalist PSR-7 middleware framework for PHP&lt;/code&gt; と書いてあるとおりなので。
+&lt;a href="http://www.slimframework.com/"&gt;Slim&lt;/a&gt;などのマイクロフレームワークも同様です。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/thephpleague/route"&gt;league/route&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/northwoods/router"&gt;northwoods/router&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/sunrise-php/http-router"&gt;sunrise/http-router&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/middlewares/request-handler"&gt;middlewares/request-handler&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;の4つを使って&lt;a href="https://github.com/sizuhiko/psr15-requesthandler-examples"&gt;サンプルプログラム集&lt;/a&gt;を作ってみました。&lt;/p&gt;
+
+&lt;h3&gt;sizuhiko/psr15-requesthandler-examples&lt;/h3&gt;
+
+&lt;h4&gt;PSR-7&lt;/h4&gt;
+
+&lt;p&gt;まず前提事項として、PSR-7対応のライブラリが必要です。
+本サンプルでは、主に &lt;a href="https://github.com/zendframework/zend-diactoros"&gt;zendframework/zend-diactoros&lt;/a&gt; を使っています。
+&lt;a href="https://github.com/sunrise-php/http-router"&gt;sunrise/http-router&lt;/a&gt;の例ついては、同系統に&lt;a href="https://github.com/sunrise-php/http-message"&gt;sunrise/http-message&lt;/a&gt;と&lt;a href="https://github.com/sunrise-php/http-server-request"&gt;sunrise-php/http-server-request&lt;/a&gt;があるので、それを利用しています。
+PSR-7のライブラリが違うと、どのような記述の違いがあるのかわかりやすいでしょう。&lt;/p&gt;
+
+&lt;h4&gt;サンプルの内容&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/psr15-requesthandler-examples"&gt;サンプルプログラム集&lt;/a&gt;を &lt;code&gt;clone&lt;/code&gt; するか、ダウンロードして、READMEの手順に従ってください。&lt;/p&gt;
+
+&lt;p&gt;ドキュメントルート(&lt;code&gt;/&lt;/code&gt;)にアクセスすると、&lt;code&gt;Hello, World!&lt;/code&gt; 出すだけの簡単なものです。&lt;/p&gt;
+
+&lt;h4&gt;サンプルコードの流れ&lt;/h4&gt;
+
+&lt;p&gt;で、結局PSR-15とは？みたいな話になるわけですが、どの例も以下のような流れで動いています&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PSR-7 でHTTPリクエスト(&lt;code&gt;Psr\Http\Message\RequestInterface&lt;/code&gt;)を受け取る&lt;/li&gt;
+&lt;li&gt;PSR-15の &lt;code&gt;Psr\Http\Server\MiddlewareInterface&lt;/code&gt; か &lt;code&gt;Psr\Http\Server\RequestHandlerInterface&lt;/code&gt; でいい感じに PSR-7のHTTPレスポンス(&lt;code&gt;Psr\Http\Message\ResponseInterface&lt;/code&gt;) を生成する。&lt;/li&gt;
+&lt;li&gt;PSR-7 のHTTPレスポンスをエミットする&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;つまり、真ん中の部分を処理することになります。&lt;/p&gt;
+
+&lt;h4&gt;リクエストハンドラ&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/psr15-requesthandler-examples/tree/master/src"&gt;サンプルのsrcフォルダ&lt;/a&gt;の下には&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Middlewares&lt;/li&gt;
+&lt;li&gt;RequestHandlers&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;があり、それぞれ &lt;code&gt;Psr\Http\Server\MiddlewareInterface&lt;/code&gt; か &lt;code&gt;Psr\Http\Server\RequestHandlerInterface&lt;/code&gt; を実装したクラスが置いてあります。
+で、それぞれのリクエストハンドラーからは、適したハンドラが呼び出されるようになっています。&lt;/p&gt;
+
+&lt;p&gt;このサンプルでは PSR-17 (HTTP Factories) を先行導入し、PSR-11 (Container Interface) に対応したライブラリでDIしてますが、
+そのあたりは、次回以降で解説します。&lt;/p&gt;
+
+&lt;p&gt;ミドルウエアもリクエストハンドラも同じように&lt;code&gt;Hello, World!&lt;/code&gt;をレスポンスボディに入れるだけです。&lt;/p&gt;
+
+&lt;h3&gt;このサンプルをとおして言いたかったこと&lt;/h3&gt;
+
+&lt;p&gt;このサンプルでは、ドキュメントルートだけの簡単な実装でしたが、ルーターの設定を追加するだけで、
+実際のアプリケーションでも使えるようになることがわかると思います。&lt;/p&gt;
+
+&lt;p&gt;もちろん実際にはDBにアクセスする必要もあったりするわけですが、そこには&lt;a href="https://www.php.net/manual/ja/intro.pdo.php"&gt;PHP Data Objects(PDO)&lt;/a&gt;があり、
+実際のDBの差分を吸収してくれます。
+そこで利用するSQLは標準であり、Webの標準よりも長い期間利用されています。&lt;/p&gt;
+
+&lt;p&gt;フレームワークを利用してアプリケーションを作ることは、速く簡単に構築できます。
+しかしフレームワークに依存せずPHPの標準を使うことで、柔軟にライブラリを変えても、自分のビジネスロジックを流用することができるようになります。&lt;/p&gt;
+
+&lt;p&gt;もちろん今日のフレームワークの多くが PSR 対応を進めていますので、フレームワークを使っていても、より互換性が高いアプリケーションを作ることができるようになるかもしれません。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="/2019/05/01/psr-17-libraries.html"&gt;次回はPSR-17について、いくつかのライブラリを紹介&lt;/a&gt;します。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>アスカン2019を開催しました</title>
     <link rel="alternate" href="http://blog.url.com/2019/04/29/asucon-2019.html"/>
@@ -371,108 +529,6 @@ Polymer1では &lt;code&gt;/bower_components/webcomponentsjs/webcomponents-lite.
 &lt;p&gt;このように修正を重ねていくことで、徐々に動作するエレメントが増えてきます。
 ここまでは多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所です。
 Toilet Evolutionでは、まだまだ修正箇所がありましたので、続きは&lt;a href="/2019/04/27/toilet-evolution-polymer3-vol3.html"&gt;次回&lt;/a&gt;で。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Toilet EvolutionのフロントエンドをPolymer3対応する(1)</title>
-    <link rel="alternate" href="http://blog.url.com/2019/04/25/toilet-evolution-polymer3-vol1.html"/>
-    <id>http://blog.url.com/2019/04/25/toilet-evolution-polymer3-vol1.html</id>
-    <published>2019-04-25T06:42:00Z</published>
-    <updated>2019-04-27T20:45:37+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;私が開発運用している&lt;a href="https://toiletevolution.space/"&gt;Toilet Evolution&lt;/a&gt;は、フロントエンドをPolymer(v1)で構築していました。
-これは古いWebComponentsの仕組みを使っているので、常々アップデートしないとなーと思いながらも、長いこと重い腰があがりませんでした。&lt;/p&gt;
-
-&lt;p&gt;しかし以下のツイートを見て「よしやるぞ」という気持ちにスイッチが入り、移行を実施しました。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="en" dir="ltr"&gt;PSA: The latest Chrome Canary has removed support for web components v0, per the deprecation plan announced last year.&lt;br&gt;&lt;br&gt;If you have a site built with Polymer 1.x (or web components v0), check it against Canary now to make sure you&amp;rsquo;re properly serving the polyfills. &lt;a href="https://t.co/IElNjGGZbI"&gt;https://t.co/IElNjGGZbI&lt;/a&gt;&lt;/p&gt;&amp;mdash; Polymer Project (@polymer) &lt;a href="https://twitter.com/polymer/status/1102664720891301888?ref_src=twsrc%5Etfw"&gt;4 March 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-
-&lt;p&gt;実際&lt;a href="https://toiletevolution.space/"&gt;Toilet Evolution&lt;/a&gt;のサイトはもう最新に置き換わっております。
-その様子は&lt;a href="https://github.com/toiletevolution/toiletevolution-server"&gt;Toilet EvolutionのGitHubリポジトリ&lt;/a&gt;のコミットログを追うことでもわかったりしますが、かなり頑張ったので、その過程を連載でブログにまとめようと思いました。&lt;/p&gt;
-
-&lt;p&gt;この記事はその1回目です。&lt;/p&gt;
-
-&lt;h3&gt;Polymer1プロジェクトをPolymer3へ移行するには&lt;/h3&gt;
-
-&lt;p&gt;マイグレーションガイドは1から2、2から3に向けてあります。
-1から3のガイドがあるわけではないので、両方を事前に読んでおくと良いです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade"&gt;Polymer1から2へのアップグレードガイド&lt;/a&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&amp;lt;dom-module&amp;gt;&lt;/code&gt; で &lt;code&gt;name&lt;/code&gt; を使っていたら &lt;code&gt;id&lt;/code&gt; に変更。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;styles&lt;/code&gt; タグは &lt;code&gt;template&lt;/code&gt; タグの内側へ&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;&amp;lt;content&amp;gt;&lt;/code&gt; タグは &lt;code&gt;&amp;lt;slot&amp;gt;&lt;/code&gt; タグへ&lt;/li&gt;
-&lt;li&gt;CSSの &lt;code&gt;::content&lt;/code&gt; セレクタは &lt;code&gt;::slotted()&lt;/code&gt; セレクタへ&lt;/li&gt;
-&lt;li&gt;CSSの &lt;code&gt;/deep/&lt;/code&gt; や &lt;code&gt;::shadow&lt;/code&gt; は使えなくなる&lt;/li&gt;
-&lt;li&gt;などなど&amp;hellip;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade"&gt;Polymer2から3へのアップグレードガイド&lt;/a&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://github.com/Polymer/tools/tree/master/packages/modulizer"&gt;modulizer&lt;/a&gt;使うと簡単にできるよ！&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Polymer2は1の記法が使えるハイブリッドモードがあるのと、そもそも1から2で変更が必要な記述を使っていないので、実際はmodulizer一発でいけるんでは？と考えました。
-なので、1から2の手順は気にせず、進むことにしました。&lt;/p&gt;
-
-&lt;h3&gt;何はともあれアップデート&lt;/h3&gt;
-
-&lt;p&gt;npmのライブラリもだいぶ古くなっていたので、まずは&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/bfcea2e380d1744012dee064e949a8cced64fe3d"&gt;最新に更新しました&lt;/a&gt;。
-Gulpを3から4にあげたので &lt;code&gt;gulpfile.js&lt;/code&gt; もモリモリと変えていきます。&lt;/p&gt;
-
-&lt;p&gt;続いて、bowerに入っているパッケージも新しくしていきます。これは &lt;a href="https://github.com/Polymer/tools/tree/master/packages/modulizer#local-package-mode"&gt;modulizerのガイド&lt;/a&gt;に書いてあるので、そのまま実施します。&lt;/p&gt;
-
-&lt;p&gt;続いてmodulizerを実行しますが、commitログではそこまでの手順で迷走しています。あまり気にしないでくださいw&lt;/p&gt;
-
-&lt;h3&gt;modulizerで変換する&lt;/h3&gt;
-
-&lt;p&gt;&lt;code&gt;modulizer --out .&lt;/code&gt; を実行します。すると html で記述していたカスタムエレメントが js ファイルに変更されます。
-&lt;a href="https://github.com/toiletevolution/toiletevolution-server/commit/da5a4aba7f40463731b467e3be7d6c856b6a918c"&gt;ここまでのコミット&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;変換するとだいたい良い感じになっています。
-でも変換だけでは動きません。ここで以下のような箇所が変換されないことがわかります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;polymerの公式エレメントなど、変換されたbower_componentsを参照していて、npmに切り替わらない&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade#less-common-upgrade-tasks"&gt;変換後に手動で書き換えること&lt;/a&gt;に書いてある手順の実施&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;これらの手順は&lt;a href="/2019/04/26/toilet-evolution-polymer3-vol2.html"&gt;次回&lt;/a&gt;へ続きます。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>esm LTでブラウザの最新動向について話しました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/04/07/esm-lt-2019-04.html"/>
-    <id>http://blog.url.com/2019/04/07/esm-lt-2019-04.html</id>
-    <published>2019-04-07T04:47:00Z</published>
-    <updated>2019-04-07T13:58:18+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;esm LTとは永和システムマネジメントの社内LT大会のようなもので、福井にゆかりのある&lt;a href="https://www.akiyoshi.co.jp/"&gt;やきとりの名門 秋吉&lt;/a&gt;のやきとりとビールを片手にワイワイ楽しむイベントです。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="ja" dir="ltr"&gt;勤務先の ESM LT #4 の設営がされている🐓🔥🍻 &lt;a href="https://t.co/HhvohEDh2j"&gt;pic.twitter.com/HhvohEDh2j&lt;/a&gt;&lt;/p&gt;&amp;mdash; Koichi ITO (@koic) &lt;a href="https://twitter.com/koic/status/1114103117614706688?ref_src=twsrc%5Etfw"&gt;5 April 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-
-&lt;p&gt;自分で写真撮るの忘れたので、同僚のツイートを引用。&lt;/p&gt;
-
-&lt;p&gt;私が話したのは「ブラウザの最新動向について」ということで、PHPerKaigiでも話した &lt;a href="https://github.com/WICG/import-maps"&gt;import maps&lt;/a&gt; と、Chrome73から入ったDevToolsの &lt;code&gt;Add Logpoints&lt;/code&gt; について話しました。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="9b7774779db54605b513344a70b28c5f" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;ChromeのDevToolsに入った新しい機能とか、そもそも&lt;a href="https://developers.google.com/web/updates/"&gt;Web Updates&lt;/a&gt;みんな読んでないよね、ってことで、新しい機能便利なんでみんな読もう！ってことです。&lt;/p&gt;
-
-&lt;p&gt;Logpointsに関しては&lt;a href="https://developers.google.com/web/updates/2019/01/devtools"&gt;What&amp;rsquo;s New In DevTools (Chrome 73)&lt;/a&gt;の記事を読んでください。
-最初に紹介されます。
-これからみんなソースコードにデバッグ用途の &lt;code&gt;console.log()&lt;/code&gt; を書くの禁止な！&lt;/p&gt;
 </content>
   </entry>
 </feed>
