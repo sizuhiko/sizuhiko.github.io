@@ -1,0 +1,825 @@
+---
+title: Google I/O 2019ふりかえり
+date: 2019-05-15 09:57 UTC
+tags:
+- Google I/O
+---
+
+タイトルを見ると、現地に行ったみたいですが、実際は行ってなくて Youtube のビデオで Webの全セッションを見ました。
+なんでかというと、今週末に [I/O Extended 2019 Tokyo@GDG](https://gdg-tokyo.connpass.com/event/128867/)というイベントがあって、Polymer JapanはGDGのコミュニティなんで、何かWebで喋ることになったためです。
+
+Web Componentsの発表とかがあるわけではなかったのですが、何かWebで...と思い、ひたすら3日分（実際Webは数少ないけど）見たので、発表しない内容も含め、メモをブログ記事にしておこうと思います。
+ということで、長文です。
+
+
+### Chrome and Web
+
+Web系の基調講演です。
+ハイライトは以下のとうな感じ。
+
+- Chromeの速度が改善、特にAndroid端末で
+- V8は20%のメモリ改善、JSの解析2倍速、async/awaitが11倍速く
+- 画像(imgタグ)のlazy loading
+  - iframeでも利用可能
+- lighthouseにbudget.jsonを追加して細かいパフォーマンスを取得できる
+
+#### 表示を速くするもの
+
+パフォーマンスの改善が重要なテーマで、以下のようなものに取り組んでいる。
+
+##### Portals
+
+- ナビゲートできるiframeみたいなもの
+- サンプル
+  - www.mealplan.family
+  - www.nomnom.social
+  - www.osmani.recipes
+  - www.grocery.store
+- となりのヤングジャンプ
+- Chrome Canaryで使える
+
+##### Web Packaging
+
+- Signed package（chrome canaryで)
+- AMPで使えるようになる
+
+#### 強力な機能
+
+機能面では以下のようなことがある。
+
+- Chromebook でPWAアプリが登録可能に
+  - hulu / slack / STADIA / 
+
+- PROXX 、2019のマインスイーパー
+  - preact , web worker
+  - proxx.app
+  - githubでソースを公開
+
+- アシスタント
+  - duplex
+  - 翻訳して一部を表示できる
+
+- ネイティブのような機能
+  - Native File System Access
+  - Unlimited Quata
+  - Contacts Picker
+  - MIME-type Handlers
+  - SMS-based Authentication
+  - これらはプロジェクトfuguで管理している。
+
+### Building Successful Websites: Case Studies for Mature and Emerging Markets
+
+新興国ではPWAアプリが重要（回線速度や端末スペックによる）。
+目玉の機能としては、Web Share API。ネイティブに近い共有機能が使えるようになった。
+
+- Twitter Liteの例
+- Times Internetの例
+- Huluの例
+
+### Elevating the Web Platform with the JavaScript Framework Community
+
+Googleが各JavaScriptフレームワーク（おもにReact/Facebook）と協力してAPI開発を進めている
+
+- Chunking code
+- Scheduling API
+  - WICG/main-thread-scheduling
+- isInputPending
+  - WICG/is-input-pending
+- Display Locking
+  - WICG/display-locking
+
+現時点の課題としては、npm/バンドルの重複がある。
+これを防ぎたい。package.jsonへesmoduleが入れられないか。
+現時点は情報が不足しているため、重複を防ぐことができない。何かしらの形で足りれば役に立つ。ということ
+->import mapsにはふれなかった。
+
+### Rapidly Building Better Web Experiences with AMP
+
+AMPの基調講演にあたる。
+
+- AMPはパフォーマンス問題を解決するために立ち上がったOSS
+- HTML上で動作するライブラリ
+- パフォーマンスを向上するためのもの
+- キャッシュを有効にします
+- 事前にレンダリングできるようにするためのものです
+
+#### 成功事例
+
+- Teads
+- tokopedia
+- INDIA TODAY
+- もっとたくさんある
+- 昨年Google検索からAMPページへのクリック率は30%増加した
+
+#### 新しい技術
+
+- ads
+- email
+- stories
+- websites
+
+A string user-first open web forever
+
+##### Websites
+
+これまではHTMLとCSS。不自由だった。
+
+WorkerDOMによってJSを利用可能にする。
+amp-scriptを実行できるようになる。
+ワシントンポストの例
+bit.lt/amp-script-trial
+
+OriginTrialで利用可能になる
+
+NEXT.jsでAMP対応できるようになる
+bit.ly/next-js-amp
+
+Webパッケージングで署名付きパッケージにすることで、google.comから独自のドメインに展開できる。
+自前で用意するか、AMP Packagerで作る方法。
+AMP Real URL（Cloudflare）
+
+###### 新機能
+
+これまでは、HTMLにAMPページのリンクがあった。
+これは2つのバージョンのコンテンツを常に2つ用意することになる。
+余分なオーバーヘッドが生まれる。
+AMP Firstアプローチを提案する。
+
+AMPで作り始め、足りないところを amp-script でビジネスロジックに補完する。
+それでも足りないこと、それを Bento AMP プロジェクトで助ける。
+
+
+PWA <--> AMP
+
+PWAでサービスワーカーを作るのはとても大変、でもAMPなら1行でできる。
+bit.ly/amp-sw
+
+amp.devではそれを利用している。
+
+AMPでは、アクセシビリティ、パフォーマンスを達成できる。
+そして、依存関係管理が楽になる。
+AMPは常に最新です。
+
+LTS（LTメンテナンス）
+800以上のコントリビューターがあなたのメンテナンスコストを減らす。
+
+- 無限スクロール( amp-list で利用可能 )
+- オートコンプリート bit.ly/amp-autocomplete （実験的）
+- カルーセル（まもなく）
+- 新しい Loaders
+
+amp-toolbox-optimizer
+go.amp.dev/optimize-amp
+
+##### 収益化
+
+AMPHTML Ads
+
+AMPページと、非AMPページのどちらにも適用できる。
+
+とにかく速い。
+
+ampifyme
+
+
+amp-analytics 解析
+amp-linker 
+amp-recaptcha
+amp-readiness
+amp-tag-test
+amp-insight
+
+
+A/Bテスト
+
+amp-experiment
+optimizely + Oracle maxymiser で利用可能
+
+##### アップデート
+
+###### AMP Stories
+
+Story Ads
+
+フルスクリーンの広告を表示できる。
+
+Google Ad Managerにあるので、AMPに配信できる。
+
+Storiesを作るツール類
+
+- MakeStories
+- Newsroom Studio
+- WordPress
+- Unfold
+
+Google Discoverでストーリーを見つけることができる
+
+検索結果にビジュアルストーリーを表示するブロックができると思う。
+
+###### AMP for Email
+
+- @mail
+- yahoo mail
+- Outlook
+
+#### まとめ
+
+広告に関する大きな変化をもたらした。
+Webサイトの収益化
+
+ロードマップ
+
+- Websites
+	- Payments
+	- Adaptive CSS Limit
+	- Transitions
+	- Stateful pages
+- Stories
+	- Embeds
+	- Animations
+	- Reactions
+	- Branching
+- Ads
+	- Coverage
+	- Capabilities
+	- Performance
+- Emails
+	- Capabilities
+	- Video Support
+	- More components
+
+### What’s New in JavaScript
+
+JavaScriptの新しい機能について。
+
+- TC39
+- V8のスピードアップはNode.jsにも貢献している。
+
+#### 新しくなったもの
+
+##### class
+
+コンストラクタなしで、プロパティの初期値が指定できるように
+
+```js
+class hoge {
+  _foo = 0;
+   
+```
+
+`#` をつけて privateにできる
+
+```js
+class hoge {
+  #foo = 0;
+  
+  get value() { return this.#foo }
+   
+```
+
+継承すると
+
+```js
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+}   
+class Cat extends Animal {
+  likeBath = false; // コンストラクタの呼び出しが必要ない。super呼び出し不要
+  meow() {
+    console.log("Meow");
+  }
+}
+
+```
+
+String#matchAll でマッチした部分や、部分一致の部分など取得しやすくなった。
+
+1000000000000
+みたいな数字を
+1_000_000_000_000 
+と区切り付きで書けるようになる。
+読みやすい...らしい(Babelで使えるよ！
+
+Bigints
+新しい機能（ロケールつき）
+
+```js
+nf = new Intl.NumberFormat('fr');
+nf.format(12345678901234567890n)
+
+12 345 678 901 234 567 890
+
+
+12_345_678_901_234_567_890n.toLocaleString('fr') // 同じ
+```
+Firefox, Node.js で使える。Polyfillもあるよ
+
+##### Array#{ flat, flatMap }
+
+```js
+array = [1, [2, [3]]];
+array.flat()
+
+[1, 2, [3]]
+
+array.flat(Infinity)
+[1, 2, 3]
+
+[2, 3, 4].flatMap(x => [x, x])
+[2, 2, 3, 3, 4, 4]
+```
+
+どこでも使えるよ！
+
+##### Object.fromEntries
+
+Object.entries したものを、オブジェクトに戻せるAPI
+
+map = new Map(Object.entries(obj));
+Object.fromEntries(map) もできるよ！
+
+どこでも使えるよ！Polyfillもあるよ
+
+##### globalThis
+
+どこでも使えるよ！
+
+##### Stable sort
+
+安全ソートがすべてのプラットフォームで使えるようになったよ
+
+##### Intl
+
+###### Intl.RelativeTimeFormat
+
+Safari以外で使えるよ
+
+###### Intl.listFormat
+
+ChromeとNodeだけね。Polyfillはあるよ
+
+###### Intl.DateFormat#formatRange
+
+Chromeだけで、flagが必要
+
+###### Intl.Locale
+
+ChromeとNodeだけね。Polyfillはあるよ
+
+##### トップレベル await
+
+まだ使わないでね
+
+##### Promise
+
+- Promise.allSettled
+	- ChromeとFirefox, polyfill
+- Promise.any
+	- まだ
+
+##### WeakRef
+
+画像をキャッシュしたいときなどにmapに入れるけど、それをGCで消すことができる
+
+Chromeだけで、flagが必要
+
+### Unlocking New Capabilities for the Web
+
+Project Fugu
+
+ネイティブアプリにあって、Webアプリにはない差分をうめていきたい。
+Webでできることを広げていきたい。
+
+Permissionモデルで機能を利用できるようにする。
+
+- Web Bluetooth
+- Sharing Contents and Receiving Shares
+	- Web Share
+	- Web Share Target
+	- Web Share Target(v2)
+- Media Session
+	- Keyboard Media Buttons
+- Detection Barcodes and Faces
+	- Shape Detection API
+	- Perception Toolkit
+- Badging
+- Keeping an App Alive
+	- Wake Lock
+- File System
+- Accessing Serial Devices
+	- Serial API
+- WebHID
+- Accessing Users Contacts
+	- Contacts Picker
+- Font Access API
+- Clipboard
+- SMS-based Phone Number Verification
+- Notification Triggers API
+
+bit.ly/new-fugu-request
+
+codelabs/web-capabilities
+developers.google.com/web/updates/capabilities
+
+### Build Fast and Smooth Web Apps from Feature Phone to Desktop
+
+PROXX開発秘話！（発表だから秘話じゃないけどw
+
+2019年のマインスイーパーをどのようにして作るか？という興味深いセッション。
+実際にソースコード見れるし、feature phone（実際は低スペックのAndroidやKaiOSあたりが該当する）にも対応している。
+
+以前にこさまりさんが、ガラケーの情報を集めていたのは、このあたりに関係しているのかなーと思って見ていた。
+
+proxx.app でためそう！
+ 
+### How to Build an E-Commerce Site with AMP
+
+どうやってECサイトをAMPで作るか、という事例をメインにしたセッション。
+そのあたりに興味あればビデオを見ると役だちそうです。
+ 
+### AMP Stories: Visual Stories for the Web
+
+snapchatで始まったストーリーは、InstagramやFacebook, whatsappなどで広まった。
+アプリのストーリーは自然な感じで、スマートフォンユーザーのほとんどが使っている。
+フルスクリーンなので、スクロールしたり回転したりせず、操作も簡単です。
+
+ただし発見されるのは難しい。そこでAMPはオープンなWebプラットフォームで見つけることが可能で、リンクでき、共有できる仕組みを提供する。
+自分でコントロールでき、Webサイトにリンクでき、検索にヒットする、Webページに埋め込むこともできる、そして一番重要なのは速い。
+タップするか、スワイプする。
+
+#### Format Update
+
+##### Localization
+
+最初は英語のみをサポートしていた。
+今は21の言語を利用できる。
+
+```html
+<html ⚡️ lang="ja">
+```
+
+##### Desktop
+
+デフォルトはモバイルデザイン。
+ワシントンポストと協力して、有用性を確認した。
+
+```html
+<amp-story supports-landscape>
+```
+
+ランドスケープに最適な背景を用意し、そうでない場合は中心が表示される（object-position で調整可能)。
+
+##### Sidebar
+
+ハンバーガーメニューにサイドバーを追加できる
+
+```html
+<amp-story>
+  <amp-sidebar>
+    <!-- サイドバーの内容 -->
+  </amp-sidebar>  
+</amp-story>
+```
+
+##### Attachments
+
+スワイプアップすると、添付ファイルにアクセスできる。
+
+```html
+<amp-story>
+  <amp-story-page>
+    <amp-story-page-attachment>
+      <amp-video src="hoge.mp4"></amp-video>
+    </amp-story-page-attachment>
+  </amp-story-page>
+</amp-story>
+```
+
+##### Embeds
+
+```html
+<amp-story>
+  <amp-story-page>
+    <amp-story-grid-layer>
+      <amp-twitter
+        layout="responsive"
+        width="400"
+        height="433"
+        data-tweetid="...">
+      </amp-twitter>
+    </amp-story-grid-layer>
+  </amp-story-page>
+</amp-story>
+```
+
+Twetter以外にもいくつかある。
+
+#### Best Practice
+
+- Make use of legible and concise text
+- Use full bleed images and videos
+- Bring static imagery to life with animations
+
+#### Monetaization
+
+- Story Ads
+  - Story Ads Templates
+- Affliate Links
+- Sponsorerd Stories
+  - 広告にあるQRコードをスキャンすると起動するような利用シーン
+  - 埋め込み可能
+
+#### Tools
+
+最初にやったのの詳細紹介
+
+### Rendering on the Web: Performance Implications of Application Architecture
+
+レンダリングがどのように行われるか、SSRとかクライアントレンダリングとか。
+パフォーマンス話なので、パフォーマンス改善に取り組みたい、方法を知りたいというときに役立つ話なので、興味あるひとはタイトルでYoutubeをチェック！
+
+### Going Big: PWAs Come to Desktop and Chrome OS
+
+DesktopとChromeOSでPWAが使えるようになるよ
+
+PWAアプリの作りかた、とくにマニフェストの書き方を丁寧に説明している。
+つづいてサービスワーカー。
+Workboxを使って作る方法
+
+インストール前のイベントをフックできるよ。
+
+ファイルシステムへのアクセスは最後に残るピース。
+
+### Modern Web Testing and Automation with Puppeteer
+
+DevToolとPuppeteerについて
+ブラウザ自動化ソリューションです。
+
+Node.jsからChromeを操作（操り人形==puppeteer）するためのAPIを提供している。
+
+npmでブラウザがインストールされるので、環境設定や構築の必要がない。
+
+これまでChromeだけだったけど、
+Puppeteer Firefox!!
+
+現在90%のAPIをサポート
+
+#### New Web Testing
+
+##### Webテストは遅いという話。
+
+- テストごとに新しいブラウザを起動する。隔離するので正しい判断
+
+puppeteerには素晴らしいAPIが。
+Browser Context.
+Chromeのシークレットモード。
+分離できるので、実質新しいブラウザを起動するのと一緒
+100倍高速！
+
+##### テストがFlaky（フレーク状, 壊れやすい）という話。
+
+非同期問題。
+
+pupperteerには waitForX APIが。
+
+##### Mobile
+
+DevToolでユーザーエージェントを変えられる。
+puppeteerからデバイスをエミュレートできる。
+100以上のデバイスをエミュレートできる。
+
+##### Offlineサポート
+
+puppeteerからオフラインモードにできる。
+
+##### サービスワーカーの検証
+
+DevToolを開くより簡単に書ける
+サービスワーカーのテストを容易にする
+
+##### GeoLocation
+
+通常にブラウザにアクセスすると、許可を与えてから、developer consoleとかで操作する。
+
+puppeteerでも同じように制御できる。
+
+##### Network Monitoring
+
+DevToolネットワークモニター
+puppeteerではリクエストとレスポンスを取得でき、そこからいろいろな情報へリーチできるようになっている。
+
+そして、リクエストをインターセプトできる。
+つまり特定のAPIリクエストのレスポンスを偽造して、Webサイトにエラー表示をさせたりできる。
+
+##### Keyboard & Mouse
+
+Dipatch Event APIというのがあったがな...
+
+Shadow DOMやiframeも通過するよ
+
+##### Performance Test
+
+Page Metrics APIがオススメ
+DevToolsのパフォーマンスモニタの値が取得できる。
+
+##### Chrome Tracing
+
+Record と Stop で記録するけど、puppeteerにもAPIがある。
+
+##### Code Coverage
+
+CSSとJSのコードカバレッジを取れる。
+
+##### Accessibility
+
+自動化は難しかったが、
+PageAccessibilitySnapShot APIで簡単にできる
+
+Accessibility Visualizer というツールを作ったよ
+githubで公開中
+
+#### コミュニティ
+
+Slackチャンネルあるよ
+
+
+### AMP for Email: Coming Soon to an Inbox Near You
+
+メールの中にAMPを入れられる。
+
+- GoogleDocs
+	- 文章にコメントを入れられる
+	- 新しいコメントが入ると、メールが届くのでたどる必要がない
+- Pinterest
+	- アイデアをブラウジングできる
+- Ecwid
+	- カタログショッピング
+- indeed
+	- 求人情報を送信
+	- クリック率が2倍になった
+- OYO
+	- インドの旅行サイト
+	- オススメメールを送る
+	- クリック率(+57%)とコンバージョン率(+60%)が大幅に向上
+
+#### デザインガイドライン
+
+いろいろある
+テストは必要
+
+- 配信サービス
+	- SPARK POST
+	- SendGrid
+	- Amazon Pinpoint
+- テスト
+	- litmus
+- メーラー
+	- GMail
+	- @Mail
+	- Yahoo Mail (comming soon)
+	- Outlook (comming soon)
+
+- ユースケース
+- 配信/テストツール
+- 一般的なメールクライアント
+
+#### はじめかた
+
+g.co/dev/ampemail で学ぼう
+
+gmail プレイグラウンドを使う
+
+amp.gmail.dev/playground
+
+通常は表示できないので、Gmailの設定から、
+- Dynamic Emailが有効になっているか？
+- そこに Developer Setting というリンクがあるのでクリックすると、ホワイトリストにメールアドレスを入れることができる（開発用に）
+- amp@gmail.dev というプレイグラウンドのメールアドレスを設定
+
+そうすると表示されているはず！
+
+あとはHTMLを追加していくだけ。
+プレイグラウンドでいろいろテストできる。
+
+go.amp.dev/io-email
+でスライドの内容を試せます
+
+#### SPARK POST
+
+プレイグラウンドではない、商用サービスの事例
+
+プレイグラウンドと同じようにプレビューしながら確認できる。
+AMPに対応していないときの表示など記述できる。
+メールの送信分析できる。
+
+
+### Taking Chrome Full Screen with Trusted Web Activities
+
+TWA
+UIなしのChrome
+AndroidでPWAをプレイストアで配信するための方法。
+
+WebView CCT より多くのことができる
+
+事例
+
+
+TWAはChromeであり、Chromeが更新されるたびに最新の機能を利用することができる。
+将来的にはChrome以外でも
+
+### Google Search and JavaScript Sites
+
+SEO
+
+Googlebot is Chrome 41?
+No!
+
+Googlebot is Chrome
+
+- ES6
+- New Web API
+- Less Polyfill
+- Ongoing Update / evergreen
+
+React
+Vue
+Angular
+
+サーチコンソールからテストしてね
+
+youtube.com/GoogleWebmasters を見ると良いよ
+
+### Securing Web Apps with Modern Platform Features
+
+セキュリティセッション
+XSSとかCSRFとか
+
+どうやってセキュアなコードにするか（特にHTML中のJSとか）
+リファクタリング方法を解説
+
+セキュリティに興味ある人は、タイトルでYoutubeをチェック！
+
+### Next-Generation 3D Graphics on the Web
+
+WebGLが8年前に入った
+
+多くのフレームワークやライブラリがある。
+
+今何で使われている？
+
+- ミュージックビデオ
+- ゲーム
+- アニメーション
+- ショールーム（製品カタログ）
+- もっと
+
+WebGL + HTML
+
+事例をたくさん紹介
+
+ReactThreeFiber
+再利用可能になる
+
+WebGL + Web Components
+これでよりWeb層に強力な影響をもたらす
+カスタムエレメントを使って、複雑なコードを隠蔽する
+
+model-viewer エレメント
+アクセシビリティにも考慮している
+
+#### Web GPU
+
+GPUを操作するためのRawレベルAPI
+
+例えば三角形を描くコード、Web GPUもWebGLも複雑さは変わらない
+でもフレームワークを使えば、それほどの問題にはならない
+
+babylon.js はWebGPUに取り組み始めている
+
+WebGLではGPU性能の前にJavaScriptの繰り返し性能に直面する
+
+WebGPUではカクカクしないし、JavaScriptのCPU時間も使わない
+GPUが利用されるから
+
+babylon.js の4.1では使えるようになる
+
+- post processing filter
+
+WebGLとWebGPUのコードの違いを解説
+
+クロスプラットフォーム
+
+webgpu.io
+を見てね！
+
+### さいごに
+
+ということで、ながながとメモを貼っただけになりましたが、私のLTでは
+
+- Web Packaging
+- AMP
+- Puppeteer
+
+について話すので、よろしくお願いします。
