@@ -275,7 +275,1234 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2019/05/05/try-import-maps.html">TRY import maps</a></h2>
+            <h2 class="title"><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/05/19.html">Sunday, May 19, 2019 07:26:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/google-i-o.html">Google I/O</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回の記事でも書いた<a href="https://gdg-tokyo.connpass.com/event/128867/">I/O Extended 2019 Tokyo@GDG</a>で話してきました。</p>
+
+<p>Twitterでも、イベントサイトの資料でも共有しましたが、スライドを添付しておきます。</p>
+
+<script async class="speakerdeck-embed" data-id="a26c79df0da54af285994d93bc6288a1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>朝から夕方まで、とても幅広い話題がたくさんあり、勉強になりました。</p>
+
+<p>Room1の様子は動画がありますので、こちらからどうぞ。
+私はRoom2だったので、ありませんがw</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LOiFe7ztZCo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました" data-url="http://blog.open.tokyo.jp/2019/05/19/i-o-extended-2019-tokyo-gdg.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/19/i-o-extended-2019-tokyo-gdg.html&t=I/O%20Extended%202019%20Tokyo@GDG%20%E3%81%A7%E3%80%81Web%E6%8A%80%E8%A1%93%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8BLT%E3%82%92%E8%A9%B1%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/19/i-o-extended-2019-tokyo-gdg.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/15/google-i-o-2019.html">Google I/O 2019ふりかえり</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/05/15.html">Wednesday, May 15, 2019 06:57:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/google-i-o.html">Google I/O</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>タイトルを見ると、現地に行ったみたいですが、実際は行ってなくて Youtube のビデオで Webの全セッションを見ました。
+なんでかというと、今週末に <a href="https://gdg-tokyo.connpass.com/event/128867/">I/O Extended 2019 Tokyo@GDG</a>というイベントがあって、Polymer JapanはGDGのコミュニティなんで、何かWebで喋ることになったためです。</p>
+
+<p>Web Componentsの発表とかがあるわけではなかったのですが、何かWebで&hellip;と思い、ひたすら3日分（実際Webは数少ないけど）見たので、発表しない内容も含め、メモをブログ記事にしておこうと思います。
+ということで、長文です。</p>
+
+<h3>Chrome and Web</h3>
+
+<p>Web系の基調講演です。
+ハイライトは以下のとうな感じ。</p>
+
+<ul>
+<li>Chromeの速度が改善、特にAndroid端末で</li>
+<li>V8は20%のメモリ改善、JSの解析2倍速、async/awaitが11倍速く</li>
+<li>画像(imgタグ)のlazy loading
+
+<ul>
+<li>iframeでも利用可能</li>
+</ul></li>
+<li>lighthouseにbudget.jsonを追加して細かいパフォーマンスを取得できる</li>
+</ul>
+
+<h4>表示を速くするもの</h4>
+
+<p>パフォーマンスの改善が重要なテーマで、以下のようなものに取り組んでいる。</p>
+
+<h5>Portals</h5>
+
+<ul>
+<li>ナビゲートできるiframeみたいなもの</li>
+<li>サンプル
+
+<ul>
+<li>www.mealplan.family</li>
+<li>www.nomnom.social</li>
+<li>www.osmani.recipes</li>
+<li>www.grocery.store</li>
+</ul></li>
+<li>となりのヤングジャンプ</li>
+<li>Chrome Canaryで使える</li>
+</ul>
+
+<h5>Web Packaging</h5>
+
+<ul>
+<li>Signed package（chrome canaryで)</li>
+<li>AMPで使えるようになる</li>
+</ul>
+
+<h4>強力な機能</h4>
+
+<p>機能面では以下のようなことがある。</p>
+
+<ul>
+<li><p>Chromebook でPWAアプリが登録可能に</p>
+
+<ul>
+<li>hulu / slack / STADIA / </li>
+</ul></li>
+<li><p>PROXX 、2019のマインスイーパー</p>
+
+<ul>
+<li>preact , web worker</li>
+<li>proxx.app</li>
+<li>githubでソースを公開</li>
+</ul></li>
+<li><p>アシスタント</p>
+
+<ul>
+<li>duplex</li>
+<li>翻訳して一部を表示できる</li>
+</ul></li>
+<li><p>ネイティブのような機能</p>
+
+<ul>
+<li>Native File System Access</li>
+<li>Unlimited Quata</li>
+<li>Contacts Picker</li>
+<li>MIME-type Handlers</li>
+<li>SMS-based Authentication</li>
+<li>これらはプロジェクトfuguで管理している。</li>
+</ul></li>
+</ul>
+
+<h3>Building Successful Websites: Case Studies for Mature and Emerging Markets</h3>
+
+<p>新興国ではPWAアプリが重要（回線速度や端末スペックによる）。
+目玉の機能としては、Web Share API。ネイティブに近い共有機能が使えるようになった。</p>
+
+<ul>
+<li>Twitter Liteの例</li>
+<li>Times Internetの例</li>
+<li>Huluの例</li>
+</ul>
+
+<h3>Elevating the Web Platform with the JavaScript Framework Community</h3>
+
+<p>Googleが各JavaScriptフレームワーク（おもにReact/Facebook）と協力してAPI開発を進めている</p>
+
+<ul>
+<li>Chunking code</li>
+<li>Scheduling API
+
+<ul>
+<li>WICG/main-thread-scheduling</li>
+</ul></li>
+<li>isInputPending
+
+<ul>
+<li>WICG/is-input-pending</li>
+</ul></li>
+<li>Display Locking
+
+<ul>
+<li>WICG/display-locking</li>
+</ul></li>
+</ul>
+
+<p>現時点の課題としては、npm/バンドルの重複がある。
+これを防ぎたい。package.jsonへesmoduleが入れられないか。
+現時点は情報が不足しているため、重複を防ぐことができない。何かしらの形で足りれば役に立つ。ということ
+-&gt;import mapsにはふれなかった。</p>
+
+<h3>Rapidly Building Better Web Experiences with AMP</h3>
+
+<p>AMPの基調講演にあたる。</p>
+
+<ul>
+<li>AMPはパフォーマンス問題を解決するために立ち上がったOSS</li>
+<li>HTML上で動作するライブラリ</li>
+<li>パフォーマンスを向上するためのもの</li>
+<li>キャッシュを有効にします</li>
+<li>事前にレンダリングできるようにするためのものです</li>
+</ul>
+
+<h4>成功事例</h4>
+
+<ul>
+<li>Teads</li>
+<li>tokopedia</li>
+<li>INDIA TODAY</li>
+<li>もっとたくさんある</li>
+<li>昨年Google検索からAMPページへのクリック率は30%増加した</li>
+</ul>
+
+<h4>新しい技術</h4>
+
+<ul>
+<li>ads</li>
+<li>email</li>
+<li>stories</li>
+<li>websites</li>
+</ul>
+
+<p>A string user-first open web forever</p>
+
+<h5>Websites</h5>
+
+<p>これまではHTMLとCSS。不自由だった。</p>
+
+<p>WorkerDOMによってJSを利用可能にする。
+amp-scriptを実行できるようになる。
+ワシントンポストの例
+bit.lt/amp-script-trial</p>
+
+<p>OriginTrialで利用可能になる</p>
+
+<p>NEXT.jsでAMP対応できるようになる
+bit.ly/next-js-amp</p>
+
+<p>Webパッケージングで署名付きパッケージにすることで、google.comから独自のドメインに展開できる。
+自前で用意するか、AMP Packagerで作る方法。
+AMP Real URL（Cloudflare）</p>
+
+<h6>新機能</h6>
+
+<p>これまでは、HTMLにAMPページのリンクがあった。
+これは2つのバージョンのコンテンツを常に2つ用意することになる。
+余分なオーバーヘッドが生まれる。
+AMP Firstアプローチを提案する。</p>
+
+<p>AMPで作り始め、足りないところを amp-script でビジネスロジックに補完する。
+それでも足りないこと、それを Bento AMP プロジェクトで助ける。</p>
+
+<p>PWA &lt;&ndash;&gt; AMP</p>
+
+<p>PWAでサービスワーカーを作るのはとても大変、でもAMPなら1行でできる。
+bit.ly/amp-sw</p>
+
+<p>amp.devではそれを利用している。</p>
+
+<p>AMPでは、アクセシビリティ、パフォーマンスを達成できる。
+そして、依存関係管理が楽になる。
+AMPは常に最新です。</p>
+
+<p>LTS（LTメンテナンス）
+800以上のコントリビューターがあなたのメンテナンスコストを減らす。</p>
+
+<ul>
+<li>無限スクロール( amp-list で利用可能 )</li>
+<li>オートコンプリート bit.ly/amp-autocomplete （実験的）</li>
+<li>カルーセル（まもなく）</li>
+<li>新しい Loaders</li>
+</ul>
+
+<p>amp-toolbox-optimizer
+go.amp.dev/optimize-amp</p>
+
+<h5>収益化</h5>
+
+<p>AMPHTML Ads</p>
+
+<p>AMPページと、非AMPページのどちらにも適用できる。</p>
+
+<p>とにかく速い。</p>
+
+<p>ampifyme</p>
+
+<p>amp-analytics 解析
+amp-linker 
+amp-recaptcha
+amp-readiness
+amp-tag-test
+amp-insight</p>
+
+<p>A/Bテスト</p>
+
+<p>amp-experiment
+optimizely + Oracle maxymiser で利用可能</p>
+
+<h5>アップデート</h5>
+
+<h6>AMP Stories</h6>
+
+<p>Story Ads</p>
+
+<p>フルスクリーンの広告を表示できる。</p>
+
+<p>Google Ad Managerにあるので、AMPに配信できる。</p>
+
+<p>Storiesを作るツール類</p>
+
+<ul>
+<li>MakeStories</li>
+<li>Newsroom Studio</li>
+<li>WordPress</li>
+<li>Unfold</li>
+</ul>
+
+<p>Google Discoverでストーリーを見つけることができる</p>
+
+<p>検索結果にビジュアルストーリーを表示するブロックができると思う。</p>
+
+<h6>AMP for Email</h6>
+
+<ul>
+<li>@mail</li>
+<li>yahoo mail</li>
+<li>Outlook</li>
+</ul>
+
+<h4>まとめ</h4>
+
+<p>広告に関する大きな変化をもたらした。
+Webサイトの収益化</p>
+
+<p>ロードマップ</p>
+
+<ul>
+<li>Websites
+
+<ul>
+<li>Payments</li>
+<li>Adaptive CSS Limit</li>
+<li>Transitions</li>
+<li>Stateful pages</li>
+</ul></li>
+<li>Stories
+
+<ul>
+<li>Embeds</li>
+<li>Animations</li>
+<li>Reactions</li>
+<li>Branching</li>
+</ul></li>
+<li>Ads
+
+<ul>
+<li>Coverage</li>
+<li>Capabilities</li>
+<li>Performance</li>
+</ul></li>
+<li>Emails
+
+<ul>
+<li>Capabilities</li>
+<li>Video Support</li>
+<li>More components</li>
+</ul></li>
+</ul>
+
+<h3>What’s New in JavaScript</h3>
+
+<p>JavaScriptの新しい機能について。</p>
+
+<ul>
+<li>TC39</li>
+<li>V8のスピードアップはNode.jsにも貢献している。</li>
+</ul>
+
+<h4>新しくなったもの</h4>
+
+<h5>class</h5>
+
+<p>コンストラクタなしで、プロパティの初期値が指定できるように</p>
+<pre class="highlight javascript"><code><span class="kr">class</span> <span class="nx">hoge</span> <span class="p">{</span>
+  <span class="nx">_foo</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+</code></pre>
+
+<p><code>#</code> をつけて privateにできる</p>
+<pre class="highlight javascript"><code><span class="kr">class</span> <span class="nx">hoge</span> <span class="p">{</span>
+  <span class="err">#</span><span class="nx">foo</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="nx">get</span> <span class="nx">value</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="err">#</span><span class="nx">foo</span> <span class="p">}</span>
+
+</code></pre>
+
+<p>継承すると</p>
+<pre class="highlight javascript"><code><span class="kr">class</span> <span class="nx">Animal</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>   
+<span class="kr">class</span> <span class="nx">Cat</span> <span class="kr">extends</span> <span class="nx">Animal</span> <span class="p">{</span>
+  <span class="nx">likeBath</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span> <span class="c1">// コンストラクタの呼び出しが必要ない。super呼び出し不要</span>
+  <span class="nx">meow</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Meow"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre>
+
+<p>String#matchAll でマッチした部分や、部分一致の部分など取得しやすくなった。</p>
+
+<p>1000000000000
+みたいな数字を
+1<em>000</em>000<em>000</em>000 
+と区切り付きで書けるようになる。
+読みやすい&hellip;らしい(Babelで使えるよ！</p>
+
+<p>Bigints
+新しい機能（ロケールつき）</p>
+<pre class="highlight javascript"><code><span class="nx">nf</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Intl</span><span class="p">.</span><span class="nx">NumberFormat</span><span class="p">(</span><span class="s1">'fr'</span><span class="p">);</span>
+<span class="nx">nf</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="mi">12345678901234567890</span><span class="nx">n</span><span class="p">)</span>
+
+<span class="mi">12</span> <span class="mi">345</span> <span class="mi">678</span> <span class="mi">901</span> <span class="mi">234</span> <span class="mi">567</span> <span class="mi">890</span>
+
+
+<span class="mi">12</span><span class="nx">_345_678_901_234_567_890n</span><span class="p">.</span><span class="nx">toLocaleString</span><span class="p">(</span><span class="s1">'fr'</span><span class="p">)</span> <span class="c1">// 同じ</span>
+</code></pre>
+
+<p>Firefox, Node.js で使える。Polyfillもあるよ</p>
+
+<h5>Array#{ flat, flatMap }</h5>
+<pre class="highlight javascript"><code><span class="nx">array</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">]]];</span>
+<span class="nx">array</span><span class="p">.</span><span class="nx">flat</span><span class="p">()</span>
+
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+
+<span class="nx">array</span><span class="p">.</span><span class="nx">flat</span><span class="p">(</span><span class="kc">Infinity</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+
+<span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">].</span><span class="nx">flatMap</span><span class="p">(</span><span class="nx">x</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="nx">x</span><span class="p">,</span> <span class="nx">x</span><span class="p">])</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+</code></pre>
+
+<p>どこでも使えるよ！</p>
+
+<h5>Object.fromEntries</h5>
+
+<p>Object.entries したものを、オブジェクトに戻せるAPI</p>
+
+<p>map = new Map(Object.entries(obj));
+Object.fromEntries(map) もできるよ！</p>
+
+<p>どこでも使えるよ！Polyfillもあるよ</p>
+
+<h5>globalThis</h5>
+
+<p>どこでも使えるよ！</p>
+
+<h5>Stable sort</h5>
+
+<p>安全ソートがすべてのプラットフォームで使えるようになったよ</p>
+
+<h5>Intl</h5>
+
+<h6>Intl.RelativeTimeFormat</h6>
+
+<p>Safari以外で使えるよ</p>
+
+<h6>Intl.listFormat</h6>
+
+<p>ChromeとNodeだけね。Polyfillはあるよ</p>
+
+<h6>Intl.DateFormat#formatRange</h6>
+
+<p>Chromeだけで、flagが必要</p>
+
+<h6>Intl.Locale</h6>
+
+<p>ChromeとNodeだけね。Polyfillはあるよ</p>
+
+<h5>トップレベル await</h5>
+
+<p>まだ使わないでね</p>
+
+<h5>Promise</h5>
+
+<ul>
+<li>Promise.allSettled
+
+<ul>
+<li>ChromeとFirefox, polyfill</li>
+</ul></li>
+<li>Promise.any
+
+<ul>
+<li>まだ</li>
+</ul></li>
+</ul>
+
+<h5>WeakRef</h5>
+
+<p>画像をキャッシュしたいときなどにmapに入れるけど、それをGCで消すことができる</p>
+
+<p>Chromeだけで、flagが必要</p>
+
+<h3>Unlocking New Capabilities for the Web</h3>
+
+<p>Project Fugu</p>
+
+<p>ネイティブアプリにあって、Webアプリにはない差分をうめていきたい。
+Webでできることを広げていきたい。</p>
+
+<p>Permissionモデルで機能を利用できるようにする。</p>
+
+<ul>
+<li>Web Bluetooth</li>
+<li>Sharing Contents and Receiving Shares
+
+<ul>
+<li>Web Share</li>
+<li>Web Share Target</li>
+<li>Web Share Target(v2)</li>
+</ul></li>
+<li>Media Session
+
+<ul>
+<li>Keyboard Media Buttons</li>
+</ul></li>
+<li>Detection Barcodes and Faces
+
+<ul>
+<li>Shape Detection API</li>
+<li>Perception Toolkit</li>
+</ul></li>
+<li>Badging</li>
+<li>Keeping an App Alive
+
+<ul>
+<li>Wake Lock</li>
+</ul></li>
+<li>File System</li>
+<li>Accessing Serial Devices
+
+<ul>
+<li>Serial API</li>
+</ul></li>
+<li>WebHID</li>
+<li>Accessing Users Contacts
+
+<ul>
+<li>Contacts Picker</li>
+</ul></li>
+<li>Font Access API</li>
+<li>Clipboard</li>
+<li>SMS-based Phone Number Verification</li>
+<li>Notification Triggers API</li>
+</ul>
+
+<p>bit.ly/new-fugu-request</p>
+
+<p>codelabs/web-capabilities
+developers.google.com/web/updates/capabilities</p>
+
+<h3>Build Fast and Smooth Web Apps from Feature Phone to Desktop</h3>
+
+<p>PROXX開発秘話！（発表だから秘話じゃないけどw</p>
+
+<p>2019年のマインスイーパーをどのようにして作るか？という興味深いセッション。
+実際にソースコード見れるし、feature phone（実際は低スペックのAndroidやKaiOSあたりが該当する）にも対応している。</p>
+
+<p>以前にこさまりさんが、ガラケーの情報を集めていたのは、このあたりに関係しているのかなーと思って見ていた。</p>
+
+<p>proxx.app でためそう！</p>
+
+<h3>How to Build an E-Commerce Site with AMP</h3>
+
+<p>どうやってECサイトをAMPで作るか、という事例をメインにしたセッション。
+そのあたりに興味あればビデオを見ると役だちそうです。</p>
+
+<h3>AMP Stories: Visual Stories for the Web</h3>
+
+<p>snapchatで始まったストーリーは、InstagramやFacebook, whatsappなどで広まった。
+アプリのストーリーは自然な感じで、スマートフォンユーザーのほとんどが使っている。
+フルスクリーンなので、スクロールしたり回転したりせず、操作も簡単です。</p>
+
+<p>ただし発見されるのは難しい。そこでAMPはオープンなWebプラットフォームで見つけることが可能で、リンクでき、共有できる仕組みを提供する。
+自分でコントロールでき、Webサイトにリンクでき、検索にヒットする、Webページに埋め込むこともできる、そして一番重要なのは速い。
+タップするか、スワイプする。</p>
+
+<h4>Format Update</h4>
+
+<h5>Localization</h5>
+
+<p>最初は英語のみをサポートしていた。
+今は21の言語を利用できる。</p>
+<pre class="highlight html"><code><span class="nt">&lt;html</span> <span class="err">⚡️</span> <span class="na">lang=</span><span class="s">"ja"</span><span class="nt">&gt;</span>
+</code></pre>
+
+<h5>Desktop</h5>
+
+<p>デフォルトはモバイルデザイン。
+ワシントンポストと協力して、有用性を確認した。</p>
+<pre class="highlight html"><code><span class="nt">&lt;amp-story</span> <span class="na">supports-landscape</span><span class="nt">&gt;</span>
+</code></pre>
+
+<p>ランドスケープに最適な背景を用意し、そうでない場合は中心が表示される（object-position で調整可能)。</p>
+
+<h5>Sidebar</h5>
+
+<p>ハンバーガーメニューにサイドバーを追加できる</p>
+<pre class="highlight html"><code><span class="nt">&lt;amp-story&gt;</span>
+  <span class="nt">&lt;amp-sidebar&gt;</span>
+    <span class="c">&lt;!-- サイドバーの内容 --&gt;</span>
+  <span class="nt">&lt;/amp-sidebar&gt;</span>  
+<span class="nt">&lt;/amp-story&gt;</span>
+</code></pre>
+
+<h5>Attachments</h5>
+
+<p>スワイプアップすると、添付ファイルにアクセスできる。</p>
+<pre class="highlight html"><code><span class="nt">&lt;amp-story&gt;</span>
+  <span class="nt">&lt;amp-story-page&gt;</span>
+    <span class="nt">&lt;amp-story-page-attachment&gt;</span>
+      <span class="nt">&lt;amp-video</span> <span class="na">src=</span><span class="s">"hoge.mp4"</span><span class="nt">&gt;&lt;/amp-video&gt;</span>
+    <span class="nt">&lt;/amp-story-page-attachment&gt;</span>
+  <span class="nt">&lt;/amp-story-page&gt;</span>
+<span class="nt">&lt;/amp-story&gt;</span>
+</code></pre>
+
+<h5>Embeds</h5>
+<pre class="highlight html"><code><span class="nt">&lt;amp-story&gt;</span>
+  <span class="nt">&lt;amp-story-page&gt;</span>
+    <span class="nt">&lt;amp-story-grid-layer&gt;</span>
+      <span class="nt">&lt;amp-twitter</span>
+        <span class="na">layout=</span><span class="s">"responsive"</span>
+        <span class="na">width=</span><span class="s">"400"</span>
+        <span class="na">height=</span><span class="s">"433"</span>
+        <span class="na">data-tweetid=</span><span class="s">"..."</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;/amp-twitter&gt;</span>
+    <span class="nt">&lt;/amp-story-grid-layer&gt;</span>
+  <span class="nt">&lt;/amp-story-page&gt;</span>
+<span class="nt">&lt;/amp-story&gt;</span>
+</code></pre>
+
+<p>Twetter以外にもいくつかある。</p>
+
+<h4>Best Practice</h4>
+
+<ul>
+<li>Make use of legible and concise text</li>
+<li>Use full bleed images and videos</li>
+<li>Bring static imagery to life with animations</li>
+</ul>
+
+<h4>Monetaization</h4>
+
+<ul>
+<li>Story Ads
+
+<ul>
+<li>Story Ads Templates</li>
+</ul></li>
+<li>Affliate Links</li>
+<li>Sponsorerd Stories
+
+<ul>
+<li>広告にあるQRコードをスキャンすると起動するような利用シーン</li>
+<li>埋め込み可能</li>
+</ul></li>
+</ul>
+
+<h4>Tools</h4>
+
+<p>最初にやったのの詳細紹介</p>
+
+<h3>Rendering on the Web: Performance Implications of Application Architecture</h3>
+
+<p>レンダリングがどのように行われるか、SSRとかクライアントレンダリングとか。
+パフォーマンス話なので、パフォーマンス改善に取り組みたい、方法を知りたいというときに役立つ話なので、興味あるひとはタイトルでYoutubeをチェック！</p>
+
+<h3>Going Big: PWAs Come to Desktop and Chrome OS</h3>
+
+<p>DesktopとChromeOSでPWAが使えるようになるよ</p>
+
+<p>PWAアプリの作りかた、とくにマニフェストの書き方を丁寧に説明している。
+つづいてサービスワーカー。
+Workboxを使って作る方法</p>
+
+<p>インストール前のイベントをフックできるよ。</p>
+
+<p>ファイルシステムへのアクセスは最後に残るピース。</p>
+
+<h3>Modern Web Testing and Automation with Puppeteer</h3>
+
+<p>DevToolとPuppeteerについて
+ブラウザ自動化ソリューションです。</p>
+
+<p>Node.jsからChromeを操作（操り人形==puppeteer）するためのAPIを提供している。</p>
+
+<p>npmでブラウザがインストールされるので、環境設定や構築の必要がない。</p>
+
+<p>これまでChromeだけだったけど、
+Puppeteer Firefox!!</p>
+
+<p>現在90%のAPIをサポート</p>
+
+<h4>New Web Testing</h4>
+
+<h5>Webテストは遅いという話。</h5>
+
+<ul>
+<li>テストごとに新しいブラウザを起動する。隔離するので正しい判断</li>
+</ul>
+
+<p>puppeteerには素晴らしいAPIが。
+Browser Context.
+Chromeのシークレットモード。
+分離できるので、実質新しいブラウザを起動するのと一緒
+100倍高速！</p>
+
+<h5>テストがFlaky（フレーク状, 壊れやすい）という話。</h5>
+
+<p>非同期問題。</p>
+
+<p>pupperteerには waitForX APIが。</p>
+
+<h5>Mobile</h5>
+
+<p>DevToolでユーザーエージェントを変えられる。
+puppeteerからデバイスをエミュレートできる。
+100以上のデバイスをエミュレートできる。</p>
+
+<h5>Offlineサポート</h5>
+
+<p>puppeteerからオフラインモードにできる。</p>
+
+<h5>サービスワーカーの検証</h5>
+
+<p>DevToolを開くより簡単に書ける
+サービスワーカーのテストを容易にする</p>
+
+<h5>GeoLocation</h5>
+
+<p>通常にブラウザにアクセスすると、許可を与えてから、developer consoleとかで操作する。</p>
+
+<p>puppeteerでも同じように制御できる。</p>
+
+<h5>Network Monitoring</h5>
+
+<p>DevToolネットワークモニター
+puppeteerではリクエストとレスポンスを取得でき、そこからいろいろな情報へリーチできるようになっている。</p>
+
+<p>そして、リクエストをインターセプトできる。
+つまり特定のAPIリクエストのレスポンスを偽造して、Webサイトにエラー表示をさせたりできる。</p>
+
+<h5>Keyboard &amp; Mouse</h5>
+
+<p>Dipatch Event APIというのがあったがな&hellip;</p>
+
+<p>Shadow DOMやiframeも通過するよ</p>
+
+<h5>Performance Test</h5>
+
+<p>Page Metrics APIがオススメ
+DevToolsのパフォーマンスモニタの値が取得できる。</p>
+
+<h5>Chrome Tracing</h5>
+
+<p>Record と Stop で記録するけど、puppeteerにもAPIがある。</p>
+
+<h5>Code Coverage</h5>
+
+<p>CSSとJSのコードカバレッジを取れる。</p>
+
+<h5>Accessibility</h5>
+
+<p>自動化は難しかったが、
+PageAccessibilitySnapShot APIで簡単にできる</p>
+
+<p>Accessibility Visualizer というツールを作ったよ
+githubで公開中</p>
+
+<h4>コミュニティ</h4>
+
+<p>Slackチャンネルあるよ</p>
+
+<h3>AMP for Email: Coming Soon to an Inbox Near You</h3>
+
+<p>メールの中にAMPを入れられる。</p>
+
+<ul>
+<li>GoogleDocs
+
+<ul>
+<li>文章にコメントを入れられる</li>
+<li>新しいコメントが入ると、メールが届くのでたどる必要がない</li>
+</ul></li>
+<li>Pinterest
+
+<ul>
+<li>アイデアをブラウジングできる</li>
+</ul></li>
+<li>Ecwid
+
+<ul>
+<li>カタログショッピング</li>
+</ul></li>
+<li>indeed
+
+<ul>
+<li>求人情報を送信</li>
+<li>クリック率が2倍になった</li>
+</ul></li>
+<li>OYO
+
+<ul>
+<li>インドの旅行サイト</li>
+<li>オススメメールを送る</li>
+<li>クリック率(+57%)とコンバージョン率(+60%)が大幅に向上</li>
+</ul></li>
+</ul>
+
+<h4>デザインガイドライン</h4>
+
+<p>いろいろある
+テストは必要</p>
+
+<ul>
+<li>配信サービス
+
+<ul>
+<li>SPARK POST</li>
+<li>SendGrid</li>
+<li>Amazon Pinpoint</li>
+</ul></li>
+<li>テスト
+
+<ul>
+<li>litmus</li>
+</ul></li>
+<li><p>メーラー</p>
+
+<ul>
+<li>GMail</li>
+<li>@Mail</li>
+<li>Yahoo Mail (comming soon)</li>
+<li>Outlook (comming soon)</li>
+</ul></li>
+<li><p>ユースケース</p></li>
+<li><p>配信/テストツール</p></li>
+<li><p>一般的なメールクライアント</p></li>
+</ul>
+
+<h4>はじめかた</h4>
+
+<p>g.co/dev/ampemail で学ぼう</p>
+
+<p>gmail プレイグラウンドを使う</p>
+
+<p>amp.gmail.dev/playground</p>
+
+<p>通常は表示できないので、Gmailの設定から、
+- Dynamic Emailが有効になっているか？
+- そこに Developer Setting というリンクがあるのでクリックすると、ホワイトリストにメールアドレスを入れることができる（開発用に）
+- amp@gmail.dev というプレイグラウンドのメールアドレスを設定</p>
+
+<p>そうすると表示されているはず！</p>
+
+<p>あとはHTMLを追加していくだけ。
+プレイグラウンドでいろいろテストできる。</p>
+
+<p>go.amp.dev/io-email
+でスライドの内容を試せます</p>
+
+<h4>SPARK POST</h4>
+
+<p>プレイグラウンドではない、商用サービスの事例</p>
+
+<p>プレイグラウンドと同じようにプレビューしながら確認できる。
+AMPに対応していないときの表示など記述できる。
+メールの送信分析できる。</p>
+
+<h3>Taking Chrome Full Screen with Trusted Web Activities</h3>
+
+<p>TWA
+UIなしのChrome
+AndroidでPWAをプレイストアで配信するための方法。</p>
+
+<p>WebView CCT より多くのことができる</p>
+
+<p>事例</p>
+
+<p>TWAはChromeであり、Chromeが更新されるたびに最新の機能を利用することができる。
+将来的にはChrome以外でも</p>
+
+<h3>Google Search and JavaScript Sites</h3>
+
+<p>SEO</p>
+
+<p>Googlebot is Chrome 41?
+No!</p>
+
+<p>Googlebot is Chrome</p>
+
+<ul>
+<li>ES6</li>
+<li>New Web API</li>
+<li>Less Polyfill</li>
+<li>Ongoing Update / evergreen</li>
+</ul>
+
+<p>React
+Vue
+Angular</p>
+
+<p>サーチコンソールからテストしてね</p>
+
+<p>youtube.com/GoogleWebmasters を見ると良いよ</p>
+
+<h3>Securing Web Apps with Modern Platform Features</h3>
+
+<p>セキュリティセッション
+XSSとかCSRFとか</p>
+
+<p>どうやってセキュアなコードにするか（特にHTML中のJSとか）
+リファクタリング方法を解説</p>
+
+<p>セキュリティに興味ある人は、タイトルでYoutubeをチェック！</p>
+
+<h3>Next-Generation 3D Graphics on the Web</h3>
+
+<p>WebGLが8年前に入った</p>
+
+<p>多くのフレームワークやライブラリがある。</p>
+
+<p>今何で使われている？</p>
+
+<ul>
+<li>ミュージックビデオ</li>
+<li>ゲーム</li>
+<li>アニメーション</li>
+<li>ショールーム（製品カタログ）</li>
+<li>もっと</li>
+</ul>
+
+<p>WebGL + HTML</p>
+
+<p>事例をたくさん紹介</p>
+
+<p>ReactThreeFiber
+再利用可能になる</p>
+
+<p>WebGL + Web Components
+これでよりWeb層に強力な影響をもたらす
+カスタムエレメントを使って、複雑なコードを隠蔽する</p>
+
+<p>model-viewer エレメント
+アクセシビリティにも考慮している</p>
+
+<h4>Web GPU</h4>
+
+<p>GPUを操作するためのRawレベルAPI</p>
+
+<p>例えば三角形を描くコード、Web GPUもWebGLも複雑さは変わらない
+でもフレームワークを使えば、それほどの問題にはならない</p>
+
+<p>babylon.js はWebGPUに取り組み始めている</p>
+
+<p>WebGLではGPU性能の前にJavaScriptの繰り返し性能に直面する</p>
+
+<p>WebGPUではカクカクしないし、JavaScriptのCPU時間も使わない
+GPUが利用されるから</p>
+
+<p>babylon.js の4.1では使えるようになる</p>
+
+<ul>
+<li>post processing filter</li>
+</ul>
+
+<p>WebGLとWebGPUのコードの違いを解説</p>
+
+<p>クロスプラットフォーム</p>
+
+<p>webgpu.io
+を見てね！</p>
+
+<h3>さいごに</h3>
+
+<p>ということで、ながながとメモを貼っただけになりましたが、私のLTでは</p>
+
+<ul>
+<li>Web Packaging</li>
+<li>AMP</li>
+<li>Puppeteer</li>
+</ul>
+
+<p>について話すので、よろしくお願いします。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Google I/O 2019ふりかえり" data-url="http://blog.open.tokyo.jp/2019/05/15/google-i-o-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/15/google-i-o-2019.html&t=Google%20I/O%202019%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/15/google-i-o-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/13/generate-import-maps-json.html">import-mapsのjsonファイルを生成するツールを作ってみた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/05/13.html">Monday, May 13, 2019 06:18:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/import-maps.html">import maps</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回 <a href="/2019/05/05/try-import-maps.html">TRY import maps</a> ということで、<a href="https://github.com/WICG/import-maps">import maps</a> を試してみる記事を書きました。
+最後に</p>
+
+<blockquote>
+<p>JSON定義を自動生成するスクリプトが出ないか期待したいですね（がんばって自作するのもあり）。</p>
+</blockquote>
+
+<p>という記述をしたのですが、その後調べたら <a href="https://github.com/WICG/import-maps/issues/60">How to convert package-lock.json to import maps? #60</a> というissue が上がっているのを見て、いくつか <code>yarn</code> のサンプルが出ていたりして、これ自作できるのでは？と思い、作ってみました。</p>
+
+<p><a href="https://www.npmjs.com/package/gen-import-maps-json">gen-import-maps-json</a> です。</p>
+
+<p>READMEのとおりで簡単に動きます。</p>
+
+<h3>しくみ</h3>
+
+<p>とても小さいJavaScriptのコードです。以下のような手順で処理しています。</p>
+
+<ol>
+<li>コマンドが実行されたディレクトリにある <code>package-lock.json</code> ファイルを読み込む</li>
+<li>devDependencies のモジュールは除外する</li>
+<li>Web Components の polyfill は除外する</li>
+<li>対象モジュールの <code>package.json</code> を読み取って、 <code>main</code> ファイルのパスを入手する</li>
+<li>メインファイルのモジュール名と、相対パスをキーにした、map情報を書き出す</li>
+</ol>
+
+<h3>ためしてみる</h3>
+
+<p>前回と同じく<a href="https://github.com/Polymer-Japan/litelement-first-element">Polymer-Japan/litelement-first-element</a> のコードを使って実行してみます。</p>
+
+<p>生成できたJSONは以下のとおりです。</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"@polymer/font-roboto/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/font-roboto"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-demo-helpers/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-flex-layout/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icon/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icons/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icons"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-iconset-svg/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-iconset-svg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-location/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-location/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-meta/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/iron-meta"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/marked-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/marked-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/polymer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/polymer-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@polymer/prism-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/prism-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@webcomponents/shadycss/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"@webcomponents/shadycss"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/shadycss.min.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"clipboard/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"clipboard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/dist/clipboard.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"delegate/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"delegate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/src/delegate.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"good-listener/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"good-listener"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/src/listen.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"lit-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"lit-html/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"marked/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"marked"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"prismjs/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"prismjs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"select/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"select"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/src/select.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"tiny-emitter/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"tiny-emitter"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/index.js"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>前回のJSONは以下のとおりでした。</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"@polymer/iron-demo-helpers/demo-pages-shared-styles"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-demo-helpers/demo-snippet"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-snippet.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/polymer-legacy.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/polymer-legacy.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/font-roboto/roboto.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/lib/utils/html-tag.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/utils/html-tag.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/marked-element/marked-element.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/prism-element/prism-highlighter.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-highlighter.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/prism-element/prism-theme-default.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-theme-default.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"marked/lib/marked.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"prismjs/prism.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/polymer/lib/elements/dom-module.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/elements/dom-module.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"lit-html/lib/shady-render"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lib/shady-render.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"lit-html/lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icons/iron-icons.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-icon/iron-icon.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nt">"@polymer/iron-meta/iron-meta.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>だいぶ違いますね！</p>
+
+<p>このツールを作ることで、<a href="https://github.com/WICG/import-maps">import maps</a> の仕様理解が深まりました。</p>
+
+<ul>
+<li>キー名に対応するパスが1つの場合、値は配列でなく文字列で良い</li>
+<li>パッケージが複数のモジュールを持っている場合、 キー名を <code>/</code> で終了すると他のファイルを参照できる。くわしくは <a href="https://github.com/WICG/import-maps#packages-via-trailing-slashes">&ldquo;Packages&rdquo; via trailing slashes</a> を参照ください</li>
+</ul>
+
+<p>これで、定義ファイルを自動生成できます。</p>
+
+<h3>実行してみる</h3>
+
+<p>前回と同じくPHPのビルトインサーバーを利用します。
+ツールで生成できた JSON をHTMLに追加しておきましょう。</p>
+<pre class="highlight plaintext"><code>$ php -S localhost:8080 -t .
+</code></pre>
+
+<p>前回と同じように、無事デモが動作しました。</p>
+
+<h3>JSONを外部ファイルにしてみる</h3>
+
+<p>いろいろとissueを見たりしているうちに、JSON記述は外部ファイルが使えるかも？と思ったので、import-mapsの定義をファイルに変更してみます。
+ツールで出力されたJSONを <code>import-maps.json</code> というファイル名にして、以下のようにHTMLの記述を変更します。</p>
+<pre class="highlight html"><code>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"importmap"</span> <span class="na">src=</span><span class="s">"import-maps.json"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre>
+
+<p>ページをリロードしてみると Dev Tool のコンソールに <strong><em>External import maps are not yet supported.</em></strong> と表示されました。
+まだサポートされてなかった&hellip;</p>
+
+<p>ということで、サポートを待ちましょう。</p>
+
+<h3>さいごに</h3>
+
+<p>仕様は文面だけで読んでいると、わかっているつもりでも、実際のユースケースではわかっていないことも多いと実感しました。
+ツールやデモプログラムを作って、実際に手に馴染ませることが重要ですね。</p>
+
+<p>それと、polyfill の除外がWeb Components固定になっているので、今後の展望としては、ignoreするモジュールを定義ファイルで指定できるようにしたいなーと思っています。</p>
+
+<p>今後も <a href="https://github.com/WICG/import-maps">import maps</a> の最新状況を追いかけていきたいと思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="import-mapsのjsonファイルを生成するツールを作ってみた" data-url="http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html&t=import-maps%E3%81%AEjson%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/05/try-import-maps.html">TRY import maps</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2019/05/05.html">Sunday, May 05, 2019 11:40:00 AM</a></p>
   <p class="tags">
     
@@ -533,312 +1760,6 @@ JSON定義を自動生成するスクリプトが出ないか期待したいで�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/05/02.html">Thursday, May 02, 2019 09:12:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
-    
-      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2019年4回目となる <a href="https://polymercoedo.doorkeeper.jp/events/91049">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p><a href="https://github.com/Edo-Elements/edo-blogcard/">edo-blogcard</a>に最初のコードをアップしました。
-<a href="https://github.com/Edo-Elements/edo-blogcard/tree/develop">developブランチ</a>にpushしています。</p>
-
-<p>まだ何も動きはないのですが、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a> を使ってビルドするところまで実装しています。</p>
-
-<h3>ES Module import との戦い</h3>
-
-<p>Web Components はHTMLファイルからだと以下のように読み込みます。</p>
-<pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/xx-element/xx-element.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre>
-
-<p>独自のカスタムエレメントから別のエレメントを利用する場合は、以下のように記述します。</p>
-<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'@polymer/iron-ajax/iron-ajax.js'</span><span class="p">;</span>
-</code></pre>
-
-<p>ここでブラウザは <code>@polymer/iron-ajax/iron-ajax.js</code> のようなパスを解決できないため、webpackでコンパイルすることが必要になります。
-この話は、以前の記事<a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a>でも書いているとおり、<a href="https://github.com/WICG/import-maps">import maps</a>待ちな状況です。</p>
-
-<h3>2つのビルド結果</h3>
-
-<p>そこで、2つのビルド結果を保持するようにしました。</p>
-
-<h4>/dist/edo-blogcard.js</h4>
-
-<p>これは</p>
-<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'@edo-elements/edo-blogcard/dist/edo-blogcard.js'</span><span class="p">;</span>
-</code></pre>
-
-<p>のように利用するためのビルド結果で、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>形式で記述された <code>.lit</code> ファイルを <code>.js</code> にコンパイルしたものです。</p>
-
-<h4>/dist/edo-blogcard.bundle.js</h4>
-
-<p>これは</p>
-<pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@edo-elements/edo-blogcard/dist/edo-blogcard.bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre>
-
-<p>のように利用するためのビルド結果で、HTMLからブログパーツとして利用したい（webpackなどを実行しないWebページで使いたい）場合のためにコンパイルしたものです。
-<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使ってHTMLから利用可能な状態になっています。</p>
-
-<h3>工夫したところ</h3>
-
-<p>後者の <code>bundle.js</code> については、普通に<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使うやり方なので、特にはありません。
-<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>はwebpackのloaderとして実装されているので、configに設定を追加するだけです。</p>
-
-<p>一方前者はwebpackのloaderようにできている<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>を、webpack使わずにどうやって呼び出すか？というところを工夫しました。</p>
-
-<p>それが <a href="https://github.com/Edo-Elements/edo-blogcard/blob/develop/build.js">build.js</a> です。
-そして <a href="https://github.com/webpack/loader-runner#readme">loader-runner</a> という webpack のモジュールを使っています。
-このモジュールは <code>Runs (webpack) loaders</code> という説明のとおり、loaderを実行することに特化しています。</p>
-<pre class="highlight javascript"><code><span class="kr">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"fs"</span><span class="p">);</span>
-<span class="kr">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"path"</span><span class="p">);</span>
-<span class="kr">const</span> <span class="p">{</span> <span class="nx">runLoaders</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"loader-runner"</span><span class="p">);</span>
-
-<span class="nx">runLoaders</span><span class="p">(</span>
-  <span class="p">{</span>
-    <span class="na">resource</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s2">"edo-blogcard.lit"</span><span class="p">),</span>
-    <span class="na">loaders</span><span class="p">:</span> <span class="p">[</span><span class="nx">require</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="s2">"lit-loader"</span><span class="p">)]</span>
-  <span class="p">},</span>
-  <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="s2">"dist/edo-blogcard.js"</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-  <span class="p">}</span>
-<span class="p">);</span>
-</code></pre>
-
-<p>これだけで <code>.lit</code> ファイルを <code>.js</code> ファイルに(webpackなしで)コンパイルできます。</p>
-
-<h3>次回</h3>
-
-<p>通常どおりの、もくもく会として開催予定しています。
-皆様の参加をお待ちしております。</p>
-
-<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo day 2019 春を開催しました" data-url="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html&t=Polymer.co-edo%20day%202019%20%E6%98%A5%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/05/01.html">Wednesday, May 01, 2019 08:15:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/psr.html">PSR</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>令和最初の記事も、PHP。
-この記事は<a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a>の続編です。</p>
-
-<p>前回のサンプルプログラムでは <a href="https://github.com/zendframework/zend-diactoros">zendframework/zend-diactoros</a> の <a href="https://docs.zendframework.com/zend-diactoros/v2/factories/">HTTP Message Factories</a> を使って PSR-7のHTTPレスポンス(<code>Psr\Http\Message\ResponseInterface</code>)を作っていました。</p>
-
-<p>今回は、他のライブラリを使っても大丈夫か考えてみたいと思います。</p>
-
-<h3>PHP-17 の HTTP Factories に対応したライブラリ</h3>
-
-<p><a href="https://packagist.org/?query=factory&amp;amp;tags=psr-17">PackagistでPSR-17を検索</a>してみました。
-PSR-15ほどはないようです。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
-なお「フレームワーク」と書いてあるものや、特定のPSR-7ライブラリ <strong>だけ</strong> に依存したもの（たとえば<code>http-factory-guzzle</code>など）は除外しています。</p>
-
-<ul>
-<li><a href="https://github.com/tuupola/http-factory">tuupola/http-factory</a></li>
-<li><a href="https://github.com/tbreuss/http-factory">tebe/http-factory</a></li>
-</ul>
-
-<p>それぞれのライブラリの説明を読んで気づくでしょう。</p>
-
-<p><code>PSR-17 HTTP-Factory with auto-discovery support</code></p>
-
-<p>そう先ほど「特定のPSR-7ライブラリ <strong>だけ</strong> に依存したもの」と書きましたが、実は特定のライブラリに依存します。
-それはそうですよね。PSR-7のHTTPレスポンスインターフェースの実装インスタンスを <strong>生成</strong> しないといけないので、何かしらに依存します。</p>
-
-<p>ただ、こういった <code>auto-discovery</code> してくれるライブラリを使っておくと、PSR-7のライブラリを変更したときも影響が少ないですね。
-でもそれ、さっきのサンプルで DI してたから、それで良くない？というのは、まさにそのとおりです。</p>
-
-<h3>で、結局どうすると良いの？</h3>
-
-<ul>
-<li>PSR-7/PSR-11/PSR-15/PSR-17 を使うアーキテクチャにするなら、FactoryInterfaceをDIすれば影響範囲は設定箇所だけになります</li>
-<li>PSR-7/PSR-15/PSR-17 を使う(PSR-11を使わない)アーキテクチャにするなら、上記のような PSR-7 を自動判定してくれるライブラリを使うと良い</li>
-</ul>
-
-<p>ということになると思います。</p>
-
-<p>それならPSR-7のライブラリも使い分けたサンプルが見たかった！とかあるかもしれませんが、それはまた今度！（機会があれば）</p>
-
-<h3>おまけ</h3>
-
-<p>さて、PSR-7/PSR-15/PSR-17 の話は面白かったですか？
-これに加えて、フロントエンドも含めてフレームワークに依存しないアプリケーションとは？
-みたいな話を<a href="http://phpcon.fukuoka.jp/2019">PHPカンファレンス福岡2019</a>でします。
-午後一のセッション。また <a href="https://twitter.com/soudai1025">@soudai1025</a> の裏になりましたが、私の方がマニアックな話なのかな。</p>
-
-<p>では6月に福岡でお会いしましょう！</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PSR-17 HTTP Factories のライブラリ" data-url="http://blog.open.tokyo.jp/2019/05/01/psr-17-libraries.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/01/psr-17-libraries.html&t=PSR-17%20HTTP%20Factories%20%E3%81%AE%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/01/psr-17-libraries.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/04/30.html">Tuesday, April 30, 2019 09:28:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-      <a rel="tag" href="/tags/psr.html">PSR</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>平成最後の記事は、PHP。
-久々のPHP記事ですが、<a href="https://www.php-fig.org/psr/psr-15">PSR-15</a>に準拠したリクエストハンドラーライブラリの実装を比較してみようと思います。</p>
-
-<h3>PSR-15とは？</h3>
-
-<p>HTTPメッセージを使用するリクエストハンドラーと、ミドルウェアコンポーネントの共通インターフェースです。</p>
-
-<p>それ<a href="http://www.php-fig.org/psr/psr-7/">PSR-7</a>なのでは？という鋭い人は、
-<a href="https://twitter.com/tanakahisateru">@tanakahisateru</a>さんのスライド
-<a href="https://speakerdeck.com/tanakahisateru/17ninatutafalseka">PHP-FIGのHTTP処理標準の設計はなぜPSR-7/15/17になったのか</a>を参照ください。</p>
-
-<p>PSR-7については、だいぶ知れ渡っていると思うので、PSR-15のリクエストハンドラーに着目していきます。</p>
-
-<h3>PHP-15のリクエストハンドラーに対応したライブラリ</h3>
-
-<p><a href="https://packagist.org/?query=PSR-15&amp;amp;tags=psr-15">PackagistでPSR-15を検索</a>してみました。
-たくさんありますね。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
-なお「フレームワーク」と書いてあるものは除外しています。
-例えば <a href="https://github.com/zendframework/zend-expressive">zend-expressive</a>は <code>minimalist PSR-7 middleware framework for PHP</code> と書いてあるとおりなので。
-<a href="http://www.slimframework.com/">Slim</a>などのマイクロフレームワークも同様です。</p>
-
-<ul>
-<li><a href="https://github.com/thephpleague/route">league/route</a></li>
-<li><a href="https://github.com/northwoods/router">northwoods/router</a></li>
-<li><a href="https://github.com/sunrise-php/http-router">sunrise/http-router</a></li>
-<li><a href="https://github.com/middlewares/request-handler">middlewares/request-handler</a></li>
-</ul>
-
-<p>の4つを使って<a href="https://github.com/sizuhiko/psr15-requesthandler-examples">サンプルプログラム集</a>を作ってみました。</p>
-
-<h3>sizuhiko/psr15-requesthandler-examples</h3>
-
-<h4>PSR-7</h4>
-
-<p>まず前提事項として、PSR-7対応のライブラリが必要です。
-本サンプルでは、主に <a href="https://github.com/zendframework/zend-diactoros">zendframework/zend-diactoros</a> を使っています。
-<a href="https://github.com/sunrise-php/http-router">sunrise/http-router</a>の例ついては、同系統に<a href="https://github.com/sunrise-php/http-message">sunrise/http-message</a>と<a href="https://github.com/sunrise-php/http-server-request">sunrise-php/http-server-request</a>があるので、それを利用しています。
-PSR-7のライブラリが違うと、どのような記述の違いがあるのかわかりやすいでしょう。</p>
-
-<h4>サンプルの内容</h4>
-
-<p><a href="https://github.com/sizuhiko/psr15-requesthandler-examples">サンプルプログラム集</a>を <code>clone</code> するか、ダウンロードして、READMEの手順に従ってください。</p>
-
-<p>ドキュメントルート(<code>/</code>)にアクセスすると、<code>Hello, World!</code> 出すだけの簡単なものです。</p>
-
-<h4>サンプルコードの流れ</h4>
-
-<p>で、結局PSR-15とは？みたいな話になるわけですが、どの例も以下のような流れで動いています</p>
-
-<ul>
-<li>PSR-7 でHTTPリクエスト(<code>Psr\Http\Message\RequestInterface</code>)を受け取る</li>
-<li>PSR-15の <code>Psr\Http\Server\MiddlewareInterface</code> か <code>Psr\Http\Server\RequestHandlerInterface</code> でいい感じに PSR-7のHTTPレスポンス(<code>Psr\Http\Message\ResponseInterface</code>) を生成する。</li>
-<li>PSR-7 のHTTPレスポンスをエミットする</li>
-</ul>
-
-<p>つまり、真ん中の部分を処理することになります。</p>
-
-<h4>リクエストハンドラ</h4>
-
-<p><a href="https://github.com/sizuhiko/psr15-requesthandler-examples/tree/master/src">サンプルのsrcフォルダ</a>の下には</p>
-
-<ul>
-<li>Middlewares</li>
-<li>RequestHandlers</li>
-</ul>
-
-<p>があり、それぞれ <code>Psr\Http\Server\MiddlewareInterface</code> か <code>Psr\Http\Server\RequestHandlerInterface</code> を実装したクラスが置いてあります。
-で、それぞれのリクエストハンドラーからは、適したハンドラが呼び出されるようになっています。</p>
-
-<p>このサンプルでは PSR-17 (HTTP Factories) を先行導入し、PSR-11 (Container Interface) に対応したライブラリでDIしてますが、
-そのあたりは、次回以降で解説します。</p>
-
-<p>ミドルウエアもリクエストハンドラも同じように<code>Hello, World!</code>をレスポンスボディに入れるだけです。</p>
-
-<h3>このサンプルをとおして言いたかったこと</h3>
-
-<p>このサンプルでは、ドキュメントルートだけの簡単な実装でしたが、ルーターの設定を追加するだけで、
-実際のアプリケーションでも使えるようになることがわかると思います。</p>
-
-<p>もちろん実際にはDBにアクセスする必要もあったりするわけですが、そこには<a href="https://www.php.net/manual/ja/intro.pdo.php">PHP Data Objects(PDO)</a>があり、
-実際のDBの差分を吸収してくれます。
-そこで利用するSQLは標準であり、Webの標準よりも長い期間利用されています。</p>
-
-<p>フレームワークを利用してアプリケーションを作ることは、速く簡単に構築できます。
-しかしフレームワークに依存せずPHPの標準を使うことで、柔軟にライブラリを変えても、自分のビジネスロジックを流用することができるようになります。</p>
-
-<p>もちろん今日のフレームワークの多くが PSR 対応を進めていますので、フレームワークを使っていても、より互換性が高いアプリケーションを作ることができるようになるかもしれません。</p>
-
-<p><a href="/2019/05/01/psr-17-libraries.html">次回はPSR-17について、いくつかのライブラリを紹介</a>します。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PSR-15リクエストハンドラーのライブラリ比較" data-url="http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html&t=PSR-15%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%8F%E3%83%B3%E3%83%89%E3%83%A9%E3%83%BC%E3%81%AE%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E6%AF%94%E8%BC%83" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -886,6 +1807,12 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a> <span>2019/05/19</span></li>
+                
+                  <li><a href="/2019/05/15/google-i-o-2019.html">Google I/O 2019ふりかえり</a> <span>2019/05/15</span></li>
+                
+                  <li><a href="/2019/05/13/generate-import-maps-json.html">import-mapsのjsonファイルを生成するツールを作ってみた</a> <span>2019/05/13</span></li>
+                
                   <li><a href="/2019/05/05/try-import-maps.html">TRY import maps</a> <span>2019/05/05</span></li>
                 
                   <li><a href="/2019/05/03/brackets-coming-lsp.html">BracketsにLSPがやってきた</a> <span>2019/05/03</span></li>
@@ -899,12 +1826,6 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
                   <li><a href="/2019/04/29/asucon-2019.html">アスカン2019を開催しました</a> <span>2019/04/29</span></li>
                 
                   <li><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a> <span>2019/04/28</span></li>
-                
-                  <li><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a> <span>2019/04/27</span></li>
-                
-                  <li><a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a> <span>2019/04/26</span></li>
-                
-                  <li><a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a> <span>2019/04/25</span></li>
                 
               </ul>
             </div>
@@ -1330,7 +2251,7 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
                 
                   
                   
-                    <li class="size3">
+                    <li class="size4">
                       <a rel="tag" href="/tags/polymer.html">Polymer</a>
                     </li>
                   
@@ -1536,6 +2457,10 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
                   
                   
                 
+                  
+                  
+                  
+                
               </ul>
             </div>
           </div>
@@ -1544,7 +2469,7 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2019.html">2019</a> (19)</li>
+                  <li><a href="/2019.html">2019</a> (22)</li>
                 
                   <li><a href="/2018.html">2018</a> (31)</li>
                 
