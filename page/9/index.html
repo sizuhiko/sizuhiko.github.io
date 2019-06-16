@@ -275,7 +275,496 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">cakephp-fabricate-adaptor を CakePHP3.6 対応しました</a></h2>
+            <h2 class="title"><a href="/2018/07/29/polymer-co-edo-meetup-16.html">Polymer.co-edo meetup ＃16 を開催しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2018/07/29.html">Sunday, July 29, 2018 11:31:00 AM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年7回目となる <a href="https://polymercoedo.doorkeeper.jp/events/77462">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>PWA Starter Kit でも使われていた lit-element を使って、カスタムエレメントを作る体験</p>
+</blockquote>
+
+<p>ということで、codelabsにある、Polymer1系のエレメント作成では定番の <a href="https://codelabs.developers.google.com/codelabs/polymer-first-elements/index.html">Build your first Polymer element</a> です。
+当日は、<a href="https://github.com/googlecodelabs/polymer-first-elements/tree/master/icon-toggle-finished">上記チュートリアルの完成系のコード</a> を見ながら <a href="https://github.com/Polymer/lit-element">lit-element</a> で作ってみました。</p>
+
+<p>このブログでは、当日やったことの履歴として、今後やってみたい人のために、手順を書いておきます。</p>
+
+<h3>Polymer CLI をインストールする</h3>
+
+<p>まず <a href="https://github.com/Polymer/lit-element">lit-element</a> の README に書かれているように Polymer CLI をインストールします。
+READMEではグローバルにインストールしていますが、今回はローカルに入れてみましょう。</p>
+
+<p><code>icon-toggle</code> というディレクトリを作ってから、CLIをインストールします。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>mkdir icon-toggle
+<span class="gp">$ </span><span class="nb">cd </span>icon-toggle
+<span class="gp">$ </span>npm i polymer-cli@next
+</code></pre>
+
+<p>念のため、インストールできたか確認してみます。
+<code>help</code> コマンドが表示できていれば大丈夫です。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>./node_modules/.bin/polymer <span class="nb">help</span>
+
+
+
+   /<span class="se">\˜</span>˜/   /<span class="se">\˜</span>˜/<span class="se">\</span>
+  /__<span class="se">\/</span>   /__<span class="se">\/</span>__<span class="se">\ </span>   Polymer-CLI
+ /<span class="se">\ </span> /   /<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\</span>
+/__<span class="se">\/</span>   /__<span class="se">\/</span>  <span class="se">\/</span>__<span class="se">\ </span> The multi-tool <span class="k">for </span>Polymer projects
+<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+ <span class="se">\/</span>__<span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>   Usage: <span class="sb">`</span>polymer &lt;<span class="nb">command</span>&gt; <span class="o">[</span>options ...]<span class="sb">`</span>
+  <span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+   <span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>
+
+</code></pre>
+
+<h3>icon-toggle エレメントのスケルトンを作る</h3>
+
+<p>codelabs にあるコードは、すでにディレクトリ構造やファイルが準備されている状態から始まりますが、今回は CLI から作成します。</p>
+
+<p>以下のコマンドを実行してみましょう。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>./node_modules/.bin/polymer init
+</code></pre>
+
+<p>何を作成するのか質問されるので、 <code>polymer-3-element</code> を選択します。</p>
+<pre class="highlight plaintext"><code>? Which starter template would you like to use? 
+❯ polymer-3-element - A simple Polymer 3.0 element template 
+</code></pre>
+
+<p>エレメント名はそのまま <code>Enter</code> で進むと、 <code>.gitignoreがないよ</code> というエラーになってしまいます。</p>
+<pre class="highlight plaintext"><code>info: [init]    Running template polymer-3-element...
+? Element name icon-toggle
+? Brief description of the element 
+error: [cli.main]   Uncaught exception: AssertionError [ERR_ASSERTION]: Trying to copy from a source that does not exist: xxx/icon-toggle/node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+e
+</code></pre>
+
+<p>これは、<a href="https://github.com/Polymer/polymer-cli/issues/999">Polymer3のエレメントテンプレートがミスっている</a>ということで、ファイルを作ってからリトライします。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>touch ./node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+<span class="gp">$ </span>./node_modules/.bin/polymer init
+</code></pre>
+
+<p>質問には、上記と同じように回答してください。そうすると、以下のように表示されて完了します。</p>
+<pre class="highlight plaintext"><code>Setup Complete!
+Check out your new project README for information about what to do next.
+</code></pre>
+
+<h3>必要なパッケージをインストールする</h3>
+
+<p>まずインストールされている PolymerElement を削除します。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>npm uninstall @polymer/polymer
+</code></pre>
+
+<p>つづいて、LitElement をインストールします。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>npm i @polymer/lit-element
+</code></pre>
+
+<p>icon-toggle では <code>iron-icon</code> と <code>iron-icons</code> を利用する（codelabsでは最初からbower.jsonに入っている）ので、これらのCustomElementsもインストールします。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>npm i @polymer/iron-icon
+<span class="gp">$ </span>npm i @polymer/iron-icons
+</code></pre>
+
+<p>最後にもう一度 Polymer CLI をインストールしておきます。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>npm i -D polymer-cli@next
+</code></pre>
+
+<h3>LitElement で書き換えてみる</h3>
+
+<p>ソースコードを GitHub に置きました。
+<a href="https://github.com/sizuhiko/lit-element-icon-toggle">sizuhiko/lit-element-icon-toggle</a></p>
+
+<p>Polymer CLIで作った Polymer3.0 element を LitElement に書き換える箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>import</code> を <code>LitElement</code> に変更</li>
+<li>親クラスを <code>LitElement</code> に変更</li>
+<li><code>static get template()</code> を <code>_render({必要な引数})</code> に変更</li>
+</ul>
+
+<p>codelabs は Polymer1 で書かれているので、Polymer3 形式に変更するときに気をつける箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>listeners</code> は使わずに <code>addEventListener</code> でクリックイベントを受け取る</li>
+</ul>
+
+<p>あと、デモのコードのアップした内容を見て確認してください。
+LitElementとは関係ないですが、Polyfillのインポートが以下のように変わっています。</p>
+<pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre>
+
+<h3>LitElement と PolymerElement の違い</h3>
+
+<p>PolymerElementはHtmlElementに以下のような機能が追加されて構成されています。
+<a href="https://www.polymer-project.org/3.0/docs/api/">公式ドキュメントのAPI doc</a>の <code>polymer-element.js</code> を参照してください。</p>
+
+<blockquote>
+<p>Base class that provides the core API for Polymer&rsquo;s meta-programming features including template stamping, data-binding, attribute deserialization, and property change observation.</p>
+</blockquote>
+
+<p>また、このドキュメントに書いてある様々な機能を利用できます（たとえば tap イベントを処理するための <code>gesture-event-listeners.js</code> とか）。</p>
+
+<p>対して、LitElementではPolymerElementのつもりでいると、以下のようなポイントで躓きます。</p>
+
+<ul>
+<li>プロパティで <code>reflectToAttribute</code> が使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/10">Adding reflectToAttribute to the demo doesn&rsquo;t work #10</a> に解決するサンプルコードが書いてあります。lit-element-icon-toggleではそのまま利用しています。</li>
+</ul></li>
+<li>プロパティで2ウェイデータバインディングが使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/14">2 way data binding not working #14</a> や <a href="https://github.com/Polymer/lit-element/issues/81">Implement property change notification events (notify) #81</a> が参考になります。</li>
+</ul></li>
+<li>プロパティで <code>observer</code> が使えない</li>
+</ul>
+
+<p>ということで、codelabs のPolymer1版ではあった、データバインディングの箇所は実装されていません。
+現時点は上記 issue を参考に、値に変更があったときにイベント <code>pressed-changed</code> イベントを投げるところまでは実装しています。
+受け取り側の <code>demo/index.html</code> で以下のようなJavaScriptを書くと変更イベントを受け取れます。</p>
+<pre class="highlight javascript"><code><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'icon-toggle[toggleicon="favorite"]'</span><span class="p">).</span> <span class="nx">addEventListener</span><span class="p">(</span><span class="s1">'pressed-changed'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">e</span><span class="p">));</span>
+</code></pre>
+
+<p>プロパティの値が変化したときには、データバインディングでなく redux などを使おう、というのは PWA-Starter-Kit のコードからも伝わってくるので、まぁそうなのかなーと思います。
+ただ、アプリでなく、エレメントを作って公開したい場合は、 redux なのか？という気もするので、change イベントなどを投げるのが良いのだろうな、とは思っています。</p>
+
+<h3>次回は</h3>
+
+<p>8/20(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>そろそろ、edoエレメントの開発をしないとなー、なんて思っています&hellip;</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃16 を開催しました" data-url="http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html&t=Polymer.co-edo%20meetup%20%EF%BC%8316%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2018/07/28.html">Saturday, July 28, 2018 01:27:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
+    
+      <a rel="tag" href="/tags/iot.html">IoT</a>
+    
+      <a rel="tag" href="/tags/wot.html">WoT</a>
+    
+      <a rel="tag" href="/tags/mftokyo2018.html">MFTokyo2018</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="http://makezine.jp/event/mft2018/">Maker Faire Tokyo 2018</a>に<a href="http://makezine.jp/event/mft2018/">CHIRIMEコミュニティ</a>で参加するためのデモをセットアップしたときのメモ。</p>
+
+<h2>購入したもの</h2>
+
+<ul>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4KC6">Raspberry Pi 3 model B+</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-55ZD">Adafruit PiTFT Plus 480x320 3.5インチTFT</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-56B6">Adafruit GPIOリボンケーブル - 26ピン</a></li>
+<li><a href="https://www.amazon.co.jp/dp/B078JKJP8D">TOSHIBA microSDHC 16GB</a></li>
+</ul>
+
+<h2>インストール</h2>
+
+<h3>イメージファイルのダウンロード</h3>
+
+<p><a href="http://download.chirimen.org/release/raspberry_pi_3/">CHIRIMEN公式サイトのダウンロードページ</a>から、<a href="http://download.chirimen.org/release/raspberry_pi_3/CHIRIMEN_Raspberry_pi_3_20180716.zip">CHIRIMEN<em>Raspberry</em>pi<em>3</em>20180716.zip</a>をダウンロードします。
+Raspberry Pi 3 model B+ で利用できる CHIRIMEN のイメージファイルは現時点では評価版です。</p>
+
+<h3>イメージファイルの書き込み</h3>
+
+<p><a href="https://www.1ft-seabass.jp/memo/2018/07/23/raspbian-install-201807-memo/">最近のRaspberry Piイメージ（Raspbian）をインストールするメモ</a>が参考になります。
+<a href="https://etcher.io/">Etcher</a>を使って、ダウンロードしたイメージファイルをmicroSDカードに書き込みます。</p>
+
+<h3>SSHの有効化</h3>
+
+<p>Raspbianはセキュリティを考慮してデフォルトではSSHが無効になっているので、
+SDカードをマウントして、以下のコマンドを実行しておきます。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>touch /Volumes/boot/ssh
+</code></pre>
+
+<h2>起動</h2>
+
+<p>microSDカードをRaspberry Pi 本体に挿して、起動します。
+Raspberry Piにsshで入るため、有線LANをMacと接続しました。
+<a href="https://qiita.com/fumishitan/items/88bb832cb08fe8016f66">MacとRaspberry piをインターネット共有でつないでみる</a>が参考になります。</p>
+<pre class="highlight shell"><code><span class="gp">$ </span>ssh pi@192.168.2.2
+</code></pre>
+
+<p>初期パスワードは <code>rasp</code> になっています。</p>
+
+<p>3.5TFTを有効にするため、<a href="https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi/easy-install-2">公式サイトのEASY INSTALL</a>を参考に、ドライバーをインストールします。</p>
+<pre class="highlight shell"><code><span class="nb">cd</span> ~
+wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
+chmod +x adafruit-pitft.sh
+sudo ./adafruit-pitft.sh
+</code></pre>
+
+<p>で、このままでは X を利用できないので <a href="https://qiita.com/hishi/items/bdd630666277e4f8162a#x-windows%E3%81%AE%E6%8F%8F%E7%94%BB">Raspberry Pi Zero(W)でPiTFTを使う - X Windowsの描画</a>を参考に、設定の変更とタッチスクリーンの調整を行います。</p>
+
+<h2>ソフトウェアキーボードのインストール</h2>
+
+<p><a href="https://darmus.net/raspberry-pi-matchbox-keyboard-install/">Raspberry Piでソフトウェアキーボードをインストール&amp;起動する方法</a>を参考に、Matchbox Keyboardをインストールします。</p>
+
+<h2>デモプログラムの作成</h2>
+
+<p>Web Components(Polymer) meets REAL WORLD ということで、2年連続 HTML のパーツを組み合わせることで WoT を体験できるようなデモを実施予定です。
+昨年は WebGpio タグを作ったので、今年は WebI2c タグを予定しています。
+近日コードは公開予定！</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CHIRIMEN Raspi setup" data-url="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html&t=CHIRIMEN%20Raspi%20setup" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/07/02/polymer-co-edo-meetup-15.html">Polymer.co-edo meetup ＃15 を開催しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2018/07/02.html">Monday, July 02, 2018 03:22:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年6回目となる <a href="https://polymercoedo.doorkeeper.jp/events/76217">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>今回は Google I/O &lsquo;18 で発表された PWA starter kit を使った、サンプルアプリを動かそう</p>
+</blockquote>
+
+<p>ということで、Polymer3以降の技術で作り直されたサンプルアプリを動かしてみました。</p>
+
+<h3>PWA starter kit のURL</h3>
+
+<ul>
+<li><a href="https://github.com/Polymer/pwa-starter-kit">PWA Starter Kit</a></li>
+<li><a href="https://github.com/Polymer/pwa-helpers">pwa-helpers</a></li>
+<li><a href="https://github.com/…/pwa…/wiki/4.-Redux-and-state-management">Redux and state management</a></li>
+<li><a href="https://github.com/…/pwa-starte…/wiki/7.-Application-testing">Application testing</a></li>
+<li><a href="https://github.com/…/pwa-start…/wiki/5.-Building-&amp;amp;-Deploying">Building &amp; Deploying</a></li>
+</ul>
+
+<p>各自 PWA Starter Kitをダウンロードして、ローカルで実行しました。
+特にはまりどころもなく、READMEどおり進めていけば大丈夫です。
+動きを確認したあとは、私からどうなっているのか、という技術的な解説をしました。</p>
+
+<p>PolymerというかLitElementの話がメインになって、reduxの解説までは時間が足りなかったのですが、
+それはインターネットにたくさん情報があるので、私の解説よりはわかりやすいかな、と。</p>
+
+<h3>PWA starter kit から見える Polymer/Web Componentsの未来</h3>
+
+<p>Polymerが生まれた時点で <code>複雑なWebアプリを作るのは大変だ</code> と言われていた状況は、
+Web ComponentsやReduxによって、わかりやすいものになっていると思います。</p>
+
+<p>PolymerはLitElementの裏に隠れていて見えませんが、もちろんPolymer3がLitElementを支えています。
+今後もPolymerチームの動きからは目が離せませんね。</p>
+
+<h3>次回は</h3>
+
+<p>7/23(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>今回はPWA starter kit のハンズオンをやったので、できなかった lit-html の体験をしてみたいな、と思っています。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃15 を開催しました" data-url="http://blog.open.tokyo.jp/2018/07/02/polymer-co-edo-meetup-15.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/07/02/polymer-co-edo-meetup-15.html&t=Polymer.co-edo%20meetup%20%EF%BC%8315%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/07/02/polymer-co-edo-meetup-15.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/06/11/brackets-prettier-extention.html">Brackets prettier 拡張を作ってみた</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2018/06/11.html">Monday, June 11, 2018 01:49:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/editor.html">Editor</a>
+    
+      <a rel="tag" href="/tags/brackets.html">Brackets</a>
+    
+      <a rel="tag" href="/tags/prettier.html">Prettier</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>JavaScriptでコードを書くときは <a href="https://www.npmjs.com/package/js-beautify">JS Beautifier</a> を使ってフォーマットしていたのですが、
+<a href="http://mizchi.hatenablog.com/">mizchi&rsquo;s blog</a>の<a href="http://mizchi.hatenablog.com/entry/2018/05/31/233220">最近のフロントエンドのエディタ事情</a>で</p>
+
+<blockquote>
+<p>フォーマッタは当然のように prettier が入る。もう選択肢はなくて、猫も杓子もprettier。すでに勝負は決している。</p>
+</blockquote>
+
+<p>と書かれていたので、じゃぁ<a href="https://prettier.io/">prettier</a>入れようと思ったのがきっかけです。</p>
+
+<h3>prettier を使うには</h3>
+
+<p>私がメインで使っているエディタは <a href="http://brackets.io">Adobe Brackets</a> です。
+vs-code にも atom にも拡張があるので、Bracketsでも誰か作ってるだろう&hellip; と思ったらありませんでした。
+ここで考えたのが、以下アイデアです。</p>
+
+<ul>
+<li>gulp-watch 使って、ファイルに変更があったら自動的に変換する</li>
+<li>git の commit フックに仕込む</li>
+<li>Bracketsの拡張作る</li>
+<li>vs-code にエディタを変える</li>
+</ul>
+
+<h3>Brackets 愛が強すぎて拡張を作ってみることにした</h3>
+
+<p>まぁアレですよ。エディタの機能拡張といえば古くは（これはものすごく古い話）Emacsの拡張作ったり、Sublime使っていたころはpython使って拡張書いたりしていたので「エディタ拡張を作るとは」みたいな流儀はわかっていたつもり、でした。
+そもそもBracketsの拡張ってatomやvs-codeとどう違うのか？と思って、<a href="https://github.com/prettier/prettier-atom">atom版</a>と<a href="https://github.com/prettier/prettier-vscode">vs-code版</a>のコードを見比べましたが「お・おぅ」となって、断念しました。
+まぁBracketsって<a href="https://bitbucket.org/chromiumembedded/cef">CEF</a>ベースだからなー（<a href="https://electronjs.org">electron</a>ベースではない）、そもそもコードを流用とか考えない方が良さそうだ。</p>
+
+<h4>Brackets 拡張を作るのに参考になるサイト</h4>
+
+<p>とりあえず調べられた範囲が以下のとおり</p>
+
+<ul>
+<li><a href="https://www.adobe.com/jp/devnet/edge-code/articles/building-your-first-brackets-extension.html">初めてのBRACKETS拡張機能の作成</a>
+
+<ul>
+<li>記事が2012年で大丈夫かぁ？と思ったが、終わってみれば何も変わっていなかった</li>
+</ul></li>
+<li><a href="https://github.com/adobe/brackets/wiki/How-to-write-extensions">How to write extensions</a>
+
+<ul>
+<li>こちらは2015年に更新されていて、情報のメンテはされているようだ</li>
+</ul></li>
+<li><a href="http://brackets.io/docs/current/index.html">Brackets API</a>
+
+<ul>
+<li>詳しいAPIの使い方が書いてある <code>Show code</code> が便利というか、それ見ないとわからないよ！</li>
+</ul></li>
+</ul>
+
+<h4>どうやって作るか</h4>
+
+<p>公式サイトにも書いてあります</p>
+
+<blockquote>
+<p>For a quick start, you can paste in the Simple &ldquo;Hello World&rdquo; extension or the code from an existing extension that is similar to what you want to do.</p>
+</blockquote>
+
+<p>「既存の機能が似ている拡張のコードを参考にすると良いよ！」（おまえドキュメントを書くということを放棄しているんじゃないだろうな&hellip;</p>
+
+<h4>参考にするもの</h4>
+
+<p><a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>という、最初にも紹介した <a href="https://www.npmjs.com/package/js-beautify">JS Beautifier</a> を使えるようにする Brackets拡張です。
+普段この拡張を使っているので、参考にするにはもってこいです（機能もコードフォーマットという部分では似ている）。</p>
+
+<h4>いくつかの壁</h4>
+
+<p><a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>のコードは難しくなく、簡単に読めたのですが</p>
+
+<ul>
+<li>これテストコードとか書けないの？（まぁ書けないに近い</li>
+<li>ES6とか使えないの？</li>
+<li>ファイル分割するベストプラクティスとかないの？</li>
+</ul>
+
+<p>という部分が気になりました。
+他の拡張のコードをいくつかみたりしましたが、まぁエディタの拡張って、ちょこっとした機能だから分割するまでもないんですよね、「わかる」みたいな感じ。</p>
+
+<p>結果として</p>
+
+<ul>
+<li>テストコードは諦めた（モックのテストになりそうだったので</li>
+<li>ES6というとアレですが、 <code>const</code> <code>let</code> あたりは使えた。allow functionはエラーになってしまった</li>
+<li>ファイル分割してみた！（ベストではないかもしれないが!!</li>
+</ul>
+
+<h3>Brackets Prettier 作ったよ！</h3>
+
+<p>そんなこんなで、<a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>のコードを <del>パクって</del> 参考に、<a href="https://github.com/sizuhiko/brackets-prettier">Brackets Prettier</a> を作りました。</p>
+
+<h4>Brackets 拡張を作ったらやること</h4>
+
+<p><a href="http://brackets-registry.aboutweb.com/">Brackets Extension Registry</a>というところに登録しておくと、エディタの <code>拡張機能マネージャ</code> からインストールできるので、世界中のBracketsユーザーが <code>prettier</code> と検索したら出てくるようになります。
+で、レジストリへの登録方法は、<a href="https://github.com/adobe/brackets/wiki/Extension-Registry-Help">公式WikiのExtension Registry Help</a>に書いてあるので、そのとおり作業を進めます。</p>
+
+<p>で、登録するとBrackets拡張のBotアカウントがツイートしてくるんですね。知らなかった。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">Brackets Prettier - 1.0.0 (NEW) <a href="https://t.co/axTV7nu5xB">https://t.co/axTV7nu5xB</a> <a href="https://t.co/3KQ31k1dED">https://t.co/3KQ31k1dED</a> <a href="https://twitter.com/brackets?ref_src=twsrc%5Etfw">@brackets</a></p>&mdash; Brackets Extensions (@brktsextensions) <a href="https://twitter.com/brktsextensions/status/1004603877402873856?ref_src=twsrc%5Etfw">7 June 2018</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<h3>今後は</h3>
+
+<p>Brackets拡張の作り方わかったので、これからは俺得な拡張をもっと作っていこうと思います！
+とりあえずPolymer関係を作ろうかなー</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Brackets prettier 拡張を作ってみた" data-url="http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html&t=Brackets%20prettier%20%E6%8B%A1%E5%BC%B5%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">cakephp-fabricate-adaptor を CakePHP3.6 対応しました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2018/06/10.html">Sunday, June 10, 2018 12:51:00 PM</a></p>
   <p class="tags">
     
@@ -309,262 +798,6 @@
           </li>
           <li>
             <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html&t=cakephp-fabricate-adaptor%20%E3%82%92%20CakePHP3.6%20%E5%AF%BE%E5%BF%9C%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html">Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2018/06/09.html">Saturday, June 09, 2018 01:00:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/co-edo.html">co-edo</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Polymerそのものと、Polumer.co-edoでの活動（取り組み）について、LTをしました。</p>
-
-<p>co-edoに集う人の中から参加者が増えると良いなーと思っています。</p>
-
-<p>今月は6/25に PWA starter kit のハンズオンを予定しています。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました" data-url="http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html&t=Co-Edo%E3%81%A7%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%8B%E3%82%A2%E3%83%BBWeb%E3%83%87%E3%82%B6%E3%82%A4%E3%83%8A%E3%83%BC%E9%A3%B2%E3%81%BF%E4%BC%9A%20%E3%80%8E%E6%A2%85%E9%9B%A8%E3%82%82%E5%88%9D%E5%A4%8F%E3%82%82%E3%81%B0%E3%81%A3%E3%81%A1%E3%81%93%E3%81%84%EF%BC%81%E6%81%92%E4%BE%8B%E3%81%AE%E3%82%B1%E3%83%B3%E3%82%BF%E3%83%83%E3%82%AD%E3%83%BC%F0%9F%8D%97%E3%81%A8%E3%83%93%E3%83%BC%E3%83%AB%F0%9F%8D%BA%E3%81%A7%E7%96%B2%E3%82%8C%E3%82%92%E5%90%B9%E3%81%8D%E9%A3%9B%E3%81%B0%E3%81%9D%E3%81%86%E3%81%AE%E4%BC%9A%E3%80%8F%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6LT%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/05/30/vivaldi-kaeremasen.html">Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2018/05/30.html">Wednesday, May 30, 2018 12:39:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/vivaldi.html">Vivaldi</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://vivaldi2018tokyo.peatix.com/">5/29に開催された Vivaldiジャパンツアー2018 #Vivaldi帰れま千 に参加しました</a></p>
-
-<p><img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/381967/cover-O8QmxcnsXjNd9jFXEZqEXum1KIL5qaQc.png" /></p>
-
-<p>古くからのOperaユーザーがほとんどでした。
-中には母親から与えられたPCにOperaが入っていたという若手もいて、年齢を感じましたがw</p>
-
-<p>Peatixのオフィスは恵比寿の、月に2度以上は目の前を通る場所でした（そこに入っているの知らなかった）。</p>
-
-<p>みんないろんなTIPSを持っていて、すごいなーと思う反面、私はヘビータブ使い（500タブとか当たり前）なので、タブの話（要望）を。
-標準でタブスタックできて、検索もできるんだけど、ウィンドウ横断でタブ検索できるようにしてほしい！というLTでした。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">昨夜、東京でのミートアップも大盛り上がりでした。登壇いただいた方、ご参加いただいた方、みなさまありがとうございました！！<a href="https://twitter.com/hashtag/Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83?src=hash&amp;ref_src=twsrc%5Etfw">#Vivaldi帰れま千</a> <a href="https://t.co/OL4qSbIzHo">pic.twitter.com/OL4qSbIzHo</a></p>&mdash; Vivaldiブラウザー (@vivaldi_jp) <a href="https://twitter.com/vivaldi_jp/status/1001713776117370886?ref_src=twsrc%5Etfw">2018年5月30日</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>1年に一回ぐらいなのかな、ユーザーの集いがあるブラウザって良いですね。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました" data-url="http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html&t=Vivaldi%E3%82%B8%E3%83%A3%E3%83%91%E3%83%B3%E3%83%84%E3%82%A2%E3%83%BC2018%20%EF%BC%83Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83%20Vivaldi%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%83%97%E3%83%AC%E3%82%BC%E3%83%B3%E3%83%BB%E4%BA%A4%E6%B5%81%E4%BC%9A%20in%20Tokyo%20%E3%80%9C%E6%9D%B1%E4%BA%AC%E3%81%AE%E4%B8%AD%E5%BF%83%E3%81%A7%E6%84%9B%E3%82%92%E5%8F%AB%E3%81%B6%E3%80%9C%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6LT%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/05/29/polymer-co-edo-meetup-14.html">Polymer.co-edo meetup ＃14 を開催しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2018/05/29.html">Tuesday, May 29, 2018 11:55:00 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>今年5回目となる <a href="https://polymercoedo.doorkeeper.jp/events/74678">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p>今回の議題は</p>
-
-<blockquote>
-<p>今回は先日開催された Google I/O &lsquo;18 から Polymer のセッション動画を見ながら Polymer3 のリリース記念パーティとして、食べ飲みしながら情報共有したいと思っています。</p>
-</blockquote>
-
-<p>ということで、ピザとビールを片手に Polymer 談義が盛り上がりました。</p>
-
-<h3>Google I/O で発表された内容のリンク集</h3>
-
-<p><a href="https://www.facebook.com/groups/416344608738146/">Polymer Japan の Facebook グループ</a>には、Google I/Oの翌日に貼りましたが、こちらにもまとめておきます。</p>
-
-<h4>セッション動画</h4>
-
-<ul>
-<li><a href="https://www.youtube.com/watch?v=7CUO7PyD5zA&amp;amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf&amp;amp;index=13&amp;amp;t=4s">Web Components and the Polymer Project: Polymer 3.0 and beyond</a></li>
-<li><a href="https://www.youtube.com/watch?v=we3lLo-UFtk&amp;amp;index=16&amp;amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf">PWA starter kit: build fast, scalable, modern apps with Web Components</a></li>
-</ul>
-
-<h4>セッションで紹介されたサイトなど</h4>
-
-<h5>Web Components and the Polymer Project: Polymer 3.0 and beyond</h5>
-
-<ul>
-<li><a href="https://tabatkins.github.io/specs/css-shadow-parts/">CSS Shadow Parts</a></li>
-<li><a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Registers</a></li>
-<li><a href="https://github.com/domenic/package-name-maps">Package name maps</a></li>
-<li>HTML Modules
-
-<ul>
-<li><a href="https://github.com/w3c/webcomponents/issues/645">https://github.com/w3c/webcomponents/issues/645</a></li>
-<li><a href="https://github.com/PolymerLabs/html-modules-toolkit">https://github.com/PolymerLabs/html-modules-toolkit</a></li>
-</ul></li>
-<li><a href="https://github.com/…/gh…/proposals/Template-Instantiation.md">HTML Template Instantiation</a></li>
-</ul>
-
-<h5>PWA starter kit: build fast, scalable, modern apps with Web Components</h5>
-
-<ul>
-<li><a href="https://github.com/Polymer/pwa-starter-kit">PWA Starter Kit</a></li>
-<li><a href="https://github.com/Polymer/pwa-helpers">pwa-helpers</a></li>
-<li><a href="https://github.com/…/pwa…/wiki/4.-Redux-and-state-management">Redux and state management</a></li>
-<li><a href="https://github.com/…/pwa-starte…/wiki/7.-Application-testing">Application testing</a></li>
-<li><a href="https://github.com/…/pwa-start…/wiki/5.-Building-&amp;amp;-Deploying">Building &amp; Deploying</a></li>
-</ul>
-
-<h3>Polymer の過去/現在</h3>
-
-<p>Polymer 3.0 のリリースに関して、Polymer がいつ発案されて、どうやって進んできたのか、という話から始まりました。
-とても古いGoogle I/Oの写真を使ったりして、Web Components がどんな問題を解決しようとしていて、Chromeチームとしてどのように取り組んできたか、がわかります。</p>
-
-<p>ブラウザ/JavaScriptを中心としたフロントエンドのトレンドは変化が大きく、最初にWeb Componentsを発案したころと、現在では細かいところに問題が多く残っていたのは事実です。
-ただ一方でPWAに代表されるように、モバイルアプリでできることをブラウザでもできるようにする取り組みも、大きな進歩を遂げています。</p>
-
-<p>PolymerがGoogle内部でどのような位置付けになっているのかを図るのは難しいのですが、少なくとも多くのプロジェクトで利用されていることは間違いないです。</p>
-
-<p>そして「現在の最適解」がPolymer3であるわけです。
-動画の中でも <code>Too weird</code> として紹介されていた、 polyfill/perceived silo/bower/HTML imports の解決に取り組んできたということです。</p>
-
-<p>polyfill については、モバイルブラウザ（iPhoneならsafari/Androidならchrome）では、Polymer3.0の仕様であればpolyfillを必要としない対応状況です。
-perceived silo （自己中心的、というかWeb Components == Polymer みたいに受け取られていた批判みたいなもの）については、 
-<a href="https://custom-elements-everywhere.com/">Custom Elements Everywhere</a>でも公開されているとおり、AngularやVueなどPolymer以外のJavaScriptフレームワークでも利用できることがわかります。
-bowerについては、発案当時はフロントエンドでは非常に流行っていた、けど今はということで npm に。
-HTML importsの仕様化はあきらめ、多くのブラウザが実装する ES Module Import へと。</p>
-
-<p>そう、Web Components は、今日ではメインストリームになるのです。</p>
-
-<p>一部のツールはまだPreviewですが、フィードバックを待っているということで、特に何もなければ大きな変化はなく、リリースになるのではないでしょうか？</p>
-
-<ul>
-<li><a href="https://custom-elements-everywhere.com/">lit-html</a></li>
-<li><a href="https://github.com/Polymer/polymer-modulizer">polymer-modulizer</a></li>
-</ul>
-
-<h3>未来</h3>
-
-<p>PWA Starter Kitで作れるアプリのコードを見るとわかるのですが、 lit-html を使うことで Polymer 感？みたいなのは非常に薄まります。PolymerElementじゃなくなるし。
-ただ lit-html は Polymer3 をベースに作られているし（互換性は少ないけど）、Polymerチームは多くの Web Components を公開しています。
-Polymerは、Web Components を使って課題を解決するのに役立つ下回りを整備してくれるライブラリやフレームワークとしてまだまだ価値があると思っています。</p>
-
-<p>あとは、Polyemrチームが取り組んでいる、上記で紹介した今後の仕様に期待しています。
-特に <code>HTML Modules</code> について、ES Module Import によって HTML部分が HTML in JavaScript になるわけです。
-「どうしてもHTMLで書けた方が良いじゃん！」というPolymerチームの意思というか（私もそうですが）HTML Importsはダメだったけど、これなら良いでしょ！私たちはHTMLで書きたいんですよ！愛が溢れています。</p>
-
-<h3>次回は</h3>
-
-<p>6/25(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
-
-<p>PWA starter kit のハンズオンをやって、Polymer3 や lit-html を体験してみたいな、と思っています。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃14 を開催しました" data-url="http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html&t=Polymer.co-edo%20meetup%20%EF%BC%8314%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/05/20/jsfest-2018-spring.html">初夏のJavaScript祭 in サーキュレーションビル ForPro で Polymer3.0 の LT をしました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2018/05/20.html">Sunday, May 20, 2018 11:34:00 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://javascript-fes.doorkeeper.jp/events/73314">5/19に開催されたJavaScript祭りに参加しました</a></p>
-
-<p><img src="/images/blog/jsfes_2018_spring.png" /></p>
-
-<p>今回もためになるセッションが多く、とても良いイベントでした。
-いつもと同様にLT枠へ申し込み、この半年でおきたPolymerのアップデートを発表しました。</p>
-
-<p>通常のセッションで <code>実践ES Modules</code> というのがあったのですが、予想外に Web Components の話をたくさんしてもらえたので、LTでは基本的な話には触れずにスムーズにできたのは助かりました。</p>
-
-<script async class="speakerdeck-embed" data-id="7c0eabdcbfb14b24bf29e7258cc6f1e2" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>今年もGoogle I/O 2018が終わった後（昨年もGoogle I/Oの直後）だったということもあり、その発表をふまえた内容にできました。
-Polymerとはどうなるのか？Polymer3.0はどういった課題を解決するのか？ということを中心に話しました。</p>
-
-<script async class="speakerdeck-embed" data-id="49d21395e0fe4edd9d038b760c5de894" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>Polymer はどこへ向かうのか、5/28 には <code>Polymer.co-edo</code> で、Google I/O の動画を見ながら語る会をやります（予定）ので、ぜひ参加ください！</p>
-
-<p>会場の サーキュレーションビル ForPro は、BEAMS のオフィスを射抜きで使わせてもらったということで、オシャレ感が半端なかったのですが、
-原宿駅からの移動が竹下通りを抜けていくので、ライフが半端なく削られました。
-おっさんに原宿はつらい&hellip;</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="初夏のJavaScript祭 in サーキュレーションビル ForPro で Polymer3.0 の LT をしました" data-url="http://blog.open.tokyo.jp/2018/05/20/jsfest-2018-spring.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/20/jsfest-2018-spring.html&t=%E5%88%9D%E5%A4%8F%E3%81%AEJavaScript%E7%A5%AD%20in%20%E3%82%B5%E3%83%BC%E3%82%AD%E3%83%A5%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%93%E3%83%AB%20ForPro%20%E3%81%A7%20Polymer3.0%20%E3%81%AE%20LT%20%E3%82%92%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/20/jsfest-2018-spring.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
           </li>
         </ul>
       </div>
@@ -641,6 +874,14 @@ Polymerとはどうなるのか？Polymer3.0はどういった課題を解決す
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2019/06/16/interop-2019-w3c-chirimen.html">InteropでW3Cブースの出展に参加してきました</a> <span>2019/06/16</span></li>
+                
+                  <li><a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a> <span>2019/06/16</span></li>
+                
+                  <li><a href="/2019/06/09/jsfes-2019-spring.html">初夏のJavaScript祭りに参加して、Import mapsについてLTをしました</a> <span>2019/06/09</span></li>
+                
+                  <li><a href="/2019/05/31/polymer-co-edo-meetup-25.html">Polymer.co-edo  meetup ＃25を開催しました</a> <span>2019/05/31</span></li>
+                
                   <li><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a> <span>2019/05/19</span></li>
                 
                   <li><a href="/2019/05/15/google-i-o-2019.html">Google I/O 2019ふりかえり</a> <span>2019/05/15</span></li>
@@ -652,14 +893,6 @@ Polymerとはどうなるのか？Polymer3.0はどういった課題を解決す
                   <li><a href="/2019/05/03/brackets-coming-lsp.html">BracketsにLSPがやってきた</a> <span>2019/05/03</span></li>
                 
                   <li><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a> <span>2019/05/02</span></li>
-                
-                  <li><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a> <span>2019/05/01</span></li>
-                
-                  <li><a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a> <span>2019/04/30</span></li>
-                
-                  <li><a href="/2019/04/29/asucon-2019.html">アスカン2019を開催しました</a> <span>2019/04/29</span></li>
-                
-                  <li><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a> <span>2019/04/28</span></li>
                 
               </ul>
             </div>
@@ -1289,6 +1522,18 @@ Polymerとはどうなるのか？Polymer3.0はどういった課題を解決す
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/import-maps.html">import maps</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
                   
                 
                   
@@ -1303,7 +1548,7 @@ Polymerとはどうなるのか？Polymer3.0はどういった課題を解決す
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2019.html">2019</a> (22)</li>
+                  <li><a href="/2019.html">2019</a> (26)</li>
                 
                   <li><a href="/2018.html">2018</a> (31)</li>
                 

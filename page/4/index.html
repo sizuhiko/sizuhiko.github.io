@@ -275,7 +275,431 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2019/03/27/polymer-co-edo-meetup-23.html">Polymer.co-edo  meetup ＃23を開催しました</a></h2>
+            <h2 class="title"><a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/26.html">Friday, April 26, 2019 04:47:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
+    
+      <a rel="tag" href="/tags/iot.html">IoT</a>
+    
+      <a rel="tag" href="/tags/toiletevolution.html">ToiletEvolution</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a>の続編です。</p>
+
+<p>今回からは<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
+
+<p>うまく動作させるために試行錯誤して変更したファイル、実に110。1回では書ききれない予感が&hellip;</p>
+
+<h3>不要になったファイルを削除</h3>
+
+<p><code>bower.json</code> や <code>.bowerrc</code> ファイルは、Polymer3でnpmに移行したので、削除します。</p>
+
+<h3>linterを追加</h3>
+
+<p>lintは <code>polymer-cli</code> にも付いているのですが、エディタで編集中にも状況は知りたいので、eslintを導入します。
+Polymer1のころはHTMLファイルだったので、特に不要でしたね。</p>
+
+<h3>ビルドを変更</h3>
+
+<p>これまでbuildは独自にgulpで実装していたのですが、Polymer3対応をするに伴い<a href="https://www.npmjs.com/package/polymer-build">polymer-build</a>を使うようにしました。
+これは <code>polymer CLI</code> でも使っているビルドライブラリです。ビルドについては、この連載で触れていきます。</p>
+
+<h3>polymer.jsonの変更</h3>
+
+<p><code>shell</code> や <code>fragments</code> で指定したファイルの拡張子を <code>html</code> から <code>js</code> に変更します。
+これは自動的に変換されないので注意しましょう。
+<code>extraDependencies</code> や、そのほかの定義も変わっていますが、このあたりは<a href="https://polymer-library.polymer-project.org/3.0/docs/tools/polymer-json">polymer.json specification</a>を参考にPolymer3形式に1から記述するぐらいの気持ちでいましょう。</p>
+
+<h3>変換された自作のカスタムエレメントを修正する</h3>
+
+<p>まずmodulizerで変換すると、Polymer本体のimportが </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'../bower_components/polymer/polymer-legacy.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>のようになっているので、これを </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'@polymer/polymer/polymer-legacy.js'</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span><span class="nx">Polymer</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/lib/legacy/polymer-fn.js'</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span><span class="nx">html</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/lib/utils/html-tag.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>のように変更しました。</p>
+
+<p>なお、公式ドキュメントによると </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="p">{</span><span class="nx">PolymerElement</span><span class="p">,</span> <span class="nx">html</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/polymer-element.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>にしていますが、これは <code>PolymerElement</code> 使っている場合なので、ハイブリッドモードの書き方の場合は、私のようにlegacyを使ってください。</p>
+
+<p>続いてテンプレートが以下のように <code>Polymer.html</code> を参照するようになっています。</p>
+<pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
+  <span class="na">_template</span><span class="p">:</span> <span class="nx">Polymer</span><span class="p">.</span><span class="nx">html</span><span class="err">`</span>
+</code></pre>
+
+<p>この記述は利用できないので、以下のように <code>import</code> した <code>html</code> を利用するように変更します。</p>
+<pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
+  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="err">`</span>
+</code></pre>
+
+<h3>bower_components を使わないようにする</h3>
+
+<p>変換されたjsファイルは、bower_components上に変換されたモジュールを参照しにいきます。
+そこで各々のパッケージがnpmに公開されているか調べて、npmに移行していきます。</p>
+
+<p>すでに上記で <code>bower_components/polymer</code> を変更していますが、これを例に説明します。</p>
+
+<ol>
+<li>まず<a href="https://www.webcomponents.org">webcomponents.org</a>のサイトでWebComponentsを検索します。</li>
+<li>この例では <code>polymer</code> を入力して検索すると、該当のものが見つかるので、<a href="https://www.webcomponents.org/element/@polymer/polymer">詳細ページ</a>を開きます。<img src="/images/blog/2019-04-27-www.webcomponents.org-78097a3d36c6.png" /></li>
+<li>もし <code>ES Modiles</code> に対応していれば、左側に <code>View on NPM</code> が表示されます。</li>
+<li><code>INSTALLED VIA NPM</code> のリンクをクリックすると <code>npm install --save Polymer/polymer</code> のように表示されるので、CLIからインストールします。</li>
+<li>bower_componentsから、参照しなくなったjsファイルを削除します。</li>
+</ol>
+
+<h3>WebComponents V1対応に追従する</h3>
+
+<p>自分が記述したCustomElementsには利用していなかった <code>&lt;content&gt;</code> も、依存関係のタグでは利用している場合があります。
+例えば<a href="https://www.webcomponents.org/element/@polymer/app-layout">@polymer/app-layout</a>は、レイアウトないのコンポーネントを識別するときに利用しているので、slot対応を行います。たとえば以下のドロワー記述は</p>
+<pre class="highlight html"><code>      <span class="nt">&lt;app-drawer&gt;</span>
+</code></pre>
+
+<p>次のように <code>slot</code> 識別を追加します。</p>
+<pre class="highlight html"><code>      <span class="nt">&lt;app-drawer</span>  <span class="na">slot=</span><span class="s">"drawer"</span><span class="nt">&gt;</span>
+</code></pre>
+
+<p>このあたりの修正ポイントは、タグが表示されなくなることで気がつきますが、アップデートしたら最新のドキュメントを一読することをオススメします。
+他にも修正箇所があるかもしれませんので。</p>
+
+<h3>importHref を修正する</h3>
+
+<p><code>iron-pages</code> でページを切り替えるとき、Polymer1では動的に HTML import を実行していました。</p>
+<pre class="highlight javascript"><code>  <span class="nx">_pageChanged</span><span class="err">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">importHref</span><span class="p">(</span><span class="s1">'/elements/te-'</span> <span class="o">+</span> <span class="nx">page</span> <span class="o">+</span> <span class="s1">'.html'</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</code></pre>
+
+<p><code>ES Module</code>を使うPolymer3では以下のように書き換えます。</p>
+<pre class="highlight javascript"><code>    <span class="k">switch</span> <span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="s1">'admin'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-admin.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'devices'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-devices.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'login'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-login.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'about'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-about.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre>
+
+<p><code>import</code> の引数には変数が利用できないので注意してください。</p>
+
+<h3>Polyfillを変更する。</h3>
+
+<p>HTMLファイルではpolyfillLをインポートしています。
+Polymer1では <code>/bower_components/webcomponentsjs/webcomponents-lite.min.js</code> を使いましたが、Polymer3では以下のpolyfillに変更します。
+これもnpmを使ってインストールするように変更します。</p>
+<pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre>
+
+<p>このように修正を重ねていくことで、徐々に動作するエレメントが増えてきます。
+ここまでは多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所です。
+Toilet Evolutionでは、まだまだ修正箇所がありましたので、続きは<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">次回</a>で。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(2)" data-url="http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(2)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/25.html">Thursday, April 25, 2019 03:42:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
+    
+      <a rel="tag" href="/tags/iot.html">IoT</a>
+    
+      <a rel="tag" href="/tags/toiletevolution.html">ToiletEvolution</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>私が開発運用している<a href="https://toiletevolution.space/">Toilet Evolution</a>は、フロントエンドをPolymer(v1)で構築していました。
+これは古いWebComponentsの仕組みを使っているので、常々アップデートしないとなーと思いながらも、長いこと重い腰があがりませんでした。</p>
+
+<p>しかし以下のツイートを見て「よしやるぞ」という気持ちにスイッチが入り、移行を実施しました。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">PSA: The latest Chrome Canary has removed support for web components v0, per the deprecation plan announced last year.<br><br>If you have a site built with Polymer 1.x (or web components v0), check it against Canary now to make sure you&rsquo;re properly serving the polyfills. <a href="https://t.co/IElNjGGZbI">https://t.co/IElNjGGZbI</a></p>&mdash; Polymer Project (@polymer) <a href="https://twitter.com/polymer/status/1102664720891301888?ref_src=twsrc%5Etfw">4 March 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>実際<a href="https://toiletevolution.space/">Toilet Evolution</a>のサイトはもう最新に置き換わっております。
+その様子は<a href="https://github.com/toiletevolution/toiletevolution-server">Toilet EvolutionのGitHubリポジトリ</a>のコミットログを追うことでもわかったりしますが、かなり頑張ったので、その過程を連載でブログにまとめようと思いました。</p>
+
+<p>この記事はその1回目です。</p>
+
+<h3>Polymer1プロジェクトをPolymer3へ移行するには</h3>
+
+<p>マイグレーションガイドは1から2、2から3に向けてあります。
+1から3のガイドがあるわけではないので、両方を事前に読んでおくと良いです。</p>
+
+<ul>
+<li><a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade">Polymer1から2へのアップグレードガイド</a>
+
+<ul>
+<li><code>&lt;dom-module&gt;</code> で <code>name</code> を使っていたら <code>id</code> に変更。</li>
+<li><code>styles</code> タグは <code>template</code> タグの内側へ</li>
+<li><code>&lt;content&gt;</code> タグは <code>&lt;slot&gt;</code> タグへ</li>
+<li>CSSの <code>::content</code> セレクタは <code>::slotted()</code> セレクタへ</li>
+<li>CSSの <code>/deep/</code> や <code>::shadow</code> は使えなくなる</li>
+<li>などなど&hellip;</li>
+</ul></li>
+<li><a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade">Polymer2から3へのアップグレードガイド</a>
+
+<ul>
+<li><a href="https://github.com/Polymer/tools/tree/master/packages/modulizer">modulizer</a>使うと簡単にできるよ！</li>
+</ul></li>
+</ul>
+
+<p>Polymer2は1の記法が使えるハイブリッドモードがあるのと、そもそも1から2で変更が必要な記述を使っていないので、実際はmodulizer一発でいけるんでは？と考えました。
+なので、1から2の手順は気にせず、進むことにしました。</p>
+
+<h3>何はともあれアップデート</h3>
+
+<p>npmのライブラリもだいぶ古くなっていたので、まずは<a href="https://github.com/toiletevolution/toiletevolution-server/commit/bfcea2e380d1744012dee064e949a8cced64fe3d">最新に更新しました</a>。
+Gulpを3から4にあげたので <code>gulpfile.js</code> もモリモリと変えていきます。</p>
+
+<p>続いて、bowerに入っているパッケージも新しくしていきます。これは <a href="https://github.com/Polymer/tools/tree/master/packages/modulizer#local-package-mode">modulizerのガイド</a>に書いてあるので、そのまま実施します。</p>
+
+<p>続いてmodulizerを実行しますが、commitログではそこまでの手順で迷走しています。あまり気にしないでくださいw</p>
+
+<h3>modulizerで変換する</h3>
+
+<p><code>modulizer --out .</code> を実行します。すると html で記述していたカスタムエレメントが js ファイルに変更されます。
+<a href="https://github.com/toiletevolution/toiletevolution-server/commit/da5a4aba7f40463731b467e3be7d6c856b6a918c">ここまでのコミット</a></p>
+
+<p>変換するとだいたい良い感じになっています。
+でも変換だけでは動きません。ここで以下のような箇所が変換されないことがわかります。</p>
+
+<ul>
+<li>polymerの公式エレメントなど、変換されたbower_componentsを参照していて、npmに切り替わらない</li>
+<li><a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade#less-common-upgrade-tasks">変換後に手動で書き換えること</a>に書いてある手順の実施</li>
+</ul>
+
+<p>これらの手順は<a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">次回</a>へ続きます。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(1)" data-url="http://blog.open.tokyo.jp/2019/04/25/toilet-evolution-polymer3-vol1.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/25/toilet-evolution-polymer3-vol1.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(1)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/25/toilet-evolution-polymer3-vol1.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/07/esm-lt-2019-04.html">esm LTでブラウザの最新動向について話しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/07.html">Sunday, April 07, 2019 01:47:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/esm_lt.html">esm_LT</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>esm LTとは永和システムマネジメントの社内LT大会のようなもので、福井にゆかりのある<a href="https://www.akiyoshi.co.jp/">やきとりの名門 秋吉</a>のやきとりとビールを片手にワイワイ楽しむイベントです。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">勤務先の ESM LT #4 の設営がされている🐓🔥🍻 <a href="https://t.co/HhvohEDh2j">pic.twitter.com/HhvohEDh2j</a></p>&mdash; Koichi ITO (@koic) <a href="https://twitter.com/koic/status/1114103117614706688?ref_src=twsrc%5Etfw">5 April 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>自分で写真撮るの忘れたので、同僚のツイートを引用。</p>
+
+<p>私が話したのは「ブラウザの最新動向について」ということで、PHPerKaigiでも話した <a href="https://github.com/WICG/import-maps">import maps</a> と、Chrome73から入ったDevToolsの <code>Add Logpoints</code> について話しました。</p>
+
+<script async class="speakerdeck-embed" data-id="9b7774779db54605b513344a70b28c5f" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>ChromeのDevToolsに入った新しい機能とか、そもそも<a href="https://developers.google.com/web/updates/">Web Updates</a>みんな読んでないよね、ってことで、新しい機能便利なんでみんな読もう！ってことです。</p>
+
+<p>Logpointsに関しては<a href="https://developers.google.com/web/updates/2019/01/devtools">What&rsquo;s New In DevTools (Chrome 73)</a>の記事を読んでください。
+最初に紹介されます。
+これからみんなソースコードにデバッグ用途の <code>console.log()</code> を書くの禁止な！</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="esm LTでブラウザの最新動向について話しました" data-url="http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html&t=esm%20LT%E3%81%A7%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B6%E3%81%AE%E6%9C%80%E6%96%B0%E5%8B%95%E5%90%91%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E8%A9%B1%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/07.html">Sunday, April 07, 2019 01:00:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/php.html">PHP</a>
+    
+      <a rel="tag" href="/tags/phperkaigi.html">PHPerKaigi</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><img src="/images/blog/phperkaigi2019.jpg" /></p>
+
+<p>初めてのPHPerKaigi参加です。
+これまで予定が重なっていて参加できなかったのですが、今年は年度末開催ということで、他の予定もなく参加することができました。</p>
+
+<p>どうせなら何か話さないと、ということで</p>
+
+<ul>
+<li>Day2 の IRT: テスト〜CI/CD相談会 で、 <a href="https://twitter.com/kaz_29">@kaz_29</a> のテーブルトークの賑やかしに</li>
+<li>Day3 のアンカンファレンスで <a href="https://twitter.com/phperkaigi/status/1112168095261429761">ブラウザの次に来る（かも？しれない）仕様を知ってフロントエンドチョットデキル人になろう</a>というテーマで話す</li>
+<li>Day3 の IRT: フロントエンド相談会 で、 <a href="https://twitter.com/FruitRiin">@FruitRiin</a> のテーブルトークの賑やかしに</li>
+<li>Day3 の <a href="https://fortee.jp/phperkaigi-2019/proposal/180747ce-2451-4958-9b18-42f218ce61b3">出張版PHP勉強会@東京</a>で、メインセッションを担当</li>
+</ul>
+
+<p>他はセッションを聞いていました。</p>
+
+<h3>CI/CDとは&hellip;</h3>
+
+<p>CI/CD相談会で受けた印象は、CI == 自動テストやってます、CD == ツール使ってデプロイしてます（完全手動ではない）という雰囲気の人が多く、ほんとうのCI/CDにはまだまだ遠いなぁという感じ。それでも私がテストやろうね、といってほとんどの人が書いてない時代からは大きな変化で、いつかほんとうの意味に近づいてくれることを期待しています。</p>
+
+<h3>import maps と HTML Template Instantiation について</h3>
+
+<p>アンカンファレンスではWeb Componentsの周辺仕様の動きについて、話しました。</p>
+
+<ul>
+<li><a href="https://drafts.csswg.org/css-shadow-parts/">CSS Shadow Parts</a></li>
+<li><a href="https://github.com/WICG/import-maps">import maps</a></li>
+<li><a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Register</a></li>
+<li><a href="https://github.com/w3c/webcomponents/issues/645">HTML Modules</a></li>
+<li><a href="https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md">HTML Template Instantiation</a></li>
+</ul>
+
+<p>このうち<a href="https://drafts.csswg.org/css-shadow-parts/">CSS Shadow Parts</a>はCSSWGのドラフトになっていることもあり、概要をさらっと説明。
+<a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Register</a>と<a href="https://github.com/w3c/webcomponents/issues/645">HTML Modules</a>は、Web Components色が強いので、これも概要をさらっと。
+で、<a href="https://github.com/WICG/import-maps">import maps</a>と<a href="https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md">HTML Template Instantiation</a>について、少し深く話しました。</p>
+
+<h4>import maps</h4>
+
+<p>これは過去のブログ記事でも登場した <code>Package name maps</code> の最新の名前です。過去のリンクからは自動的にリダイレクトされます。
+<code>bower</code> によるJavaScript依存ライブラリのインストールが、npm中心のエコシステムに変わり、ブラウザからそのモジュールを利用するには Webpack のようなもので依存解決をする必要がありました。
+しかし今日では ESModule Import がブラウザでもサポートされているので、以下のようなコードでライブラリを利用したくなります。</p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="nx">moment</span> <span class="nx">from</span> <span class="s2">"moment"</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">partition</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">"lodash"</span><span class="p">;</span>
+</code></pre>
+
+<p>しかしブラウザは <code>from</code> から読み取るときURIとして識別するので、当然サーバーからJavaScriptファイルを取れないし、Node.jsと違って <code>package.json</code> から <code>main</code> のスクリプトファイルをロードすることもできません。
+そこで <code>import maps</code> では以下のようなマッピング定義を使います。</p>
+<pre class="highlight javascript"><code><span class="p">{</span>
+  <span class="s2">"imports"</span><span class="err">:</span> <span class="p">{</span>
+    <span class="s2">"moment"</span><span class="err">:</span> <span class="s2">"/node_modules/moment/src/moment.js"</span><span class="p">,</span>
+    <span class="s2">"lodash"</span><span class="err">:</span> <span class="s2">"/node_modules/lodash-es/lodash.js"</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>するとブラウザはマッピングファイルから以下のように記述されたものとして解釈します。</p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="nx">moment</span> <span class="nx">from</span> <span class="s2">"/node_modules/moment/src/moment.js"</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">partition</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">"/node_modules/lodash-es/lodash.js"</span><span class="p">;</span>
+</code></pre>
+
+<p>これはWeb Componentsに関係なく、普通にHTMLからjQueryを使おうとしていた人にとってもわかりやすくなるし、Webpackからも解放されるので、はやくブラウザ実装になってほしいなぁと思っています。</p>
+
+<h4>HTML Template Instantiation</h4>
+
+<p>「テンプレートエンジンをブラウザ自体に」というのがこの仕様なわけですが、様々なフレームワークや handlebars のようなライブラリまで、テンプレートエンジンは数多くあります。ブラウザでやることは車輪の再開発なのか？という点については、RawレベルのAPIが利用可能になることでDOMの書き換えをブラウザがやってくれることはスピードアップにつながるし、ぜひとも進んでほしい仕様の一つです。
+PolymerチームのJustinなど、各ブラウザベンダーの人も議論に参加しているので、期待できます。</p>
+
+<h3>フロントエンド相談会</h3>
+
+<p>Reactを使う人、Vueを使う人、Web Componetsを推進したい人（私）など、様々なお悩み、SSRの話しなども出ました。
+技術ワードに踊らされるのではなく、それぞれの課題に対して議論できたのがとても良かったです。
+IRT楽しかったですね。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">IRTフロントエンド相談会、なんとかいい感じに終わったかと思います。 <a href="https://twitter.com/sizuhiko?ref_src=twsrc%5Etfw">@sizuhiko</a> さん回すの手伝ってくれてありがとでした！<a href="https://twitter.com/hashtag/phperkaigi?src=hash&amp;ref_src=twsrc%5Etfw">#phperkaigi</a></p>&mdash; 果物リン (@FruitRiin) <a href="https://twitter.com/FruitRiin/status/1112203030282133504?ref_src=twsrc%5Etfw">31 March 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<h3>出張版PHP勉強会@東京で話しました。</h3>
+
+<p>「PHPを学ぶということ」というタイトルで初心者セッションをやりました。</p>
+
+<script async class="speakerdeck-embed" data-id="ff6bd5cb036b48af9cf18ac85fdd8b31" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>最近PHP勉強会で初心者の人多いなーと感じることが多いのと、開発チームでもプログラミングこれから！みたいな人にどうしたら良いのかなーと思うことがあって、まずは勉強の入り口にどうしたら良いかというキッカケを作ることができれば良いと思いました。</p>
+
+<p>PHPコミュニティのSlackへの参加者が、このセッションをきっかけに結構増えたので、良かった！</p>
+
+<h3>さいごに</h3>
+
+<p>PHPerKaigi とても楽しかった。
+交流がメインのカンファレンスらしく、多くの人と、様々な話題について議論できました。
+さぁ、次は<a href="https://phpcon.fukuoka.jp/2019/">福岡</a>に行きますよ！</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPer Kaigi 2019に参加しました" data-url="http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html&t=PHPer%20Kaigi%202019%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/03/27/polymer-co-edo-meetup-23.html">Polymer.co-edo  meetup ＃23を開催しました</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2019/03/27.html">Wednesday, March 27, 2019 12:51:00 PM</a></p>
   <p class="tags">
     
@@ -314,261 +738,6 @@
           </li>
           <li>
             <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/03/27/polymer-co-edo-meetup-23.html&t=Polymer.co-edo%20%20meetup%20%EF%BC%8323%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/03/27/polymer-co-edo-meetup-23.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/03/05/webiotmakers-day3-day4.html">Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】にチューター参加してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/03/05.html">Tuesday, March 05, 2019 12:00:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
-    
-      <a rel="tag" href="/tags/webiotmakers.html">webiotmakers</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>1ヶ月前に始まった東京ステージ、<a href="2019/02/11/webiotmakers-day1-day2.html">Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました</a>の続きです。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/webiotmakers?src=hash&amp;ref_src=twsrc%5Etfw">#webiotmakers</a> ハッカソン本番です (@ KDDI DIGITAL GATE in 港区, 東京都) <a href="https://t.co/jccpWTyR9w">https://t.co/jccpWTyR9w</a> <a href="https://t.co/909OnobTL7">pic.twitter.com/909OnobTL7</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1101639711683235840?ref_src=twsrc%5Etfw">March 2, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>チューターも、デモに向けて各チームの完成を全力で応援します。
-工作からプログラムまで、その道の凄腕が揃っています。</p>
-
-<p><img src="/images/blog/2019-03-02.jpg" /></p>
-
-<p>最後はバタバタとしましたが、みんな何かしらデモできる状態になって、デモからの審査。
-最優秀作品（と予定になかった優秀賞3つ）も決まりました。</p>
-
-<p>最優秀作品は今週末に開催される<a href="https://smartiot-forum.jp/">スマートIoT推進フォーラム</a>に展示されますので、興味がある人はぜひ見学にいってみてください。
-（それまでに完成度が上がっていると良いなー）</p>
-
-<p><img src="/images/blog/2019-03-03.jpg" /></p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】にチューター参加してきました" data-url="http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html&t=Web%C3%97IoT%20%E3%83%A1%E3%82%A4%E3%82%AB%E3%83%BC%E3%82%BA%E3%83%81%E3%83%A3%E3%83%AC%E3%83%B3%E3%82%B8%202018-19%20in%20%E6%9D%B1%E4%BA%AC%E3%80%90%E3%83%8F%E3%83%83%E3%82%AB%E3%82%BD%E3%83%B3%E3%80%91%E3%81%AB%E3%83%81%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/02/24/polymer-japan-cafe-4.html">Polymer Japan Cafe ＃4 もくもく会が開催されました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/02/24.html">Sunday, February 24, 2019 11:32:00 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/web-components.html">Web Components</a>
-    
-      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>今月のPolymer/Web Components のもくもく会は、Polymer Japan との共催になったので、Co-Edoではなく渋谷にて開催となりました。</p>
-
-<p>Lit Elementが2.0リリースになったので、
-<a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html">はじめての LitElement エレメントの作り方</a>のバージョンを最新に更新しました。</p>
-
-<p>Lit Elementではスタイル定義を以下のように、記述することが推奨されています。</p>
-<pre class="highlight javascript"><code><span class="kr">class</span> <span class="nx">MyElement</span> <span class="kr">extends</span> <span class="nx">LitElement</span> <span class="p">{</span>
-  <span class="kr">static</span> <span class="nx">get</span> <span class="nx">styles</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">css</span><span class="err">`</span>
-    <span class="err">:</span><span class="nx">host</span> <span class="p">{</span>
-        <span class="nl">display</span><span class="p">:</span> <span class="nx">block</span><span class="p">;</span>
-    <span class="p">}</span><span class="err">`</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre>
-
-<p>これは<a href="https://wicg.github.io/construct-stylesheets/">Constructable Stylesheets</a>として2019/1/24にGoogleから提出されたアイデアで、
-エレメントのスタイルを <code>static getter</code> で返すことで、ページ内に同一エレメントが複数回あるとき１回だけスタイルを評価するようになるというものです。
-高速化には役立ちそうですが、現時点サポートしているブラウザあるのか？（Chromeはもうサポートしてるかも）という状況です。</p>
-
-<p>なので前述のCodeLabとか、私の好きな<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とかは、まだ<a href="https://wicg.github.io/construct-stylesheets/">Constructable Stylesheets</a>の記法には対応していません
-（もちろん従来の書き方でも動きます）。
-でも注目していきたい仕様の1つではあるので、今後組み込むこともあるかもな、とは思っています。</p>
-
-<p>詳しくは<a href="https://lit-element.polymer-project.org/guide/styles">LitElementの公式ドキュメントのStyles</a>を参照ください。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer Japan Cafe ＃4 もくもく会が開催されました" data-url="http://blog.open.tokyo.jp/2019/02/24/polymer-japan-cafe-4.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/02/24/polymer-japan-cafe-4.html&t=Polymer%20Japan%20Cafe%20%EF%BC%834%20%E3%82%82%E3%81%8F%E3%82%82%E3%81%8F%E4%BC%9A%E3%81%8C%E9%96%8B%E5%82%AC%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/02/24/polymer-japan-cafe-4.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/02/11/webiotmakers-day1-day2.html">Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/02/11.html">Monday, February 11, 2019 10:43:00 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
-    
-      <a rel="tag" href="/tags/webiotmakers.html">webiotmakers</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://webiotmakers.github.io/">Web×IoT メイカーズチャレンジ</a>は全国各地で実施されていて、今年度の最後は東京で実施されます。
-まず最初の2日間は、ほとんどの参加者はふれたことがない<a href="https://tutorial.chirimen.org/raspi3/ja/section0#chirimen-for-raspberry-pi-3-%E3%81%A8%E3%81%AF">CHIRIMEN for Raspberry Pi 3</a>
-について、ハンズオン講習会とアイデアワークショップが行われます。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/webiotmakers?src=hash&amp;ref_src=twsrc%5Etfw">#webiotmakers</a> スタッフで参加しています (@ KDDI DIGITAL GATE in 港区, 東京都) <a href="https://t.co/INIoSU3i9b">https://t.co/INIoSU3i9b</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1094038291899469824?ref_src=twsrc%5Etfw">February 9, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<h3>なんでチューター参加したか</h3>
-
-<p>私は<a href="https://chirimen.org/">CHIRIMENコミュニティ</a>の一員なので、中の人としてハンズオン講習会のサポート役をしてきました。
-<a href="http://blog.open.tokyo.jp/2018/08/13/maker-faire-tokyo-2018.html">Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました</a>といった記事も書いています。</p>
-
-<h3>どんな雰囲気だったか</h3>
-
-<p>以下に列挙します。</p>
-
-<ul>
-<li>最初に総務省のテキストをベースにした <code>IoT や電波や無線通信に関する基礎知識の座学講習</code> があるが、これがとても面白くタメになった</li>
-<li>高校生から社会人まで幅広い年齢層の参加者がいる（学生と社会人は半々ぐらいだったかな？</li>
-<li>チュートリアルの雰囲気からハード/Webアプリそれぞれに強い人はいるけど、両方に強い人は少ない（CHIRIMENは両方とも必要になる</li>
-<li>みんな初対面で運営側が決めたチーム構成だけど、アイデアワークショップ盛り上がった</li>
-<li>KDDI DIGITAL DATEがキレイ！</li>
-</ul>
-
-<p><img src="/images/blog/2019-02-09.jpg" /></p>
-
-<h3>CHIRIMENとは？</h3>
-
-<p>さて、今回のハッカソンで利用するCHIRIMENですが、紆余曲折あって現在では<a href="https://tutorial.chirimen.org/raspi3/ja/section0#chirimen-for-raspberry-pi-3-%E3%81%A8%E3%81%AF">CHIRIMEN for Raspberry Pi 3</a>がアクティブな活動になっています。
-ベースはブラウザから物理デバイスを操作するためのAPIである<a href="https://rawgit.com/browserobo/WebGPIO/master/index.html">Web GPIO</a>や<a href="https://rawgit.com/browserobo/WebI2C/master/index.html">Web I2C</a>といった仕様を進めてことにあるのですが、
-フィードバックを受ける手段としてハードを作ったり、Polyfillやドライバーを実装したりしています。</p>
-
-<p>もっと多くの人がコミュニティに参加してもらえるとうれしいです（公式ページからSlackにアクセスできます）。</p>
-
-<h3>本番は1ヶ月後</h3>
-
-<p>ハッカソン本番は3/2と3/3の2日間。
-アイデアソンの内容がどのぐらい実装されてきて、デモに向けて完成度をあげていくのかが、楽しみです。
-参加者の皆様、1ヶ月後にまた会いましょう！</p>
-
-<p><img src="/images/blog/2019-02-10.jpg" /></p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました" data-url="http://blog.open.tokyo.jp/2019/02/11/webiotmakers-day1-day2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/02/11/webiotmakers-day1-day2.html&t=Web%C3%97IoT%20%E3%83%A1%E3%82%A4%E3%82%AB%E3%83%BC%E3%82%BA%E3%83%81%E3%83%A3%E3%83%AC%E3%83%B3%E3%82%B8%202018-19%20in%20%E6%9D%B1%E4%BA%AC%E3%80%90%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%E8%AC%9B%E7%BF%92%E3%80%91%E3%81%AB%E3%83%81%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/02/11/webiotmakers-day1-day2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/01/27/php-conference-sendai-2019.html">PHPカンファレンス仙台2019で、Web Componentsについて発表してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/01/27.html">Sunday, January 27, 2019 10:43:00 AM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/web-components.html">Web Components</a>
-    
-      <a rel="tag" href="/tags/php.html">PHP</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><img src="https://phpcon-sendai.net/2019/assets/images/logo.svg" style="width:40%;float:left;">
-<img src="https://phpcon-sendai.net/2019/assets/images/logo_text.svg" style="width:40%;float:left;">
-<div style="clear:left"></div></p>
-
-<p><br><br>
-<a href="https://phpcon-sendai.net/2019/">PHPカンファレンス仙台2019</a>に参加しました。</p>
-
-<h3>前日</h3>
-
-<p>東京から新幹線で東北に行くのは初めて（車でしか行ったことがない）だったので、それも楽しみでした。</p>
-
-<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">初の東北新幹線 (@ 東北新幹線 東京駅 in 千代田区, 東京都) <a href="https://t.co/NC3mYDHgLr">https://t.co/NC3mYDHgLr</a> <a href="https://t.co/khHALnn24e">pic.twitter.com/khHALnn24e</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1088663936243822593?ref_src=twsrc%5Etfw">25 January 2019</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>仙台では公式前夜祭に参加したり、とても楽しい前日を過ごすことができました。</p>
-
-<h3>当日</h3>
-
-<p><img src="https://fastly.4sqi.net/img/general/590x1049/3824971_fxLrsmRVL_wE3B_mpSReO3OB3Q-2K0PYG0Ow1DoFl8Q.jpg" /></p>
-
-<p>初回開催で3トラック(6部屋)ってスゴイですよね。
-当日は地元参加の人もたくさんいて、キャンセルも少ないなど、仙台でも大きいイベントに期待している人が多いことがわかりました。</p>
-
-<p>私は、昨年末の東京で話したものと同じテーマでしたが、東京での反応をふまえて少しリニューアルしています。</p>
-
-<ul>
-<li>アジェンダを入れた</li>
-<li>デモプログラムを入れた</li>
-</ul>
-
-<script async class="speakerdeck-embed" data-id="0cb330c1c3264e08bc004a6050f3641f" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>SNSでの反応は薄めでしたが、参加してもらった人から感じる雰囲気は良かったので、私のメッセージはそれなりに伝わったと思います。</p>
-
-<p>当日の過ごし方は</p>
-
-<ul>
-<li>午前中はセッションを聴講</li>
-<li>午後一は自分のセッション</li>
-<li>その後はアンカンファレンス</li>
-<li>LT聴講/懇親会参加&hellip;(続く</li>
-</ul>
-
-<p>という感じでした。</p>
-
-<p>PHPカンファレンスは、どの地方に行ってもスタッフの皆さんが良くて、参加者としてとても楽しめます。
-また、来年以降も仙台で開催されたら、ぜひ参加したいなと思います。</p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス仙台2019で、Web Componentsについて発表してきました" data-url="http://blog.open.tokyo.jp/2019/01/27/php-conference-sendai-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/01/27/php-conference-sendai-2019.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9%E4%BB%99%E5%8F%B02019%E3%81%A7%E3%80%81Web%20Components%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/01/27/php-conference-sendai-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
           </li>
         </ul>
       </div>
@@ -640,6 +809,14 @@
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2019/06/16/interop-2019-w3c-chirimen.html">InteropでW3Cブースの出展に参加してきました</a> <span>2019/06/16</span></li>
+                
+                  <li><a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a> <span>2019/06/16</span></li>
+                
+                  <li><a href="/2019/06/09/jsfes-2019-spring.html">初夏のJavaScript祭りに参加して、Import mapsについてLTをしました</a> <span>2019/06/09</span></li>
+                
+                  <li><a href="/2019/05/31/polymer-co-edo-meetup-25.html">Polymer.co-edo  meetup ＃25を開催しました</a> <span>2019/05/31</span></li>
+                
                   <li><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a> <span>2019/05/19</span></li>
                 
                   <li><a href="/2019/05/15/google-i-o-2019.html">Google I/O 2019ふりかえり</a> <span>2019/05/15</span></li>
@@ -651,14 +828,6 @@
                   <li><a href="/2019/05/03/brackets-coming-lsp.html">BracketsにLSPがやってきた</a> <span>2019/05/03</span></li>
                 
                   <li><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a> <span>2019/05/02</span></li>
-                
-                  <li><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a> <span>2019/05/01</span></li>
-                
-                  <li><a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a> <span>2019/04/30</span></li>
-                
-                  <li><a href="/2019/04/29/asucon-2019.html">アスカン2019を開催しました</a> <span>2019/04/29</span></li>
-                
-                  <li><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a> <span>2019/04/28</span></li>
                 
               </ul>
             </div>
@@ -1288,6 +1457,18 @@
                 
                   
                   
+                    <li class="size0">
+                      <a rel="tag" href="/tags/import-maps.html">import maps</a>
+                    </li>
+                  
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
                   
                 
                   
@@ -1302,7 +1483,7 @@
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2019.html">2019</a> (22)</li>
+                  <li><a href="/2019.html">2019</a> (26)</li>
                 
                   <li><a href="/2018.html">2018</a> (31)</li>
                 
