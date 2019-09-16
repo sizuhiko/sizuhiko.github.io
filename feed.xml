@@ -5,10 +5,268 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2019-06-30T03:24:00Z</updated>
+  <updated>2019-08-12T01:50:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Maker Faire Tokyo 2019にCHIRIMENコミュニティで参加しました</title>
+    <link rel="alternate" href="http://blog.url.com/2019/08/12/maker-faire-tokyo-2019.html"/>
+    <id>http://blog.url.com/2019/08/12/maker-faire-tokyo-2019.html</id>
+    <published>2019-08-12T01:50:00Z</published>
+    <updated>2019-09-16T23:27:03+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;今年もMakers夏の祭典&lt;a href="https://makezine.jp/event/mft2019/"&gt;Maker Faire Tokyo&lt;/a&gt;に出展してきました。&lt;/p&gt;
+
+&lt;p&gt;昨年の記事はこちら:&lt;a href="/2018/08/13/maker-faire-tokyo-2018.html"&gt;Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;もうこの準備のため、2ヶ月ぐらい時間を使った(構想から実装まで)ので、長文になります。&lt;/p&gt;
+
+&lt;h2&gt;昨年の反省と今年の想い&lt;/h2&gt;
+
+&lt;p&gt;昨年は&lt;a href="http://blog.open.tokyo.jp/chirimen-piano/"&gt;CHIRIMEN PIANO&lt;/a&gt;を作って、展示したのですが、地味だなーと。
+ちゃんとしたピアノ風の見た目を作れば良かったとか、いろいろ思うところがありました。&lt;/p&gt;
+
+&lt;p&gt;展示の想いとしては、&lt;a href="https://chirimen.org/"&gt;CHIRIMENコニュニティ&lt;/a&gt;のアピールではあるわけで、とにかく足をとめて興味を持ってもらうことが大切です。
+昨年はバスがあって、LEDラッピングを光らせるデモがあって、かなりの人が足をとめてくれたのですが、今年はバス無しということがわかっていたのです。&lt;/p&gt;
+
+&lt;p&gt;鳴り物と光り物は、足をとめてもらえる要素が多いので、今年も楽器でいこうとは決めていました。
+自分でデモプレイできる楽器といえばギターとサックス&amp;hellip;.
+サックスはさすがに作れないなーということで、ギターを選択しました。&lt;/p&gt;
+
+&lt;p&gt;昨年の技術を応用して、今年はこんなのかな？みたいなのを初期は想定していました。&lt;/p&gt;
+
+&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/Cjk9rVGwkk0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;いわゆるスティールギターです。
+ただ構想を重ねていく中で、やっぱり人の興味を引くのには地味かなーと思い始め、どうせなら&lt;a href="https://fabcross.jp/interview/20190731_gaikotsu_ojisan.html"&gt;ガイコツおじさん&lt;/a&gt;のように、
+より参加者に近い形でコミュニケーションできないかな？と考え普通のギタースタイルへと変えていきました。&lt;/p&gt;
+
+&lt;h2&gt;いざ準備開始&lt;/h2&gt;
+
+&lt;p&gt;いつももっと早く始めてればなぁ、と思うのですが、だいたい6月からです。春のカンファレンス時期なんですよね&amp;hellip;
+といっても6月は、上記の構想や設計と実際に必要になりそうなセンサー類などの発注作業を行ってました。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="/2019/06/30/phpconfuk2019.html"&gt;PHPカンファレンス福岡2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました&lt;/a&gt;にも書いたとおり6月末は福岡での発表がありましたが、
+それも終わり7月から本格始動です。&lt;/p&gt;
+
+&lt;p&gt;まずセンサー類などが届くまでにWebアプリの作成から。
+昨年の&lt;a href="http://blog.open.tokyo.jp/chirimen-piano/"&gt;CHIRIMEN PIANO&lt;/a&gt;と同様に、PCでもスマホでも、もちろんCHIRIMENでもプレイ可能なギターアプリを作ります。
+もちろん Web Components 技術を使って。&lt;/p&gt;
+
+&lt;p&gt;WebI2Cエレメント自体の昨年からのアップデートは少なくて &lt;code&gt;&amp;lt;chirimen-ads1015&amp;gt;&lt;/code&gt; というタグを追加しただけに終わりました。
+&lt;a href="https://www.switch-science.com/catalog/1136/"&gt;ADS1015搭載 12BitADC 4CH 可変ゲインアンプ付き&lt;/a&gt;を使うためですが、これをどのように使ったかは後で解説します。&lt;/p&gt;
+
+&lt;h2&gt;CHIRIMEN-GUITER&lt;/h2&gt;
+
+&lt;p&gt;CHIRIMENぎたー&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/sizuhiko/chirimen-guiter"&gt;ソースコード&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://blog.open.tokyo.jp/chirimen-guiter/docs/"&gt;動作URL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;PCやスマホでのプレイ方法：&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-screen.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;PCの場合は、フレットがキーボードにアサインされています。
+F3, E2などの音階の下にアサインされているキーを表示しています。
+たとえばC3の場合は &lt;code&gt;q&lt;/code&gt; キーを、F2の場合は &lt;code&gt;c&lt;/code&gt; キーを押します（同時に複数のキーを押してコードにすることも可能です）。
+音を鳴らすには、右側の黒い部分をマウスホバーして上下すると音が鳴ります。&lt;/p&gt;
+
+&lt;p&gt;スマホの場合は、タッチ(マルチタッチ)に対応しています。
+回転固定アプリなどを使って、横向き、上下反転すると、通常のギターを操作するのと同じようにフレットをおさえることができます。
+ピックアップが右の黒い部分なのはPC版と同じですが、スマホ版ではここを擦る（スワイプする）ことで音が鳴ります。&lt;/p&gt;
+
+&lt;h3&gt;CHIRIMENでのプレイ方法：&lt;/h3&gt;
+
+&lt;p&gt;普通のギターっぽく演奏できます！&lt;/p&gt;
+
+&lt;h2&gt;ハード制作&lt;/h2&gt;
+
+&lt;p&gt;ギターを作るために利用したものは以下のとおりです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CHIRIMEN piano を作るときに書いた&lt;a href="/2018/07/28/chirimen-raspi-setup.html"&gt;CHIRIMEN Raspi setup&lt;/a&gt;の記事でふれたもの
+
+&lt;ul&gt;
+&lt;li&gt;Raspberry Pi 3 model B+&lt;/li&gt;
+&lt;li&gt;Adafruit PiTFT Plus 480x320 3.5インチTFT&lt;/li&gt;
+&lt;li&gt;Adafruit GPIOリボンケーブル - 26ピン&lt;/li&gt;
+&lt;li&gt;TOSHIBA microSDHC 16GB&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/825/"&gt;GROVE - I2C タッチセンサ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/2645/"&gt;GROVE - ジェスチャー&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/796/"&gt;GROVE - I2Cハブ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/798/"&gt;GROVE - 4ピンケーブル 20cm (5本セット)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4K34"&gt;Grove 4ピンコネクタ - ジャンパーピン変換ケーブル(5本入り)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/1136/"&gt;ADS1015搭載 12BitADC 4CH 可変ゲインアンプ付き&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-5CEW"&gt;JST to Breadboard Jumper (3-pin)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.switch-science.com/catalog/283/"&gt;SoftPot接触位置センサ200mm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.amazon.co.jp/dp/B07LBTKGGL/"&gt;ギターフレットボード&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;ブレッドボード/足長ソケット/ジャンパー(AWG22)&lt;/li&gt;
+&lt;li&gt;木目調シート(100均にあるもの)&lt;/li&gt;
+&lt;li&gt;クリアケース(100均にあるもの)&lt;/li&gt;
+&lt;li&gt;シルバーラッカー(100均にあるもの)&lt;/li&gt;
+&lt;li&gt;チップスターの缶(食べ終わったもの)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;フレット&lt;/h3&gt;
+
+&lt;p&gt;ギターのフレットには、どこが押されたかを調べるため、 &lt;code&gt;SoftPot接触位置センサ&lt;/code&gt; を利用することにしました。
+このセンサーは曲げセンサーなどと同じで、押した箇所の抵抗が上がることでアナログ値として、起点からの距離を知ることができます。
+このセンサーを弦の代わりに6本はれば良いわけですが、センサーの幅が両端をギリギリまでカットしても1cmあります。
+ギターのフレットボードは一番幅が狭い箇所が4cmぐらいなので、6本はどうみても無理。
+ということで、スクリーンショットなどでもわかるとおり、4弦ギターになっています（それはベースなのでは？とかウクレレで良かったのでは？という話はありますが、私がデモプレイできないので&amp;hellip; ry）&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-1.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;まずはCHIRIMENとADS1015を使って、SoftPot接触位置センサから値が取得できるかを調べます。
+ADS1015のオンラインサンプルは&lt;a href="http://chirimen.org/chirimen-raspi3/gc/i2c/i2c-ADS1015/"&gt;Raspi3版のADS1015オンラインサンプル&lt;/a&gt;があるので、センサーを接続してCHIRIMEN for Raspi3のブラウザで動作確認します。
+ちょっとわかりずらいですが、Raspi上のTFTモニタにサンプル画面が表示され、押した場所の値が表示されています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-2.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;次に4本接続して値が取得できるかを確認します。
+この段階では &lt;code&gt;&amp;lt;chirimen-ads1015&amp;gt;&lt;/code&gt; タグの仮実装までして、WebI2Cタグで値が取得できるかを確認しています。&lt;/p&gt;
+
+&lt;p&gt;SoftPot接触位置センサからは、 &lt;code&gt;JST to Breadboard Jumper&lt;/code&gt; （厳密には少し違うものなのですが、せんごくオンラインにはなかったので同等のものをリンクしています）を使って、
+ジャンパー経由でブレッドボードに落としています。JSTコネクタは2.5mm幅でハンダ付けの必要がなく接触位置センサーと接続できそうだったので、導入しました。
+接触位置センサーのはんだ端子が結構微妙なので、この方式が良いと思います（実際にはコネクタ端子の製品もあるらしいけど、店舗やスイッチサイエンスにはないようです）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-3.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;あとはセンサー左右の耳の部分をカッターで切り落とし、ギターフレットに貼り付けてみます。
+なんとか4本を敷きつめられました。
+耳のカットは、まず1本やって、値がちゃんと取れることを確認してから4本実施。
+もしカットして値が取れなくなっていたら、戦略の見直しが必要なところでしたが、良かったです。
+（実はスリムタイプという製品が販売元のページにあるのを知っていて、カットしたら同じなんじゃない？という感覚があったのも良かったと思います）&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-4.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;最後の仕上げです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;クリアケースとフレットボードを取り付け&lt;/li&gt;
+&lt;li&gt;ブレッドボードでAD変換してGrove端子にするような回路を作成&lt;/li&gt;
+&lt;li&gt;フレットボードの裏側に接触位置センサーのケーブルを取り回すように穴あけ&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;その他&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-7.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;クリアケースにCHIRIMENとI2Cハブを取り付けます。
+そこからchirimen-pianoでも利用したタッチセンサーとジェスチャーセンサーをクリアケースの外側に取り付けます。&lt;/p&gt;
+
+&lt;p&gt;この2つのセンサーはプレイ方法に関係します。
+フレットに利用した接触位置センサーの値は、PC/スマホ版のキーボードやタッチと同じで、音階を指定するだけです。
+タッチとジェスチャーは、PC/スマホ版の黒い部分と連動していて、ジェスチャーは何か動きがあったときにストロークプレイ、
+タッチは4弦と連動してアルペジオプレイができるように、アプリケーションを実装しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-6.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;見た目とプレイしやすさから &lt;code&gt;チップスターの缶&lt;/code&gt; をいい感じにカットしてフレット裏の湾曲を作りました。
+これでFコードなどを抑えるのも用意になります。&lt;/p&gt;
+
+&lt;p&gt;接触位置センサーは木目調シートで隠して、ちゃんとしたフレット位置にシルバーラッカーで目印を書いておきます。&lt;/p&gt;
+
+&lt;h2&gt;当日&lt;/h2&gt;
+
+&lt;p&gt;土曜日&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/MFTokyo2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#MFTokyo2019&lt;/a&gt; 出展してます。これ、どっちもMFTokyoじゃん。紛らわしいw (@ 東京ビッグサイト (東京国際展示場) - &lt;a href="https://twitter.com/T_Bigsight?ref_src=twsrc%5Etfw"&gt;@t_bigsight&lt;/a&gt; in 江東区, 東京都) &lt;a href="https://t.co/pUNHVjNMeS"&gt;https://t.co/pUNHVjNMeS&lt;/a&gt; &lt;a href="https://t.co/qlwmMuwLfC"&gt;pic.twitter.com/qlwmMuwLfC&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1157468516020293632?ref_src=twsrc%5Etfw"&gt;August 3, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;日曜日&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/MFTokyo2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#MFTokyo2019&lt;/a&gt; 今日もS-02ブースでお待ちしてます (@ 東京ビッグサイト (東京国際展示場) - &lt;a href="https://twitter.com/T_Bigsight?ref_src=twsrc%5Etfw"&gt;@t_bigsight&lt;/a&gt; in 江東区, 東京都) &lt;a href="https://t.co/N5kyNOB7Tr"&gt;https://t.co/N5kyNOB7Tr&lt;/a&gt; &lt;a href="https://t.co/k0gecgezSI"&gt;pic.twitter.com/k0gecgezSI&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1157817313946755073?ref_src=twsrc%5Etfw"&gt;August 4, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/chirimen-guiter-5.jpg" /&gt;&lt;/p&gt;
+
+&lt;p&gt;Cloud Next Tokyoが終わって直前の2日間ぐらい、制作したギターで練習して当日に挑みました。
+ちゃんとギターアンプまで持ち込み。&lt;/p&gt;
+
+&lt;p&gt;結果として、たくさんの方の目に留まり、コミュニティの説明をすることができました（パンフレットなくなったし！）
+実際に今後どのぐらいの人が&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CHIRIMENをさわってくれたり&lt;/li&gt;
+&lt;li&gt;Webとリアルをつなぐアプリを作ってくれたり&lt;/li&gt;
+&lt;li&gt;プログラミングを学んでくれたり&lt;/li&gt;
+&lt;li&gt;Webの標準化に興味を持ってくれたり&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;するかはわかりませんが、何かのキッカケを作れたんじゃないかなーと思います。
+ギターはまだ分解してませんw ので、ご要望があればどこかに持っていて遊びたいなーと思っています。&lt;/p&gt;
+
+&lt;p&gt;来年のMFTokyoは10月開催予定ということで真夏の祭典じゃなくなるけど、また面白い展示を考えて、CHIRIMENを広める活動をしたいなーと思っています。
+&lt;a href="https://chirimen.org/"&gt;CHIRIMENコニュニティ&lt;/a&gt;は皆様の参加を待っています！&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Google Cloud Next Tokyo'19 に出展しました</title>
+    <link rel="alternate" href="http://blog.url.com/2019/08/12/google-cloud-next-tokyo.html"/>
+    <id>http://blog.url.com/2019/08/12/google-cloud-next-tokyo.html</id>
+    <published>2019-08-12T01:48:00Z</published>
+    <updated>2019-09-16T23:27:03+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://cloud.withgoogle.com/next/tokyo"&gt;Google Cloud Next Tokyo&lt;/a&gt;に出展してきました。
+今回は会社がプラチナスポンサーになっていたので、主にブース内でデモ担当をやっていました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/GoogleNext19?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#GoogleNext19&lt;/a&gt; 出展してますー (@ ザ・プリンス パークタワー東京 in 港区, 東京都) &lt;a href="https://t.co/Ne5VD8y4sM"&gt;https://t.co/Ne5VD8y4sM&lt;/a&gt; &lt;a href="https://t.co/VyDZJsa0q8"&gt;pic.twitter.com/VyDZJsa0q8&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1156356954505265153?ref_src=twsrc%5Etfw"&gt;July 31, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;本日も出展しています。よろしくお願いします &lt;a href="https://twitter.com/hashtag/GoogleNext19?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#GoogleNext19&lt;/a&gt; (@ ザ・プリンス パークタワー東京 in 港区, 東京都) &lt;a href="https://t.co/kVNJlVUzIQ"&gt;https://t.co/kVNJlVUzIQ&lt;/a&gt; &lt;a href="https://t.co/MCXDnO1iUa"&gt;pic.twitter.com/MCXDnO1iUa&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1156721815110242304?ref_src=twsrc%5Etfw"&gt;August 1, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;p&gt;デモしたのは&lt;a href="https://github.com/its-succ/dakoku-web"&gt;dakoku&lt;/a&gt;という、IoT技術を使った勤怠システム打刻の仕組みで、会社のIoT勉強会で作ったものです。
+インフラでGCPを使っているので、今回デモ用の事例として展示することになりました。&lt;/p&gt;
+
+&lt;p&gt;上記リポジトリに構成が添付されていますが、結構マジメに（セキュリティとか可用性とか）考えています。
+すべてOSSで公開しているので、もし勤怠の打刻をやってみたいという方の参考になればなと思っています。&lt;/p&gt;
+
+&lt;p&gt;あと、会社の勉強会は社外の方も参加可能らしいので、IoTに興味がある方はお声がけください。
+電子工作のための機材とか、GCPの環境などは準備がありますので、どうぞー&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Chrome Tech Talk Night</title>
+    <link rel="alternate" href="http://blog.url.com/2019/07/28/chrome-tech-talk-night-14.html"/>
+    <id>http://blog.url.com/2019/07/28/chrome-tech-talk-night-14.html</id>
+    <published>2019-07-28T01:45:00Z</published>
+    <updated>2019-09-16T23:27:03+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;7/26にGoogleで開催された&lt;a href="https://events.withgoogle.com/chrome-tech-talk-night-14/"&gt;Chrome Tech Talk Night #14&lt;/a&gt;に参加しました。&lt;/p&gt;
+
+&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/chromejp?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#chromejp&lt;/a&gt; 着席 (at &lt;a href="https://twitter.com/googlejapan?ref_src=twsrc%5Etfw"&gt;@GoogleJapan&lt;/a&gt; in 港区, 東京都) &lt;a href="https://t.co/Pf8K08b7b7"&gt;https://t.co/Pf8K08b7b7&lt;/a&gt; &lt;a href="https://t.co/CUOQ4sOY8N"&gt;pic.twitter.com/CUOQ4sOY8N&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1154690615537537024?ref_src=twsrc%5Etfw"&gt;July 26, 2019&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;今回のイベントにはWPSGのメンバーとして。&lt;/p&gt;
+
+&lt;h2&gt;WPSGとは？&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://medium.com/web-platform-study-group/web-platform-study-group%E8%A8%AD%E7%AB%8B%E3%81%AE%E3%81%8A%E7%9F%A5%E3%82%89%E3%81%9B-2986866439ff"&gt;Web Platform Study Group設立のお知らせ&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;簡単に言うと、今までPolymer Japanというコミュニティでやってきたメンバーで、新しいコミュニティを設立したという流れです。&lt;/p&gt;
+
+&lt;h2&gt;AMP&lt;/h2&gt;
+
+&lt;p&gt;AMPはWeb Componentsをベースにしたフレームワークで、&lt;a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html"&gt;I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました&lt;/a&gt;でも紹介しています。&lt;/p&gt;
+
+&lt;p&gt;Polymer JapanのころにAMPでイベントやりたいね！、と思っていたところ、ちょうどGoogleさんでも今回のイベントを企画していたということで、コミュニティから数名のスピーカーを出して一緒にやることができました。&lt;/p&gt;
+
+&lt;p&gt;AMPはほんとうに良くできていて、BentoプロジェクトでAMPファーストなサイトが作れるようになってきたら、本格的に使うのもアリだなーと思っています。
+そんな仕事ないかなぁー（笑&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHPカンファレンス福岡2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</title>
     <link rel="alternate" href="http://blog.url.com/2019/06/30/phpconfuk2019.html"/>
@@ -187,79 +445,6 @@ xo                     0.21.1      0.21.1  0.24.0  lit-loader-example
 &lt;p&gt;私は昨年のMaker Faireで展示したCHIRIMEN PIANOを持って行きました。小さいキットなので、ポータビリティが良いです。&lt;/p&gt;
 
 &lt;p&gt;少しでもWebブラウザからIoT機器を操作することに興味を持ってくれる人が増えると嬉しいです。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>合宿に参加してKARAKURIを作った</title>
-    <link rel="alternate" href="http://blog.url.com/2019/06/16/karakuri.html"/>
-    <id>http://blog.url.com/2019/06/16/karakuri.html</id>
-    <published>2019-06-16T06:25:00Z</published>
-    <updated>2019-06-16T16:31:21+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;会社の合宿に参加するため6/7と6/8で福井の&lt;a href="https://www.takasusou.jp/"&gt;鷹巣荘&lt;/a&gt;に行ってました。
-海沿いの景色の良い温泉宿だったと思うのですが、生憎梅雨入り直後で雨でした。&lt;/p&gt;
-
-&lt;p&gt;まぁ開発に集中できるということで、 &lt;code&gt;edo-blogcard&lt;/code&gt; で使うスクレイピングサーバーを作ってました。&lt;/p&gt;
-
-&lt;p&gt;名前は &lt;a href="https://github.com/Edo-Elements/edo-karakuri"&gt;edo-karakuri&lt;/a&gt; です。&lt;/p&gt;
-
-&lt;p&gt;成果発表のスライドがあるので、こちらから。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="831d3dc0f327492d9c2f090d24eec5d8" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;スクレイピングしてCORSを回避するのってカラクリだし、なんか江戸っぽいな、ということで、こういうネーミングにしました。
-これを実際にサービスにするには、&lt;a href="https://github.com/GoogleChrome/puppeteer"&gt;Puppeteer&lt;/a&gt;が重いので、先頭で受けるサービスにするとお金もかかる、ということで手前にキャッシュから打ち返すサービスを作って、キャッシュにない場合はスクレイピングするようにしたいと思います。&lt;/p&gt;
-
-&lt;p&gt;現在 GitHub に上がっているコードは、まだGAEにデプロイするようになっていないので、次の &lt;a href="#"&gt;Polymer.co-edoのmeetup&lt;/a&gt;では、ここを作ろうと思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>初夏のJavaScript祭りに参加して、Import mapsについてLTをしました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/06/09/jsfes-2019-spring.html"/>
-    <id>http://blog.url.com/2019/06/09/jsfes-2019-spring.html</id>
-    <published>2019-06-09T05:43:00Z</published>
-    <updated>2019-06-16T15:21:30+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://javascript-fes.doorkeeper.jp/events/90894"&gt;6/1に開催されたJavaScript祭りに参加しました&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="https://dzpp79ucibp5a.cloudfront.net/events_banners/90894_normal_1556002686_jsfes2019.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;いつもと同様にLT枠へ申し込みましたが、今回はPolymerではありません。
-とは言いつつ、WebComponentsに関してもとても重要な仕様となる&lt;a href="https://github.com/WICG/import-maps"&gt;import maps&lt;/a&gt;について、最近Blogにまとめた内容について発表してきました。&lt;/p&gt;
-
-&lt;p&gt;さて、私のスライドは以下のとおりです。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="912b2dfa5d154da6878af26b60aa5b7e" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;イベントでは他にもとても楽しいセッションが多く、盛り上がりました。
-また参加したいと思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Polymer.co-edo  meetup ＃25を開催しました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/05/31/polymer-co-edo-meetup-25.html"/>
-    <id>http://blog.url.com/2019/05/31/polymer-co-edo-meetup-25.html</id>
-    <published>2019-05-31T05:43:00Z</published>
-    <updated>2019-06-16T15:24:07+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;2019年4回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/91906"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
-
-&lt;p&gt;前回 &lt;code&gt;edo-blogcard&lt;/code&gt; の作成に入りましたが、実際はWebサイトのデータを収集するためには、スクレイピングする必要があります。
-ブラウザからはCORSになってしまうため、そういったOSSや、サーバー側のアーキテクチャの調査をしていました。
-個人的には少しずつアイデアが固まってきたので、会社の合宿でまとめていきたいなぁと思っています。&lt;/p&gt;
-
-&lt;h3&gt;次回&lt;/h3&gt;
-
-&lt;p&gt;引き続きEdoエレメントの開発ともくもくを進めていきます。
-皆様の参加をお待ちしております。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;&lt;/p&gt;
 </content>
   </entry>
 </feed>
