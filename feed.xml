@@ -5,10 +5,207 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2019-10-13T04:02:00Z</updated>
+  <updated>2019-11-17T07:40:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CHIRIMENおさわり＆もくもく会 〜Raspberry Pi 4 ＆ Jetson対応記念〜に参加しました</title>
+    <link rel="alternate" href="http://blog.url.com/2019/11/17/chirimen-meetup.html"/>
+    <id>http://blog.url.com/2019/11/17/chirimen-meetup.html</id>
+    <published>2019-11-17T07:40:00Z</published>
+    <updated>2019-11-17T16:51:13+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://chirimen-oh.connpass.com/event/155170/"&gt;CHIRIMENおさわり＆もくもく会 〜Raspberry Pi 4 ＆ Jetson対応記念〜&lt;/a&gt;に参加しました。&lt;/p&gt;
+
+&lt;h2&gt;やったこと1 : 新しいハードのお触り&lt;/h2&gt;
+
+&lt;p&gt;現在公式サポートしているRaspberry Pi 3より、どのくらい速く動くのか確認したかったので、参加しました。
+自分の作成した、CHIRIMEN Piano, CHIRIMEN Guitar で検証です。&lt;/p&gt;
+
+&lt;p&gt;結果としてはレスポンスが速くなっていて、自作楽器にはもってこいでした。
+私のはフロントをWebComponentsで作っているので、スペックの弱いマシンで動かすとモッサリするのですが、これなら良いと思いました。&lt;/p&gt;
+
+&lt;h2&gt;やったこと2 : WebGpioエレメントとWebI2Cエレメントのパッケージ化&lt;/h2&gt;
+
+&lt;p&gt;これまでは楽器アプリ内にて普通のエレメントとして作っていましたが、パッケージ化も進めています。
+まずはWebGpio。
+とりあえずTypeScript + LitElement + Rollupで。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/sizuhiko/WebGpioElement/tree/develop"&gt;sizuhiko/WebGpioElement&lt;/a&gt;で開発を進めています。
+まだReadだけ。Write I/Fもそろそろ書きます。&lt;/p&gt;
+
+&lt;p&gt;今の所は&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;web-gpio&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;web-gpio-peripheral&lt;/span&gt; &lt;span class="na"&gt;port=&lt;/span&gt;&lt;span class="s"&gt;"19"&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;"out"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/web-gpio-peripheral&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;web-gpio-peripheral&lt;/span&gt; &lt;span class="na"&gt;port=&lt;/span&gt;&lt;span class="s"&gt;"5"&lt;/span&gt; &lt;span class="na"&gt;mode=&lt;/span&gt;&lt;span class="s"&gt;"in"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/web-gpio-peripheral&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;slot=&lt;/span&gt;&lt;span class="s"&gt;"no-web-gpio"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    The device is not CHIRIMEN.
+  &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/web-gpio&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;こんな感じなんですが、&lt;/p&gt;
+&lt;pre class="highlight html"&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;web-gpio&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;web-gpio-out&lt;/span&gt; &lt;span class="na"&gt;port=&lt;/span&gt;&lt;span class="s"&gt;"19"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/web-gpio-out&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;web-gpio-in&lt;/span&gt; &lt;span class="na"&gt;port=&lt;/span&gt;&lt;span class="s"&gt;"5"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&amp;lt;/web-gpio-in&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;div&lt;/span&gt; &lt;span class="na"&gt;slot=&lt;/span&gt;&lt;span class="s"&gt;"no-web-gpio"&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    The device is not CHIRIMEN.
+  &lt;span class="nt"&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/web-gpio&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;みたいなのも悪くないなーと思って検討中です。&lt;/p&gt;
+
+&lt;p&gt;何かアップデートあれば、随時記事にしていこうと思います。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>CakeFest 2019 Tokyoに参加しました</title>
+    <link rel="alternate" href="http://blog.url.com/2019/11/17/cakefest-2019-tokyo.html"/>
+    <id>http://blog.url.com/2019/11/17/cakefest-2019-tokyo.html</id>
+    <published>2019-11-17T06:28:00Z</published>
+    <updated>2019-11-17T16:16:56+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;昨年はCakeFest自体がスキップとなったので、2年ぶり。
+そして遂に東京です。
+長くCakePHPコミュニティに関わってきて、念願の？というと大げさですが、何度か東京で&amp;hellip;みたいな話が出ては消えてきたので、とても嬉しかったです。&lt;/p&gt;
+
+&lt;h2&gt;前夜祭！&lt;/h2&gt;
+
+&lt;p&gt;カンファレンスの前日に、渋谷の串カツ田中で前夜祭が行われました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;飲んでお釣りを寄付するのが &lt;a href="https://twitter.com/hashtag/CakePHPMeetUp?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakePHPMeetUp&lt;/a&gt; のスタイル、また明日会いましょう〜。&lt;br&gt;&lt;br&gt;Deink &amp;amp; donatipn is japanese cakephp meetup style, see you tomorrow!!&lt;br&gt;&lt;br&gt; &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/CakePHP?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakePHP&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/phpc?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#phpc&lt;/a&gt; &lt;a href="https://t.co/qaCFq8ZMAm"&gt;pic.twitter.com/qaCFq8ZMAm&lt;/a&gt;&lt;/p&gt;&amp;mdash; junichirojp (@junichirojp) &lt;a href="https://twitter.com/junichirojp/status/1192834848110415872?ref_src=twsrc%5Etfw"&gt;November 8, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;国際的なメンバーで串カツ、なかなか体験できない空間でした。
+この後は、坂上の&lt;a href="https://goodbeerfaucets.jp/"&gt;Goodbeer faucets&lt;/a&gt;で2次会。
+しかしよく飲むなー、カンファレンスは明日からが本番ですよー。
+だが、その後3次会まで行って、2時過ぎにタクシーで帰宅しました&amp;hellip;.&lt;/p&gt;
+
+&lt;h2&gt;カンファレンス Day1&lt;/h2&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; (@ スマートニュース株式会社 - &lt;a href="https://twitter.com/SmartNewsInc_jp?ref_src=twsrc%5Etfw"&gt;@smartnewsinc_jp&lt;/a&gt; in 渋谷区, 東京都) &lt;a href="https://t.co/q989IVDnY0"&gt;https://t.co/q989IVDnY0&lt;/a&gt; &lt;a href="https://t.co/72zry3Az5p"&gt;pic.twitter.com/72zry3Az5p&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1192980933672087552?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;場所はスマートニュースさんでした。初めての訪問です。
+オシャレな会場でカンファレンスが始まります。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Here is our keynote speakers from &lt;a href="https://twitter.com/ShizenEnergyInc?ref_src=twsrc%5Etfw"&gt;@ShizenEnergyInc&lt;/a&gt; - we are glad to have them as a sponsor this year. &lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/cakePHP?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakePHP&lt;/a&gt; &lt;a href="https://t.co/cslxx0WjQA"&gt;pic.twitter.com/cslxx0WjQA&lt;/a&gt;&lt;/p&gt;&amp;mdash; CakePHP (@cakephp) &lt;a href="https://twitter.com/cakephp/status/1192985305118326784?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;CakeFestはいつもノベルティもステキで、今回はCakeFestの像に、ノートでした。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="und" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt;&lt;br&gt;&lt;br&gt;Get! &lt;a href="https://t.co/UmwuFhIUCn"&gt;pic.twitter.com/UmwuFhIUCn&lt;/a&gt;&lt;/p&gt;&amp;mdash; Chanmio@駆け出しTL (@chanmio_man) &lt;a href="https://twitter.com/chanmio_man/status/1192980468238438400?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;まず驚いたのは通訳の人がいたということ。
+ちゃんとCakePHPに関連するワードなど配慮されていて、日本人に配慮してくれたのかな、という感じでした。&lt;/p&gt;
+
+&lt;p&gt;一方で日本からの登壇者の方も、英語で話して通訳さんが日本語にしていたので、そこは登壇者が両方喋るか、日本語で話して英語に訳してもらうか、どちらかの方が良かったのかなーと思いました。&lt;/p&gt;
+
+&lt;p&gt;その後、みんなでランチ食べに行ったりして、夕方ごろLTの募集が始まります。
+前夜祭でもLarryから、お前はやるだろ？みたいな事を言われていて、何も準備してないよ！と返しておいたのに、募集案内でいきなり指さされましたw（仕方なく手を上げたけどww&lt;/p&gt;
+
+&lt;p&gt;そこからLTの資料準備して（といっても、過去にやったものの流用ですが）、無事？LTを終えました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;\ｷｬｰｷｼﾀﾞｻｰﾝ!!!// &lt;a href="https://twitter.com/hashtag/cakefest?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; &lt;a href="https://t.co/3rml9CiMZr"&gt;pic.twitter.com/3rml9CiMZr&lt;/a&gt;&lt;/p&gt;&amp;mdash; hamaco (@hamaco) &lt;a href="https://twitter.com/hamaco/status/1193538974188392450?ref_src=twsrc%5Etfw"&gt;November 10, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;LTはAMPについて。これは春先のGoogle I/O Extendで私が担当したもので、LT向きだなと思って慌ててスライドを英語に変換しました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;My LT talk slide &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt;&lt;a href="https://t.co/EhwQT8Ca3B"&gt;https://t.co/EhwQT8Ca3B&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1193114111455875074?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;h2&gt;懇親会 Day1&lt;/h2&gt;
+
+&lt;p&gt;10:00から20:00までという長いカンファレンス Day1を終えて、なぜか竹下通りにやってきました。
+Savantはガチャやってます。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Enjoy! &lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; &lt;a href="https://t.co/b8CprpCV60"&gt;pic.twitter.com/b8CprpCV60&lt;/a&gt;&lt;/p&gt;&amp;mdash; ichikaway (@ichikaway) &lt;a href="https://twitter.com/ichikaway/status/1193125636832821248?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;その後、Mark, Jose, Savant, 市川さんとビール飲みに行きました。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="und" dir="ltr"&gt;&lt;a href="https://twitter.com/mark_story?ref_src=twsrc%5Etfw"&gt;@mark_story&lt;/a&gt; &lt;a href="https://twitter.com/jose_zap?ref_src=twsrc%5Etfw"&gt;@jose_zap&lt;/a&gt; &lt;a href="https://twitter.com/savant?ref_src=twsrc%5Etfw"&gt;@savant&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; &lt;a href="https://t.co/dRcVUQbsSw"&gt;pic.twitter.com/dRcVUQbsSw&lt;/a&gt;&lt;/p&gt;&amp;mdash; ichikaway (@ichikaway) &lt;a href="https://twitter.com/ichikaway/status/1193178236852686848?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;さらにグリフォンに福岡チームがいるということで移動することに。
+ここで解散となれば良かったのですが、なぜか&amp;hellip;..&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="in" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; Karaoke &lt;a href="https://t.co/bkfnmZbjlh"&gt;pic.twitter.com/bkfnmZbjlh&lt;/a&gt;&lt;/p&gt;&amp;mdash; ichikaway (@ichikaway) &lt;a href="https://twitter.com/ichikaway/status/1193208693975728130?ref_src=twsrc%5Etfw"&gt;November 9, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;カラオケに&amp;hellip;.（終わったの4時でした&lt;/p&gt;
+
+&lt;h2&gt;カンファレンス Day2&lt;/h2&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; conference day2 (@ スマートニュース株式会社 - &lt;a href="https://twitter.com/SmartNewsInc_jp?ref_src=twsrc%5Etfw"&gt;@smartnewsinc_jp&lt;/a&gt; in 渋谷区, 東京都) &lt;a href="https://t.co/Wi9g5tkSrC"&gt;https://t.co/Wi9g5tkSrC&lt;/a&gt; &lt;a href="https://t.co/GANaXYzvbz"&gt;pic.twitter.com/GANaXYzvbz&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1193338131598188544?ref_src=twsrc%5Etfw"&gt;November 10, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;ちゃんと起きて10:00過ぎには、カンファレンス会場に。今朝までいた中では一番早く到着していたと思う。&lt;/p&gt;
+
+&lt;p&gt;2日目最初のセッションはJoseのテストの話だったのですが、多くの人はテストの種類についての違いが理解できていないことも多いなと感じるので、こういったセッションは良いな、と思いました。私も来年はこのあたりの話をしていきたい。&lt;/p&gt;
+
+&lt;p&gt;グラハムを含め2人の登壇者の都合が悪くなり、早めに終了となったCakeFest2019。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Attendees signing the &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; banner for &lt;a href="https://twitter.com/PhpNut?ref_src=twsrc%5Etfw"&gt;@PhpNut&lt;/a&gt; to hang by his bed. &lt;a href="https://twitter.com/hashtag/cakefest?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/japan?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#japan&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/cakePHP?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakePHP&lt;/a&gt; &lt;a href="https://t.co/94t9Mwmkri"&gt;pic.twitter.com/94t9Mwmkri&lt;/a&gt;&lt;/p&gt;&amp;mdash; CakePHP (@cakephp) &lt;a href="https://twitter.com/cakephp/status/1193433132910952448?ref_src=twsrc%5Etfw"&gt;November 10, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;最後は旗にサインして、恒例のリアルケーキで締め。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;It’s time for everyone’s favorite part of &lt;a href="https://twitter.com/hashtag/CakeFest?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest&lt;/a&gt; - the cake! 🍰 It even made &lt;a href="https://twitter.com/PhpNut?ref_src=twsrc%5Etfw"&gt;@PhpNut&lt;/a&gt; smile. &lt;a href="https://twitter.com/hashtag/cake?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cake&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/cakefest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakefest2019&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/cakePHP?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#cakePHP&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/japan?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#japan&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/php?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#php&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/oss?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#oss&lt;/a&gt; &lt;a href="https://t.co/HRIrbR5VIP"&gt;pic.twitter.com/HRIrbR5VIP&lt;/a&gt;&lt;/p&gt;&amp;mdash; CakePHP (@cakephp) &lt;a href="https://twitter.com/cakephp/status/1193458595150602241?ref_src=twsrc%5Etfw"&gt;November 10, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;h2&gt;懇親会 Day2&lt;/h2&gt;
+
+&lt;p&gt;最後はお好み焼き。&lt;/p&gt;
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;にじかい &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/CakeFest2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#CakeFest2019&lt;/a&gt; &lt;a href="https://t.co/CJDczl3pAV"&gt;pic.twitter.com/CJDczl3pAV&lt;/a&gt;&lt;/p&gt;&amp;mdash; Gro(Ishiguro Mizuki) (@ishiguro_mizuki) &lt;a href="https://twitter.com/ishiguro_mizuki/status/1193522151472558080?ref_src=twsrc%5Etfw"&gt;November 10, 2019&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;串カツに始まり、お好み焼きで終わる。
+CakeFest &lt;code&gt;TOKYO&lt;/code&gt; だったはずだけど、とても良かったですw&lt;/p&gt;
+
+&lt;p&gt;昨日の疲れもあり？そのまま解散となりました。&lt;/p&gt;
+
+&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
+
+&lt;h2&gt;日本での国際カンファレンス&lt;/h2&gt;
+
+&lt;p&gt;最近はPHPカンファレンスなどでも海外からスピーカーがやってきますし、いろいろなコミュニティイベントでも英語セッションがあったりと、それ自体はそんなに珍しいものでもないような気もします。
+ただ全編英語で行われるカンファレンスともなると、あまりないのかな？と思います。&lt;/p&gt;
+
+&lt;p&gt;もちろん通訳の方がいたということもあるとは思いますが、参加者の満足度は高かったんじゃないかと感じました。
+次にいつこういう機会があるかわかりませんが、また開催されると良いな、と思います。&lt;/p&gt;
+
+&lt;p&gt;また、これをキッカケに来年以降CakeFestに参加する日本人が増えると良いなーと。
+一緒に来年はアメリカに行きましょう！（Larryが来年はアメリカ〜と言っていた&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;CakeFest 2019とても楽しかった。
+でも月曜からの仕事は辛かった（海外だと翌日出国でも時差の関係で2日間は休みになるが、国内は翌日からなのだ&amp;hellip;&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Polymer.co-edo ＃27</title>
+    <link rel="alternate" href="http://blog.url.com/2019/10/13/polymer-co-edo-meetup-27.html"/>
+    <id>http://blog.url.com/2019/10/13/polymer-co-edo-meetup-27.html</id>
+    <published>2019-10-13T06:21:00Z</published>
+    <updated>2019-11-17T15:27:39+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;2019年6回目となる &lt;a href="https://polymercoedo.doorkeeper.jp/events/97690"&gt;Polymer.co-edo ミートアップ&lt;/a&gt; を開催しました。&lt;/p&gt;
+
+&lt;p&gt;今回は、Polymer teamから新しいお知らせがありましたので、その内容を解説する会としました。&lt;/p&gt;
+
+&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Wondering what we&amp;rsquo;re up to?&lt;br&gt;&lt;br&gt;🏎️🚚🏍️🚗🚲🛴&lt;br&gt;&lt;br&gt;Check out our up-to-date roadmap here:&lt;a href="https://t.co/OJGfid67aV"&gt;https://t.co/OJGfid67aV&lt;/a&gt;&lt;/p&gt;&amp;mdash; Polymer Project (@polymer) &lt;a href="https://twitter.com/polymer/status/1169665596784402432?ref_src=twsrc%5Etfw"&gt;September 5, 2019&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;さらに先月の23日には、Web Components SF Meetupが行われたのですが、こちらはSalesForceの取り組みしか情報が得られなかったので、そこでリンクされていた情報について軽く共有しました。&lt;/p&gt;
+
+&lt;p&gt;参加者から今後のWeb Components動向なども聞かれましたが、基本的にもう仕様になっているし、モダンブラウザでは普通に使えるのでどんどん使うと良いよ！という感じですね。&lt;/p&gt;
+
+&lt;h3&gt;次回&lt;/h3&gt;
+
+&lt;p&gt;Web Components SF Meetupの動画が公開されたら、みんなで観る会をやりたいなーと思っています。
+皆様の参加をお待ちしております。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Doorkeeperのコミュニティページ&lt;/a&gt;&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHPカンファレンス沖縄2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</title>
     <link rel="alternate" href="http://blog.url.com/2019/10/13/phpcon-okinawa-2019.html"/>
@@ -405,141 +602,6 @@ ADS1015のオンラインサンプルは&lt;a href="http://chirimen.org/chirimen
 
 &lt;p&gt;来年のMFTokyoは10月開催予定ということで真夏の祭典じゃなくなるけど、また面白い展示を考えて、CHIRIMENを広める活動をしたいなーと思っています。
 &lt;a href="https://chirimen.org/"&gt;CHIRIMENコニュニティ&lt;/a&gt;は皆様の参加を待っています！&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Google Cloud Next Tokyo'19 に出展しました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/08/12/google-cloud-next-tokyo.html"/>
-    <id>http://blog.url.com/2019/08/12/google-cloud-next-tokyo.html</id>
-    <published>2019-08-12T01:48:00Z</published>
-    <updated>2019-09-16T23:27:03+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://cloud.withgoogle.com/next/tokyo"&gt;Google Cloud Next Tokyo&lt;/a&gt;に出展してきました。
-今回は会社がプラチナスポンサーになっていたので、主にブース内でデモ担当をやっていました。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/GoogleNext19?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#GoogleNext19&lt;/a&gt; 出展してますー (@ ザ・プリンス パークタワー東京 in 港区, 東京都) &lt;a href="https://t.co/Ne5VD8y4sM"&gt;https://t.co/Ne5VD8y4sM&lt;/a&gt; &lt;a href="https://t.co/VyDZJsa0q8"&gt;pic.twitter.com/VyDZJsa0q8&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1156356954505265153?ref_src=twsrc%5Etfw"&gt;July 31, 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;本日も出展しています。よろしくお願いします &lt;a href="https://twitter.com/hashtag/GoogleNext19?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#GoogleNext19&lt;/a&gt; (@ ザ・プリンス パークタワー東京 in 港区, 東京都) &lt;a href="https://t.co/kVNJlVUzIQ"&gt;https://t.co/kVNJlVUzIQ&lt;/a&gt; &lt;a href="https://t.co/MCXDnO1iUa"&gt;pic.twitter.com/MCXDnO1iUa&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1156721815110242304?ref_src=twsrc%5Etfw"&gt;August 1, 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-
-&lt;p&gt;デモしたのは&lt;a href="https://github.com/its-succ/dakoku-web"&gt;dakoku&lt;/a&gt;という、IoT技術を使った勤怠システム打刻の仕組みで、会社のIoT勉強会で作ったものです。
-インフラでGCPを使っているので、今回デモ用の事例として展示することになりました。&lt;/p&gt;
-
-&lt;p&gt;上記リポジトリに構成が添付されていますが、結構マジメに（セキュリティとか可用性とか）考えています。
-すべてOSSで公開しているので、もし勤怠の打刻をやってみたいという方の参考になればなと思っています。&lt;/p&gt;
-
-&lt;p&gt;あと、会社の勉強会は社外の方も参加可能らしいので、IoTに興味がある方はお声がけください。
-電子工作のための機材とか、GCPの環境などは準備がありますので、どうぞー&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Chrome Tech Talk Night</title>
-    <link rel="alternate" href="http://blog.url.com/2019/07/28/chrome-tech-talk-night-14.html"/>
-    <id>http://blog.url.com/2019/07/28/chrome-tech-talk-night-14.html</id>
-    <published>2019-07-28T01:45:00Z</published>
-    <updated>2019-09-16T23:27:03+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;7/26にGoogleで開催された&lt;a href="https://events.withgoogle.com/chrome-tech-talk-night-14/"&gt;Chrome Tech Talk Night #14&lt;/a&gt;に参加しました。&lt;/p&gt;
-
-&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/chromejp?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#chromejp&lt;/a&gt; 着席 (at &lt;a href="https://twitter.com/googlejapan?ref_src=twsrc%5Etfw"&gt;@GoogleJapan&lt;/a&gt; in 港区, 東京都) &lt;a href="https://t.co/Pf8K08b7b7"&gt;https://t.co/Pf8K08b7b7&lt;/a&gt; &lt;a href="https://t.co/CUOQ4sOY8N"&gt;pic.twitter.com/CUOQ4sOY8N&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1154690615537537024?ref_src=twsrc%5Etfw"&gt;July 26, 2019&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;今回のイベントにはWPSGのメンバーとして。&lt;/p&gt;
-
-&lt;h2&gt;WPSGとは？&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href="https://medium.com/web-platform-study-group/web-platform-study-group%E8%A8%AD%E7%AB%8B%E3%81%AE%E3%81%8A%E7%9F%A5%E3%82%89%E3%81%9B-2986866439ff"&gt;Web Platform Study Group設立のお知らせ&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;簡単に言うと、今までPolymer Japanというコミュニティでやってきたメンバーで、新しいコミュニティを設立したという流れです。&lt;/p&gt;
-
-&lt;h2&gt;AMP&lt;/h2&gt;
-
-&lt;p&gt;AMPはWeb Componentsをベースにしたフレームワークで、&lt;a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html"&gt;I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました&lt;/a&gt;でも紹介しています。&lt;/p&gt;
-
-&lt;p&gt;Polymer JapanのころにAMPでイベントやりたいね！、と思っていたところ、ちょうどGoogleさんでも今回のイベントを企画していたということで、コミュニティから数名のスピーカーを出して一緒にやることができました。&lt;/p&gt;
-
-&lt;p&gt;AMPはほんとうに良くできていて、BentoプロジェクトでAMPファーストなサイトが作れるようになってきたら、本格的に使うのもアリだなーと思っています。
-そんな仕事ないかなぁー（笑&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>PHPカンファレンス福岡2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</title>
-    <link rel="alternate" href="http://blog.url.com/2019/06/30/phpconfuk2019.html"/>
-    <id>http://blog.url.com/2019/06/30/phpconfuk2019.html</id>
-    <published>2019-06-30T03:24:00Z</published>
-    <updated>2019-09-22T10:32:38+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;6月はCakeFestがあったり、山形行っていたりでなかなか参加できないPHPカンファレンス福岡、今年は何の予定も重複していなかったので、参加することができました。
-また、CFPに応募した発表が通過したので &lt;code&gt;標準インターフェースを使ったアプリケーション開発&lt;/code&gt; というタイトルで発表してきました。&lt;/p&gt;
-
-&lt;p&gt;前回参加したのは2016年だった。&lt;a href="/2016/05/29/phpconfuk2016.html"&gt;PHPカンファレンス福岡2016に参加してLTをしました&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;ということで、3年ぶり2回目のPHPカンファレンス福岡です。&lt;/p&gt;
-
-&lt;h2&gt;前日入り&lt;/h2&gt;
-
-&lt;p&gt;スポンサー/スピーカー/スタッフの公式前夜祭があったので、前日入り。&lt;/p&gt;
-
-&lt;p&gt;木曜日はずっとリハをやっていたので、ごはん食べ損ねたのと、遅くまでやってしまって旅支度できてなかったので、朝支度した都合上朝食も取れず。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="ja" dir="ltr"&gt;カレーうどん、ハーフ&amp;amp;ハーフ。昨日のお昼以来の食事 (@ cuud in 東京, 東京都) &lt;a href="https://t.co/ZG0LxX1w8j"&gt;https://t.co/ZG0LxX1w8j&lt;/a&gt; &lt;a href="https://t.co/p67jDyoIco"&gt;pic.twitter.com/p67jDyoIco&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1144436554225655808?ref_src=twsrc%5Etfw"&gt;28 June 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;p&gt;で、前夜祭終わって、福岡来たらかならず行く &lt;a href="http://bar-rummy.com/"&gt;Bar Rummy&lt;/a&gt; へ。
-気持ちよくラムを味わって、エールズ祭り（金曜版）が終わる頃に、3次回行く人を探しに。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://twitter.com/kaz_29"&gt;@kaz_29&lt;/a&gt; と &lt;a href="https://twitter.com/koyhoge"&gt;@koyhoge&lt;/a&gt; で&lt;a href="http://nagahama-yamachan.jp/tenjin.html"&gt;やまちゃん&lt;/a&gt;へ。&lt;/p&gt;
-
-&lt;p&gt;1時過ぎに解散となりました。&lt;/p&gt;
-
-&lt;h2&gt;当日&lt;/h2&gt;
-
-&lt;p&gt;心配された雨も問題なかったので、 &lt;a href="https://merchari.bike/"&gt;メルチャリ&lt;/a&gt;にチャレンジしました。ホテルの近くにポートがあったのと、会場の隣にもあったので便利。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/merchari.jpg" style="width:40%"&gt;&lt;/p&gt;
-
-&lt;p&gt;初のメルチャリでしたが、なかなかに苦戦しました。
-まず自分のインターネット回線がギガ制限を食らっていたので、おそらくタイムアウトしちゃうんだろうなー。以下のようなエラーが出続けます。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;サポート外のエリアです&lt;/li&gt;
-&lt;li&gt;サーバーとの通信ができませんでした&lt;/li&gt;
-&lt;li&gt;QRコードの読み込み後、通信エラー&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;あたり。まぁギガ制限食らってる私が悪いので、来月（今日まで制限）またどこかで試したいなぁ。
-そして、会場まで自転車で移動。シェアサイクル東京でも使ってるけど、土地勘あるのでずっと困ってなかった。
-ただ出先で使うと、スマホの台欲しい。Googleマップとかのナビで移動したいけど、スマホおける場所ないのつらいなーと。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet" data-lang="en-gb"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/phpconfuk?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#phpconfuk&lt;/a&gt; に参加してます。午後一にHASHIGOホールで登壇します。 (@ FFBホール in 福岡市, 福岡県) &lt;a href="https://t.co/xxjfbpDynQ"&gt;https://t.co/xxjfbpDynQ&lt;/a&gt; &lt;a href="https://t.co/UXczIMVbho"&gt;pic.twitter.com/UXczIMVbho&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1144784970965295104?ref_src=twsrc%5Etfw"&gt;29 June 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-
-&lt;p&gt;午前中は普通にセッションを聞いて、ランチはもちろんウェスト。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/west20190629.jpg" style="width:40%"&gt;&lt;/p&gt;
-
-&lt;p&gt;午後一で私のセッションでしたが、メインホールが &lt;a href="https://twitter.com/soudai1025"&gt;@soudai1025&lt;/a&gt; だったのに、参加していただいた皆様に感謝です。&lt;/p&gt;
-
-&lt;script async class="speakerdeck-embed" data-id="32a9ca5a52c94a53b0645a03dc9a8ca6" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"&gt;&lt;/script&gt;
-
-&lt;p&gt;自分のセッションのあとは Ask The Speaker にいたり、交流スペースで参加者同士話していたりして、ほとんどセッションに出てませんでしたが、おもしろい技術話しで盛り上がりました。これぞカンファレンスな感じです。&lt;/p&gt;
-
-&lt;p&gt;夜は懇親会→Rummy→エールズ→ビール→やまちゃん みたいな流れで3時ごろにホテルへ。&lt;/p&gt;
-
-&lt;h2&gt;後日&lt;/h2&gt;
-
-&lt;p&gt;朝一で、またウェスト。
-よく考えると、金曜日から、うどん→前夜祭/ラーメン→うどん→懇親会/ラーメン→うどん の流れですわw。&lt;/p&gt;
-
-&lt;p&gt;帰京までの時間、 &lt;a href="https://fusic.connpass.com/event/127592/"&gt;(非公式)PHP Conference Fukuoka 2019 After Hack!!&lt;/a&gt; に参加して、このブログ記事を書いています。&lt;/p&gt;
-
-&lt;p&gt;PHPカンファレンス福岡、来年も参加できると良いなー。でも6月は厳しい&amp;hellip;.&lt;/p&gt;
 </content>
   </entry>
 </feed>
