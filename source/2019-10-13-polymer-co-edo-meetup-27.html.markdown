@@ -1,5 +1,5 @@
 ---
-title: Polymer.co-edo ＃27
+title: Polymer.co-edo ＃27 を開催しました
 date: 2019-10-13 06:21 UTC
 tags:
 - Polymer
