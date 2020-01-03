@@ -275,7 +275,283 @@
         <div id="main">
           
 
-            <h2 class="title"><a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a></h2>
+            <h2 class="title"><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/27.html">Saturday, April 27, 2019 07:16:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
+    
+      <a rel="tag" href="/tags/iot.html">IoT</a>
+    
+      <a rel="tag" href="/tags/toiletevolution.html">ToiletEvolution</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a>の続編です。</p>
+
+<p>今回も<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
+
+<p>前回は多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所について解説しましたが、ここからはアプリケーションで使っている機能やエレメントについて、修正が必要だった箇所について解説していきます。</p>
+
+<h3>ES Module対応になっていないエレメントを使う</h3>
+
+<p>前回の記事で「<code>bower_components を使わないようにする</code>」について解説しました。
+PolymerチームやVaadinチームなどが作っているコンポーネントについては、ほとんど <code>ES Module</code> に対応しているのですが、場合によっては対応してないモジュールを使っていることがあるかもしれません。</p>
+
+<p>Toilet Evolutionでは以下のエレメントが <code>ES Module</code> に対応していませんでした。<code>iron-signals</code> は <code>toast-er</code> の依存に関連しています。</p>
+
+<ul>
+<li><a href="https://github.com/atotic/excess-router">excess-router</a></li>
+<li><a href="https://www.webcomponents.org/element/ebidel/geo-location">geo-location</a></li>
+<li><a href="https://www.webcomponents.org/element/GeoloeG/gold-password-input">gold-password-input</a></li>
+<li><a href="https://www.webcomponents.org/element/GoogleWebComponents/google-map">google-map</a></li>
+<li><a href="https://www.webcomponents.org/element/googlearchive/paper-menu">paper-menu</a></li>
+<li><a href="https://github.com/masonlouchart/toast-er">toast-er</a>
+
+<ul>
+<li><a href="https://www.webcomponents.org/element/googlearchive/iron-signals">iron-signals</a></li>
+</ul></li>
+</ul>
+
+<p>そこで、これらのエレメントは modulizer で変換されたものを、そのまま利用することにしました。
+また変換されたエレメントについては、前回の記事同様に共通的な修正箇所が必要になります。
+つまり自分で作ったエレメントと同様に、そのエレメントが依存している（bower.jsonに含まれている）エレメントやライブラリについても、 <code>npm install</code> で取得するように変更する必要があります。</p>
+
+<p>またPolymer1用のライブラリだったりする場合は、<a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade">Polymer1から2へのアップグレードガイド</a>に書いてある <code>slot</code> の対応なども必要だったので、そのライブラリが最新版だとPolymerのどのバージョンに対応したものなのかを確認しておくことが重要です。</p>
+
+<p>そして、これらの作業が結構やっかいです（自分で作ったものでないので、ソースを理解する必要があります）。</p>
+
+<h3>以前のPolymerのビヘイビアは個別にインストールする必要がある</h3>
+
+<p>HTMLインポートで利用していた、Polymerチームが作っていたようなカスタムエレメントのビヘイビアは、個別に <code>import</code> するか、場合によっては <code>npm install</code> で導入する必要があります。
+自分で作ったエレメントでは、ビヘイビアを使っていなかったので、この段階で初めて知りました（これは意外にもドキュメントに書いていません）。</p>
+
+<p>例えば <code>&lt;gold-password-input&gt;</code> では、<code>PaperInputAddonBehavior</code> という <code>paper-input</code> に含まれていたビヘイビアを使っています。
+これは以下のように、<code>import</code> を追加してあげる必要があります。</p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="p">{</span><span class="nx">PaperInputAddonBehavior</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/paper-input/paper-input-addon-behavior.js'</span><span class="p">;</span>
+</code></pre>
+
+<p><code>ES Module</code>対応しているエレメントであれば、<a href="https://www.webcomponents.org">webcomponents.org</a>のビヘイビアを参照すると解説が書いてあります。
+上記の <code>PaperInputAddonBehavior</code> であれば、<a href="https://www.webcomponents.org/element/@polymer/paper-input/behaviors/PaperInputAddonBehavior">こちら</a>です。</p>
+
+<h3>Polymer.dom を変更する</h3>
+
+<p>これも自分のエレメントでは使っていなかったので気付かなかったのですが、使っているエレメントがあったので修正の必要がありました。
+まず <code>dom</code> をインポートします。</p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="p">{</span><span class="nx">dom</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/lib/legacy/polymer.dom.js'</span>
+</code></pre>
+
+<p>で、<code>Polymer.dom</code> を使っている箇所を <code>dom</code> に変更します。例えば以下のような感じです。</p>
+<pre class="highlight javascript"><code><span class="k">return</span> <span class="nx">dom</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parentNode</span><span class="p">;</span>
+</code></pre>
+
+<h3>bowerでカスタムエレメント以外のライブラリに依存している</h3>
+
+<p><code>&lt;gold-password-input&gt;</code> は<a href="https://github.com/dropbox/zxcvbn">zxcvbn</a>というパスワードストレングスエミュレータを使っています。
+Node.jsなどにも対応しているのですが、今回はbowerでインストールしたフォルダをそのままコピーして、リポジトリに追加しました。
+このようにカスタムエレメント以外のライブラリを使っている場合は、npmでインストールしてビルドする方法以外の検討も必要となります。
+特に<code>&lt;gold-password-input&gt;</code>では、以下のように <code>script</code> タグを動的に追加してライブラリをインポートしていたため、npmを利用するのに適していなかったという理由があります。</p>
+<pre class="highlight javascript"><code>  <span class="nx">ready</span><span class="err">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="k">typeof</span> <span class="nx">zxcvbn</span> <span class="o">!==</span> <span class="s2">"undefined"</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isZxcvbnLoaded</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="kd">var</span> <span class="nx">oScript</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s2">"script"</span><span class="p">);</span>
+      <span class="nx">oScript</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="s2">"text\/javascript"</span><span class="p">;</span>
+      <span class="nx">oScript</span><span class="p">.</span><span class="nx">onerror</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nx">URIError</span><span class="p">(</span><span class="s2">"The script "</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">src</span> <span class="o">+</span> <span class="s2">" is not accessible."</span><span class="p">);</span>
+      <span class="p">};</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">insertBefore</span><span class="p">(</span><span class="nx">oScript</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+      <span class="nx">oScript</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">resolveUrl</span><span class="p">(</span><span class="s2">"../zxcvbn/dist/zxcvbn.js"</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+</code></pre>
+
+<p>このぐらいまで対応が進むと、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなります。
+ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
+これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところなのですが、
+これらの対応方法については<a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">次回</a>解説していきます。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(3)" data-url="http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(3)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a></h2>
+  <p class="postdate"><a title="Permanent link" href="/2019/04/26.html">Friday, April 26, 2019 04:47:00 PM</a></p>
+  <p class="tags">
+    
+      <a rel="tag" href="/tags/polymer.html">Polymer</a>
+    
+      <a rel="tag" href="/tags/webcomponents.html">WebComponents</a>
+    
+      <a rel="tag" href="/tags/iot.html">IoT</a>
+    
+      <a rel="tag" href="/tags/toiletevolution.html">ToiletEvolution</a>
+    
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a>の続編です。</p>
+
+<p>今回からは<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
+
+<p>うまく動作させるために試行錯誤して変更したファイル、実に110。1回では書ききれない予感が&hellip;</p>
+
+<h3>不要になったファイルを削除</h3>
+
+<p><code>bower.json</code> や <code>.bowerrc</code> ファイルは、Polymer3でnpmに移行したので、削除します。</p>
+
+<h3>linterを追加</h3>
+
+<p>lintは <code>polymer-cli</code> にも付いているのですが、エディタで編集中にも状況は知りたいので、eslintを導入します。
+Polymer1のころはHTMLファイルだったので、特に不要でしたね。</p>
+
+<h3>ビルドを変更</h3>
+
+<p>これまでbuildは独自にgulpで実装していたのですが、Polymer3対応をするに伴い<a href="https://www.npmjs.com/package/polymer-build">polymer-build</a>を使うようにしました。
+これは <code>polymer CLI</code> でも使っているビルドライブラリです。ビルドについては、この連載で触れていきます。</p>
+
+<h3>polymer.jsonの変更</h3>
+
+<p><code>shell</code> や <code>fragments</code> で指定したファイルの拡張子を <code>html</code> から <code>js</code> に変更します。
+これは自動的に変換されないので注意しましょう。
+<code>extraDependencies</code> や、そのほかの定義も変わっていますが、このあたりは<a href="https://polymer-library.polymer-project.org/3.0/docs/tools/polymer-json">polymer.json specification</a>を参考にPolymer3形式に1から記述するぐらいの気持ちでいましょう。</p>
+
+<h3>変換された自作のカスタムエレメントを修正する</h3>
+
+<p>まずmodulizerで変換すると、Polymer本体のimportが </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'../bower_components/polymer/polymer-legacy.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>のようになっているので、これを </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="s1">'@polymer/polymer/polymer-legacy.js'</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span><span class="nx">Polymer</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/lib/legacy/polymer-fn.js'</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span><span class="nx">html</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/lib/utils/html-tag.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>のように変更しました。</p>
+
+<p>なお、公式ドキュメントによると </p>
+<pre class="highlight javascript"><code><span class="kr">import</span> <span class="p">{</span><span class="nx">PolymerElement</span><span class="p">,</span> <span class="nx">html</span><span class="p">}</span> <span class="nx">from</span> <span class="s1">'@polymer/polymer/polymer-element.js'</span><span class="p">;</span>
+</code></pre>
+
+<p>にしていますが、これは <code>PolymerElement</code> 使っている場合なので、ハイブリッドモードの書き方の場合は、私のようにlegacyを使ってください。</p>
+
+<p>続いてテンプレートが以下のように <code>Polymer.html</code> を参照するようになっています。</p>
+<pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
+  <span class="na">_template</span><span class="p">:</span> <span class="nx">Polymer</span><span class="p">.</span><span class="nx">html</span><span class="err">`</span>
+</code></pre>
+
+<p>この記述は利用できないので、以下のように <code>import</code> した <code>html</code> を利用するように変更します。</p>
+<pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
+  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="err">`</span>
+</code></pre>
+
+<h3>bower_components を使わないようにする</h3>
+
+<p>変換されたjsファイルは、bower_components上に変換されたモジュールを参照しにいきます。
+そこで各々のパッケージがnpmに公開されているか調べて、npmに移行していきます。</p>
+
+<p>すでに上記で <code>bower_components/polymer</code> を変更していますが、これを例に説明します。</p>
+
+<ol>
+<li>まず<a href="https://www.webcomponents.org">webcomponents.org</a>のサイトでWebComponentsを検索します。</li>
+<li>この例では <code>polymer</code> を入力して検索すると、該当のものが見つかるので、<a href="https://www.webcomponents.org/element/@polymer/polymer">詳細ページ</a>を開きます。<img src="/images/blog/2019-04-27-www.webcomponents.org-78097a3d36c6.png" /></li>
+<li>もし <code>ES Modiles</code> に対応していれば、左側に <code>View on NPM</code> が表示されます。</li>
+<li><code>INSTALLED VIA NPM</code> のリンクをクリックすると <code>npm install --save Polymer/polymer</code> のように表示されるので、CLIからインストールします。</li>
+<li>bower_componentsから、参照しなくなったjsファイルを削除します。</li>
+</ol>
+
+<h3>WebComponents V1対応に追従する</h3>
+
+<p>自分が記述したCustomElementsには利用していなかった <code>&lt;content&gt;</code> も、依存関係のタグでは利用している場合があります。
+例えば<a href="https://www.webcomponents.org/element/@polymer/app-layout">@polymer/app-layout</a>は、レイアウトないのコンポーネントを識別するときに利用しているので、slot対応を行います。たとえば以下のドロワー記述は</p>
+<pre class="highlight html"><code>      <span class="nt">&lt;app-drawer&gt;</span>
+</code></pre>
+
+<p>次のように <code>slot</code> 識別を追加します。</p>
+<pre class="highlight html"><code>      <span class="nt">&lt;app-drawer</span>  <span class="na">slot=</span><span class="s">"drawer"</span><span class="nt">&gt;</span>
+</code></pre>
+
+<p>このあたりの修正ポイントは、タグが表示されなくなることで気がつきますが、アップデートしたら最新のドキュメントを一読することをオススメします。
+他にも修正箇所があるかもしれませんので。</p>
+
+<h3>importHref を修正する</h3>
+
+<p><code>iron-pages</code> でページを切り替えるとき、Polymer1では動的に HTML import を実行していました。</p>
+<pre class="highlight javascript"><code>  <span class="nx">_pageChanged</span><span class="err">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">importHref</span><span class="p">(</span><span class="s1">'/elements/te-'</span> <span class="o">+</span> <span class="nx">page</span> <span class="o">+</span> <span class="s1">'.html'</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+</code></pre>
+
+<p><code>ES Module</code>を使うPolymer3では以下のように書き換えます。</p>
+<pre class="highlight javascript"><code>    <span class="k">switch</span> <span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="s1">'admin'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-admin.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'devices'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-devices.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'login'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-login.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">'about'</span><span class="err">:</span>
+        <span class="kr">import</span><span class="p">(</span><span class="s1">'./te-about.js'</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre>
+
+<p><code>import</code> の引数には変数が利用できないので注意してください。</p>
+
+<h3>Polyfillを変更する。</h3>
+
+<p>HTMLファイルではpolyfillLをインポートしています。
+Polymer1では <code>/bower_components/webcomponentsjs/webcomponents-lite.min.js</code> を使いましたが、Polymer3では以下のpolyfillに変更します。
+これもnpmを使ってインストールするように変更します。</p>
+<pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre>
+
+<p>このように修正を重ねていくことで、徐々に動作するエレメントが増えてきます。
+ここまでは多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所です。
+Toilet Evolutionでは、まだまだ修正箇所がありましたので、続きは<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">次回</a>で。</p>
+
+
+
+    
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(2)" data-url="http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(2)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a></h2>
   <p class="postdate"><a title="Permanent link" href="/2019/04/25.html">Thursday, April 25, 2019 03:42:00 PM</a></p>
   <p class="tags">
     
@@ -542,99 +818,6 @@ IRT楽しかったですね。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/03/27/polymer-co-edo-meetup-23.html">Polymer.co-edo  meetup ＃23を開催しました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/03/27.html">Wednesday, March 27, 2019 12:51:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/polymer.html">Polymer</a>
-    
-      <a rel="tag" href="/tags/polymer-co-edo.html">Polymer.co-edo</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2019年2回目となる <a href="https://polymercoedo.doorkeeper.jp/events/88769">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p>今回、私はいよいよEdoエレメントの作成に入りました。
-名前は <code>edo-blogcard</code> です（まだリポジトリをPUSHしてないので、upしたら別の記事にします）。
-これは、はてな等でブログにリンク先のサムネ、タイトル、概要の部品が入っているのを見たことがあると思うのですが、あれです。
-これを <a href="https://github.com/PolymerX/lit-loader">LitLoader</a> を使って作り始めました。</p>
-
-<h3>次回</h3>
-
-<p>2019年のGWに <code>Polymer.co-edo day</code> として開催予定を公開しています。
-私が1日 co-edo で作業しているので、一緒にもくもくしたり、Web Components関連の質問を受け付けたり、
-好きな時間に来て、帰ってもらっても大丈夫な1日になります。
-皆様の参加をお待ちしております。</p>
-
-<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo  meetup ＃23を開催しました" data-url="http://blog.open.tokyo.jp/2019/03/27/polymer-co-edo-meetup-23.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/03/27/polymer-co-edo-meetup-23.html&t=Polymer.co-edo%20%20meetup%20%EF%BC%8323%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/03/27/polymer-co-edo-meetup-23.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/03/05/webiotmakers-day3-day4.html">Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】にチューター参加してきました</a></h2>
-  <p class="postdate"><a title="Permanent link" href="/2019/03/05.html">Tuesday, March 05, 2019 12:00:00 PM</a></p>
-  <p class="tags">
-    
-      <a rel="tag" href="/tags/chirimen.html">CHIRIMEN</a>
-    
-      <a rel="tag" href="/tags/webiotmakers.html">webiotmakers</a>
-    
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>1ヶ月前に始まった東京ステージ、<a href="2019/02/11/webiotmakers-day1-day2.html">Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】にチューター参加してきました</a>の続きです。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/webiotmakers?src=hash&amp;ref_src=twsrc%5Etfw">#webiotmakers</a> ハッカソン本番です (@ KDDI DIGITAL GATE in 港区, 東京都) <a href="https://t.co/jccpWTyR9w">https://t.co/jccpWTyR9w</a> <a href="https://t.co/909OnobTL7">pic.twitter.com/909OnobTL7</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1101639711683235840?ref_src=twsrc%5Etfw">March 2, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>チューターも、デモに向けて各チームの完成を全力で応援します。
-工作からプログラムまで、その道の凄腕が揃っています。</p>
-
-<p><img src="/images/blog/2019-03-02.jpg" /></p>
-
-<p>最後はバタバタとしましたが、みんな何かしらデモできる状態になって、デモからの審査。
-最優秀作品（と予定になかった優秀賞3つ）も決まりました。</p>
-
-<p>最優秀作品は今週末に開催される<a href="https://smartiot-forum.jp/">スマートIoT推進フォーラム</a>に展示されますので、興味がある人はぜひ見学にいってみてください。
-（それまでに完成度が上がっていると良いなー）</p>
-
-<p><img src="/images/blog/2019-03-03.jpg" /></p>
-
-
-
-    
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】にチューター参加してきました" data-url="http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html&t=Web%C3%97IoT%20%E3%83%A1%E3%82%A4%E3%82%AB%E3%83%BC%E3%82%BA%E3%83%81%E3%83%A3%E3%83%AC%E3%83%B3%E3%82%B8%202018-19%20in%20%E6%9D%B1%E4%BA%AC%E3%80%90%E3%83%8F%E3%83%83%E3%82%AB%E3%82%BD%E3%83%B3%E3%80%91%E3%81%AB%E3%83%81%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/03/05/webiotmakers-day3-day4.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
     
@@ -704,6 +887,10 @@ IRT楽しかったですね。</p>
             <div class="pad">
               <ul>
                 
+                  <li><a href="/2020/01/03/2020-first.html">2020年の目標と昨年のふりかえり</a> <span>2020/01/03</span></li>
+                
+                  <li><a href="/2019/12/28/gdg-devfest-2019.html">GDG Devfest 2019 に WPSG として参加してきました</a> <span>2019/12/28</span></li>
+                
                   <li><a href="/2019/12/08/asucon-night-2019.html">明日の開発カンファレンス アスカントークナイトを開催しました</a> <span>2019/12/08</span></li>
                 
                   <li><a href="/2019/12/08/phpcon2019.html">PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました</a> <span>2019/12/08</span></li>
@@ -719,10 +906,6 @@ IRT楽しかったですね。</p>
                   <li><a href="/2019/10/13/polymer-co-edo-meetup-27.html">Polymer.co-edo ＃27 を開催しました</a> <span>2019/10/13</span></li>
                 
                   <li><a href="/2019/10/13/phpcon-okinawa-2019.html">PHPカンファレンス沖縄2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</a> <span>2019/10/13</span></li>
-                
-                  <li><a href="/2019/09/22/phpcondo-2019.html">PHPカンファレンス北海道 2019で「PHPを学ぶということ」について発表してきました</a> <span>2019/09/22</span></li>
-                
-                  <li><a href="/2019/08/12/maker-faire-tokyo-2019.html">Maker Faire Tokyo 2019にCHIRIMENコミュニティで参加しました</a> <span>2019/08/12</span></li>
                 
               </ul>
             </div>
@@ -1196,6 +1379,14 @@ IRT楽しかったですね。</p>
                 
                   
                   
+                  
+                
+                  
+                  
+                  
+                
+                  
+                  
                     <li class="size0">
                       <a rel="tag" href="/tags/wot.html">WoT</a>
                     </li>
@@ -1418,7 +1609,9 @@ IRT楽しかったですね。</p>
             <div class="pad">
               <ul>
                 
-                  <li><a href="/2019.html">2019</a> (40)</li>
+                  <li><a href="/2020.html">2020</a> (1)</li>
+                
+                  <li><a href="/2019.html">2019</a> (41)</li>
                 
                   <li><a href="/2018.html">2018</a> (31)</li>
                 
