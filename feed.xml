@@ -5,10 +5,149 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2020-02-21T01:49:00Z</updated>
+  <updated>2021-07-11T08:40:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</title>
+    <link rel="alternate" href="http://blog.url.com/2021/07/11/pong-swoosh.html"/>
+    <id>http://blog.url.com/2021/07/11/pong-swoosh.html</id>
+    <published>2021-07-11T08:40:00Z</published>
+    <updated>2021-07-11T19:04:50+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;前回のBlog更新が1年半近く前の、最後のオフラインイベントだったでしょうか&amp;hellip;.
+それから、書くまでもありませんが、イベントや仕事がすべてオンラインで行われるようになりました。&lt;/p&gt;
+
+&lt;p&gt;私たちインターネットに関連する仕事をしているものは、特に在宅でも同じように仕事を進めています（僕の場合は家の環境が劣悪というのはありますが）。&lt;/p&gt;
+
+&lt;p&gt;変わったのは勉強会やカンファレンス、コミュニティ活動がオンラインになったり、そもそも開催されなくなったりといったことがあります。&lt;/p&gt;
+
+&lt;p&gt;僕も昨年中はずっとモチベーションもダダ下がりで、ただ仕事をして何となくYoutubeで動画見るみたいな繰り返しを送っていました。
+オンラインの勉強会やカンファレンスにも参加する気になれなかった、というのが本当のところです。&lt;/p&gt;
+
+&lt;p&gt;お前は懇親会とか飲み会メインだろ？とか言われると、まぁ否定もできないのですが、リアルな共感が得られない（廊下カンファレンスができない）とか、ちゃんとした理由もあったりします。
+僕は必ず前方の席で参加するし、リアクションも他の人と比べるとある方かなーと思っています。
+オンラインは、どうしても講義形式になりがちだし、参加している人同士がこういうことに関心があるんだとか、面白いと思ったり感動したりするんだな、ということは得られないな、と思っています。
+もちろんチャットやTwitterなど、文字と盛り上がりが共有できたり、ログとして残ったりするんですが、どうしてもWeb会議システムで登壇者の顔、スライドを観ながらチャットも、となると注意力が分散したり、スクリーン数の限界とかにも達するなーと思っています。&lt;/p&gt;
+
+&lt;p&gt;目は2つしかない。&lt;/p&gt;
+
+&lt;h3&gt;社内勉強会きっかけ&lt;/h3&gt;
+
+&lt;p&gt;さて少し話題は変わりますが、僕は所属している会社でIoT勉強会というのを主催していて、これまでトイレ利用状況可視化サービス&lt;a href="https://toiletevolution.space/#/about"&gt;Toilet Evolution&lt;/a&gt;、常駐先などから社員証で出退勤できるデバイスとサービス&lt;a href="https://github.com/its-succ/dakoku-web"&gt;dakoku&lt;/a&gt;といったものを開発してきました。
+IoT勉強会はデバイスなんかを作ることもあったので、会社で購入した工具なんかを共有で使ったりしていたわけですが、同様にオンラインとなると難しくなります。
+そこで、何とかオンライン時代のサービスをIoTという文脈で作り出せないかな、と思い続けてきて今回の効果音共有サービスを開発するに至りました。
+IoTはモノのインターネットですが、オンラインイベントに参加する盛り上がりや人の感情をモノと見立てて、インターネットで共有するのがオンラインイベントでは有益なのでは？と思っています。&lt;/p&gt;
+
+&lt;h2&gt;pong-swoosh&lt;/h2&gt;
+
+&lt;p&gt;在宅になって、ずっとFMラジオを聴きながら仕事をしていたりするのですが、DJの人が拍手なんかをサウンドマシーンで出すシーンがありますよね。
+あれを &lt;code&gt;ポン出し&lt;/code&gt; なんて言ったりします。
+今回作ったサービスは、ポン（効果音）を投げる（チャットの文字送信みたいなイメージ）というところから、pong swoosh という名前にしました。
+（日本酒が好きだからポンシュ、なんてことじゃないです。）&lt;/p&gt;
+
+&lt;h2&gt;どんなサービスか&lt;/h2&gt;
+
+&lt;p&gt;pong-swooshは、Web会議システムを利用しながら効果音を送受信して、盛り上がりを共有するシステムです。
+使い方は簡単なので、まずは使ってみましょう。&lt;/p&gt;
+
+&lt;h3&gt;まずはチャンネルを作成する&lt;/h3&gt;
+
+&lt;p&gt;チャンネルとは効果音を共有する部屋の単位です。pong-swooshは効果音チャットシステムのようなものなので、チャットでよく使うチャンネルという単語を利用しています。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://its-succ.github.io/pong-swoosh/"&gt;トップページ&lt;/a&gt;にアクセスして、チャンネル名を入力して作成します。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/pong-swoosh-top.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;そうすると、チャンネルのURLが表示されるので、これを参加者に共有します。
+1URLだけなので、イベントサイトだったり、Web会議のチャットだったりで共有できますね。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/pong-swoosh-created.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;コピーアイコンで簡単にクリップボードにもコピーできます。&lt;/p&gt;
+
+&lt;h3&gt;参加者がアクセスする&lt;/h3&gt;
+
+&lt;p&gt;共有されたURLにアクセスすると、エントランスページが表示されます。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/pong-swoosh-entrance.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;pong-swooshには&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;コントローラー画面（効果音を送信する画面&lt;/li&gt;
+&lt;li&gt;スピーカー画面（効果音を再生する画面&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;というものがあります。
+なぜ画面を分けたか？というのには理由があります。&lt;/p&gt;
+
+&lt;p&gt;オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
+かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。&lt;/p&gt;
+
+&lt;p&gt;そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
+スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
+もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。&lt;/p&gt;
+
+&lt;h3&gt;コントローラー画面&lt;/h3&gt;
+
+&lt;p&gt;このスクショは、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://user-images.githubusercontent.com/132000/125040797-01ed9200-e0d3-11eb-813d-9def687f7c9a.png" width="300px" border="1"&gt;&lt;/p&gt;
+
+&lt;p&gt;コントローラー画面には効果音を参加者に共有(送信)するボタンと、実際にどんな音が鳴るのか送信せずに確認する &lt;code&gt;視聴&lt;/code&gt; リンクがあります。&lt;/p&gt;
+
+&lt;h3&gt;スピーカー画面&lt;/h3&gt;
+
+&lt;p&gt;このスクショも、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="https://user-images.githubusercontent.com/132000/125053337-f48ad480-e0df-11eb-9c2e-77dbfb522b47.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;ボリュームのスライダーがあるので、各自の環境に応じて音量を調整できます。
+音量は参加者の人数と同じ効果音を同時(1秒以内)にリアクションした人の数で変化します。
+計算式は以下のとおりです。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Math.sin(Math.PI * 90 * (同時にリアクションした人の数 / チャンネル参加者数) /180) * 2;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;最初は直線的に音量が上がるようになっていたのですが、途中から円弧に沿って上がるように変更しています。
+同時にリアクションした人の数を集計するのに、RedisのINCR/DECRコマンドを使っています。
+チャンネル名と効果音IDをキーにINCRで人数を加算して、1秒後にDECRするといったことで音量が変化します。&lt;/p&gt;
+
+&lt;h3&gt;技術的な話&lt;/h3&gt;
+
+&lt;p&gt;前にも書きましたが、pong-swooshは効果音チャットシステムのようなものです。
+サーバーとの送受信には&lt;a href="https://socket.io/"&gt;socket.io&lt;/a&gt;が使われていて、効果音が送信されてくるとチャンネル参加者にブロードキャストされます。
+簡単なチャットプログラムを作ったことがあれば容易に想像できるシステムです。
+バックエンドはNode.jsで書かれていて、現在はHeroku（無料プラン）にデプロイされています。
+フロントエンドはSvelteを使っていて、GitHub Pagesにデプロイされています。
+バックエンドは手動デプロイですが、フロントエンドはGitHub Actionsでmainにマージされると自動的にデプロイされるようになっています。&lt;/p&gt;
+
+&lt;p&gt;勉強会メンバーで開発していますが、ソースコードは公開されています。
+https://github.com/its-succ/pong-swoosh&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;pong-swooshは、現在自分が担当しているプロジェクトのスクラムイベントと、会社の部門メンバーが月一で集まるミーティングで利用して改善を重ねてきました。
+スプリントレビューのデモや、ふりかえり、プレゼンテーションなどの場で効果音を使ってリアクションを共有しています。&lt;/p&gt;
+
+&lt;p&gt;それまでは画面越しに拍手をしてみたり（音は出さず映像で）だったのですが、pong-swooshを使うことで賑やかになったといったフィードバックをもらったりしています。&lt;/p&gt;
+
+&lt;p&gt;もちろんこういった共有の方法が合う場面、合わない場面などあるかもしれないのですが、もし興味があれば使ってみてください。
+そんなに重い処理もないので、Herokuの無料枠で使ってもらっていても問題ないかな？と思っています。&lt;/p&gt;
+
+&lt;p&gt;もし使ってみてフィードバックがあれば、GitHubのissueなどに報告してもらえると嬉しいです。
+もちろんPRという形で参加いただくのもWelcomeです。&lt;/p&gt;
+
+&lt;p&gt;いつかオフラインで昔のように勉強会やカンファレンスができるときが来ると良いのですが、
+もうしばらくオンラインが続きそうな感じでもあります。
+そんなとき pong-swoosh が少しでもお役に立てれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました</title>
     <link rel="alternate" href="http://blog.url.com/2020/02/21/phperkaigi-2020.html"/>
@@ -578,88 +717,6 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"&lt;/span&gt;&lt;span class="p"
 PRのコメントに Changelog や Commit など変更のリンクがあるので、内容をチェックすることもできます。&lt;/p&gt;
 
 &lt;p&gt;プライベートでも依存関係の更新をちゃんとやれるよ！ということでした。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>2020年の目標と昨年のふりかえり</title>
-    <link rel="alternate" href="http://blog.url.com/2020/01/03/2020-first.html"/>
-    <id>http://blog.url.com/2020/01/03/2020-first.html</id>
-    <published>2020-01-03T07:00:00Z</published>
-    <updated>2020-01-03T17:16:06+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;h3&gt;ふりかえり&lt;/h3&gt;
-
-&lt;p&gt;昨年は、よりBlog発信、登壇に力を入れていました。
-成果としては、Blog記事が41投稿ということで、(2018年は31投稿なので) +10記事増やせました。&lt;/p&gt;
-
-&lt;p&gt;これは登壇や中の人としてイベントに参加したことが大きかったのですが、それらをふりかえってみます。&lt;/p&gt;
-
-&lt;h4&gt;イベント登壇と運営&lt;/h4&gt;
-
-&lt;p&gt;2019年は、2018年以上にずっとイベントに追われていました。
-&lt;a href="http://blog.open.tokyo.jp/2018/12/31/final-2018.html"&gt;2018年のふりかえりはこちら&lt;/a&gt;を参照ください。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;主催: ESM社内勉強会(IoT Study) 22回 （基本的に第一/第三水曜日）&lt;/li&gt;
-&lt;li&gt;主催: &lt;a href="https://polymercoedo.doorkeeper.jp/"&gt;Polymer.co-edo&lt;/a&gt; meetup 7回 ( ＃21 から ＃28 まで、月一 )&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://nextwebconf.connpass.com/event/103056/"&gt;01/13（土） 次世代Webカンファレンス&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://phpcon-sendai.net/2019/"&gt;01/26（土） PHPカンファレンス仙台2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;運営: &lt;a href="https://webiotmakers.connpass.com/event/110708/"&gt;02/09 - 02/10 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://cakephp.connpass.com/event/119458/"&gt;02/13（水） CakePHPの国際イベント、CakeFestの動画を見よう！第13回CakePHP MeetUp&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://phpstudy.doorkeeper.jp/events/87344"&gt;02/27（水） 第135回 PHP勉強会＠東京&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;運営: &lt;a href="https://webiotmakers.connpass.com/event/110708/"&gt;03/02 - 03/03 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://phpstudy.doorkeeper.jp/events/88400"&gt;03/27（水） 第136回 PHP勉強会＠東京&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://phperkaigi.jp/2019/"&gt;03/31（日） PHPer Kaigi 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html"&gt;04/05（金） ESM LT #4&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;運営: &lt;a href="https://fod.connpass.com/event/121358/"&gt;04/24（水） 開発リーダのための「明日の開発カンファレンス 2019」&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://gdg-tokyo.connpass.com/event/128867/"&gt;05/19（月） I/O Extended 2019 Tokyo@GDG&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://phpstudy.doorkeeper.jp/events/91688"&gt;05/29（水） 第138回 PHP勉強会＠東京&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://javascript-fes.doorkeeper.jp/events/90894"&gt;06/01（土） 初夏のJavaScript祭 in メンバーズキャリア&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="http://blog.open.tokyo.jp/2019/06/16/karakuri.html"&gt;06/07 - 06/08 開発合宿&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;出展: &lt;a href="http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html"&gt;06/12 - 6/14 Interop 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://phpcon.fukuoka.jp/2019/"&gt;06-29（土） PHPカンファレンス福岡2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://events.withgoogle.com/chrome-tech-talk-night-14/"&gt;07/26（金） Chrome Tech Talk Night #14&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;出展: &lt;a href="https://cloud.withgoogle.com/next/tokyo"&gt;07/31 - 08/01 Google Cloud Next Tokyo&amp;#39;19&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;出展: &lt;a href="https://makezine.jp/event/mft2019/"&gt;08/03 - 08/04 Maker Faire Tokyo 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://phpstudy.doorkeeper.jp/events/96166"&gt;08/28（水） 第141回 PHP勉強会＠東京&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://phpcon.hokkaido.jp/"&gt;09/21（土） PHPカンファレンス北海道 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://phpcon.okinawa.jp/"&gt;10/12（土） PHPカンファレンス沖縄 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://phpstudy.doorkeeper.jp/events/98730"&gt;10/30（水） 第143回 PHP勉強会＠東京&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://cakefest.org/"&gt;11/09 11/10 CakeFest 2019 Tokyo&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://gmo-research.connpass.com/event/132190/"&gt;11/11（月） GMOリサーチ テックカンファレンス 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;参加: &lt;a href="https://chirimen-oh.connpass.com/event/155170/"&gt;11/16（土） CHIRIMENおさわり＆もくもく会 〜Raspberry Pi 4 ＆ Jetson対応記念〜&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://javascript-fes.doorkeeper.jp/events/99978"&gt;11/30（土） 冬のJavaScript祭 in メンバーズキャリア&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="http://phpcon.php.gr.jp/2019/"&gt;12/01（日） PHP Conference 2019&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;運営: &lt;a href="https://asucon2019talknight.peatix.com/"&gt;12/06（金） 明日の開発カンファレンス アスカントークナイト&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;発表: &lt;a href="https://gdg-tokyo.connpass.com/event/137666/"&gt;12/14（日） GDG DevFest Tokyo 2019&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;運営/主催/発表/出展などは、その準備だったりミーティングがあったりして、これよりも私のGoogleカレンダーは濃密にイベントスケジュールで埋まっています。
-トータルの数としては昨年とほぼ一緒なのですが、参加よりも運営/主催/発表/出展が多かったのも、多忙に感じた原因にはあったかと思います。&lt;/p&gt;
-
-&lt;p&gt;なんといっても、全国PHPカンファレンスに発表枠で参加できたことは思い出です。&lt;/p&gt;
-
-&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;&lt;a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#phpcon2019&lt;/a&gt; &lt;a href="https://twitter.com/hashtag/phpcon?src=hash&amp;amp;ref_src=twsrc%5Etfw"&gt;#phpcon&lt;/a&gt; デカ象ヤバい &lt;a href="https://t.co/iKP5Jedh6O"&gt;pic.twitter.com/iKP5Jedh6O&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw"&gt;December 1, 2019&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-
-&lt;h3&gt;はじめのおわり&lt;/h3&gt;
-
-&lt;p&gt;今年は&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;WPSG&lt;/li&gt;
-&lt;li&gt;CHIRIMEN&lt;/li&gt;
-&lt;li&gt;OSS (Fabricateのアプデ頑張る)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;あたりが主戦場になると思います。
-もちろんカンファレンスなどにも、なるべく参加していきたいとは思っています（今年のようにフル参加は難しいかもしれませんが）。&lt;/p&gt;
-
-&lt;p&gt;昨年同様に何をするにも健康第一なので、運動してお酒はほどほどに？みなさまと楽しい1年にできればと思います。
-どこかでお会いしましたら、よろしくお願いします！&lt;/p&gt;
 </content>
   </entry>
 </feed>
