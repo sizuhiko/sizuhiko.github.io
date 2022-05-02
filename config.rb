@@ -108,7 +108,7 @@ page "/sitemap.xml", :layout => false
 
 activate :deploy do |deploy|
   deploy.build_before = true # default: false
-  deploy.method = :git
+  deploy.deploy_method = :git
   # Optional Settings
   # deploy.remote   = "custom-remote" # remote name or git url, default: origin
   deploy.branch   = "master" # default: gh-pages
