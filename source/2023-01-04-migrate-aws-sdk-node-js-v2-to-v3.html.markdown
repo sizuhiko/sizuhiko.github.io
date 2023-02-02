@@ -130,7 +130,7 @@ v3 で aws-sdk をモックするときは [AWS SDK v3 Client mock](https://gith
 
 ということで公式にもオススメされるライブラリということで良いですね。
 
-上記の v2 でのテストコードは以下のようになります。
+上記の v3 でのテストコードは以下のようになります。
 
 ```javascript
 import 'aws-sdk-client-mock-jest';
