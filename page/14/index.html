@@ -1,0 +1,912 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2019/01/27/polymer-co-edo-meetup-21.html">Polymer.co-edo meetup 21を開催しました</a></h2>
+  <p class="postdate"><a href="/2019/01/27.html" title="Permanent link">Sunday, January 27, 2019 10:29:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年1回目となる <a href="https://polymercoedo.doorkeeper.jp/events/85430">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回、私は以下の作業を実施しました。</p>
+
+<ul>
+<li><a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html">はじめての LitElement エレメントの作り方</a> のLitElementをv2.0にアップデート</li>
+<li><a href="https://github.com/PolymerX/lit-loader">LitLoader</a> のLitElement v2.0対応。どちらのPRもマージされました！
+
+<ul>
+<li><a href="https://github.com/PolymerX/lit-loader/pull/25">本体へのPR</a></li>
+<li><a href="https://github.com/PolymerX/lit-loader-example/pull/2">サンプルアプリへのPR</a></li>
+</ul></li>
+</ul>
+
+<p><a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html">はじめての LitElement エレメントの作り方</a>はなるべく多くの人が体験できるようにかなっていますので、ぜひお試しいただき、何かあれば気軽に<a href="https://github.com/Polymer-Japan/litelement-first-element/issues">フィードバック</a>をいただければと思います。</p>
+
+<p><a href="https://github.com/PolymerX/lit-loader">LitLoader</a>は、Polymer1や2のときのようにHTMLファイルでの記述が可能で、拡張子を <code>.lit</code> という形式にしています。
+WebpackをとおすとLitElementのjsファイルに変換する仕組みになっています。
+私は HTML in js よりも、こちらの書き方が気に入っているので、これからも何かあれば貢献していきたいです。</p>
+
+<p>なぜかと言うと、<a href="https://github.com/w3c/webcomponents/issues/645">HTML Modules</a>の議論が活発に行われていますが、ブラウザの実装になるまでは時間がかかると思うので、いったんWebpackで変換するなどpolyfillにも頼らない形での記述形式は重要かな、と思っています。</p>
+
+<p><a href="https://github.com/PolymerX/lit-loader">LitLoader</a>は、コードも簡単でスッキリしているので現時点では不満もありません。</p>
+
+<h3>次回</h3>
+
+<p>2019年の開催予定を公開しています。次回は2/18の予定です。皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup 21を開催しました" data-url="http://blog.open.tokyo.jp/2019/01/27/polymer-co-edo-meetup-21.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/01/27/polymer-co-edo-meetup-21.html&t=Polymer.co-edo%20meetup%2021%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/01/27/polymer-co-edo-meetup-21.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/01/07/gcp-bitnami-memcached-server.html">GCPにBitnamiでmemcachedサーバーを作る</a></h2>
+  <p class="postdate"><a href="/2019/01/07.html" title="Permanent link">Monday, January 07, 2019 11:26:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/gcp.html" rel="tag">GCP</a>
+      <a href="/tags/memcached.html" rel="tag">memcached</a>
+      <a href="/tags/bitnami.html" rel="tag">Bitnami</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年最初の記事はmemcachedのサーバーを作ることからです。</p>
+
+<h3>なんで今さらサーバーを？</h3>
+
+<p>私は現在<a href="https://toiletevolution.space/">Toilet Evolution</a>というサービスを作っていて、まぁ特に流行ってもいないのですが、トイレ監視のIoTプラットフォームをやっています。
+これはGAE(Google App Engine)で動いていて、PHP5.5で作られています。</p>
+
+<p>GAEには<a href="https://github.com/google/gvisor">gVisor</a>というコンテナ技術をベースにした第二世代( <code>2nd Gen</code> と呼ばれている )があるのですが、PHP7.2が使えるようになります。
+しかしこれに伴い、これまで使えていたmemcachedサーバーが使えなくなります。
+通常のGCPアプリと一緒となり、<a href="https://cloud.google.com/memorystore/?hl=ja">Cloud Memorystore</a>を使えということですね。
+ただ、これには無料枠がなくて、（なんとか低額でやっていきたい層だけが）ぬーんとなるので、今回 GCP の無料インスタンス <code>f1-micro</code> にmemcachedサーバー(SASL付き)を構築してみようという試みです（<code>f1-micro</code> が無料で使えるのは米国リージョンだけです）。</p>
+
+<h3>Bitnami</h3>
+
+<p><a href="https://bitnami.com">Bitnami</a>とは、アプリケーションをインストールするのを支援するサービスで、クラウドにも対応しています。
+memcachedサーバーをGCP上に構築するのも、GUIからポチポチと実行できます。
+もちろん自力でやっても問題はないので、<a href="https://blog.couchbase.com/sasl-memcached-now-available/">SASL memcached now available!</a>みたいな記事を読んでやってもOKです。</p>
+
+<p>Bitnamiの画面遷移とかざっくりした説明は書きません。
+<a href="https://stpost.net/se/web-se/server/gcp-redmine-environment">GCPにRedmine環境を作ってみた</a>というBlogが、Bitnamiを使ってGCPにRedmine環境を作るという内容で、スクショもたくさんあってわかりやすいです。
+まぁ使ってみてそんなにハマりどころはないので、読まなくてもだいたい大丈夫です（ただし英語アレルギーとかない人）。</p>
+
+<h3>プロジェクトを作る</h3>
+
+<p>GCPでプロジェクトを作って（もしくは既存のプロジェクトで）以下のAPIを有効化しておくと、Bitnamiからのデプロイが簡単に進みます。</p>
+
+<ul>
+<li><a href="https://console.cloud.google.com/apis/api/compute.googleapis.com/overview">Compute Engine API</a></li>
+<li><a href="https://console.cloud.google.com/apis/api/deploymentmanager.googleapis.com/overview">Google Cloud Deployment Manager V2 API</a></li>
+</ul>
+
+<p>あとは課金の設定。</p>
+
+<h3>memcachedサーバーを作る</h3>
+
+<p>米国リージョンを選択するのですが、App Engine と同じリージョンに配置したいので、 <code>gcloud app regions list</code> で利用できるリージョンを確認しておきましょう（GAEからはインターネット越しになるので、それほど意味があるかはわかりませんが、気分的な問題ですw）。</p>
+
+<p>memcachedを選択して、プロジェクトを選んでいくと <code>us-xxxx</code> のリージョンで <code>f1-micro</code> を選択したのに、料金が表示（$4.28ぐらい）されるかもしれませんが、
+<a href="https://cloud.google.com/free/docs/always-free-usage-limits">f1-micro インスタンス使用量は、最初の 744 時間分が無料</a> なので、744時間 == 31日 ということで実質月額無料です。</p>
+
+<p><code>Application Info</code> にユーザー名 <code>user</code> とパスワードがあるので、PHPから接続する情報として記録しておきます。
+<code>Server Info</code> にアクセスするときのIPアドレスがあるので記録しておきます。また、SSHするときのキーがあるので、何かのときのためにダウンロードしておきます。</p>
+
+<p><a href="https://console.cloud.google.com/compute/instances">Cloud ConsoleのVMインスタンス</a>に、memcachedサーバーができているのを確認しておきます。</p>
+
+<h4>App Engine からアクセスできるようにする</h4>
+
+<p>このままでは App Engine からアクセスできない（App Engine はインターネット経由でGCPのVMにアクセスするため）ので、ファイヤーウォールの設定を行います。
+Bitnamiのドキュメント<a href="https://docs.bitnami.com/google/infrastructure/memcached/administration/connect-remotely/">Connect To Memcached From A Different Machine</a>によると、ポート <code>11211</code> を解放するよう書いてあります。
+BitnamiからインストールされるmemcachedはデフォルトでSASL認証がonになっているので、PaaSのようにIP制限できない環境からクラウド越しに利用するときは安心ですね。</p>
+
+<p>もし、GCPでのファイヤーウォール設定のやり方がわからない場合は、上記ページの <code>the FAQ</code> の遷移先 <a href="https://docs.bitnami.com/google/faq/administration/use-firewall/">Open Or Close Server Ports</a>が参考になります。</p>
+
+<h3>サンプルプログラム</h3>
+
+<p><a href="https://github.com/sizuhiko/gae-php7-memcache-sample">GAE 2nd Gen で動くPHP7.2のサンプルプログラム</a>を用意しました。</p>
+
+<p><code>app.yaml</code> ファイルの環境変数を3つ設定します。</p>
+
+<ul>
+<li>MEMCACHED<em>SERVER</em>ADDR: memcached サーバーのIP</li>
+<li>MEMCACHED_USERNAME: ユーザー名。これはデフォルトで <code>user</code> になっているので、変更不要</li>
+<li>MEMCACHED_PASSWORD: <code>Application Info</code> で表示できるパスワード</li>
+</ul>
+
+<p>以下のコマンドでプロジェクトにApp Engineを作ります。例えば <code>us-west2</code> に memcached サーバーを構築したら以下のような感じです。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gcloud app create --region=us-west2
+</code></pre></div>
+<p>続いて、アプリケーションをデプロイします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gcloud app deploy
+</code></pre></div>
+<h3>実行してみる</h3>
+
+<p>GAEのエンドポイントに接続すると、以下のように表示され、memcached と接続し読み書きできていることがわかります。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Array
+(
+    [xxx.xxx.xxx.xxx:11211] =&gt; Array
+        (
+            [pid] =&gt; 1786
+            [uptime] =&gt; 4689
+            [time] =&gt; 1546843636
+            [version] =&gt; 1.5.12
+            [libevent] =&gt; 2.0.17-stable
+            [pointer_size] =&gt; 64
+            [rusage_user] =&gt; 0.46
+            [rusage_system] =&gt; 0.188
+            [max_connections] =&gt; 1024
+            [curr_connections] =&gt; 2
+            [total_connections] =&gt; 5
+            [rejected_connections] =&gt; 0
+            [connection_structures] =&gt; 3
+            [reserved_fds] =&gt; 20
+            [cmd_get] =&gt; 2
+            [cmd_set] =&gt; 2
+            [cmd_flush] =&gt; 0
+            [cmd_touch] =&gt; 0
+            [get_hits] =&gt; 2
+            [get_misses] =&gt; 0
+            [get_expired] =&gt; 0
+            [get_flushed] =&gt; 0
+            [delete_misses] =&gt; 0
+            [delete_hits] =&gt; 0
+            [incr_misses] =&gt; 0
+            [incr_hits] =&gt; 0
+            [decr_misses] =&gt; 0
+            [decr_hits] =&gt; 0
+            [cas_misses] =&gt; 0
+            [cas_hits] =&gt; 0
+            [cas_badval] =&gt; 0
+            [touch_hits] =&gt; 0
+            [touch_misses] =&gt; 0
+            [auth_cmds] =&gt; 3
+            [auth_errors] =&gt; 0
+            [bytes_read] =&gt; 607
+            [bytes_written] =&gt; 6855
+            [limit_maxbytes] =&gt; 67108864
+            [accepting_conns] =&gt; 1
+            [listen_disabled_num] =&gt; 0
+            [time_in_listen_disabled_us] =&gt; 0
+            [threads] =&gt; 4
+            [conn_yields] =&gt; 0
+            [hash_power_level] =&gt; 16
+            [hash_bytes] =&gt; 524288
+            [hash_is_expanding] =&gt; 0
+            [slab_reassign_rescues] =&gt; 0
+            [slab_reassign_chunk_rescues] =&gt; 0
+            [slab_reassign_evictions_nomem] =&gt; 0
+            [slab_reassign_inline_reclaim] =&gt; 0
+            [slab_reassign_busy_items] =&gt; 0
+            [slab_reassign_busy_deletes] =&gt; 0
+            [slab_reassign_running] =&gt; 0
+            [slabs_moved] =&gt; 0
+            [lru_crawler_running] =&gt; 0
+            [lru_crawler_starts] =&gt; 3060
+            [lru_maintainer_juggles] =&gt; 4979
+            [malloc_fails] =&gt; 0
+            [log_worker_dropped] =&gt; 0
+            [log_worker_written] =&gt; 0
+            [log_watcher_skipped] =&gt; 0
+            [log_watcher_sent] =&gt; 0
+            [bytes] =&gt; 69
+            [curr_items] =&gt; 1
+            [total_items] =&gt; 2
+            [slab_global_page_pool] =&gt; 0
+            [expired_unfetched] =&gt; 0
+            [evicted_unfetched] =&gt; 0
+            [evicted_active] =&gt; 0
+            [evictions] =&gt; 0
+            [reclaimed] =&gt; 0
+            [crawler_reclaimed] =&gt; 0
+            [crawler_items_checked] =&gt; 0
+            [lrutail_reflocked] =&gt; 0
+            [moves_to_cold] =&gt; 2
+            [moves_to_warm] =&gt; 0
+            [moves_within_lru] =&gt; 0
+            [direct_reclaims] =&gt; 0
+            [lru_bumps_dropped] =&gt; 0
+        )
+
+)
+Hello World
+</code></pre></div>
+<p>数回アクセスしてみると、以下のようなスペックになります。</p>
+
+<ul>
+<li>99 パーセンタイル: 90.24ms</li>
+<li>95 パーセンタイル: 89.18ms</li>
+<li>50 パーセンタイル: 77.25ms</li>
+</ul>
+
+<h3>さいごに</h3>
+
+<p>私のサービスは <code>Cloud Datastore</code> のキャッシュとしてmemcacheを使っているので、キャッシュになければ、
+永続化しているところから直接ロードするだけなので、堅牢さはそれほど必要ないです。
+できれば <code>Cloud Datastore</code> へのI/O回数を減らして低額でやりたいなぁという程度なので、<code>f1-micro</code> に1つサーバーを起動する程度で良いという割り切りです。</p>
+
+<p>あとは<a href="https://redislabs.com">redislabs</a>が30MBまでなら無料で使えるので、そういうのも選択肢としてあるかもしれないですね（実際に<a href="https://cloud.google.com/appengine/docs/standard/python3/using-redislabs-redis?hl=ja">GAE Python3のドキュメント</a>からはリンクされていたりする）。</p>
+
+<p>もし同様にやってみたいなぁと思う方がいたら参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GCPにBitnamiでmemcachedサーバーを作る" data-url="http://blog.open.tokyo.jp/2019/01/07/gcp-bitnami-memcached-server.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/01/07/gcp-bitnami-memcached-server.html&t=GCP%E3%81%ABBitnami%E3%81%A7memcached%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%82%92%E4%BD%9C%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/01/07/gcp-bitnami-memcached-server.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/12/31/final-2018.html">2018年を締めくくる最後の投稿</a></h2>
+  <p class="postdate"><a href="/2018/12/31.html" title="Permanent link">Monday, December 31, 2018 02:36:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/blog.html" rel="tag">Blog</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>おわりのはじめ</h3>
+
+<p>今年は「発信」をテーマにした1年でした。ここ2年Blogの本数も1桁で、もっとやっていることを短くても良いから初心に返ってたくさん書こうと思ったのでした。
+実際はもっと書けることもあったような気がしますが、この投稿も含め31投稿ということで今までで一番多い投稿ができた1年でした。
+来年も継続していきたい。</p>
+
+<h3>イベント登壇と運営</h3>
+
+<p>2018年は、なんかずっとイベントに追われている気がしたので、まとめてみます。</p>
+
+<ul>
+<li>主催: ESM社内勉強会(IoT Study) 23回 （基本的に第一/第三水曜日）</li>
+<li>参加: ESM社内勉強会(Golang) 3回</li>
+<li>主催: <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> meetup 11回 ( ＃10 から ＃19 までと、祭りを1回、月一 )</li>
+<li>運営: <a href="https://polymer-japan.connpass.com/event/77121/">02/06（火） Polymer Japan Cafe #1</a></li>
+<li>参加: <a href="https://mercari.connpass.com/event/77284/">02/19（月） Mercari Web / Frontend meetup</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/70860">02/28（水） 第123回 PHP勉強会＠東京</a></li>
+<li>参加: <a href="https://web-study.connpass.com/event/80198/">03/06（火） template<em>instantiation</em>study</a></li>
+<li>参加: <a href="https://devlove.doorkeeper.jp/events/70969">03/10（土） 「ベタープログラマ」 ☓ ソフトウェアエンジニアの心得</a></li>
+<li>参加: <a href="https://events.withgoogle.com/vui-tokyo/">03/14（水） Voice UI Designer Meetup Tokyo</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/72071">03/28（水） 第124回 PHP勉強会＠東京</a></li>
+<li>参加: <a href="https://http2study.connpass.com/event/81469/">04/13（金） CDN Study (Akamai/Fastly)</a></li>
+<li>運営: <a href="https://fod.connpass.com/event/81486/">04/17（火） 開発リーダのための「明日の開発カンファレンス 2018」</a></li>
+<li>運営: <a href="https://polymer-japan.connpass.com/event/84638/">04/23（月） Web Components Cafe by Polymer Japan</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/73314">05/19（土） 初夏のJavaScript祭 in サーキュレーションビル ForPro</a></li>
+<li>参加: <a href="https://vivaldi2018tokyo.peatix.com/">05/29（火） Vivaldiジャパンツアー2018</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/74677">05/30（水） 第126回 PHP勉強会＠東京</a></li>
+<li>参加: <a href="https://cakephp.connpass.com/event/88835/">06/01（金） CakePHP3.6のリリースを把握しよう！第10回CakePHP MeetUp</a></li>
+<li>発表: <a href="https://coedo-dev.doorkeeper.jp/events/75171">06-07（木） Co-Edoでエンジニア・Webデザイナー飲み会</a></li>
+<li>参加: 06/13-06/14 Interop</li>
+<li>参加: <a href="https://gaeja.connpass.com/event/90133/">06/14（木） やっぱり AppEngine ja night #3</a></li>
+<li>参加: <a href="https://html5app-conf.connpass.com/event/87730/">07/08（日） HTML5 APP CONFERENCE 2018</a></li>
+<li>発表: <a href="https://2018.kphpug.jp/">07/14（土） PHPカンファレンス関西</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/77255">07/25（水） 第128回 PHP勉強会＠東京</a></li>
+<li>出展: <a href="https://makezine.jp/event/mft2018/">08/04 - 08/05 Maker Faire Tokyo</a></li>
+<li>参加: <a href="https://cakephp.connpass.com/event/97532/">08/21（火） CakePHPのカンファレンスが日本にやってくる！第11回CakePHP MeetUp</a></li>
+<li>参加: <a href="https://llevent.connpass.com/event/95443/">08/26（日） Learn Languages 2018 in ODC (LL2018)</a></li>
+<li>運営: <a href="https://tokyo2018.gdgjapan.org/">09/01（土） GDG DevFest 2018 Tokyo</a></li>
+<li>運営: <a href="https://polymer-japan.connpass.com/event/100320/">09/18（火） Polymer Japan Cafe #3</a></li>
+<li>運営: <a href="https://fod.connpass.com/event/103066/">10/13（土） 開発リーダのための「明日の開発カンファレンス 2018 秋」</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/81669">10/31（水） 第131回 PHP勉強会＠東京</a></li>
+<li>参加: <a href="https://gmo-research.connpass.com/event/93355/">11/08（木） GMOリサーチ テックカンファレンス</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/81307">11/17（土） 秋のJavaScript祭 in 富士通クラウドテクノロジーズ</a></li>
+<li>運営: <a href="https://events.html5j.org/conference/2018/11/">11/25（日） HTML5 Conference 2018</a></li>
+<li>発表: <a href="https://aogdevsja.connpass.com/event/107408/">11/26（月） Assistant Developer Conference vol.1</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/82962">11/28（水） 第132回 PHP勉強会＠東京</a></li>
+<li>運営: <a href="https://www.kdghacks.com/">12/01 - 12/02 KDDI DIGITAL GATE HACKS</a></li>
+<li>発表: <a href="http://phpcon.php.gr.jp/2018/">12/15（土） PHP Conference 2018</a></li>
+</ul>
+
+<p>運営/主催/発表/出展などは、その準備だったりミーティングがあったりして、これよりも私のGoogleカレンダーは濃密にイベントスケジュールで埋まっています。
+ここ数年これほどなかったなという記憶と、やりきった感は強いのですが、<a href="https://qiita.com/akase244/items/d74316f6ee8fa464cfa3">来年はPHP関連のカンファレンスが毎月のようにある</a>じゃないですかw</p>
+
+<h3>おわりのおわり</h3>
+
+<p>来年も同じようなペースでやっていきたいです。
+何をするにも健康第一なので、運動してお酒はほどほどに？みなさまと楽しい1年にできればと思います。
+どこかでお会いしましたら、よろしくお願いします！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="2018年を締めくくる最後の投稿" data-url="http://blog.open.tokyo.jp/2018/12/31/final-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/31/final-2018.html&t=2018%E5%B9%B4%E3%82%92%E7%B7%A0%E3%82%81%E3%81%8F%E3%81%8F%E3%82%8B%E6%9C%80%E5%BE%8C%E3%81%AE%E6%8A%95%E7%A8%BF" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/31/final-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/12/31/php-conference-2018.html">PHPカンファレンス2018に参加してWebComponentsに関する発表をしました</a></h2>
+  <p class="postdate"><a href="/2018/12/31.html" title="Permanent link">Monday, December 31, 2018 01:52:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><img src="http://phpcon.php.gr.jp/2018/dist/img/logo.svg" alt="" /></p>
+
+<p><a href="http://phpcon.php.gr.jp/2018/">PHPカンファレンス2018</a>に参加しました。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2018?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2018</a> 今日は13時から6Fで登壇します (@ 大田区産業プラザPiO in 大田区, 東京都 w/ <a href="https://twitter.com/hamaco?ref_src=twsrc%5Etfw">@hamaco</a>) <a href="https://t.co/Z1MmxtTtE8">https://t.co/Z1MmxtTtE8</a> <a href="https://t.co/ZdfaN67VSw">pic.twitter.com/ZdfaN67VSw</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1073752856258330625?ref_src=twsrc%5Etfw">15 December 2018</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>今年は、珍しく朝イチから到着して他のセッションをみたりしながら、1日を過ごすことができました。
+資料作成やリハが順調に進んでいたので、良かった。</p>
+
+<p>午前中はメルカリさんのスポンサーセッション、とはいえあの <a href="https://twitter.com/dqneo">@DQNEO</a> さんによるPHPUnitアップグレードセッションなので、通常セッションとして楽しめました。大企業におけるツラミみたいなのが満載のセッッションで、他の会社でそこまでブランチ戦略などが複雑に絡み合うことは少ないかもしれないけど、同じような悩みを抱えている人には心強いメッセージになっていたと思います。</p>
+
+<p>午後一番は自分のセッションでした。</p>
+
+<script async class="speakerdeck-embed" data-id="99342c3f8bcc4e818bd98a0014f0a7dc" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>私はJavaScriptやHTML5jなどフロントエンドエンジニアが集まるコミュニティに参加したり、お手伝いをしたり、今回発表するきっかけのコミュニティでもある<a href="https://polymer-jp.org/">Polymer Japan</a>を運営していたりするので（実際の仕事もほとんどフロントエンドだし）、本当にSPAや重厚なJSフレームワークが必要なケースがどれぐらいあるのか？というのを見てきたつもりです。</p>
+
+<p>まだ多くのWebサイトはそこまでを必要としていないので、jQueryやBootstrapを利用すれば十分であったりするケースもあります。
+そういったときに「Web Componentsができること」というメッセージを伝えらるセッションになっていたら良いな、と思います。</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/b_EW-ILQ9gM?start=1513" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+<p>そのあとは、またスポンサーセッションですが「PHPを選ぶ理由 / CTO 松本 宏太 / 株式会社SCOUTER」を。これも技術/人材というスコープから考える戦略という意味で多くの気づきが得られる内容だったと思っています。</p>
+
+<p>そのままの部屋で「PHP-FIGのHTTP処理標準の設計はなぜPSR-7/15/17になったのか / 田中 ひさてる」を。
+PSRはちょうど発表の直前にPHP FIGあたりの揉め事があって、なんかPSRとは？みたいな気分になっている人もいたと思いますが、セッションの内容はとてもすばらしくて。PHPはいろんな言語の良いところを取ってきたというのは事実として、よりPHPが向いている指向になっていったという良い話が聞けました。</p>
+
+<p>最後は「Webサービスを育てるための組織作りと文化作り / 曽根 壮大 / 株式会社 オミカレ」を。
+@soudai さんDBではない貴重な？発表でした。すごい良い話だったので、ぜひ<a href="https://soudai.hatenablog.com/entry/2018/12/15/141456">ブログ記事</a>を見て欲しいな。</p>
+
+<p>あとはLT見て、懇親会、二次会&hellip;&hellip;. 5ぐらいまであったとかw</p>
+
+<p>解散時の言葉は、やっぱり蒲田に宿取ろう&hellip;.昨年も聞いた気はしますが&hellip;
+とにかく楽しいPHPコミュニティのお祭りでした！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2018に参加してWebComponentsに関する発表をしました" data-url="http://blog.open.tokyo.jp/2018/12/31/php-conference-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/31/php-conference-2018.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92018%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6WebComponents%E3%81%AB%E9%96%A2%E3%81%99%E3%82%8B%E7%99%BA%E8%A1%A8%E3%82%92%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/31/php-conference-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/12/31/polymer-coedo-meetup-20.html">Polymer.coedo ＃20を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/12/31.html" title="Permanent link">Monday, December 31, 2018 01:34:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年11回目となる <a href="https://polymercoedo.doorkeeper.jp/events/84224">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>前回に引き続き「Edoエレメントの制作とWeb Componentsもくもく」です。</p>
+
+<p>ちょうど <a href="https://github.com/Polymer/lit-html">lit-html</a> が<a href="https://www.polymer-project.org/blog/2018-12-13-lit-html-rc">1.0 rcになるというニュース</a>を直前に見ていたので、今後Edoエレメントを <code>LitElement</code> で作る時の参考になるように、恒例のCodeLabsをLitElement版に書き換える作業をやりました。</p>
+
+<p><a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html">はじめての LitElement エレメントの作り方</a> でLitElementをベースにしたWeb Componentsの入門が行えます。</p>
+
+<p>ぜひ体験して、<a href="https://github.com/Polymer-Japan/litelement-first-element/issues">フィードバック</a>をいただければと思います。</p>
+
+<h3>次回（==来年）</h3>
+
+<p>2019年の開催予定を公開しました。年明け1回目は1/21になります。皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.coedo ＃20を開催しました" data-url="http://blog.open.tokyo.jp/2018/12/31/polymer-coedo-meetup-20.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/31/polymer-coedo-meetup-20.html&t=Polymer.coedo%20%EF%BC%8320%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/31/polymer-coedo-meetup-20.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+
+  <p class="pagenav">
+      <a href="/page/13/">« Prev</a>
+        <a href="/page/10/">10</a>
+        <a href="/page/11/">11</a>
+        <a href="/page/12/">12</a>
+        <a href="/page/13/">13</a>
+        <b>14</b>
+        <a href="/page/15/">15</a>
+        <a href="/page/16/">16</a>
+        <a href="/page/17/">17</a>
+        <a href="/page/18/">18</a>
+      <a href="/page/15/">Next »</a>
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

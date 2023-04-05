@@ -1,0 +1,603 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+            <h2>Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる</h2>
+            <p class="postdate"><a href="/2008/09/13.html" title="Permanent link">Saturday, September 13, 2008 02:09:10 PM</a></p>
+            <p class="tags">
+                <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                <a href="/tags/flex.html" rel="tag">Flex</a>
+            </p>
+
+          <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第八回は、画像を重ね合わせる手法を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
+
+<p>前回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して実装してみました。今回は、画像を重ね合わせていきます。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_8/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+<li>CoverFlowLayout.as</li>
+<li>RepeaterHBox.as</li>
+</ul>
+
+<p>新しいファイルCoverFlowLayoutとRepeaterBoxの2つが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■選択している画像以外の表示幅を狭くする</h3>
+
+<p>画像を重ね合わせるときに、まずはじめに考える方法は、標記のとおりだと思います。そこで、今回はoverrlapWidthをいう変数を使って、重ね合わせの幅を定義してみました。実際に適用する箇所は、</p>
+
+<ul>
+<li>measure() &ndash; 実際に描画する縦横サイズを返す処理</li>
+<li>transformImage() &ndash; 画像を斜めに描画する処理</li>
+<li>animateTransform() &ndash; アニメーション描画を開始する処理</li>
+</ul>
+
+<p>です。画像は左右の両側から重なるイメージなので、重なり幅が20とすると、実際の画像幅は倍の40必要となりますので、画像の幅として*2をしています。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>measuredWidth = overrlapWidth*2;
+</code></pre></div>
+<p>このように修正してプレビューしてみるとどうなるでしょうか？
+<img src="/images/blog/images/flex2_coverflow_8/example1.jpg" alt="" /> </p>
+
+<p>残念ながら赤丸で囲ったように、選択画像より右側の並びが変になってしまいます。</p>
+
+<h3>■要素のZ順序を入れ替える</h3>
+
+<p>Window操作のプログラミングをした経験のある人なら、この状況を標記のとおり解決できる、と推測するでしょう。そしてもちろんFlexでも同様の機能を持っています。  </p>
+
+<p>そこで以下のようにmxmlのonCreationComplete()を変更してみました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>private function onCreationComplete(event:FlexEvent):void {
+    if(event.currentTarget.repeaterIndex &gt;= (dp.length - 1)){
+        // 最初の重なりは一番右の項目が下になるよう（逆順）にする。
+        for(var i:int = 0; i &lt; (dp.length/2); i++) {
+            h_frame.swapChildren(imageReflector[i], imageReflector[dp.length-i-1]);
+        }
+        h_frame.invalidateProperties();
+        // 重なりスワップ終了
+        initScroll();
+    }
+}
+</code></pre></div>
+<p>このように修正してプレビューしてみるとどうなるでしょうか？<img src="/images/blog/images/flex2_coverflow_8/example2.jpg" alt="" /> </p>
+
+<p>うわぁーーーーーー、なぜか表示する順番が変になってしまいました。なぜこうなるのでしょうか？</p>
+
+<h3>■Flexはオープンソースだから、ソースを読めばいいじゃないか</h3>
+
+<p>Flexの各クラスはcoreでない限りソースが提供されています。ともかくh_frameのクラスであるHBOXの描画について調べてみましょう。  </p>
+
+<p>frameworks/source/mx/containers/HBox.asにはほとんど処理はないので、親クラスであるBoxのコードを見ます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>override protected function updateDisplayList(unscaledWidth:Number,
+                                                  unscaledHeight:Number):void
+{
+    super.updateDisplayList(unscaledWidth, unscaledHeight);
+
+    layoutObject.updateDisplayList(unscaledWidth, unscaledHeight);
+}
+</code></pre></div>
+<p>描画のコードはこのようになっていて、実際の描画はどうもlayoutObjectがやっているようです。そこでmx.containers.utilityClasses.BoxLayoutのupdateDisplayListを見てみると、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>for (i = 0; i &lt; n; i++)
+{
+    obj = IUIComponent(target.getChildAt(i));
+    top = (h - obj.height) * verticalAlign + paddingTop;
+    obj.move(Math.floor(left), Math.floor(top));
+    if (obj.includeInLayout)
+        left += obj.width + gap;
+}
+</code></pre></div>
+<p>のように、getChildAtを使って、子要素の順番（=Z順）に表示位置の計算をしているのがわかります。swapChildrenは子要素の順番を変更することで描画の重なりを変更しようとしているので、2番目のプレビューのようになるのはやもえません。ではどのようにHBoxに定義された順番（レイアウト計算順序）とZ順（表示順序）を別々に管理し、描画したら良いのでしょうか？</p>
+
+<h3>■Repeaterを使うHBox、RepeaterHBoxを作る</h3>
+
+<p>つまりこういうことです。HBox内に要素を並べるとき、通常は要素の並びを持っている訳ではありませんが、HBox内でRepeaterを使っているなら、要素の順番はRepeater自信が保持しています。  </p>
+
+<p>そこでRepeaterHBoxを作ることにします。今回は簡単に要素の並びを取得できるように、mxml上のパラメータrepeaterArray=&ldquo;{imageReflector}&quot;でクラス変数に配列を渡すことにしました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>&lt;local:RepeaterHBox id="h_frame" height="400" width="500" backgroundColor="0x000000" paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)" mouseOut="onMouseOut(event)"  initialize="onInitialize()" repeaterArray="{imageReflector}" &gt;
+    &lt;Repeater id="rp" dataProvider="{dp}"&gt;
+        &lt;local:ImageReflector id="imageReflector" asinId="{rp.currentItem}" creationComplete="onCreationComplete(event)" click="changeSelect(event)" /&gt;
+    &lt;/Repeater&gt;
+&lt;/local:RepeaterHBox&gt;
+</code></pre></div>
+<p>RepeaterHBoxの特徴は、HBoxを継承しHBoxである機能はもちろん、前節で問題となっていた、BoxLayoutを変更することです。RepeaterHBoxでは独自のレイアウト処理CoverFlowLayoutを使っています。CoverFlowLayoutはBoxLayoutの一部を変更したいだけなので、BoxLayoutのソースコードを丸ごとコピーしてきて、前記のコードを下記
+のように修正します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>for (i = 0; i &lt; n; i++)
+{
+    obj = IUIComponent(target.repeaterArray[i]);
+    top = (h - obj.height) * verticalAlign + paddingTop;
+    obj.move(Math.floor(left), Math.floor(top));
+    if (obj.includeInLayout)
+        left += obj.width + gap;
+}
+</code></pre></div>
+<p>表示順を変更しても、リピーターの定義（target.repeaterArray）順に要素の表示位置（レイアウト）を計算すれば問題は解決します。</p>
+
+<h3>■mx_internal::で内部要素にアクセスする</h3>
+
+<p>RepeaterHBoxクラスでは見慣れない記述mx_internalがあると思います。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mx_internal::layoutObject = new CoverFlowLayout();
+</code></pre></div>
+<p>実はこのmx_internalは、Flexの内部クラスに直接アクセスするために、重要な記述です。今回のように標準コンポーネントをカスタマイズする場合、通常のメソッドオーバーライドだけでは、どうしてもうまくカスタマイズできない場合があります。例えば、coreの中の変数だったり、以下のように内部名前空間に変数が定義されている場合です。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>/**
+ *  @private
+ */
+mx_internal var layoutObject:BoxLayout = new BoxLayout();
+</code></pre></div>
+<p>これはBoxクラスで、レイアウトオブジェクトを定義している例ですが、要はprivate変数として扱っているものなのです。ただこれだと独自レイアウトによる描画ができないので、上記のようにmx_internal::layoutObjectと書くことで、内部スコープの変数値を上書きできるのです。</p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは過去記事を参考にしてください。  </p>
+
+<h3>■次回予告</h3>
+
+<p>次回で最終回、最後にamazonからタイトル、著者を取り出して表示する機能を実装してみます。</p>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (８) ～画像を重ね合わせる" data-url="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%98)%20%EF%BD%9E%E7%94%BB%E5%83%8F%E3%82%92%E9%87%8D%E3%81%AD%E5%90%88%E3%82%8F%E3%81%9B%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/09/13/flex2-coverflow-8.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

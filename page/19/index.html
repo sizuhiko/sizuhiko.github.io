@@ -1,0 +1,978 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2018/05/06/polymer-co-edo-day-2018.html">Polymer.co-edo day 2018 春 を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/05/06.html" title="Permanent link">Sunday, May 06, 2018 04:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>4月に予定していた今年4回目(通算で13回目)となるMeetupは、Polymer Japan主催の <a href="https://polymer-japan.connpass.com/event/84638/">Web Components Cafe by Polymer Japan</a> と重なってしまったため中止となり、このG/Wに <a href="https://polymercoedo.doorkeeper.jp/events/73944">Polymer.co-edo day 2018 春</a>として開催することになりました。</p>
+
+<p>Web Components Cafeでは「PolymerによるWeb Componentsの開発」というタイトルで発表もしましたので、スライドをリンクしておきますね。</p>
+
+<script async class="speakerdeck-embed" data-id="a79e61c934c24a8b9b97830f625c3b20" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p><code>Polymer.co-edo day</code> <strong><em>春</em></strong>って付くと、秋もやりそうじゃないですか！？（もしかしてやるかもね）</p>
+
+<h3>Polymer.co-edo day とは</h3>
+
+<blockquote>
+<p>私が1日 Co-Edoにいるので、Polymerのことについて話したり、質問受け付けたり、ワークショップやったり、一緒にお酒飲んだりw、Polymer/Web Componentsについて、何でもやるよ！の1日です。気軽に参加ください。</p>
+
+<p>お好きな時間に来て、帰って も大丈夫です。
+GW予定ないけど、もくもくしたい、Web Componentsさわってみたいなど、私と一緒に作業をしませんか？</p>
+</blockquote>
+
+<p>ということで、連休にもかかわらず2名の方が参加してくれました。ありがたい！</p>
+
+<p>非エンジニアの方ですが、コミュニティにもJOINしてもらった午前中の参加者と、Polymer.co-edoの常連さんが午後に来てくれて、ぼっちの時間も少なく楽しい1日でした。</p>
+
+<p>やった/話した内容は以下のようなことです</p>
+
+<ul>
+<li>Polymerとは？のプレゼン</li>
+<li>どのように現在のビジネスにマッチさせるか</li>
+<li>Wordpress の Polymer プラグインがあるらしい？！</li>
+<li>どこから学んでいけば良いか？
+
+<ul>
+<li>Google Mapとか Codelabs にあるのが良いね！</li>
+</ul></li>
+<li>Polymer 3がリリースされるってよ</li>
+<li>CMS構想</li>
+<li>次回Polymer.co-edoはリリース記念イベント！？
+
+<ul>
+<li>Google I/O 終わったあとだし、動画見ながらのイベントになるかも</li>
+</ul></li>
+<li>そろそろハンズオンやりたい（3系でやる？）</li>
+</ul>
+
+<h3>次回の Polymer.co-edo は</h3>
+
+<p>5/21(月)を予定しています。</p>
+
+<p><a href="#">Polymer 3のリリースはGoogle I/O の翌週と告知されている</a>ので、ナイスタイミングだと思っています。
+みなさまの参加をお待ちしております。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo day 2018 春 を開催しました" data-url="http://blog.open.tokyo.jp/2018/05/06/polymer-co-edo-day-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/06/polymer-co-edo-day-2018.html&t=Polymer.co-edo%20day%202018%20%E6%98%A5%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/06/polymer-co-edo-day-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/04/10/asucon-2018.html">明日の開発カンファレンス2018を開催します</a></h2>
+  <p class="postdate"><a href="/2018/04/10.html" title="Permanent link">Tuesday, April 10, 2018 10:33:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/asucon.html" rel="tag">asucon</a>
+      <a href="/tags/conference.html" rel="tag">conference</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>昨年に続き <a href="http://asucon.alleyoop.jp/">明日の開発カンファレンス</a> を1週間後の <strong>4/17(火)</strong> に開催します。</p>
+
+<p><img src="/images/blog/asucon2018.jpeg" alt="" /></p>
+
+<h3>明日の開発カンファレンスとは？</h3>
+
+<p>公式サイトの開催趣旨を引用します。</p>
+
+<blockquote>
+<p>「明日の開発カンファレンス」では、開発の効率化に取り組むエキスパートの生の声を伝えます。そして、一歩、二歩、三歩先にどのような事ができるか、実際の現場にどのように導入するか。開発リーダのみなさまや開発リーダを目指すエンジニアのみなさまに、実現可能な情報を共有できる場を提供したいと考えています。</p>
+</blockquote>
+
+<p>プログラムも、各分野に精通した運営メンバーが「今現場に求められているもの」の中で <strong>もっとも聞きたい話</strong> を、各分野のエキスパートに登壇を快諾いただきました。
+昨年に続き、参加したみなさまが <strong>明日からのヒント</strong> を持ち帰って、現場の改善に役立つようなイベントになると信じています。</p>
+
+<p>なお、名前が長いので、通称は <strong>アスカン</strong> という名前になっています。みなさまも愛着をもって「アスカン」と読んでもらえると嬉しいです。</p>
+
+<h3>2018年のみどころ</h3>
+
+<h4>ものづくりを変える開発者ファーストの４つのカイゼン</h4>
+
+<p>デンソーさんのアジャイル開発事例は、今年の<a href="https://event.shoeisha.jp/devsumi/20180215">デブサミ2018</a>や、他のイベント、Webの記事などで見たり聞いたりしたことがあるのではないかと思います。</p>
+
+<p>ですが、ここはアスカンです。より現場の声が聞きたいんです。</p>
+
+<p>そこで、今回は現場のチーフエンジニアである、<a href="http://asucon.alleyoop.jp/speaker/sato/">佐藤 義永さん</a>に登壇いただき <strong>開発者の視点から具体的な取り組みとその効果</strong> を紹介していだたけることになりました。
+楽しみですね。</p>
+
+<h4>クラウド労務サービス「SmartHR」を支える開発チームの作り方</h4>
+
+<p>急成長中のクラウド労務サービス「SmartHR」。
+プログラム選定をした神戸さん曰く <strong>まだ他で話を聞いたことがないが、絶対に話を聞きたい人</strong> <a href="http://asucon.alleyoop.jp/speaker/masato_serizawa/">芹澤 雅人さん</a>に登壇いただきます。</p>
+
+<p><strong>成長するサービスの中で、どのように対応してきたか、また、今後どのような開発チームを作っていきたいか</strong> について発表していただきます。
+自社サービスを作っている人にとって、とても参考になる話、見逃せないですね。</p>
+
+<h4>新卒3年目のぼくが、でぶおぷす???なオジサンだらけのエンプラ金融PJにAnsibleを導入してみた</h4>
+
+<p>フューチャー株式会社の<a href="http://asucon.alleyoop.jp/speaker/syuntaro_saiba/">齋場 俊太朗さん</a>には、エンタープライズ開発の現場で
+<strong>先進的なツール</strong> と <strong>今までのやり方や文化</strong> をうまく結びつけるために、どのような工夫をしたかを発表していただきます。
+これから開発リーダーを目指すエンジニアがとおる現場の改善。
+エンタープライズの現場の、こういった発表は他ではなかなか聞くことができない内容になっています。</p>
+
+<h4>カイゼン・ジャーニー 〜たった一人からはじめて、「越境」するチームをつくるまで〜</h4>
+
+<p>午後最初のセッションは <a href="http://amzn.asia/5AMX5Xq">カイゼン・ジャーニー</a> の著者である <a href="http://asucon.alleyoop.jp/speaker/toshihiro_ichitani/">市谷 聡啓さん</a> に、
+<strong>どのようにして自分の場所（開発現場）を変えていくのか</strong> について発表していただきます。
+会社のトップダウンでアジャイルを導入できるケース、スタートアップで改善を続けていけるケース、などありますが、
+ <strong>一人から</strong> 改善をはじめなくてはいけないケースが多いのではないか？と思っています。
+ このセッションのテーマは <strong>そう、変化は「たった一人から」でも始められます</strong> です。</p>
+
+<p>こちらも、今年の<a href="https://event.shoeisha.jp/devsumi/20180215">デブサミ2018</a>や他のイベントなどで、見たり聞いたりしたことがあるのではないかと思います。
+アスカンでは他のイベントよりも発表時間をドーンと拡大して80分枠で、ジャーニーを語ってもらいます。</p>
+
+<h4>サーバーレスいいとこどり</h4>
+
+<p><strong>サーバーレス</strong> という言葉で最初に思いつくことは何でしょうか？
+多くの現場で導入が進められていたり、導入が検討されているのではないかと思います。</p>
+
+<p>AWSのコミュニティでは知らない人はいない、株式会社セクションナイン <a href="http://asucon.alleyoop.jp/speaker/shingo_yoshida/">吉田 真吾さん</a> を中心に、
+サーバーレスの現場で活躍する 中山 桂一さんと(サーバーレス薄い本でも有名な)仲山 昌宏さんに登壇いただき、
+<strong>サーバーレスを現場に導入するにあたり直面する課題について、対策のアイデアや視座</strong> を紹介していただきます。
+ここだけの話が聴けるチャンスです！</p>
+
+<h4>リアルストーリー：「うちのカイハツ、セキュリティやばい」からの脱却シナリオ</h4>
+
+<p>最後のセッションは、セキュリティです。
+OWASP Japanチャプターリーダーでもある<a href="http://asucon.alleyoop.jp/speaker/okada/">岡田 良太郎さん</a>、
+サイボウズ株式会社 <a href="http://asucon.alleyoop.jp/speaker/ito/">伊藤 彰嗣さん</a>、
+<a href="https://github.com/future-architect/vuls">Vuls</a>の開発者でもある<a href="http://asucon.alleyoop.jp/speaker/kanbe/">神戸 康多さん</a>が、
+ゲストを迎えて <strong>現場の生々しい話を根掘り葉掘り聞きまくる</strong> トークセッションです。
+<strong>どうすればセキュア開発・運用など実現しうるのか</strong> について、アスカンでしか聞けない深イイ話、見逃せません。</p>
+
+<h3>最後に</h3>
+
+<p>もうすでに 119名(4/10 23:00現在) の方に申し込みをいただいていますが、まだ残席あります。
+イベント後には懇親会 <strong>アスカンナイト</strong> も開催されますので、登壇者／参加者でイベントの感想や、明日からどうやっていくかを議論するのも良いと思います。</p>
+
+<p><a href="https://asucon2018.peatix.com/">Peatixイベントサイト</a> よりイベントチケットを購入できます。</p>
+
+<p>アスカンまであと一週間。
+よろしくお願いします。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="明日の開発カンファレンス2018を開催します" data-url="http://blog.open.tokyo.jp/2018/04/10/asucon-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/04/10/asucon-2018.html&t=%E6%98%8E%E6%97%A5%E3%81%AE%E9%96%8B%E7%99%BA%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92018%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/04/10/asucon-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/03/27/polymer-co-edo-meetup-12.html">Polymer.co-edo meetup ＃12 を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/03/27.html" title="Permanent link">Tuesday, March 27, 2018 02:47:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年3回目となる <a href="https://polymercoedo.doorkeeper.jp/events/71980">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>日本発！？のWeb Componentsを作ろう！ということで、一度ブレストした内容を詰めていきたい</p>
+</blockquote>
+
+<p>ということで<a href="http://blog.open.tokyo.jp/2018/01/30/polymer-co-edo-meetup-10.html">Polymer.co-edo meetup ＃10 を開催しました</a>で、一度上がった案をベースに議論をしました。</p>
+
+<h3>本題の前に</h3>
+
+<p>ちょうど少し前、Polymerの公式ブログに<a href="https://www.polymer-project.org/blog/2018-03-23-polymer-3-latest-preview.html">Polymer 3.0: Latest preview</a>という記事がアップされました。
+こちらの記事は英語ですが、Chromeで開いて日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください（最近の自動翻訳すごい！）。</p>
+
+<p>ちょうど1つ前の記事が <code>preview-12</code> では、こうなるよ、という話だったのを前回の #11 で話していたので「Polymer.co-edo の開催に合わせて記事がアップされるなんて、なんて親切なんだ」と勝手に妄想してますw</p>
+
+<p>また、先日行われた <a href="https://web-study.connpass.com/event/80198/">template<em>instantiation</em>study</a> のハイライトや感想も話しました。</p>
+
+<h3>Polymer.co-edo では何をやっていきたいか</h3>
+
+<p>ということで、本題に戻るのですが、始めて参加される方がいたので、コミュニティ/勉強会として何をやっていきたいか、というのをおさらい。</p>
+
+<ul>
+<li>日本発の Web Components を開発/発信したい</li>
+<li>Web Components の開発フレームワークとして Polymer を推したい</li>
+<li>Polymer を学ぶ人が気軽に来て学習/相談できるコミュニティにしたい（ハンズオンするとかも）</li>
+</ul>
+
+<p>Polymer で Web Components を作る意味として、個人的な想いを少し話しました。</p>
+
+<p>Webサイトを作るとき、昔からフレームワークやライブラリは、どんどん変わってきました。
+その中でライブラリの中心にいたのが jQuery だと思っています。もちろん今でも使われているし、
+サイトに簡単な部品を設置するには jQuery だったり、それをベースとした Bootstrap ライブラリを使ったりします。
+しかし、それらはモバイル端末で見ると十分なパフォーマンスを得られなかったり、他のフレームワークと衝突してしまう、といったことがおきたりします。</p>
+
+<p>Web Components は、ブラウザの低レベルのAPIを使うことで、フレームワークを超えて部品を共通化することが可能だと思っています。
+もちろん部品を組み合わせることでアプリケーションになることも可能です。
+今日 Shadow DOMなどのWeb Componentsの要素単位で見れば、主要フレームワークで利用可能な（標準サポートされている）ものもあります。
+ですので、そこでPolymerがという話ではなく、同じ会社でもプロジェクトによっては使うフレームワークが違っていたりすることはあるし、
+OSSでUI部品を公開するとき多くの人に使ってもらうには、特定のフレームワークに依存した形でなく webcomponents.org で共有するエコシステムみたいなのができたら良いなと思っています。</p>
+
+<p>このような視点で考えると、作るもののアイデアが jQueryやBootstrap であったものを置き換えたり、どこかのサイトで表示されているものを模したものだったりするなぁというのは、自然な流れに感じています。</p>
+
+<h3>#10で出たアイデアのおさらいと、新しいタグのブレスト</h3>
+
+<p><code>#10</code> で出たアイデア以外に何かないか、新しい人も来ていたので、もう一度ブレストしました。
+まずあたりをつけたのが、日本のサービスでAPIを公開しているところはないか？それを使ってタグが作れないか？というところです。</p>
+
+<p>そうすると意外とAPIって開いてなかったり、開いていてもサイト上で使うものだったりして、利用規約が Web Components に向いていない（サイトにバナーなどを埋め込んでくださいなど）ことがありました。
+こういった利用規約は、Web Components 自体に入ってなくても良いような気がしますが、カスタムタグを利用する人に、どうやって守ってもらうかとか難しいなぁと。</p>
+
+<p>で、LINEの共有ボタンとかないねーとか、有り体な話題で終わるかと思っていたころ、1つの発想転換がありました。</p>
+
+<h3>今回採用した新しいアイデア</h3>
+
+<p><strong>埋め込みタグ</strong> です。昔 jQuery とかでリンクにホバーすると、サイトの概要がポップアップされるようなものがあったのは覚えています。
+また、hatena とか使うとき、他の hatena 記事へリンクを貼ると、埋め込みタグ表示にできたりするじゃないですか。
+埋め込みタグがあるサービス、例えばTwitterやSlide系のサイトは良いのですが、自分のブログなどに埋め込みタグがないサイトのリンクとして <strong>埋め込みタグをつけれたら便利</strong> というものです。</p>
+
+<p>旅行に行ったブログを書くとき、レストラン行ったら食べログサイトの埋め込みタグを入れたいかもしれないし、ホテルや観光スポットの公式サイトの埋め込みタグを入れたいかもしれないです。
+単なるリンクよりも良いですよね！</p>
+
+<p>まずはじめにプロトタイプとしては、直接サイトのHTMLをもってきて meta タグの OGP を埋め込みタグ風に表示する（つまり自分のサイトに Facebook の共有表示を埋め込む感じ）のを目指します。
+HTMLだけならテキストでそれほど容量もないし、画像ほど重くはないと思っていますが、サービスとして探して見たら意外となかったりしたので、OGP情報だけをキャッシュするサービスを併せて作っても良いかなーとも思っています。</p>
+
+<p>これ自分のブログにも埋め込みたいし、早く使いたいですw</p>
+
+<h3>次回は</h3>
+
+<p>4/23(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>また、春と秋に1回ずつハンズオンもやりたいと思っています。
+<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a> のメールか、Facebookグループ <a href="https://www.facebook.com/groups/416344608738146/">Polymer Japan</a> などでのアナウンスをお待ちください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃12 を開催しました" data-url="http://blog.open.tokyo.jp/2018/03/27/polymer-co-edo-meetup-12.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/03/27/polymer-co-edo-meetup-12.html&t=Polymer.co-edo%20meetup%20%EF%BC%8312%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/03/27/polymer-co-edo-meetup-12.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/02/27/polymer-co-edo-meetup-11.html">Polymer.co-edo meetup ＃11 を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/02/27.html" title="Permanent link">Tuesday, February 27, 2018 03:24:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年2回目となる <a href="https://polymercoedo.doorkeeper.jp/events/70895">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>Web Componentsを作るにあたり、いくつか必要な開発ツールがあるので、その解説と体験がメインになります。</p>
+</blockquote>
+
+<p>ということで、必要なツールと、その使い方／書き方について学習しました。</p>
+
+<ul>
+<li>polymer-cli の使い方</li>
+<li>polymer test を使ってみよう</li>
+</ul>
+
+<h3>開発環境をととのえる</h3>
+
+<p>ちょうど少し前に<a href="https://www.youtube.com/user/ChromeDevelopers/">YouTubeのGoogle Chrome Developersチャンネル</a>に<a href="https://www.youtube.com/user/ChromeDevelopers/search?query=Building+an+Element+in+Polymer2">Building an Element in Polymer 2という動画シリーズ1から5</a>がアップされました。
+こちらの動画は英語ですが、字幕をONにして日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください。</p>
+
+<p>今回は<a href="https://www.youtube.com/watch?v=NU4TGxYZEjs">Building an Element in Polymer 2: Install Tools &amp; Initialize Project (Part 1 of 5)</a>が議題とマッチしていたので、一旦ビデオを見ならが進めました。</p>
+
+<p>はじめに <code>polymer-cli</code> をインストールしましょう。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ npm install -g polymer-cli
+</code></pre></div>
+<p>動画の中でも言っていますが、いろいろなものが入るので、結構時間がかかります。</p>
+
+<p>次に <code>bower</code> をインストールします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ npm install -g bower
+</code></pre></div>
+<p><code>polymer help</code> や <code>bower help</code> などを実行して、コマンドが正常にインストールされているか確認しましょう。</p>
+
+<h3>自動テストのしくみ</h3>
+
+<p>Polymer はテストコマンドとして <code>polymer test</code> を用意しています。
+このコマンドは、<a href="https://github.com/Polymer/polymer-cli">polymer-cliのリポジトリ</a>で<a href="https://github.com/Polymer/polymer-cli/blob/master/src/commands/test.ts">ソースコード</a>を読むとわかりますが、このコマンドは<a href="https://github.com/Polymer/web-component-tester">web-component-tester</a>へのエイリアスとなっています。</p>
+
+<p><code>web-component-tester</code> は Polymerチームによって開発されていますが、Polymer用というわけではなく、Web Components をテストするために既存のテスティングフレームワークを統合したものです。
+<a href="https://github.com/Polymer/web-component-tester/blob/master/README.md">README</a>にも書いてあるとおり、フロントエンドやNode.jsでは馴染みのある、以下のようなツールを使って構成されています。</p>
+
+<ul>
+<li><a href="http://mochajs.org/" title="Mocha Test Framework">Mocha</a> as a test framework.</li>
+<li><a href="http://chaijs.com/" title="Chai Assertion Library">Chai</a> assertions.</li>
+<li><a href="https://github.com/caolan/async" title="Async.js">Async</a> to keep your sanity.</li>
+<li><a href="https://lodash.com/" title="Lo-Dash">Lodash</a> (3.0) to repeat fewer things.</li>
+<li><a href="http://sinonjs.org/" title="Sinon.JS">Sinon</a> and <a href="https://github.com/domenic/sinon-chai" title="Chai assertions for Sinon">sinon-chai</a> to test just your things.</li>
+<li><a href="https://github.com/PolymerElements/test-fixture" title="Easy DOM fixture testing">test-fixture</a> for easy fixture testing with <code>&lt;template&gt;</code> tags.</li>
+<li><a href="https://github.com/GoogleChrome/accessibility-developer-tools" title="A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page.">accessibility-developer-tools</a> through <code>a11ySuite</code> for simple, automated Accessibility testing.</li>
+</ul>
+
+<p>テストスイートの書き方は、Mocha でテストを書いたことがあれば、それほど違和感はないと思います。
+Web Components をテストするのに、追加されているのが test-fixture で、テストするエレメントのテンプレートを複数定義しておき、テストで必要な時だけDOMへ追加できます。</p>
+
+<p>またWebサイトはアクセシビリティにも配慮すべきなので、a11ySuite で自動的に問題がないかどうかを検証できます。
+参考サイト：<a href="https://html5experts.jp/shumpei-shiraishi/24671/">Webアプリのアクセシビリティを追求せよ！「インクルーシブ」なマークアップを議論しながら学んでみた</a></p>
+
+<p>web-component-tester はブラウザを起動してテストを行います。Web Componentsはブラウザの上で動作することを確認することが重要だからです。
+しかし、さまざまなブラウザやOSのバージョンマトリクスを用意するのは困難です。
+そこで<a href="https://saucelabs.com/">Sauce Labs</a>のようなマルチOS/マルチブラウザで動作できるSaaSを利用するのが良いでしょう。
+テスト困難はお金で解決できます。
+web-component-testerでは、そのためのプラグインが標準で用意されているので、Sauce Labsならすぐに利用できます。
+私は<a href="http://www.browserstack.com/">Browserstack</a>を使いたい！、という場合は、<a href="https://github.com/hotforfeature/wct-browserstack">Browserstack用プラグイン</a>がOSSで公開されているので、試してみてください。</p>
+
+<p>また、テストで起動するブラウザは、自動的に判定されるので、特定のブラウザだけ実行したい場合などは、<code>wct.conf.json</code> というファイルを作ってREADMEを参考に設定します。</p>
+
+<p>もちろんCIでの実行にも配慮されていて、 Gulp や Grunt から実行するインターフェースも用意されています。</p>
+
+<h3>テストを実行してみる</h3>
+
+<p>実際にどうやってテストが実行されるのか、既存のエレメントで確認しました。
+利用したエレメントは、以下の2つです。</p>
+
+<ul>
+<li><a href="https://github.com/PolymerElements/paper-progress">PolymerElements/paper-progress</a></li>
+<li><a href="https://github.com/PolymerElements/gold-email-input">PolymerElements/gold-email-input</a></li>
+</ul>
+
+<p>どちらも、以下の手順でテストを実行できます。</p>
+
+<ul>
+<li><code>git clone</code> する</li>
+<li>clone 先にディレクトリを移動</li>
+<li><code>bower install</code> を実行</li>
+<li><code>polymer test</code> を実行</li>
+</ul>
+
+<p>端末にインストールされているブラウザが自動的に起動して、テストが実行されます。
+起動したブラウザは、2ペインになっていて、左側にテスト中のDOM、右側にはテスト結果が表示されます。</p>
+
+<h3>既存のエレメントから、基本的なテストの書き方を学ぼう</h3>
+
+<p>それぞれのリポジトリのテストコードを読んで、テストコードの書き方を学びます。</p>
+
+<p>まず、どちらのリポジトリも、ルートディレクトリに <code>test</code> というディレクトリがあります。
+web-component-testerはデフォルトで、このディレクトリ名を利用するので、よほどのことがない限りこの名前を利用します。</p>
+
+<p>次に test ディレクトリには index.html と、それ以外のテストファイル（複数でも、サブディレクトリでも）を配置します。
+まず index.html が読み込まれるので、テストスイートを初期化します。
+ほとんどの Web Components で書き方はコピペで良く、変更が必要なのは title タグと、以下のテストスイートに列挙するファイルの一覧だけです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="nx">WCT</span><span class="p">.</span><span class="nx">loadSuites</span><span class="p">([</span>
+      <span class="dl">'</span><span class="s1">basic.html</span><span class="dl">'</span><span class="p">,</span>
+      <span class="dl">'</span><span class="s1">basic.html?dom=shadow</span><span class="dl">'</span>
+    <span class="p">]);</span>
+</code></pre></div>
+<p>重要なこととして、web-component-testerは、デフォルトでは Shadow DOM をOFFにしてテストを実行します。つまり 1行目の <code>basic.html</code> は Shady DOM でテストが実行されます。
+もし、Shadow DOM でもテストしたい場合は、2行目のようにパラメータを追加する必要があります。</p>
+
+<h4>テストヘルパーの役割</h4>
+
+<p>実際のテストコードを見ると、以下のようなテストヘルパーをインクルードしています。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../../iron-test-helpers/test-helpers.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../../iron-test-helpers/mock-interactions.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>テストヘルパーを導入すると、テストコードを書くのが容易になります。
+代表的なヘルパーメソッドを紹介します。</p>
+
+<ul>
+<li>flushAsynchronousOperations : Custom Elements のライフサイクルコールバックを強制的に実行します</li>
+<li>forceXIfStamp : <code>dom-if</code> を利用しているとき、データバインディングで変更された値の再描画を強制的に実行します。通常はライフサイクルコールバックに入り、非同期で書き換わります</li>
+<li>pressSpace : 指定したエレメント上でスペースキーが押されたことをエミュレーションします</li>
+<li>tap : 指定したエレメントでタップ操作をエミュレーションします</li>
+</ul>
+
+<p>これらの操作は、ヘルパーなしに書くと冗長だったり、それだけで疲れてしまうものですが、ヘルパーを利用することでタグ本来の挙動を確認することに集中できます。</p>
+
+<p>また、paper-progress のようにCSSアニメーションを利用する Web Components のテストでは、asyncPlatformFlush を使っています。
+<a href="https://github.com/Polymer/web-component-tester/blob/ed21e16c1b91da0e9a64b32af7f726b3c8613a0d/browser/environment/helpers.ts#L162">このメソッドは web-component-tester で定義されています</a>が、現時点では DEPRECATED なので、 <code>flush</code> を利用することが推奨されています。</p>
+
+<p>flush は flushAsynchronousOperations と似ていますが、コールバックで呼び出されるか、同期実行になるかが異なります。
+<a href="https://www.polymer-project.org/2.0/docs/tools/tests#hybrid-elements-test-local-dom">公式ドキュメントでは flush を利用するように書いている</a>ので、flushを使って書いた方が良いでしょう。
+<code>dom-if</code> や <code>dom-repeat</code> などデータバインディングの結果としてDOMの構造が書き換わる場合、変更は非同期で実行されるため、必ず flush が必要です。
+私もプロダクション開発のテストコードでは、頻繁に flush を使うことがあります。</p>
+
+<h4>それ以外のテストのTIPS</h4>
+
+<p>今回はこのあたりで終了時間が少なくなったので、公式ドキュメントで案内されているテストの書き方について、いくつか解説しました。</p>
+
+<ul>
+<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-methods">エレメントのメソッドをスタブする方法</a></li>
+<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-elements">エレメント自体をスタブする方法</a></li>
+<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#ajax">Ajaxのテスト方法</a></li>
+</ul>
+
+<p>これらは実際にテストを書くと必要になるので、TIPSとしてリンクを残しておきます。</p>
+
+<h3>FAQ</h3>
+
+<blockquote>
+<p>サーバーサイド言語の単体テストは、メソッドを実行して戻り値などを検証するけど、Web Components はプロパティで値を指定して、描画後の状態を取得して検証するの？</p>
+</blockquote>
+
+<p>基本的には、そのような解釈でも問題ないです。
+ただし Web Components にはメソッドも定義できるので、こちらはサーバサイドのテストと同様に記述することも可能です（実際そういう需要があるかは別として）。</p>
+
+<blockquote>
+<p>仮想環境を使っていると面倒</p>
+</blockquote>
+
+<p>たしかに web-component-tester はブラウザを起動して Selenium(Web Driver)を使ってテストするので Vagrant や Virtualbox を使った開発環境ではやりずらいです。
+なるべくホストOSの環境で開発するのがオススメです。</p>
+
+<h3>次回は</h3>
+
+<p>3/26(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>いよいよ、実際に今回アイデア出ししたエレメントを作っていきたいと思います。
+今後もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
+新しいエレメントのアイデアも募集しています。</p>
+
+<h3>さいごに</h3>
+
+<p>写真忘れなかったw！</p>
+
+<p><img src="/images/blog/20180226_211052344.jpg" alt="" /></p>
+
+<p>ワークショップの解説をしている私と参加者、という雰囲気です。</p>
+
+<!-- References -->
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃11 を開催しました" data-url="http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html&t=Polymer.co-edo%20meetup%20%EF%BC%8311%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html">Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS</a></h2>
+  <p class="postdate"><a href="/2018/02/16.html" title="Permanent link">Friday, February 16, 2018 12:36:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://qiita.com/sizuhiko/items/6d3f2c356303b75cb86c">Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS</a>をいう記事をQiitaに投稿しました。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymerで作ったWeb Componentで string 型以外の属性を使う場合のTIPS" data-url="http://blog.open.tokyo.jp/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html&t=Polymer%E3%81%A7%E4%BD%9C%E3%81%A3%E3%81%9FWeb%20Component%E3%81%A7%20string%20%E5%9E%8B%E4%BB%A5%E5%A4%96%E3%81%AE%E5%B1%9E%E6%80%A7%E3%82%92%E4%BD%BF%E3%81%86%E5%A0%B4%E5%90%88%E3%81%AETIPS" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/02/16/how-to-use-not-string-attribute-made-by-polymer-from-html.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+
+  <p class="pagenav">
+      <a href="/page/18/">« Prev</a>
+        <a href="/page/15/">15</a>
+        <a href="/page/16/">16</a>
+        <a href="/page/17/">17</a>
+        <a href="/page/18/">18</a>
+        <b>19</b>
+        <a href="/page/20/">20</a>
+        <a href="/page/21/">21</a>
+        <a href="/page/22/">22</a>
+        <a href="/page/23/">23</a>
+      <a href="/page/20/">Next »</a>
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

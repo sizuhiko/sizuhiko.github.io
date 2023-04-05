@@ -1,0 +1,576 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - CakePHP2プラグインをTravisCIでビルドしているときに気をつけること</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+            <h2>CakePHP2プラグインをTravisCIでビルドしているときに気をつけること</h2>
+            <p class="postdate"><a href="/2018/10/23.html" title="Permanent link">Tuesday, October 23, 2018 10:58:00 AM</a></p>
+            <p class="tags">
+                <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                <a href="/tags/cakephp2.html" rel="tag">CakePHP2</a>
+                <a href="/tags/travisci.html" rel="tag">TravisCI</a>
+                <a href="/tags/ci.html" rel="tag">CI</a>
+                <a href="/tags/fabricate.html" rel="tag">Fabricate</a>
+            </p>
+
+          <p>先日 <a href="https://twitter.com/tenkoma">@tenkoma</a> さんが、<a href="https://github.com/sizuhiko/Fabricate">Fabricate</a> に <a href="https://github.com/sizuhiko/Fabricate/pull/30">PR</a> をくれました。
+しかももう枯れてる <a href="https://github.com/sizuhiko/Fabricate/tree/cakephp2">CakePHP2版</a> に。ありがたやー、と思っていましたら&hellip;</p>
+
+<p><a href="https://travis-ci.org/sizuhiko/Fabricate/builds/443036544">CIのビルドが失敗</a>しています。</p>
+
+<p>おや？<a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/246923803">直前までは通過</a>していて、<a href="https://github.com/sizuhiko/Fabricate/pull/30">READMEのtypoが修正された</a>だけなんですが&hellip;</p>
+
+<p>（ただ直前は1年も前なのだが&hellip;）</p>
+
+<h3>ためしにRebuildしてみる</h3>
+
+<p>そういう小手先の問題ではないようだ&hellip;.</p>
+
+<h3>TravisCIに書いてあるスクリプトの手順をローカルで実行してみる</h3>
+
+<p>うまく動く&hellip;</p>
+
+<h3>ビルド失敗の問題とは</h3>
+
+<p><a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/444524331">失敗ビルドの一例</a>でわかるとおり、PHPUnitのバージョンが期待値ではありません。</p>
+
+<p>CakaPHP2ではPHPUnit3.7系しか使えません。
+<a href="https://github.com/cakephp/cakephp/blob/2.x/lib/Cake/TestSuite/CakeTestSuiteDispatcher.php#L135">CakeTestSuiteDispatcherでPHPUnitのロード</a>を試みていて、もしロードできないと<a href="https://github.com/cakephp/cakephp/blob/2.x/lib/Cake/Console/Command/TestShell.php#L179">TestShellでエラー</a>になります。</p>
+
+<p>CakePHP2のプラグインのテストを簡単に実行できるようにするため<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>を使っています。
+このTravis用ツールは、PHPUnit3.7をインストールして、 <code>Vendor</code> の下にリンクしてくれるので、うまくPHPUnitは見つかるはずなのですが。</p>
+
+<p>想定される原因としては、以下のような感じです。</p>
+
+<ul>
+<li>PHPUnitが見つからない</li>
+<li>新しいPHPUnitが見つかった</li>
+</ul>
+
+<h3>CakePHPの日本語Slackで相談してみる</h3>
+
+<p>https://cakesf.slack.com/archives/C1FT02VQA/p1539927224000100</p>
+
+<blockquote>
+<p>CakePHP2系のプラグインをTravis CIでテストするのに
+https://github.com/FriendsOfCake/travis
+を使っているのですが、PHPUnitへの参照がうまくできなくなっていて、解決した人っていたりしますか？
+個人的に修正できそうなんて、試してみようかと思ったのですが、すでに対応済みの人がいたらなーと思い、聞いてみたいです</p>
+</blockquote>
+
+<p>他のCakePHP2プラグインはビルド通っているのか？</p>
+
+<ul>
+<li>https://github.com/lampager/lampager-cakephp2 は5ヶ月ぐらい前に<a href="https://travis-ci.org/lampager/lampager-cakephp2/builds/387421969">通過している</a>。でもPHPUnitのバージョンが新しい</li>
+<li>https://github.com/cakephp/debug_kit/tree/2.2 はPHPUnit3.7使っているけど、 <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> を使ってない。ビルドは<a href="https://travis-ci.org/cakephp/debug_kit/builds/429846172">最近通過</a>している</li>
+<li>https://github.com/tsmsogn/Pas/ は <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> を使っていて、Slackで相談したらビルドまでしていただけた。ありがたや。<a href="https://travis-ci.org/tsmsogn/Pas/builds/249863706">通過</a>している。</li>
+</ul>
+
+<h3>とにかくいろいろ試す</h3>
+
+<p>試すのに、別のブランチを切れば良かったのですが、まぁ簡単になおるだろうと <code>Fabricate/cakephp2</code> ブランチで作業したのは、ちょっと後悔しています&hellip;.</p>
+
+<ul>
+<li>◎ <a href="https://github.com/FriendsOfCake/travis/blob/master/before_script.sh">FriendsOfCake/travisのbefore_script.sh</a> を呼び出す方法が、 <code>travis_wait</code> 付きに変わっていたので<a href="https://github.com/sizuhiko/Fabricate/commit/046548930effc61affab8acd0b64b974d52005d8">追従した</a>。ビルドが不安定なことがあったが安定した</li>
+<li>× <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> をローカルに fork して、ログを仕込んだりしてビルドを試みた（何も意味はなかった）</li>
+<li>× <a href="https://github.com/FriendsOfCake/travis/blob/master/before_script.sh">FriendsOfCake/travisのbefore_script.sh</a> で <code>composer global install</code> しているPHPUnitを削除して <code>composer require</code> で入れてみた（変化なし）</li>
+<li>× <code>include_path</code> の先頭にPHPUnitへのパスを設定してみた（変化なし）</li>
+<li>△ Slackで <code>CAKE_REF</code> 使うと良いかも？というアドバイスをいただいたので、入れてみた。PHPUnitへの参照としては変化がなかったけど、有用そうなのでそのまま採用した。</li>
+<li>× 既存で <code>composer.json</code> があるのが、<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>を使っている他のプラグインと違ったので、 <code>.travis.yml</code> の <code>before_script</code> で消してみた（変化なし）</li>
+</ul>
+
+<p>で、TravisCIの画面（のビルド結果コンソールではない部分）を見比べていたら、テストが通過している画面にはワーニングが表示されていて、自分のビルドには出ていないことが判明。
+さらに<a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/246923803">過去に通過していたビルド</a>にもワーニングが表示されていることを確認した。</p>
+
+<h3>何のワーニング？</h3>
+
+<blockquote>
+<p>This job ran on our Precise environment, which is in the process of being decommissioned. Please read about the status of the rollout on the blog, and take note that you can explicitly stay on Precise by specifying dist: precise in your .travis.yml.</p>
+</blockquote>
+
+<p>意訳すると「このビルドは、Precise環境で実行されたけど、廃止予定です。もし続けて使いたければ .travis.yml に <code>dist：precise</code> と書いておけばOK。続きはBlogで」みたいなことです。
+<a href="https://blog.travis-ci.com/2017-08-31-trusty-as-default-status">the blog</a>も見ておいてください。</p>
+
+<h3>precise 指定でビルドしてみる</h3>
+
+<p><code>.travis.yml</code> に <code>dist：precise</code> を追加してみると&hellip;.</p>
+
+<p>ビルドが通過しました！！</p>
+
+<p>ついでに古い composer.lock と composer.json も更新/削除しておきました。</p>
+
+<h3>詳しく調べた</h3>
+
+<p>現在のTravisでビルドするLinuxイメージは <code>trusty</code> なのですが、そこでPHP5.4などを利用しようとすると以下のようなメッセージがビルドコンソール中に表示されます。</p>
+
+<blockquote>
+<p>5.4 is not pre-installed; installing
+Downloading archive: https://s3.amazonaws.com/travis-php-archives/binaries/ubuntu/14.04/x86<em>64/php-5.4.tar.bz2
+9.31s$ curl -s -o archive.tar.bz2 $archive</em>url &amp;&amp; tar xjf archive.tar.bz2 &ndash;directory /</p>
+</blockquote>
+
+<p>ということで、PHPのイメージファイルをダウンロード＆解凍してみました。
+すると、PHPUnitが同梱されています。
+そのバージョンは <code>PHPUnit 4.8.35</code> でした。
+そこかー、それ参照しちゃいましたか&hellip;</p>
+
+<h3>まとめ</h3>
+
+<p>CakePHP2プラグインを作ったことがあって、最近ビルドしていない方は漏れなく同様の事象になると思います。
+これは<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>使っている、使っていないに関係なくです。</p>
+
+<p>あなたの <code>.travis.yml</code> に <code>dist：precise</code> が設定されていなければ、今のうちに追加しておきましょう。</p>
+
+<p>ではステキなCakePHPライフを！</p>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2プラグインをTravisCIでビルドしているときに気をつけること" data-url="http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html&t=CakePHP2%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92TravisCI%E3%81%A7%E3%83%93%E3%83%AB%E3%83%89%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AB%E6%B0%97%E3%82%92%E3%81%A4%E3%81%91%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

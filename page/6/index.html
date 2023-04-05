@@ -1,0 +1,824 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2020/01/03/2020-first.html">2020年の目標と昨年のふりかえり</a></h2>
+  <p class="postdate"><a href="/2020/01/03.html" title="Permanent link">Friday, January 03, 2020 04:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/blog.html" rel="tag">Blog</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>ふりかえり</h3>
+
+<p>昨年は、よりBlog発信、登壇に力を入れていました。
+成果としては、Blog記事が41投稿ということで、(2018年は31投稿なので) +10記事増やせました。</p>
+
+<p>これは登壇や中の人としてイベントに参加したことが大きかったのですが、それらをふりかえってみます。</p>
+
+<h4>イベント登壇と運営</h4>
+
+<p>2019年は、2018年以上にずっとイベントに追われていました。
+<a href="http://blog.open.tokyo.jp/2018/12/31/final-2018.html">2018年のふりかえりはこちら</a>を参照ください。</p>
+
+<ul>
+<li>主催: ESM社内勉強会(IoT Study) 22回 （基本的に第一/第三水曜日）</li>
+<li>主催: <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> meetup 7回 ( ＃21 から ＃28 まで、月一 )</li>
+<li>参加: <a href="https://nextwebconf.connpass.com/event/103056/">01/13（土） 次世代Webカンファレンス</a></li>
+<li>発表: <a href="https://phpcon-sendai.net/2019/">01/26（土） PHPカンファレンス仙台2019</a></li>
+<li>運営: <a href="https://webiotmakers.connpass.com/event/110708/">02/09 - 02/10 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】</a></li>
+<li>参加: <a href="https://cakephp.connpass.com/event/119458/">02/13（水） CakePHPの国際イベント、CakeFestの動画を見よう！第13回CakePHP MeetUp</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/87344">02/27（水） 第135回 PHP勉強会＠東京</a></li>
+<li>運営: <a href="https://webiotmakers.connpass.com/event/110708/">03/02 - 03/03 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/88400">03/27（水） 第136回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://phperkaigi.jp/2019/">03/31（日） PHPer Kaigi 2019</a></li>
+<li>発表: <a href="http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html">04/05（金） ESM LT #4</a></li>
+<li>運営: <a href="https://fod.connpass.com/event/121358/">04/24（水） 開発リーダのための「明日の開発カンファレンス 2019」</a></li>
+<li>発表: <a href="https://gdg-tokyo.connpass.com/event/128867/">05/19（月） I/O Extended 2019 Tokyo@GDG</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/91688">05/29（水） 第138回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/90894">06/01（土） 初夏のJavaScript祭 in メンバーズキャリア</a></li>
+<li>参加: <a href="http://blog.open.tokyo.jp/2019/06/16/karakuri.html">06/07 - 06/08 開発合宿</a></li>
+<li>出展: <a href="http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html">06/12 - 6/14 Interop 2019</a></li>
+<li>発表: <a href="https://phpcon.fukuoka.jp/2019/">06-29（土） PHPカンファレンス福岡2019</a></li>
+<li>参加: <a href="https://events.withgoogle.com/chrome-tech-talk-night-14/">07/26（金） Chrome Tech Talk Night #14</a></li>
+<li>出展: <a href="https://cloud.withgoogle.com/next/tokyo">07/31 - 08/01 Google Cloud Next Tokyo&#39;19</a></li>
+<li>出展: <a href="https://makezine.jp/event/mft2019/">08/03 - 08/04 Maker Faire Tokyo 2019</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/96166">08/28（水） 第141回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://phpcon.hokkaido.jp/">09/21（土） PHPカンファレンス北海道 2019</a></li>
+<li>発表: <a href="https://phpcon.okinawa.jp/">10/12（土） PHPカンファレンス沖縄 2019</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/98730">10/30（水） 第143回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://cakefest.org/">11/09 11/10 CakeFest 2019 Tokyo</a></li>
+<li>参加: <a href="https://gmo-research.connpass.com/event/132190/">11/11（月） GMOリサーチ テックカンファレンス 2019</a></li>
+<li>参加: <a href="https://chirimen-oh.connpass.com/event/155170/">11/16（土） CHIRIMENおさわり＆もくもく会 〜Raspberry Pi 4 ＆ Jetson対応記念〜</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/99978">11/30（土） 冬のJavaScript祭 in メンバーズキャリア</a></li>
+<li>発表: <a href="http://phpcon.php.gr.jp/2019/">12/01（日） PHP Conference 2019</a></li>
+<li>運営: <a href="https://asucon2019talknight.peatix.com/">12/06（金） 明日の開発カンファレンス アスカントークナイト</a></li>
+<li>発表: <a href="https://gdg-tokyo.connpass.com/event/137666/">12/14（日） GDG DevFest Tokyo 2019</a></li>
+</ul>
+
+<p>運営/主催/発表/出展などは、その準備だったりミーティングがあったりして、これよりも私のGoogleカレンダーは濃密にイベントスケジュールで埋まっています。
+トータルの数としては昨年とほぼ一緒なのですが、参加よりも運営/主催/発表/出展が多かったのも、多忙に感じた原因にはあったかと思います。</p>
+
+<p>なんといっても、全国PHPカンファレンスに発表枠で参加できたことは思い出です。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2019</a> <a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> デカ象ヤバい <a href="https://t.co/iKP5Jedh6O">pic.twitter.com/iKP5Jedh6O</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<h3>はじめのおわり</h3>
+
+<p>今年は</p>
+
+<ul>
+<li>WPSG</li>
+<li>CHIRIMEN</li>
+<li>OSS (Fabricateのアプデ頑張る)</li>
+</ul>
+
+<p>あたりが主戦場になると思います。
+もちろんカンファレンスなどにも、なるべく参加していきたいとは思っています（今年のようにフル参加は難しいかもしれませんが）。</p>
+
+<p>昨年同様に何をするにも健康第一なので、運動してお酒はほどほどに？みなさまと楽しい1年にできればと思います。
+どこかでお会いしましたら、よろしくお願いします！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="2020年の目標と昨年のふりかえり" data-url="http://blog.open.tokyo.jp/2020/01/03/2020-first.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/01/03/2020-first.html&t=2020%E5%B9%B4%E3%81%AE%E7%9B%AE%E6%A8%99%E3%81%A8%E6%98%A8%E5%B9%B4%E3%81%AE%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/01/03/2020-first.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/12/28/gdg-devfest-2019.html">GDG Devfest 2019 に WPSG として参加してきました</a></h2>
+  <p class="postdate"><a href="/2019/12/28.html" title="Permanent link">Saturday, December 28, 2019 03:41:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/gdg-tokyo.html" rel="tag">GDG tokyo</a>
+      <a href="/tags/wpsg.html" rel="tag">WPSG</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://gdg-tokyo.connpass.com/event/137666/">GDG DevFest Tokyo 2019</a>に<a href="https://medium.com/web-platform-study-group">Web Platfoem Study Group</a>として、Hands-on Teachersで参加してきました。</p>
+
+<p><img src="https://connpass-tokyo.s3.amazonaws.com/thumbs/32/09/32093d09e4d39c664f3aece5b398b08f.png" alt="" /></p>
+
+<p><code>Web Codelab</code> ということで、スプレッドシートに最近のCodelabのリストを列挙しました。
+これらは、すべて事前にちゃんとできるか確認したので、しばらくは大丈夫だと思います（ブラウザのアップデートなどでエラーになる場合もあります）。</p>
+
+<p><a href="https://docs.google.com/spreadsheets/d/18LyeSXJOQtx3elZ8U-GkukIBq01QkLQUgF6h5DS50ck/edit?usp=sharing">Web Codelab 最新リスト</a></p>
+
+<p>このリストの選択は、以下の方針となっています。</p>
+
+<ul>
+<li>GCPとかクレカ情報とか必要でないもの</li>
+<li>ほかのページで解説しないもの（Basics of Angularとか見出しページだけで、中は別ページのスライド形式だった…</li>
+<li>Chromeの翻訳機能で日本語がある程度理解可能なもの</li>
+</ul>
+
+<p>一部うまくいかない箇所もあるので、リストの備考を参考にしてください。</p>
+
+<p>ということで、このDevFestをもって、中の人のコミュニティ活動はすべて終了です。</p>
+
+<p>来年はWPSGで勉強会とかもやりたいなー</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GDG Devfest 2019 に WPSG として参加してきました" data-url="http://blog.open.tokyo.jp/2019/12/28/gdg-devfest-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/28/gdg-devfest-2019.html&t=GDG%20Devfest%202019%20%E3%81%AB%20WPSG%20%E3%81%A8%E3%81%97%E3%81%A6%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/28/gdg-devfest-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/12/08/asucon-night-2019.html">明日の開発カンファレンス アスカントークナイトを開催しました</a></h2>
+  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 09:03:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/asucon.html" rel="tag">asucon</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://asucon2019talknight.peatix.com/">明日の開発カンファレンス アスカントークナイト</a>の中の人として運営参加しました。</p>
+
+<p><img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/1373423/cover-LlQx4v2cmC9LXR1nkwb6LLMHkCkgxemi.png" alt="" /></p>
+
+<p>今回は「明日の開発カンファレンス年末スペシャル」ということで、以下の趣旨で開催となりました。</p>
+
+<blockquote>
+<p>開発にまつわる全ての話題について、腹を割って話し合える「明日の開発カンファレンス」
+今回は過去のカンファレンスに登壇いただいた皆様により熱く語っていただけるようトークライブ形式のイベント「アスカントークナイト」
+を12/6(金)に開催致します。</p>
+</blockquote>
+
+<p>私は、最初のトークセッションでモデレータを担当しました。</p>
+
+<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">一つ目のセッション始まってます！「開発現場の生の声　〜様々な障害を乗り越えて〜」 <a href="https://twitter.com/hashtag/asucon?src=hash&amp;ref_src=twsrc%5Etfw">#asucon</a> <a href="https://twitter.com/hashtag/%E3%82%A2%E3%82%B9%E3%82%AB%E3%83%B3?src=hash&amp;ref_src=twsrc%5Etfw">#アスカン</a> <a href="https://t.co/5MAHZCKpVb">pic.twitter.com/5MAHZCKpVb</a></p>&mdash; asuconjp (@asuconjp) <a href="https://twitter.com/asuconjp/status/1202894021535780869?ref_src=twsrc%5Etfw">December 6, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
+
+<p><code>開発現場の生の声 〜様々な障害を乗り越えて〜</code> とはまた重厚なテーマですが、基本的には3名の登壇者に、登壇してから現在までのアップデートを5分ずつ話してもらい、チャチャをちょっと入れながら進め、最後20分ぐらいをQ&amp;Aセッションにする、という流れでした。</p>
+
+<p>質問ないだろうなぁ？というのはこういうセッションでは <code>あるある</code> なので、ちゃんとお題も2つ用意しておきました。</p>
+
+<ul>
+<li>最近取り入れてみて良いと思ったプラクティス</li>
+<li>課題対私たち の構図を生み出すために、良いと思う施策やアイデア</li>
+</ul>
+
+<p><code>開発現場</code> ということで、なるべく <code>チーム</code> にフォーカスした話をしたかったのですが、
+<code>人</code> の話が多くなってしまったのはすり合わせ不足なのか、それが現場のリアルな悩みなのか？
+ということがありましたが、後で聞くと盛り上がっていて良かったという感想をいただきましたので、
+良かったと思います。</p>
+
+<p>当日の雰囲気は <a href="https://togetter.com/li/1439655">アスカンナイトトーク2019</a> にTogetterまとめがありますので、みていただければと思います。</p>
+
+<p>SNS書けない話もたくさんあったので、次回あるときはみなさまぜひご来場ください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="明日の開発カンファレンス アスカントークナイトを開催しました" data-url="http://blog.open.tokyo.jp/2019/12/08/asucon-night-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/asucon-night-2019.html&t=%E6%98%8E%E6%97%A5%E3%81%AE%E9%96%8B%E7%99%BA%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9%20%E3%82%A2%E3%82%B9%E3%82%AB%E3%83%B3%E3%83%88%E3%83%BC%E3%82%AF%E3%83%8A%E3%82%A4%E3%83%88%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/asucon-night-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/12/08/phpcon2019.html">PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました</a></h2>
+  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:33:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>12/1に開催された<a href="https://phpcon.php.gr.jp/2019/">PHPカンファレンス</a>に参加＆登壇してきました。</p>
+
+<p><img src="/images/blog/phpcon2019-visual-02.png" alt="" /></p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> 到着 (@ 大田区産業プラザPiO in 大田区, 東京都) <a href="https://t.co/ycLLHX1Pwk">https://t.co/ycLLHX1Pwk</a> <a href="https://t.co/ttXiGBi9BK">pic.twitter.com/ttXiGBi9BK</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200936870328320002?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
+
+<p>早速ですが、当日のスライドです。</p>
+
+<script async class="speakerdeck-embed" data-id="53981d585eb44ebc928e5ccf1450c926" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>実はこの発表そのものは、<a href="/2019/09/22/phpcondo-2019.html">PHPカンファレンス北海道 2019で「PHPを学ぶということ」について発表してきました</a>で登壇したときとまったく同じ内容です。
+スライド内容の話などは、こちらの記事を辿ってください。</p>
+
+<p>変更箇所としては、今回PHPUnit生みの親である<a href="https://twitter.com/s_bergmann">Sebastian Bergmann</a>のゲストセッションがあったので、
+これは海外から来ていて日本在住のプログラマーとか、結構来るのでは？と思い英語を併記しました。
+さらに発表の最初で「英語で字幕読んでね」みたいな挨拶も入れたのですが、反応薄かったので皆さん日本語でokだったようですw</p>
+
+<p>北海道では30分だったセッションが、今回は25分です。
+この5分をどうしても巻かないといけなくて、全体的に説明が雑になったりして、やっぱり30分以下は無理だな&hellip;と思いました。
+すみません。
+でも伝えたい重要なところは、ちゃんと時間をかけて話ました。</p>
+
+<h2>2019年最後のPHPカンファレンス</h2>
+
+<p>ということで、例のスタンプラリーも全制覇はできませんでした(LaraConは気づいたらチケット売り切れてた)が、7つ。
+よく参加しました。特典として、大きい像がスタンプ1つあたり1,000円引きだったので、1万円の像を3,000円でお買い上げしてきました。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2019</a> <a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> デカ象ヤバい <a href="https://t.co/iKP5Jedh6O">pic.twitter.com/iKP5Jedh6O</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
+
+<p>小さい像はスピーカー特典でした。</p>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<h2>さいごに</h2>
+
+<p>20回目の節目となるPHPカンファレンスで登壇できたのは、とても良かったです。
+心残りなのはSebastianのセッションが自分の1つ前だったので、彼の登壇後話せなかったのと、
+懇親会にはいるだろ？と思ったら、早めに退席されてしまっていて、まったく話せなかったことです。
+まぁでもまだどこかで会えるよね？という期待を抱いて生きていきます。
+彼のセッション聞いて、OSS開発のモチベも上がったので、来年はOSS開発いろいろ頑張るぞー</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました" data-url="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92019%E3%81%A7%E3%80%81%E3%80%8CPHP%E3%82%92%E5%AD%A6%E3%81%B6%E3%81%A8%E3%81%84%E3%81%86%E3%81%93%E3%81%A8%E3%80%8D%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/12/08/jsfes2019-winter.html">冬のJavaScript祭りに参加して、E2Eテストについて登壇しました</a></h2>
+  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:01:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/e2e%E3%83%86%E3%82%B9%E3%83%88.html" rel="tag">E2Eテスト</a>
+      <a href="/tags/puppeteer.html" rel="tag">puppeteer</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://javascript-fes.doorkeeper.jp/events/99978">11/30に開催されたJavaScript祭りに参加しました</a></p>
+
+<p><img src="https://dzpp79ucibp5a.cloudfront.net/events_banners/99978_normal_1572511571_jsfes_2019_winter.png" alt="" /></p>
+
+<p>早速ですが、私のスライドは以下のとおりです。</p>
+
+<script async class="speakerdeck-embed" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<h2>なぜこのテーマを選んだか？</h2>
+
+<p>最近E2Eテストの課題について、いろいろなところで話題になっていたのと、
+CakeFestでJoseがテストに関連する講演をしていたのですが、
+実はE2Eテストの理解って意外とされていないのでは？と思い、このテーマを選びました。</p>
+
+<p>内容自体は、各種引用から成り立っていて、現時点では最適な解決策は<a href="https://pptr.dev/">Puppeteer</a>を使うことなのでは？という話の流れです。</p>
+
+<h2>講演の概要</h2>
+
+<script async class="speakerdeck-embed" data-slide="4" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>まずはTesting Pyramidの話ですが、これはGoogleが提唱した割合の話としてよく出没する3段の簡易な画像です。
+Joseの発表でも、この簡易版の画像を引用していました。</p>
+
+<p><a href="https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html">Just Say No to More End-to-End Tests</a>というGoogleのTesting Blogの記事なのですが、
+これはテストの比率を説明する資料としてはわかりやすいものです。しかし具体性に欠けています。
+そこで出典の記事を確認する必要があります。</p>
+
+<p>記事の中で</p>
+
+<blockquote>
+<p>Here is a simplified version of the testing pyramid from the opening keynote of the 2014 Google Test Automation Conference:</p>
+</blockquote>
+
+<p>と書かれているように、<a href="https://docs.google.com/presentation/d/15gNk21rjer3xo-b1ZqyQVGebOp_aPvHU3YH7YnOMxtE/edit#slide=id.g437663ce1_53_98">Google Test Automationカンファレンスのオープニングキーノート</a>を確認してみましょう。</p>
+
+<p>そうすると、Testing Pyramidの話をしています。
+よく見ると、これ自体が引用であることがわかります。さらに出典を辿ってみます。</p>
+
+<p><a href="https://watirmelon.blog/tag/testing-pyramid/">WatirMelon - A Software Testing Blog by Alister Scott</a>というブログがあります。
+先ほどのキーノートのスライドの説明で、このブログの著者Alisterが観客の中にいることが示唆されています。</p>
+
+<p><img src="https://watirmelon.files.wordpress.com/2014/05/automated-testing-pyramid.png" alt="" /></p>
+
+<p>最初のTesting Pyramidの例では、ざっくりとしていた各層は、実はもう少しブレイクダウンされています。</p>
+
+<p>これらは全て2014年の内容ですが、今でもこの理解がされていないのでは？という気がします。
+E2Eはマニュアル（手動）テストも含んでいるのです。
+自動化にばかりフォーカスされている気がしますね。</p>
+
+<p>で、Testing Pyramidについて、新しい記事がないかな？というときに、ありましたよ。
+我らが martinFowler.com の<a href="https://martinfowler.com/articles/practical-test-pyramid.html">The Practical Test Pyramid</a>です。
+こちらは2018年の技術背景を元に書かれています。
+とても良い内容なので、これを読むことでテストに対する理解がぐっと深まります。</p>
+
+<p>で、現時点で使うツールは<a href="https://pptr.dev/">Puppeteer</a>で良いのでは？という、私の提案で終わります。
+Puppeteerがなぜ良いかというのはスライドに書いてある内容で理解していただけると思います。</p>
+
+<p>また、もしUIテスト(単体や結合)で使いたい場合の機能についても、簡単にふれています。</p>
+
+<h2>さいごに</h2>
+
+<p>同日に<a href="https://jsconf.jp/2019/">JSConf JP</a>が開催されていて、JavaScriptのイベント同士で被るのかー、と思っていたら結構参加者も多く、
+他にもとても楽しいセッションが多く、盛り上がりました。</p>
+
+<p>次回もぜひ参加したいと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="冬のJavaScript祭りに参加して、E2Eテストについて登壇しました" data-url="http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html&t=%E5%86%AC%E3%81%AEJavaScript%E7%A5%AD%E3%82%8A%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%80%81E2E%E3%83%86%E3%82%B9%E3%83%88%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BB%E5%A3%87%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+
+  <p class="pagenav">
+      <a href="/page/5/">« Prev</a>
+        <a href="/page/2/">2</a>
+        <a href="/page/3/">3</a>
+        <a href="/page/4/">4</a>
+        <a href="/page/5/">5</a>
+        <b>6</b>
+        <a href="/page/7/">7</a>
+        <a href="/page/8/">8</a>
+        <a href="/page/9/">9</a>
+        <a href="/page/10/">10</a>
+      <a href="/page/7/">Next »</a>
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

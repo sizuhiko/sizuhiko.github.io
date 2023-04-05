@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Blog Name</title>
+  <subtitle>Blog subtitle</subtitle>
+  <id>http://blog.url.com/</id>
+  <link href="http://blog.url.com/"/>
+  <link href="http://blog.url.com/feed.xml" rel="self"/>
+  <updated>2023-04-05T17:08:00+09:00</updated>
+  <author>
+    <name>Blog Author</name>
+  </author>
+  <entry>
+    <title>Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"/>
+    <id>http://blog.url.com/2023/04/05/aws-sdk-v3-changed-enum-to-const.html</id>
+    <published>2023-04-05T17:08:00+09:00</published>
+    <updated>2023-04-05T17:43:52+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;「Lambda アプリが突然動かなくなる」なんて、どうせバグなんでしょーというのが当然のリアクションですが、これは本当にバグなのか&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;本当にあった怖い話をします。&lt;/p&gt;
+
+&lt;h3&gt;ある日、Lambda アプリが突然動かなくなる&lt;/h3&gt;
+
+&lt;p&gt;Node.js v18 のライタイムで動く Lambda にデプロイされているアプリで、ある日突然エラーが出るようになりました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;original: TypeError: Cannot read properties of undefined (reading ‘RUNNING’)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;この部分ですが TypeScript のコードでは以下のようになっていました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;DescribeExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;ExecutionDoesNotExist&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;paginateListExecutions&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;// 省略&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;latest&lt;/span&gt;&lt;span class="p"&gt;?.&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RUNNING&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ExecutionStatus&lt;/code&gt; は StepFunctions のクライアントで export されている値です。
+StepFuntions のジョブが実行中かどうか判定している箇所で。少し前まで普通に動いていたのに&amp;hellip;.&lt;/p&gt;
+
+&lt;h3&gt;Lambda アプリの構成&lt;/h3&gt;
+
+&lt;p&gt;AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
+Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。&lt;/p&gt;
+
+&lt;h3&gt;node コンソールで確認してみる&lt;/h3&gt;
+
+&lt;p&gt;手元では devDependencies に &lt;code&gt;@aws-sdk/client-sfn&lt;/code&gt; が入っているので、 node コンソールに入って require を実行してみました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;&amp;gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
+undefined
+&amp;gt; ExecutionStatus
+{
+  ABORTED: 'ABORTED',
+  FAILED: 'FAILED',
+  RUNNING: 'RUNNING',
+  SUCCEEDED: 'SUCCEEDED',
+  TIMED_OUT: 'TIMED_OUT'
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;ふむ、問題なさそうだが？&lt;/p&gt;
+
+&lt;p&gt;最新版の aws-sdk で変わったのだろうか？
+一時的に最新版にバージョンアップをしてみて、確認してみます&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;&amp;gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
+undefined
+&amp;gt; ExecutionStatus
+undefined
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;えええええええーーー&lt;/p&gt;
+
+&lt;h3&gt;aws-sdk の該当箇所の修正履歴をチェックする&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/pull/4587"&gt;hore(codegen): export enums as const&lt;/a&gt;&lt;/p&gt;
+
+&lt;h4&gt;元のコード&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
+ * @public
+ */&lt;/span&gt;
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kr"&gt;enum&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;ABORTED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;FAILED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;RUNNING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;SUCCEEDED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="nx"&gt;TIMED_OUT&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;変更後のコード&lt;/h4&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
+ * @public
+ * @enum
+ */&lt;/span&gt;
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;ABORTED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;FAILED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;RUNNING&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;おいおい、これって &lt;code&gt;@public&lt;/code&gt; なのに後方互換性なくなっとるだろ&amp;hellip;.&lt;/p&gt;
+
+&lt;h3&gt;なぜ undefined になるのか&lt;/h3&gt;
+
+&lt;p&gt;enum はコンパイルされて JavaScript になると以下のようなコードになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;})(&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{}));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;でも &lt;code&gt;export const as const&lt;/code&gt; になると、JavaScript にはコンパイルされることなく、変数の利用箇所に埋め込みの形になります。&lt;/p&gt;
+
+&lt;p&gt;最初にも書きましたが、 aws-sdk v2 では普通だった&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
+Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;こういう運用はすでにオワコンなんでしょうか？
+いやでも、v3 になってもランタイムに aws-sdk は入っています。&lt;/p&gt;
+
+&lt;p&gt;少なくとも &lt;code&gt;ExecutionStatus&lt;/code&gt; が内部変数で export されてない private な値だったら良いのですが、これはさすがにマズイんじゃないですかね？awsさん。&lt;/p&gt;
+
+&lt;h3&gt;この問題が発生するケース&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;AWS Lambda でランタイムの aws-sdk を使っていて、TypeScript から enum の値を参照していた場合（同一の変更ですべての enum が const に書き変わっています）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;amplify とか Lambda でなくコンパイルされているケースでは問題は起きませんが、いやこういうのサクッと変更しちゃダメだと思うんですが&amp;hellip;
+しかもランタイム側に入っているので、動作している Lambda アプリケーションが突然動作しなくなります。&lt;/p&gt;
+
+&lt;h3&gt;aws-sdk v3 を安心して使うためには（追記）&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;peerDependencies&lt;/code&gt; が指定されていたら、バージョンを揃えるために自分でインストールする&lt;/li&gt;
+&lt;li&gt;関数/クラス以外、たとえば enum の値などは基本的に利用しない&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;大事なこと3つ目を追加しました。&lt;/p&gt;
+
+&lt;p&gt;aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>aws-sdk v3 でコンパイルエラーになる - その２</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/04/aws-sdk-v3-compile-error-2.html"/>
+    <id>http://blog.url.com/2023/04/04/aws-sdk-v3-compile-error-2.html</id>
+    <published>2023-04-04T16:20:00+09:00</published>
+    <updated>2023-04-05T16:59:57+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;先日の &lt;a href="/2023/04/03/aws-sdk-v3-ts2345.html"&gt;aws-sdk v3 で TS2345 が出てコンパイルエラーになる&lt;/a&gt; という記事でも書いたとおり、 &lt;code&gt;@aws-sdk/client-xxxxx&lt;/code&gt; を追加するときは&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;新しく &lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;のがオススメなのは変わりがないのですが、これだけだとうまく対応できないことがあったので、別記事として書いておきます。&lt;/p&gt;
+
+&lt;h3&gt;ある日の変更前依存パッケージ&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;devDependencies&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-dynamodb&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.264.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-s3&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.264.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-s3-control&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.264.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-secrets-manager&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.264.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/lib-dynamodb&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.264.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;DynamoDB, S3, Secret Manager を利用するようになっていました。&lt;/p&gt;
+
+&lt;h3&gt;パッケージを追加したらエラーになる&lt;/h3&gt;
+
+&lt;p&gt;で、そこに &lt;code&gt;@aws-sdk/lib-storage&lt;/code&gt; というパッケージを追加しようとしたところ、また先日と同様に &lt;code&gt;TS2345&lt;/code&gt; でコンパイルエラーになります。
+ちゃんとバージョンをすべて最新にしてみたのですが、ダメでした。&lt;/p&gt;
+
+&lt;h3&gt;ふたたび issue を探る&lt;/h3&gt;
+
+&lt;p&gt;そうすると、issue ではなく discussions に変更されてしまったものを発見しました。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/discussions/4261"&gt;Peer dependencies not pinned for lib-dynamodb&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3&gt;なぜこんなことになるのか&lt;/h3&gt;
+
+&lt;p&gt;やはりパッケージ管理が崩壊しているとしか思えないのですが、何でこうなっているのかというのを解説していきます。&lt;/p&gt;
+
+&lt;p&gt;以下は、今回追加しようとした &lt;code&gt;@aws-sdk/lib-storage&lt;/code&gt; の &lt;code&gt;package.json&lt;/code&gt; の一部です。
+追加時点の &lt;code&gt;lib-storage&lt;/code&gt; のバージョンが &lt;code&gt;3.272.0&lt;/code&gt; だったので、上記の変更前依存パッケージでインストール済みだったものも &lt;code&gt;3.272.0&lt;/code&gt; に更新済みです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;dependencies&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/middleware-endpoint&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/smithy-client&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;buffer&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;5.6.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;events&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.3.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;stream-browserify&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.0.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;tslib&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^2.3.1&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;peerDependencies&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/abort-controller&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.0.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-s3&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.0.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;peerDependencies&lt;/code&gt; の依存がありますね。&lt;/p&gt;
+
+&lt;p&gt;で、すでにインストール済みだった &lt;code&gt;@aws-sdk/client-dymanodb&lt;/code&gt; の &lt;code&gt;package.json&lt;/code&gt; の一部も見てみましょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;dependencies&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-crypto/sha256-browser&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.0.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="c1"&gt;// 省略&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/smithy-client&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/types&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="c1"&gt;// 省略&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;uuid&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^8.3.2&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;依存が多いのでちょっと省略しましたが、注目したいところだけ書きました。
+こちらには &lt;code&gt;peerDependencies&lt;/code&gt; の依存はありません。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@aws-sdk/client-s3&lt;/code&gt; は上記のとおりインストール済みだったので、 &lt;code&gt;@aws-sdk/abort-controller&lt;/code&gt; を見てみましょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;  "dependencies": {
+    "@aws-sdk/types": "3.289.0",
+    "tslib": "^2.3.1"
+  },
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;おや？ &lt;code&gt;@aws-sdk/types&lt;/code&gt; のバージョンが違うじゃん&amp;hellip;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&amp;ldquo;@aws-sdk/abort-controller&amp;rdquo;: &amp;ldquo;^3.0.0&amp;rdquo;,&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;なぜ、ここは &lt;code&gt;^3.0.0&lt;/code&gt; なのだ？？
+というのが、最初のディスカッションでもふれられている訳ですが、本当にパッケージ管理が (ry&lt;/p&gt;
+
+&lt;h3&gt;対応案&lt;/h3&gt;
+
+&lt;p&gt;使っている aws-sdk のパッケージで &lt;code&gt;peerDependencies&lt;/code&gt; になっているのを調べて、すべてバージョン指定でインストールします。&lt;/p&gt;
+
+&lt;p&gt;ということで変更後の依存は以下のとおりにします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/abort-controller&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-dynamodb&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-s3&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-s3-control&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-secrets-manager&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/lib-dynamodb&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/lib-storage&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/smithy-client&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/types&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;3.272.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;abort-controller, smithy-client, types が利用しているパッケージの中で &lt;code&gt;peerDependencies&lt;/code&gt; にあったので、すべてバージョンを揃えてコンパイルエラーは解消されました。&lt;/p&gt;
+
+&lt;h3&gt;aws-sdk v3 を安心して使うためには&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;peerDependencies&lt;/code&gt; が指定されていたら、バージョンを揃えるために自分でインストールする&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;この2つとても大事です。&lt;/p&gt;
+
+&lt;p&gt;こんなの discussions に変更した上で放置していて良いのか？&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;とても悲しい状況ですが、同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>aws-sdk v3 で TS2345 が出てコンパイルエラーになる</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/03/aws-sdk-v3-ts2345.html"/>
+    <id>http://blog.url.com/2023/04/03/aws-sdk-v3-ts2345.html</id>
+    <published>2023-04-03T15:47:00+09:00</published>
+    <updated>2023-04-05T16:19:13+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;h3&gt;dependabot で @aws-sdk/client のバージョンアップがコンパイルエラーになる&lt;/h3&gt;
+
+&lt;p&gt;少し久しぶりの記事になってしまいましたが、この間も Node.js v18 / aws-sdk v3 への移行を行なっています。
+一部のリポジトリではコードの移行は終わって、 dependabot でライブラリの最新追従を行なっているのですが、以下のようなコンパイルエラーが出るようになりました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;error TS2345: Argument of type 'typeof LambdaClient' is not assignable to parameter of type 'InstanceOrClassType&amp;lt;Client&amp;lt;ServiceInputTypes, MetadataBearer, any&amp;gt;&amp;gt;'.
+  Type 'typeof LambdaClient' is not assignable to type 'ClassType&amp;lt;Client&amp;lt;ServiceInputTypes, MetadataBearer, any&amp;gt;&amp;gt;'.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;aws-sdk v3 では複数の aws サービスを使っていると複数のパッケージに依存するようになるのですが、複数のバージョンアップが dependabot によって PR されるうち、一部のアプデだけ上記のようなエラーになります。&lt;/p&gt;
+
+&lt;h3&gt;issue を探してみる&lt;/h3&gt;
+
+&lt;p&gt;aws-sdk の issue を調べていくと、それっぽいものがありました。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/issues/3390"&gt;Typescript compilation problems since 3.52.0 in lib-dynamodb&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;この issue 自体はクローズされていないのですが、コメントのスレッドの中に有用な情報がありました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@aws-sdk/types&lt;/code&gt; が依存に入っていて、異なるバージョンの client-xxx があるとエラーになる（なんで package-lock.json を消してから npm i しなおすとうまくいくよ -&amp;gt; そんなんやるか！）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; の各クライアントはすべて最新バージョンに追従してください&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;のようなものです（要約してあります）。&lt;/p&gt;
+
+&lt;p&gt;aws-sdk@v3 はサービスごとにパッケージを分割することで v2 と比べて良い、というのがウリなはずなんですが、これではパッケージ管理崩壊しているのでは？と思わなくもないですが、まぁ各クライアントのバージョンを合わせれば良いだけなので、従うことにしました。
+ちなみにこの時点では複数の &lt;code&gt;@aws-sdk/client-xxx&lt;/code&gt; を全て最新版に追従することで解消されました。&lt;/p&gt;
+
+&lt;h3&gt;この問題が発生する状況&lt;/h3&gt;
+
+&lt;p&gt;この問題が発生する状況は以下のとおりです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;すでに1つ以上の &lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; を入れていて、後日機能追加によって別のクライアントをインストールするとき&lt;/li&gt;
+&lt;li&gt;dependabot でパッケージごとにバージョンアップの PR が発動する&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;おすすめの対応&lt;/h3&gt;
+
+&lt;p&gt;なので、現時点でのオススメの対応は以下のとおりです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;新しく &lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する&lt;/li&gt;
+&lt;li&gt;dependabot による更新を &lt;code&gt;@aws-sdk/*&lt;/code&gt; については無効にする&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Github Actions の dependabot でアプデを無効にするには、 dependabot.yml を以下のように記述すれば良いです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
+&lt;span class="na"&gt;updates&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;package-ecosystem&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;npm'&lt;/span&gt;
+    &lt;span class="na"&gt;directory&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;/'&lt;/span&gt;
+    &lt;span class="na"&gt;ignore&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;dependency-name&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;@aws-sdk/*'&lt;/span&gt;
+        &lt;span class="c1"&gt;# aws-sdk に対するすべての更新を無視&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;私たちは AWS Lambda の Node.js v18 ランタイムを使っているので、aws-sdk はランタイムにグローバルインストールされているから、あえて最新版に追従しなくても問題ないというのが主な理由です。
+新しいクライアント追加のときに最新に追従すれば十分という判断です。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
+同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</title>
+    <link rel="alternate" href="http://blog.url.com/2023/02/02/how-mock-aws-sdk-client-mock.html"/>
+    <id>http://blog.url.com/2023/02/02/how-mock-aws-sdk-client-mock.html</id>
+    <published>2023-02-02T17:05:00+09:00</published>
+    <updated>2023-04-05T14:34:43+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;前回の記事&lt;a href="https://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）&lt;/a&gt;で&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;aws-sdk-client-mock&lt;/code&gt; 便利ですね。
+しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
+sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 &lt;code&gt;mockClient&lt;/code&gt; の結果で得られたモックを使っているわけでもありません。
+そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;書いたとおり、どうやってモックしているのか、紹介していきます。&lt;/p&gt;
+
+&lt;h2&gt;前回のおさらい&lt;/h2&gt;
+
+&lt;p&gt;aws-sdk v3 でのテストコードは以下のようになることを紹介しました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock-jest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reset&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+
+&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;resolves&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toHaveReceivedNthCommanddWith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;モックするときは &lt;code&gt;mockClient(SFNClient)&lt;/code&gt; とクラスを渡しているだけでしたね。
+生成した &lt;code&gt;SFNClientMock&lt;/code&gt; はテストクラスでしか利用していません。&lt;/p&gt;
+
+&lt;h2&gt;aws-sdk-client-mock の実装を見てみる&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/m-radzikowski/aws-sdk-client-mock/blob/main/packages/aws-sdk-client-mock/src/mockClient.ts"&gt;mockClientのコード&lt;/a&gt;を見てみましょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;object&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;MetadataBearer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;InstanceOrClassType&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="nx"&gt;AwsClientStub&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;isClientInstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;prototype&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;ふむふむ &lt;code&gt;mockClient&lt;/code&gt; の引数がインスタンスかどうか調べて、クラスだったら prototype が利用されるわけですか。
+さらに見てみると&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;sendStub&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;stub&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;send&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;SinonStub&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;Command&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nb"&gt;Promise&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;なるほど &lt;code&gt;send&lt;/code&gt; メソッドをスタブしてますね。
+あー、つまりクラスを指定すると、 prototype 定義が置き換わっちゃうわけですね。&lt;/p&gt;
+
+&lt;h2&gt;使い分けが必要&lt;/h2&gt;
+
+&lt;p&gt;prototype が置き換わることで &lt;code&gt;mockClient&lt;/code&gt; に渡したクラスの &lt;code&gt;send&lt;/code&gt; はすべてのシーンでスタブに置き換わります。
+テストしたい実装側でクライアントのインスタンスをDIなどで注入していない場合は、この方法で良いですね。
+逆にシーンによっては、実際に send を実行したい場合は困ってしまいます。&lt;/p&gt;
+
+&lt;p&gt;localstack などを使って部分的にインテグレーションテストをしたい場合は、なるべくインスタンスをDIできる仕組みにした方が良いでしょう。
+インスタンスを生成するメソッドを作って、それをモックして &lt;code&gt;mockClient&lt;/code&gt; の戻り値を返すようにしても良いですね。&lt;/p&gt;
+
+&lt;p&gt;とくにイングレーションテストとかなく、すべてのクライアント呼び出しをモックするのであれば、クラス指定が楽ですね。&lt;/p&gt;
+
+&lt;p&gt;このように使い分けることで、テストコードを書いていきたいですね。
+簡単ではありますが、aws-sdk-client-mock はどのように aws-sdk をモックしているのか？ を紹介しました。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</title>
+    <link rel="alternate" href="http://blog.url.com/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"/>
+    <id>http://blog.url.com/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html</id>
+    <published>2023-01-04T11:00:00+09:00</published>
+    <updated>2023-04-05T14:34:43+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;先日も紹介したクラメソさんの &lt;a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/"&gt;[アップデート] AWS Lambdaが Node.js 18をサポートしました&lt;/a&gt; 記事でもふれられていましたが、Node.js が 18 になるのに伴い、イメージ内の aws-sdk が v3 になりました。
+Node.js 16 までは v2 系だったのですが、ここでは多くの変更が発生しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;npm install する対象が &lt;code&gt;aws-sdk&lt;/code&gt; から &lt;code&gt;@aws-sdk/client-xxx&lt;/code&gt; のように AWS のサービスごとのクライアントライブラリになった&lt;/li&gt;
+&lt;li&gt;書き方が、各クライアントを &lt;code&gt;new&lt;/code&gt; して &lt;code&gt;send&lt;/code&gt; でコマンドを送信する記述に統一された&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;大きくはこの2点でしょうか。
+私たちは aws-sdk の利用に関してリポジトリパターンの中に閉じ込めているので、基本的にそこだけ対応すれば良いのですが、API で同期実行だったものが非同期実行に変更となっているので、そこだけはインターフェースを Promise に変更する必要があります。
+これは実際のコマンド内部は同期で問題ないけど、 &lt;code&gt;Client.send(command)&lt;/code&gt; が基本的に Promise を返却するようになったための副作用だと思ってください。
+（ aws-sdk v2 のときは &lt;code&gt;command().promise()&lt;/code&gt; のようにすると、非同期コマンドは Promise を返却するようになっていたのですが、この &lt;code&gt;promise()&lt;/code&gt; 部分がなくなり、基本的な戻りは Promise になっています）&lt;/p&gt;
+
+&lt;h2&gt;具体的なコードで見る v2 と v3 の違い&lt;/h2&gt;
+
+&lt;p&gt;StepFuntions を実行するコードで違いをみてみましょう。&lt;/p&gt;
+
+&lt;h3&gt;v2 のコード&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;StepFunctions&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StepFunctions&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;promise&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;v3 のコード&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;parse&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/util-arn-parse&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;  
+&lt;span class="p"&gt;}));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;StepFunctions では、利用するライブラリ名が &lt;code&gt;aws-sdk/client-sfn&lt;/code&gt; になりました。
+ほとんどの場合は、サービス名を使っています（たとえば S3 なら aws-sdk/client-s3 だし、 S3Client です）が、StepFunctions の場合は &lt;code&gt;sfn&lt;/code&gt; に省略されているので注意が必要です。（僕はこの略名に気付くまでメチャクチャ探したことを告白しておきます）&lt;/p&gt;
+
+&lt;p&gt;クライアントライブラリを探すときは &lt;a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/"&gt;AWS SDK for JavaScript v3&lt;/a&gt; の公式ドキュメントを参照すると良いのですが、ぱっとみてサービス名からクライアントライブラリが見つけられない場合は、それっぽい略名から探してみると良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;v2 と v3 を比較するとわかりますが、大きな変更でないことはわかると思います。&lt;/p&gt;
+
+&lt;h2&gt;v3 移行するときに役立つドキュメント&lt;/h2&gt;
+
+&lt;p&gt;次に v3 移行するときに役立つドキュメントを紹介していきます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/"&gt;AWS SDK for JavaScript v3&lt;/a&gt; &lt;/li&gt;
+&lt;li&gt;&lt;a href="https://aws.amazon.com/jp/blogs/news/service-error-handling-modular-aws-sdk-js/"&gt;AWS SDK for JavaScript (v3) モジュールでのエラー処理&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/blob/main/UPGRADING.md"&gt;Upgrading Notes (2.x to 3.x)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;1つ目は公式のSDKドキュメントですね。クライアントライブラリを探すときも、コマンド名を確認するときにも良く参照します。&lt;/p&gt;
+
+&lt;p&gt;2つ目はエラーハンドリングのやり方の違いについてです。詳しくはドキュメントを読めばわかるのですが、従来はエラーの判定方法が 
+&lt;code&gt;(&amp;lt;AWSError&amp;gt;e).code === &amp;#39;ExecutionDoesNotExist&amp;#39;&lt;/code&gt; みたいにしていたのを &lt;code&gt;e instanceof ExecutionDoesNotExist&lt;/code&gt; のように例外クラスのインスタンスとして判定できるようになっています。これも v3 に移行するときに注意したいポイントです。&lt;/p&gt;
+
+&lt;p&gt;3つ目はSDKのv3へのアップグレードガイドで、主に破壊的変更があった部分について解説されています。単純に XxxxClient と XxxxCommand に変更したときに型エラーが出たときは、このドキュメントを読んで破壊的変更（変数名の変更や、JSON構造の変更など）がないか確認すると解決への近道になります。&lt;/p&gt;
+
+&lt;p&gt;ただし、先ほどの例で書いた StepFunctions のコンストラクタのように&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;リージョンが v3 から必須パラメータになったのですが、こういった変更は動かしてみるまでわからないことが多いので、ユニットテストを書いておくことは重要です。&lt;/p&gt;
+
+&lt;h2&gt;ユニットテスト&lt;/h2&gt;
+
+&lt;p&gt;私たちは以下のサービスについては、モックせずにローカルで代替ライブラリを使って結合テストを行なっています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;S3 : &lt;a href="https://www.npmjs.com/package/s3rver"&gt;S3rver&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;SQS: &lt;a href="https://github.com/softwaremill/elasticmq"&gt;ElasticMQ&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;RDS: &lt;a href="https://www.npmjs.com/package/better-sqlite3"&gt;better-sqlite3&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;v2 でのユニットテスト&lt;/h3&gt;
+
+&lt;p&gt;上記以外について、v2 のときは以下のようにモックしていました。ここでは Jest での書き方を紹介します。
+sfn の start というメソッドで StepFunctions を呼び出していると想定してください。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// startExecution の引数チェック用&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;startExecution&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// startExecution の戻り値モック用&lt;/span&gt;
+&lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mock&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;StepFunctions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;mockImplementation&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockImplementation&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+          &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;promise&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;startExecution&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
+        &lt;span class="p"&gt;}),&lt;/span&gt;
+      &lt;span class="p"&gt;};&lt;/span&gt;
+    &lt;span class="p"&gt;});&lt;/span&gt;
+  &lt;span class="p"&gt;};&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+
+&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockReset&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockReset&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+
+&lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockResolvedValue&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;calls&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toEqual&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
+  &lt;span class="p"&gt;[{&lt;/span&gt; &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}]&lt;/span&gt;
+&lt;span class="p"&gt;]);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;v2 でのモックは面倒でしたね。&lt;/p&gt;
+
+&lt;h3&gt;v3 でのユニットテスト&lt;/h3&gt;
+
+&lt;p&gt;v3 で aws-sdk をモックするときは &lt;a href="https://github.com/m-radzikowski/aws-sdk-client-mock"&gt;AWS SDK v3 Client mock&lt;/a&gt; を利用します。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Library recommended by the AWS SDK for JavaScript team - see the introductory post on the AWS blog.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;ということで公式にもオススメされるライブラリということで良いですね。&lt;/p&gt;
+
+&lt;p&gt;上記の v3 でのテストコードは以下のようになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock-jest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reset&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+
+&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;resolves&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toHaveReceivedNthCommanddWith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;モックライブラリを使うと、v2 のときより可読性も良くわかりやすくなっています。&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;ここまで aws-sdk を v2 から v3 にする方法をまとめてみました。
+&lt;code&gt;aws-sdk-client-mock&lt;/code&gt; 便利ですね。
+しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
+sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 &lt;code&gt;mockClient&lt;/code&gt; の結果で得られたモックを使っているわけでもありません。
+そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</title>
+    <link rel="alternate" href="http://blog.url.com/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html"/>
+    <id>http://blog.url.com/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html</id>
+    <published>2022-12-30T15:39:00+09:00</published>
+    <updated>2023-04-05T14:34:43+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;クラメソさんの &lt;a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/"&gt;[アップデート] AWS Lambdaが Node.js 18をサポートしました&lt;/a&gt; 記事のとおり、やっと AWS Lambda でも Node.js 18 が使えるようになりました。&lt;/p&gt;
+
+&lt;p&gt;現在 Node.js 14 を使って AWS Lambda で API サーバーを構築しているのですが、 Node.js 16 の LTS が 9ヶ月終了が早まったこともあり、
+このタイミングで Node.js 18 へ移行することにしました。&lt;/p&gt;
+
+&lt;p&gt;本稿では CI/CD 環境を Node.js 14 から Node.js 18 へ移行するときに実施した作業を振り返って、まとめておきます。&lt;/p&gt;
+
+&lt;p&gt;現在の構成はこんな感じです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Node.js 14 / TypeScript&lt;/li&gt;
+&lt;li&gt;CI/CD に GitHub Actions を利用&lt;/li&gt;
+&lt;li&gt;Amazonlinux ベースの &lt;a href="https://hub.docker.com/r/amazon/aws-cli"&gt;amazon/aws-cli&lt;/a&gt; コンテナをベースにパッケージを追加した独自コンテナイメージで CI/CD を実施&lt;/li&gt;
+&lt;li&gt;Serverless Framework でビルド/デプロイ&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;CI/CD イメージの Node.js を 18 にする&lt;/h2&gt;
+
+&lt;p&gt;まずはビルド/デプロイをするコンテナイメージを Node.js 18 にしていきます。
+実際に Node.js 18 をインストールしようとしたのですが、エラーになってしまいます。&lt;/p&gt;
+
+&lt;p&gt;具体的なエラーは &lt;a href="https://stackoverflow.com/questions/50564999/lib64-libc-so-6-version-glibc-2-14-not-found-why-am-i-getting-this-error"&gt;/lib64/libc.so.6: version `GLIBC_2.14&amp;rsquo; not found. Why am I getting this error?&lt;/a&gt; と一緒で、調べていくと Amazonlinux2 ベースである CentOS7 と Node.js 18 は &lt;a href="https://it.ama2pro.net/2022/05/31/node%E3%81%AEv18%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%89%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%EF%BC%88centos7%EF%BC%89/"&gt;nodeのv18を使ったらエラーになった（CentOS7）&lt;/a&gt; などにもあるように単純な話ではないようです。&lt;/p&gt;
+
+&lt;p&gt;おや？でも Lambda は Node.js 18 が使えるんですよね？どういうこと？と思いますよね。&lt;/p&gt;
+
+&lt;p&gt;Node.js のディストリビューション issue を確認すると &lt;a href="https://github.com/nodesource/distributions/issues/1367"&gt;distribution package Amazon Linux 2022 not supported&lt;/a&gt; なんてのがありました。&lt;/p&gt;
+
+&lt;h3&gt;で、Amazon Linux 2022 って何なん？！&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://hub.docker.com/_/amazonlinux"&gt;amazonlinux のコンテナイメージ&lt;/a&gt;をみると、 &lt;code&gt;latest&lt;/code&gt; は &lt;code&gt;amazonlinux2&lt;/code&gt; なんですが、タグをみていくと確かに &lt;code&gt;2022&lt;/code&gt; があります。
+あと現時点では aws-cli のイメージは 2022 には追従していません。&lt;/p&gt;
+
+&lt;p&gt;そこで、 amazonlinux2022 をベースにして Node.js 18 をインストールするのを試してみます。&lt;/p&gt;
+
+&lt;p&gt;しかし、ここでプロビジョニングツールが amazonlinux 2022 に対応していないことがわかります（グルグル循環して脳が溶けてくる&amp;hellip; 溶けてやがる、まだ早すぎたんだ&amp;hellip;.）。違うプロビジョニングツールも調べてみたのですが、どれも 2022 には対応していませんでした。ここでプロビジョニングツールを捨てる選択となりました。&lt;/p&gt;
+
+&lt;p&gt;（実際僕らは Chef を使っているんですが、Chef Workstation 自体に amazonlinux 2022 の対応は入っていました（&lt;a href="https://github.com/chef/omnitruck/issues/569"&gt;Omnitruck artifact does not exist for version 17 on platform Amazon Linux 2022 &lt;/a&gt;）。ただまだリリースパッケージに含まれていないので、いずれリリースされるバージョンでは対応されているでしょう。Ansibleも調べましたが、同様にまだリリースパッケージには含まれていませんでした。）&lt;/p&gt;
+
+&lt;p&gt;調べていたら、&lt;a href="https://www.geekfeed.co.jp/geekblog/amazonlinx3-amazonlinux2022-al2022"&gt;AmazonLinux3じゃなくってAmazon Linux 2022 (AL2022) だってさ。&lt;/a&gt; という記事が見つかりました。
+そんで &lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;AmazonLinux2022以降はメジャーバージョンが2年ごとにリリースされる&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;まじかー。まぁ今までの AmazonLinux2 が長かったですね。そのぐらいで OS イメージを最新にしていかないとですよね。
+ということで、今後も踏まえて CI/CD のフローを含め利用するコンテナイメージを検討しなおすことにしました。
+（2年ごとの変更がプロビジョニングツールを捨てる決定的な要因になったのは間違いない）&lt;/p&gt;
+
+&lt;h2&gt;CI/CD フローの変更&lt;/h2&gt;
+
+&lt;p&gt;現時点のフローを整理してみました&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;チェックアウト&lt;/li&gt;
+&lt;li&gt;ビルド&lt;/li&gt;
+&lt;li&gt;デプロイが必要な場合
+
+&lt;ol&gt;
+&lt;li&gt;環境のスイッチロール&lt;/li&gt;
+&lt;li&gt;デプロイ&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;だいたいこんな感じです。
+これを今までは全部1つのコンテナでやっていたのですが、それぞれ分割していくことにしました。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;チェックアウト -&amp;gt; alpine/git&lt;/li&gt;
+&lt;li&gt;ビルド -&amp;gt; amazon/aws-lambda-nodejs:18 ベースに zip/unzip を追加したもの&lt;/li&gt;
+&lt;li&gt;デプロイが必要な場合
+
+&lt;ol&gt;
+&lt;li&gt;環境のスイッチロール -&amp;gt; amazon/aws-cli ベースに jq を追加したもの&lt;/li&gt;
+&lt;li&gt;デプロイ -&amp;gt; node:18&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;ビルドに関しては &lt;code&gt;node:18&lt;/code&gt; でも良かったのですが、ここは以前と同じく稼働する OS イメージと合わせています。
+今後 OS イメージを追従するというより、実際の Lambda 実行コンテナイメージを使うことで、 Node.js ランタイムにあった OS バージョンを気にせず利用できるメリットがあると考えました（サイズ大きいけど）。&lt;/p&gt;
+
+&lt;p&gt;それ以外は必要な部分に最低限のコンテナという感じですね。&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;LTS に合わせて開発環境をアップデートしていくのは、とても大事ですね。
+記事にすると、さらっと解決したように見えますが、それぞれのツールのソースコードや issue を確認しながら進んでいたので、かなり時間を取られてしまいました。
+ただ、今後同じようにな環境でアップデートしていこうと思う人の助けになればと思います。&lt;/p&gt;
+</content>
+  </entry>
+</feed>

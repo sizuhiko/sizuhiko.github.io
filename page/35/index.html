@@ -1,0 +1,884 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2009/04/27/42-php.html">第42回PHP勉強会@関東に参加しました。</a></h2>
+  <p class="postdate"><a href="/2009/04/27.html" title="Permanent link">Monday, April 27, 2009 10:04:56 AM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;今回はフレームワーク特集ということだったので、ものすごく久しぶりにPHP勉強会へ参加してきました。  </p>
+
+<p><a href="http://events.php.gr.jp/events/show/75">http://events.php.gr.jp/events/show/75</a>  </p>
+
+<p>お初の方がいっぱいでしたが（というか自分が参加してないというのもあるんですが）、とても楽しく交流できました。  </p>
+
+<p>半日と勉強会としては比較的長めの時間ということもあり、皆さん濃い内容＆素晴らしい発表で、ほんと勉強になりました。  </p>
+
+<p>特にTCPDFの話は、以前Cakeから使って同じようなことではまった事があり、とても共感しました。  </p>
+
+<p>それと合宿ネタでLTやりましたので、スライドをUPしておきます。  </p>
+
+<div style="width:425px;text-align:left" id="__ss_1345186">
+<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/ss-1345186?type=powerpoint" title="箱根湯けむり事件簿" rel="nofollow">箱根湯けむり事件簿</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy20090426-090426200618-phpapp01&amp;stripped_title=ss-1345186">
+<param name="allowFullScreen" value="true">
+<param name="allowScriptAccess" value="never">
+<embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=phpstudy20090426-090426200618-phpapp01&amp;stripped_title=ss-1345186" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View more <a style="text-decoration:underline;" href="http://www.slideshare.net/" rel="nofollow">presentations</a> from <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
+</div>
+
+<p>CakePHPハンズオンのサポータ募集してまーす。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="第42回PHP勉強会@関東に参加しました。" data-url="http://blog.open.tokyo.jp/2009/04/27/42-php.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/04/27/42-php.html&t=%E7%AC%AC42%E5%9B%9EPHP%E5%8B%89%E5%BC%B7%E4%BC%9A@%E9%96%A2%E6%9D%B1%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/04/27/42-php.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/03/11/cakephp-web.html">「CakePHPによる実践Webアプリケーション開発」が出ます</a></h2>
+  <p class="postdate"><a href="/2009/03/11.html" title="Permanent link">Wednesday, March 11, 2009 05:03:39 PM</a></p>
+  <p class="tags">
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;Amazonにupされていたので、もう告知してもいいかな。  </p>
+
+<p>3/26(木)3/31（Amazonでは4/8になってますね）に発売される「CakePHPによる実践Webアプリケーション開発」という本を企画＆共著しました。  </p>
+
+<p><a href="http://www.amazon.co.jp/CakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA-%E5%AE%89%E8%97%A4-%E7%A5%90%E4%BB%8B/dp/4839930651/ref=sr_1_38?ie=UTF8&amp;s=books&amp;qid=1236752037&amp;sr=8-38"><img src="http://images.amazon.com/images/P/4839930651.09._PC_SCMZZZZZZZ_.jpg" alt="" /></a></p>
+
+<p>内容は入門的な内容はほとんどなく、淡々とサンプルアプリケーション（サイボウズ的なスケジュール表）を作っていくというものです。  </p>
+
+<p>今までCakePHPではこの手の本がなかったので、１冊ぐらいあっても良いかな？ということで。皆様、手にとって・・・というかぜひ買ってください！:cry:   </p>
+
+<p>CakePHP1.2stableをベースとした最初の書籍となる・・・・なんて書いたのですが、なんとその２週間ぐらい前の14日に、秀和システムさんから題名も良く似た「CakePHPによるWebアプリケーション開発」という本も出るようです（こちらはAmazonに登録がないので、実体はよくわかりません）。うーん執筆中に他の本の状況はわからないですからねー。  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="「CakePHPによる実践Webアプリケーション開発」が出ます" data-url="http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html&t=%E3%80%8CCakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA%E3%80%8D%E3%81%8C%E5%87%BA%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/11/cakephp-web.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/03/07/cakephp-tokyo.html">CakePHPハンズオン＠Tokyo#2が実施されました。</a></h2>
+  <p class="postdate"><a href="/2009/03/07.html" title="Permanent link">Saturday, March 07, 2009 11:03:25 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://events.php.gr.jp/events/show/70">CakePHPハンズオン＠Tokyo#2</a>にサポーターとして参加してきました。  </p>
+
+<p>えーXAMPP方面でいくらかヘルプできたかな？と。  </p>
+
+<p>後は皆さん以外とスムーズに進んでいたようで、感心が高く事前に予習している感がありました。すごーい。  </p>
+
+<p>反省としては、あんまり本のCMができなかったことでしょうか:ko:   </p>
+
+<p>来週九州でCakePHP勉強会があるので、共著の皆様に宣伝をお願いする事にします・・・</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPハンズオン＠Tokyo#2が実施されました。" data-url="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html&t=CakePHP%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%EF%BC%A0Tokyo%232%E3%81%8C%E5%AE%9F%E6%96%BD%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
+  <p class="postdate"><a href="/2009/02/04.html" title="Permanent link">Wednesday, February 04, 2009 10:02:22 AM</a></p>
+  <p class="tags">
+      <a href="/tags/authcomponent.html" rel="tag">AuthComponent</a>
+      <a href="/tags/cakephp1-2-1.html" rel="tag">CakePHP1.2.1</a>
+      <a href="/tags/scaffold.html" rel="tag">Scaffold</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;先日セキュリティアップデートとして、1.2.0から1.2.1に更新されたのは、皆さんご存知のことと思います。  </p>
+
+<p>で、昨日やっとこさ1.2.1を使い始めたら、なんとAuthでログインしてなくてもscaffoldのアクションが動いちゃうじゃないですか！！。これはまずい。。  </p>
+
+<p>なお肝心のセキュリティアップデートは、<a href="http://cakephp.jp/modules/newbb/viewtopic.php?topic_id=1696&amp;forum=1&amp;post_id=4032#forumpost4032">CakePHP 1.2.1.8004へアップデート推奨</a>からリンクされている「<a href="https://trac.cakephp.org/changeset/7979">Changeset 7979</a>」の差分のようなので、今回の回避策を使っても、問題なさそうだと判断しています。まぁscaffold使ってなければ関係ないのですけどね。  </p>
+
+<p>で、問題の箇所はAuthComponent::startup()で</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$isErrorOrTests = (
+    strtolower($controller-&gt;name) == 'cakeerror' ||
+    (strtolower($controller-&gt;name) == 'tests' &amp;&amp; Configure::read() &gt; 0) ||
+    !in_array($controller-&gt;params['action'], $controller-&gt;methods)
+);
+if ($isErrorOrTests) {
+    return true;
+}
+</code></pre></div>
+<p>という箇所があるのですが、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>!in_array($controller-&gt;params['action'], $controller-&gt;methods)
+</code></pre></div>
+<p>というコードの「$controller-&gt;methods」にはscaffoldのアクションが含まれていないんですよね。なんでコントローラにそんなメソッドないよエラーページに遷移しようとして、ログイン画面には遷移しないんですが、ほんとのところはscaffoldに遷移して、一覧・追加・変更・削除ができちゃうというトホホな感じです。  </p>
+
+<p>なのでscaffoldをAuthのログイン傘下で使っている人は、Authから$controller-&gt;methodsに含まれているかどうかチェックは外してしまいましょう。  </p>
+
+<p>これから本家のTracにチケットを書くとします。。。  </p>
+
+<p>その後、あっさり本家から「Bakeしてね」とやんわり修正を断られてしまったので、Auth使う人はscaffold使わないか、$controller-&gt;methodsにbeforeFilterでscaffoldAction追加するとか（たぶんこれは良くないけど）、Authを継承して変えちゃう（startupの前でscaffoldActionをarray_mergeして、戻ってきたら元の値に戻せば・・・まぁ、どうか？というのもありますけど）とか、まぁいろいろ策はあるかな？と思います。  </p>
+
+<p>PS: この、$controller-&gt;methodsですが、どこで使ってんの？と調べてみたら、dispatcherとauthだけでした。dispatcherは当然として、なんでauthが！？？という不思議な感は否めないのですが、こればっかりは仕方ないですね。今後使うところ増えるかもしれないし。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項" data-url="http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html&t=CakePHP1.2.1.8004%20%E3%81%A7%20Auth%E3%82%B3%E3%83%B3%E3%83%9D%E3%83%BC%E3%83%8D%E3%83%B3%E3%83%88%E3%81%A8Scaffold%E3%82%92%E4%BD%B5%E7%94%A8%E3%81%99%E3%82%8B%E9%9A%9B%E3%81%AE%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/11/11/flex2-coverflow-8-amazon.html">Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する</a></h2>
+  <p class="postdate"><a href="/2008/11/11.html" title="Permanent link">Tuesday, November 11, 2008 11:11:39 AM</a></p>
+  <p class="tags">
+      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+      <a href="/tags/flex.html" rel="tag">Flex</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第九回の今回は最終回となります。AmazonWebserviceと連携してタイトルや著者名を表示する手法を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように動作します。  </p>
+
+<p>前回は画像を重ね合わせることで、写真部分の見栄えは「ほぼ」CoverFlowに近くなりました。今回はAmazonWebserviceと連携して、asinIdのタイトルや著者を表示します。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_9/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。  </p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+<li>CoverFlowLayout.as</li>
+<li>RepeaterHBox.as</li>
+<li>AmazonWebservice.as</li>
+</ul>
+
+<p>新しいファイルAmazonWebservice.asが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■AmazonWebサービスに登録する</h3>
+
+<p>AmazonWebサービスを使うと、今回やろうとしているような、asinIdの商品情報を取得することができます。  </p>
+
+<p>精しくは、こちらのドキュメントが日本語であるので、一読すると良いでしょう。  </p>
+
+<p><a href="http://www.amazon.co.jp/gp/feature.html?docId=451209">http://www.amazon.co.jp/gp/feature.html?docId=451209</a>  </p>
+
+<p>まだアカウントをもっていない方は、  </p>
+
+<p><a href="http://aws.amazon.com">http://aws.amazon.com</a>/  </p>
+
+<p>から登録しましょう。  </p>
+
+<p>登録すると、登録ID(Subscription ID)が取得できます。  </p>
+
+<p>そのIDをAmazonWebservice.asのAWSAccessKeyId変数に入れてください。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>public class AmazonWebservice {
+    private const AWSAccessKeyId:String = "***** あなたの登録ID ******";
+    private const AmazonRegionCode:String = "09"; // 日本は09
+</code></pre></div>
+<h3>■Amazonから商品情報を取得する</h3>
+
+<p>Amazonとのデータのやりとりは、FlashからGETパラメータで必要な情報を送り込み、戻りとしてXMLを受け取るシンプルなRESTインターフェースです。  </p>
+
+<p>AmazonへリクエストするURLをgetAmazonRestUrl関数で作っています。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>private function getAmazonRestUrl(asin:String):String 
+{
+    var url:String = "http://webservices.amazon.co.jp/onca/xml?"
+               + "Service=AWSECommerceService&amp;"
+               + "AWSAccessKeyId="+AWSAccessKeyId+"&amp;"
+               + "Operation=ItemLookup&amp;"
+               + "IdType=ASIN&amp;ItemId=" + asin + "&amp;"
+               + "ResponseGroup=Request,ItemIds,ItemAttributes,Tracks,EditorialReview";
+    return url; 
+}
+</code></pre></div>
+<p>パラメータごとの詳細な解説は、上記ドキュメントを参照して欲しいのですが、ここでは
+IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </p>
+
+<p>レスポンスはすべて取得することもできますが、ここではResponseGroupに書いた内容に絞り込んで
+取得します。  </p>
+
+<h3>■Amazonからの戻り値を取得する</h3>
+
+<p>URLを呼び出して、結果を取得するのは、AmazonからCoverFlow用の写真を取得するインターフェースと同じです。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>_amazonLoader = new URLLoader();
+_amazonLoader.addEventListener(Event.COMPLETE, completeAmazonRequest);
+_amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
+</code></pre></div>
+<p>のようにして、URLから取得できたらcompleteAmazonRequest関数が呼ばれます。  </p>
+
+<p>受信部分のコードは  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>private function completeAmazonRequest(event:Event):void
+{
+    namespace ns = 'http://webservices.amazon.com/AWSECommerceService/2005-10-05';
+    use namespace ns;
+    _xml = new XML(_amazonLoader.data);
+}
+</code></pre></div>
+<p>と、たったこれだけです。Amazon Webサービスで指定されたネーミングスペースを指定して、XMLオブジェクトを作ります。  </p>
+
+<p>戻ってきたデータはXML形式なので、これでActionScriptから参照しやすい形式となります。  </p>
+
+<h3>■XML内のデータを解析する</h3>
+
+<p>取得したXMLを解析するのはとても簡単です。  </p>
+
+<p>たとえばWeb2.0ビギナーズバイブルのasinIdを指定して戻ってくるXMLは以下のとおりです。  </p>
+<div class="highlight"><pre class="highlight xml"><code><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
+<span class="nt">&lt;ItemLookupResponse</span> <span class="na">xmlns=</span><span class="s">"http://webservices.amazon.com/AWSECommerceService/2005-10-05"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;OperationRequest&gt;</span>
+    <span class="nt">&lt;HTTPHeaders&gt;</span>
+      <span class="nt">&lt;Header</span> <span class="na">Name=</span><span class="s">"UserAgent"</span> <span class="na">Value=</span><span class="s">"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;/Header&gt;</span>
+    <span class="nt">&lt;/HTTPHeaders&gt;</span>
+    <span class="nt">&lt;RequestId&gt;</span>53c87848-02e3-4317-8136-b49b1d2a0108<span class="nt">&lt;/RequestId&gt;</span>
+    <span class="nt">&lt;Arguments&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Operation"</span> <span class="na">Value=</span><span class="s">"ItemLookup"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Service"</span> <span class="na">Value=</span><span class="s">"AWSECommerceService"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ItemId"</span> <span class="na">Value=</span><span class="s">"4839923221"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"IdType"</span> <span class="na">Value=</span><span class="s">"ASIN"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"AWSAccessKeyId"</span> <span class="na">Value=</span><span class="s">"********************"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ResponseGroup"</span> <span class="na">Value=</span><span class="s">"Request,ItemIds,ItemAttributes,Tracks,EditorialReview"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
+    <span class="nt">&lt;/Arguments&gt;</span>
+    <span class="nt">&lt;RequestProcessingTime&gt;</span>0.1317150000000000<span class="nt">&lt;/RequestProcessingTime&gt;</span>
+  <span class="nt">&lt;/OperationRequest&gt;</span>
+  <span class="nt">&lt;Items&gt;</span>
+    <span class="nt">&lt;Request&gt;</span>
+      <span class="nt">&lt;IsValid&gt;</span>True<span class="nt">&lt;/IsValid&gt;</span>
+      <span class="nt">&lt;ItemLookupRequest&gt;</span>
+        <span class="nt">&lt;Condition&gt;</span>New<span class="nt">&lt;/Condition&gt;</span>
+        <span class="nt">&lt;DeliveryMethod&gt;</span>Ship<span class="nt">&lt;/DeliveryMethod&gt;</span>
+        <span class="nt">&lt;IdType&gt;</span>ASIN<span class="nt">&lt;/IdType&gt;</span>
+        <span class="nt">&lt;MerchantId&gt;</span>Amazon<span class="nt">&lt;/MerchantId&gt;</span>
+        <span class="nt">&lt;OfferPage&gt;</span>1<span class="nt">&lt;/OfferPage&gt;</span>
+        <span class="nt">&lt;ItemId&gt;</span>4839923221<span class="nt">&lt;/ItemId&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>Request<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>ItemIds<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>ItemAttributes<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>Tracks<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ResponseGroup&gt;</span>EditorialReview<span class="nt">&lt;/ResponseGroup&gt;</span>
+        <span class="nt">&lt;ReviewPage&gt;</span>1<span class="nt">&lt;/ReviewPage&gt;</span>
+      <span class="nt">&lt;/ItemLookupRequest&gt;</span>
+    <span class="nt">&lt;/Request&gt;</span>
+    <span class="nt">&lt;Item&gt;</span>
+      <span class="nt">&lt;ASIN&gt;</span>4839923221<span class="nt">&lt;/ASIN&gt;</span>
+      <span class="nt">&lt;DetailPageURL&gt;</span>http://www.amazon.co.jp/Web2-0%E3%83%93%E3%82%AE%E3%83%8A%E3%83%BC%E3%82%BA%E3%83%90%E3%82%A4%E3%83%96%E3%83%AB-%E4%BC%8A%E8%97%A4-%E6%B5%A9%E4%B8%80/dp/4839923221%3FSubscriptionId%3D*******************%26tag%3Dws%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839923221<span class="nt">&lt;/DetailPageURL&gt;</span>
+      <span class="nt">&lt;ItemAttributes&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>伊藤 浩一<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>大津 真<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>岸田 健一郎<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>まえだ ひさこ<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Author&gt;</span>安井 力<span class="nt">&lt;/Author&gt;</span>
+        <span class="nt">&lt;Binding&gt;</span>単行本<span class="nt">&lt;/Binding&gt;</span>
+        <span class="nt">&lt;EAN&gt;</span>9784839923228<span class="nt">&lt;/EAN&gt;</span>
+        <span class="nt">&lt;ISBN&gt;</span>4839923221<span class="nt">&lt;/ISBN&gt;</span>
+        <span class="nt">&lt;Label&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Label&gt;</span>
+        <span class="nt">&lt;ListPrice&gt;</span>
+          <span class="nt">&lt;Amount&gt;</span>3990<span class="nt">&lt;/Amount&gt;</span>
+          <span class="nt">&lt;CurrencyCode&gt;</span>JPY<span class="nt">&lt;/CurrencyCode&gt;</span>
+          <span class="nt">&lt;FormattedPrice&gt;</span>￥ 3,990<span class="nt">&lt;/FormattedPrice&gt;</span>
+        <span class="nt">&lt;/ListPrice&gt;</span>
+        <span class="nt">&lt;Manufacturer&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Manufacturer&gt;</span>
+        <span class="nt">&lt;NumberOfPages&gt;</span>927<span class="nt">&lt;/NumberOfPages&gt;</span>
+        <span class="nt">&lt;PackageDimensions&gt;</span>
+          <span class="nt">&lt;Height</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>205<span class="nt">&lt;/Height&gt;</span>
+          <span class="nt">&lt;Length</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>921<span class="nt">&lt;/Length&gt;</span>
+          <span class="nt">&lt;Weight</span> <span class="na">Units=</span><span class="s">"hundredths-pounds"</span><span class="nt">&gt;</span>340<span class="nt">&lt;/Weight&gt;</span>
+          <span class="nt">&lt;Width</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>724<span class="nt">&lt;/Width&gt;</span>
+        <span class="nt">&lt;/PackageDimensions&gt;</span>
+        <span class="nt">&lt;ProductGroup&gt;</span>Book<span class="nt">&lt;/ProductGroup&gt;</span>
+        <span class="nt">&lt;PublicationDate&gt;</span>2007-04<span class="nt">&lt;/PublicationDate&gt;</span>
+        <span class="nt">&lt;Publisher&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Publisher&gt;</span>
+        <span class="nt">&lt;Studio&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Studio&gt;</span>
+        <span class="nt">&lt;Title&gt;</span>Web2.0ビギナーズバイブル<span class="nt">&lt;/Title&gt;</span>
+      <span class="nt">&lt;/ItemAttributes&gt;</span>
+    <span class="nt">&lt;/Item&gt;</span>
+  <span class="nt">&lt;/Items&gt;</span>
+<span class="nt">&lt;/ItemLookupResponse&gt;</span>
+</code></pre></div>
+<p>で、本のタイトルは、  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>ItemLookupResponse
+ +-- Item
+      +-- ItemAttributes
+           +-- Title
+</code></pre></div>
+<p>という階層にあります。これを取得するにはXMLオブジェクトから  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>_xml.Items.Item.ItemAttributes.child('Title');
+</code></pre></div>
+<p>と書くだけで取得できます。_xmlオブジェクトからXMLの階層をたどるようにタグ名を.(ドット)で区切っていくだけです。簡単ですね。  </p>
+
+<h3>■ImageReflectorから使う</h3>
+
+<p>AmazonWebserviceの実装ができたら、ImageReflectorから呼び出します。  </p>
+
+<p>initLoader()の末尾に、  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>_amazonInfo.callAmazon(asinId);
+</code></pre></div>
+<p>を追加し、asinIdの商品情報を取得します。情報が取得できたか判断して、描画終了という判断にするために、isCompleted関数を  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>public function isCompleted():Boolean {
+    if (!_invalidatedReflection) return false
+    if (_amazonInfo == null) return false
+    if (!_amazonInfo.isLoaded()) return false;
+
+    return true;
+}
+</code></pre></div>
+<p>のように修正して、Amazon Webサービスからのロードが終了していることも判断材料とします。</p>
+
+<h3>■画面に描画する</h3>
+
+<p>最後に画面に描画領域を作成します。  </p>
+
+<p>mxmlにラベルとして、タイトルと著者名を表示する欄を作ります。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
+&lt;Label id="subtitle" text="著者" color="0xFFFFFF" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
+</code></pre></div>
+<p>この表示は、特定の本を選択したときに変更したいので、選択が変更されたときのイベントselectedIndex関数で、値を代入します。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 選択された項目のタイトルを表示
+title.text = imageReflector[value].titleText;
+subtitle.text = imageReflector[value].authorText;
+</code></pre></div>
+<p>お約束ですが、ImageReflector側では、titleTextとauthorTextはBindableにしておく必要があります。  </p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは過去記事を参考にしてください。  </p>
+
+<h3>■さいごに</h3>
+
+<p>これまで読んでくださった皆様、ありがとうございました。こんな機能もFlex版CoverFlowに欲しいぞ！という場合は、ぜひコメントください。
+よろしくお願いします。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する" data-url="http://blog.open.tokyo.jp/2008/11/11/flex2-coverflow-8-amazon.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/11/11/flex2-coverflow-8-amazon.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%99)%20%EF%BD%9EAmazon%E3%81%A8%E9%80%A3%E6%90%BA%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/11/11/flex2-coverflow-8-amazon.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+
+  <p class="pagenav">
+      <a href="/page/34/">« Prev</a>
+        <a href="/page/31/">31</a>
+        <a href="/page/32/">32</a>
+        <a href="/page/33/">33</a>
+        <a href="/page/34/">34</a>
+        <b>35</b>
+        <a href="/page/36/">36</a>
+        <a href="/page/37/">37</a>
+        <a href="/page/38/">38</a>
+      <a href="/page/36/">Next »</a>
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

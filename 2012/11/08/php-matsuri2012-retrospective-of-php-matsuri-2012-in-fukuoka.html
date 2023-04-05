@@ -1,0 +1,587 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+            <h2>PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</h2>
+            <p class="postdate"><a href="/2012/11/08.html" title="Permanent link">Thursday, November 08, 2012 11:11:53 PM</a></p>
+            <p class="tags">
+                <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+            </p>
+
+          <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/2012_matsuri_02.jpg" alt="" /><br>
+On this year, PHP Matsuri had convened of 3rd time around.<br>
+The participant who first timer and the repeater are split 50:50.<br>
+It become common composition of the participant in the event of 100 person scale.   </p>
+
+<p>As a motive of participation are followings:<br>
+1. Repeater brings the friend of the first participation.<br>
+2. Participant in the vicinity who saw last year&rsquo;s article<br>
+3. Enthusiastic fan  </p>
+
+<p>I think that PHP Matsuri has become a annual event at late autumn.  </p>
+
+<p>As the PHP Matsuri staff, this maybe first post. So I stop it only in an easy summary.<br>
+To be continues and the details are posted by DANCHO.   </p>
+
+<blockquote>
+<p>PHP Matsuriも3回目の開催となりました。<br>
+参加者は、始めての人が半分ぐらい、リピーターが半分ぐらいで、100人規模のイベントでは良くある人数構成になってきました。<br>
+参加の動機としては、<br>
+1. リピーターの人が初参加の友人を連れてくる<br>
+2. 去年の記事を見た、近隣の参加者<br>
+3. 熱狂的ファン<br>
+があると思っています。  </p>
+</blockquote>
+
+<p>そういう意味でPHP Matsuriは晩秋の恒例行事となってきたのではないかと思います。  </p>
+
+<p>PHP Matsuri 青年団の最初をきって書くので、簡単なまとめだけに留めたいと思います。詳しくは団長が&hellip;..  </p>
+
+<h3>Thanks:</h3>
+
+<p><img src="/images/blog/2012_matsuri_03.jpg" alt="" /><br>
+It had been offered by many sponsors from the enterprise to the individual.<br>
+As a result, a very gorgeous prize was able to be prepared. And, it became a very happy event.<br>
+I&rsquo;m really thankful.  </p>
+
+<blockquote>
+<p>感謝：<br>
+今年は、企業から個人まで多くのスポンサー様にご提供いただき、大変豪華な賞品を用意でき、とても楽しいイベントになりました。本当に感謝しております。  </p>
+</blockquote>
+
+<h3>This year&rsquo;s challenge:</h3>
+
+<p>The 1st time and the 2nd times were the same hotel groups.<br>
+It is easy to have done arrangements and the preparation about the hall.<br>
+However, this year of the third times was a hall of &ldquo;Fukuoka Prefecture Ruby and contents industry promotion center&rdquo; that a public organization manages .<br>
+(The hotel prepared it until last year. )Because the task had increased, the staff became busy.<br>
+However, the registration fee became low price, and the prize of LT became gorgeous.   </p>
+
+<blockquote>
+<p>今年のチャレンジ：<br>
+1回目、2回目とも同じ系列のホテルだったこともあり、会場に関する手配や準備はとてもやりやすかったです。3回目の今年は「福岡県Ruby・コンテンツ産業振興センター」という公的な機関が運営する会場でした。ホテルの人が担当してくれていた雑務をスタッフ主導でやることは大変でしたが、その分参加費が安くなったりLTの賞品が豪華になったことで参加者へ還元できたのではないかと思っています。  </p>
+</blockquote>
+
+<h3>This is good:</h3>
+
+<p><img src="/images/blog/2012_matsuri_04.jpg" alt="" /><br>
+It is some the improved points that it is a few problem until last year<br>
+1. The wifi doesn&rsquo;t disconnect. We think that we solved the problem of the network because we have controlled the connection with 3 access point.<br>
+2. Just good temperature.<br>
+There were some comments that it was cold, too. However, I think the improvement to have been done since last year (Because the hall is too wide and air-conditioning was not effective).<br>
+3. Neither the conference nor the workshop get entangled. it became a concentrating workshop by using another conference room.   </p>
+
+<blockquote>
+<p>特に良かった事：<br>
+昨年までちょっと課題だと思っていた部分で、いくつか改善された点ですが<br>
+1. 無線が切れない。うまく分散することで、ネットワークの問題はなかったと思います<br>
+2. ちょうど良い温度。若干寒いというご意見もありましたが、昨年は会場が広すぎて空調が効かなかったりしたので、改善はされていたと思います<br>
+3. 講演とワークショップが混線しない。会議室が別だったこともあり、ワークショップを集中して開催できたと思います  </p>
+</blockquote>
+
+<h3>Important things :</h3>
+
+<p><img src="/images/blog/2012_matsuri_05.jpg" alt="" /><br>
+These are important thing in the event. I think that I was able to do this this year.<br>
+1. We are nice smile<br>
+2. It doesn&rsquo;t become loneliness. If first timer that there was not a friend either, then I think that they were able to exchange it at the ice break and break-time.<br>
+3. Meal is delicious.<br>
+4. Wanna become repeater. I think this to be feelings that each one was able to take home.   </p>
+
+<blockquote>
+<p>イベントで大事な事：<br>
+私がイベント大事だと思っていることで、今年も実践できていたと思います<br>
+1. みんな笑顔<br>
+2. ボッチを作らない。もちろん始めての参加で友人もいなかったという人もいると思いますが、アイスブレークや食事時間に交流できたと思います<br>
+3. 食事が美味しい<br>
+4. また参加したくなる。これは参加者皆さんが持ち帰っていただけた気持ちと期待しています  </p>
+</blockquote>
+
+<h3>At last, My presentation:</h3>
+
+<p><img src="/images/blog/2012_matsuri_01.jpg" alt="" /><br>
+In this year, I had plan to make demonstrate application look like the micro framework with using followings component:  </p>
+
+<ul>
+<li>Respect<br>
+<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
+<li>Rails Router DSL for PHP<br>
+<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
+</ul>
+
+<p>The demonstration was not complete.<br>
+When the sample application program became runnable a little more well, I want to announce in Blog or the PHP study meet up.   </p>
+
+<blockquote>
+<p>最後に私事：<br>
+今年は以下のどちらかを使って、マイクロフレームワーク的なコードが書けるところをデモする予定でした。  </p>
+</blockquote>
+
+<ul>
+<li>Respect。まだ dev-beta （一部α）なのですが、コンセプトおもしろい<br>
+<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
+<li>Rails Router DSL for PHP。Rails3のroutesをかなり再現できていておもしろい<br>
+<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
+</ul>
+
+<p>で、結局 Respectのバグっぽい箇所をふんでしまって、朝方6時ぐらいに Rails Routerに切り替えたけど、こっちはこっちでうまく動作しなくて、8時ぐらいに元鞘に。うまく動いている箇所だけで発表しました。<br>
+これらは、もうちょっとうまく動くサンプルアプリが作れたら、BlogやPHP勉強会などで発表したいと思います。  </p>
+
+<p>See you PHP Matsuri 2013 (maybe HOKKAIDO) !!  </p>
+
+<blockquote>
+<p>また来年のPHP Matsuri（たぶん北海道）で会いましょう  </p>
+</blockquote>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka" data-url="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html&t=PHP%20Matsuri2012%E3%82%92%E7%B5%82%E3%81%88%E3%81%A6%20%E3%80%9C%20Retrospective%20of%20PHP%20Matsuri%202012%20in%20Fukuoka" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

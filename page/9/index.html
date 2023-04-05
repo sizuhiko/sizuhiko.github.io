@@ -1,0 +1,714 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+
+            <h2 class="title"><a href="/2019/06/30/polymer-co-edo-meetup-26.html">Polymer.co-edo  meetup ＃26を開催しました</a></h2>
+  <p class="postdate"><a href="/2019/06/30.html" title="Permanent link">Sunday, June 30, 2019 11:36:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年5回目となる <a href="https://polymercoedo.doorkeeper.jp/events/93071">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>まず最初に私から、先日の<a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a>について共有しました。
+<a href="https://github.com/Edo-Elements/edo-karakuri">edo-karakuri</a>の仕組みやできることなど、edo-blogcardとの関連など。</p>
+
+<h3>lit-loaderのコンパイルがエラーになる？</h3>
+
+<p>で、そのあとはedo-blogcardとedo-karakuriをつないで、動かそうとしたところ、<a href="https://github.com/PolymerX/lit-loader">lit-loader</a>というかBabelでエラーになります。
+どうもコンストラクターがダメらしい。lit-loaderの公式では以下のような例です。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">CounterElement</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">get</span> <span class="nx">properties</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span>
+      <span class="na">clicks</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span>
+      <span class="na">value</span><span class="p">:</span> <span class="nb">Number</span>
+    <span class="p">}};</span>
+
+    <span class="kd">constructor</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">super</span><span class="p">();</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>これを見てパッとは気づかなかったのですが、よく考えると <code>extends</code> してない（親クラスない）のに、 <code>constructor</code> で <code>super</code> 呼んだらダメじゃね？と。
+まぁ厳密には <code>lit-loader</code> を使ってコンパイルされると、以下のように <code>LitElement</code> を継承するので、コンパイル後であれば問題はないです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">CounterElement</span> <span class="kd">extends</span> <span class="nx">LitElement</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">get</span> <span class="nx">properties</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span>
+      <span class="na">clicks</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span>
+      <span class="na">value</span><span class="p">:</span> <span class="nb">Number</span>
+    <span class="p">}};</span>
+
+    <span class="kd">constructor</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">super</span><span class="p">();</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>あれ？でもこれ <a href="https://github.com/PolymerX/lit-loader-example">lit-loader-example</a>でうまく動作していなかったっけ？と思ったわけです。
+そして、確かにリポジトリをcloneしてから <code>yarn install</code> して <code>yarn build</code> してもエラーになりません。</p>
+
+<h3>そのときと現状</h3>
+
+<p>当時のパッケージバージョンと、現在のパッケージバージョンを比較してみました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ npm outdated
+Package               Current      Wanted  Latest  Location
+@babel/core             7.2.2       7.2.2   7.4.5  lit-loader-example
+@babel/preset-env       7.3.0       7.3.0   7.4.5  lit-loader-example
+babel-loader            7.1.5       7.1.5   8.0.6  lit-loader-example
+lit-element        2.0.0-rc.3  2.0.0-rc.3   2.2.0  lit-loader-example
+webpack                4.16.1      4.16.1  4.35.0  lit-loader-example
+webpack-cli             3.0.8       3.0.8   3.3.5  lit-loader-example
+xo                     0.21.1      0.21.1  0.24.0  lit-loader-example
+</code></pre></div>
+<p>babel新しくなってるな。確かに新しくするとES6のチェックが厳密になっている。
+まぁあるべき姿なんですけどね。</p>
+
+<h3>どうするか？</h3>
+
+<p>ただしく解決するなら <code>constructor</code> が定義されている場合のみ、最初の行に <code>super()</code> を差し込むような <code>lit-loader</code> にすれば良いのかなと。
+で、 <code>lit-loader</code> は <a href="https://github.com/facebook/jscodeshift">jscodeshift</a> を使っているので、JavaScriptのASTとか調べながら、jscodeshiftでどうやってソースコードを変換できるかを調べました。
+で、修正コードは作れたので、PR出すかなーと思っています。
+今のところ通過するようにするためには Babel のバージョンを <code>7.2.2</code> にしておくと良いです。</p>
+
+<h3>次回</h3>
+
+<p>Polymer Japanのイベントが同じ週に計画されているので、次回は8月の予定です。</p>
+
+<p>引き続きEdoエレメントの開発ともくもくを進めていきます。
+皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo  meetup ＃26を開催しました" data-url="http://blog.open.tokyo.jp/2019/06/30/polymer-co-edo-meetup-26.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/06/30/polymer-co-edo-meetup-26.html&t=Polymer.co-edo%20%20meetup%20%EF%BC%8326%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/06/30/polymer-co-edo-meetup-26.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/06/16/interop-2019-w3c-chirimen.html">InteropでW3Cブースの出展に参加してきました</a></h2>
+  <p class="postdate"><a href="/2019/06/16.html" title="Permanent link">Sunday, June 16, 2019 03:26:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/interop.html" rel="tag">Interop</a>
+      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>Interopに今年も参加したのですが、何年か前と同じくCHIRIMENコミュニティで出展の説明員もしてきました。
+それとW3Cブースで登壇も。。</p>
+
+<p>今年は幕張メッセの開場をAWS Summitと同時開催ということで、とてもたくさんの人がいました。</p>
+
+<p>InteropでのW3Cブースはだいぶ影薄めなのですが、なんと中央通り沿いという今までにない？！良い位置取りで、思ったより多くの方に興味を持ってもらえたような気がします。</p>
+
+<p>私は昨年のMaker Faireで展示したCHIRIMEN PIANOを持って行きました。小さいキットなので、ポータビリティが良いです。</p>
+
+<p>少しでもWebブラウザからIoT機器を操作することに興味を持ってくれる人が増えると嬉しいです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="InteropでW3Cブースの出展に参加してきました" data-url="http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html&t=Interop%E3%81%A7W3C%E3%83%96%E3%83%BC%E3%82%B9%E3%81%AE%E5%87%BA%E5%B1%95%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a></h2>
+  <p class="postdate"><a href="/2019/06/16.html" title="Permanent link">Sunday, June 16, 2019 03:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+      <a href="/tags/karakuri.html" rel="tag">karakuri</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>会社の合宿に参加するため6/7と6/8で福井の<a href="https://www.takasusou.jp/">鷹巣荘</a>に行ってました。
+海沿いの景色の良い温泉宿だったと思うのですが、生憎梅雨入り直後で雨でした。</p>
+
+<p>まぁ開発に集中できるということで、 <code>edo-blogcard</code> で使うスクレイピングサーバーを作ってました。</p>
+
+<p>名前は <a href="https://github.com/Edo-Elements/edo-karakuri">edo-karakuri</a> です。</p>
+
+<p>成果発表のスライドがあるので、こちらから。</p>
+
+<script async class="speakerdeck-embed" data-id="831d3dc0f327492d9c2f090d24eec5d8" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>スクレイピングしてCORSを回避するのってカラクリだし、なんか江戸っぽいな、ということで、こういうネーミングにしました。
+これを実際にサービスにするには、<a href="https://github.com/GoogleChrome/puppeteer">Puppeteer</a>が重いので、先頭で受けるサービスにするとお金もかかる、ということで手前にキャッシュから打ち返すサービスを作って、キャッシュにない場合はスクレイピングするようにしたいと思います。</p>
+
+<p>現在 GitHub に上がっているコードは、まだGAEにデプロイするようになっていないので、次の <a href="#">Polymer.co-edoのmeetup</a>では、ここを作ろうと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="合宿に参加してKARAKURIを作った" data-url="http://blog.open.tokyo.jp/2019/06/16/karakuri.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/06/16/karakuri.html&t=%E5%90%88%E5%AE%BF%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6KARAKURI%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/06/16/karakuri.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/06/09/jsfes-2019-spring.html">初夏のJavaScript祭りに参加して、Import mapsについてLTをしました</a></h2>
+  <p class="postdate"><a href="/2019/06/09.html" title="Permanent link">Sunday, June 09, 2019 02:43:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://javascript-fes.doorkeeper.jp/events/90894">6/1に開催されたJavaScript祭りに参加しました</a></p>
+
+<p><img src="https://dzpp79ucibp5a.cloudfront.net/events_banners/90894_normal_1556002686_jsfes2019.png" alt="" /></p>
+
+<p>いつもと同様にLT枠へ申し込みましたが、今回はPolymerではありません。
+とは言いつつ、WebComponentsに関してもとても重要な仕様となる<a href="https://github.com/WICG/import-maps">import maps</a>について、最近Blogにまとめた内容について発表してきました。</p>
+
+<p>さて、私のスライドは以下のとおりです。</p>
+
+<script async class="speakerdeck-embed" data-id="912b2dfa5d154da6878af26b60aa5b7e" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>イベントでは他にもとても楽しいセッションが多く、盛り上がりました。
+また参加したいと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="初夏のJavaScript祭りに参加して、Import mapsについてLTをしました" data-url="http://blog.open.tokyo.jp/2019/06/09/jsfes-2019-spring.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/06/09/jsfes-2019-spring.html&t=%E5%88%9D%E5%A4%8F%E3%81%AEJavaScript%E7%A5%AD%E3%82%8A%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%80%81Import%20maps%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6LT%E3%82%92%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/06/09/jsfes-2019-spring.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/31/polymer-co-edo-meetup-25.html">Polymer.co-edo  meetup ＃25を開催しました</a></h2>
+  <p class="postdate"><a href="/2019/05/31.html" title="Permanent link">Friday, May 31, 2019 02:43:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年4回目となる <a href="https://polymercoedo.doorkeeper.jp/events/91906">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>前回 <code>edo-blogcard</code> の作成に入りましたが、実際はWebサイトのデータを収集するためには、スクレイピングする必要があります。
+ブラウザからはCORSになってしまうため、そういったOSSや、サーバー側のアーキテクチャの調査をしていました。
+個人的には少しずつアイデアが固まってきたので、会社の合宿でまとめていきたいなぁと思っています。</p>
+
+<h3>次回</h3>
+
+<p>引き続きEdoエレメントの開発ともくもくを進めていきます。
+皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo  meetup ＃25を開催しました" data-url="http://blog.open.tokyo.jp/2019/05/31/polymer-co-edo-meetup-25.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/31/polymer-co-edo-meetup-25.html&t=Polymer.co-edo%20%20meetup%20%EF%BC%8325%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/31/polymer-co-edo-meetup-25.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+
+  <p class="pagenav">
+      <a href="/page/8/">« Prev</a>
+        <a href="/page/5/">5</a>
+        <a href="/page/6/">6</a>
+        <a href="/page/7/">7</a>
+        <a href="/page/8/">8</a>
+        <b>9</b>
+        <a href="/page/10/">10</a>
+        <a href="/page/11/">11</a>
+        <a href="/page/12/">12</a>
+        <a href="/page/13/">13</a>
+      <a href="/page/10/">Next »</a>
+  </p>
+<script type="text/javascript" src="/javascripts/image-resize-ie.js"></script>
+
+
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>

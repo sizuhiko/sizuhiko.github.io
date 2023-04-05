@@ -1,0 +1,688 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - CakePHPのWebTestCaseでfixtureを使う</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
+    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        Socialite.load("blog-social");
+      });
+    </script>
+
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <div id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </div>
+
+    <div id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+            <h2>CakePHPのWebTestCaseでfixtureを使う</h2>
+            <p class="postdate"><a href="/2009/10/01.html" title="Permanent link">Thursday, October 01, 2009 08:10:02 PM</a></p>
+            <p class="tags">
+                <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                <a href="/tags/fixture.html" rel="tag">fixture</a>
+                <a href="/tags/phpstudy.html" rel="tag">phpstudy</a>
+                <a href="/tags/webtestcase.html" rel="tag">WebTestCase</a>
+            </p>
+
+          <p>&lt;!&ndash; more &ndash;&gt;９／３０に行われた<a href="http://events.php.gr.jp/events/show/84">第46回PHP勉強会</a>で発表した内容ですが、そのままブログで読めるように展開します。</p>
+
+<hr>
+
+<h3>経緯</h3>
+
+<p>CakePHPはユニットテスト実行時にテストデータを投入するfixture機能をサポートしています。CakePHPのユニットテストはSimpleTestをベースにしており、UnitTestCaseと、それを継承してWebブラウザ動作のテストを行うWebTestCase、２つのテストケースを持っています。CakeではそれぞれCakeTestCase、CakeWebTestCaseという名前になります。
+ただしCakeWebTestCaseはWebTestCaseを継承しているだけで、何も機能拡張をしていません。</p>
+
+<p>cake/tests/lib/cake<em>web</em>test_case.php</p>
+<div class="highlight"><pre class="highlight plaintext"><code>class CakeWebTestCase extends WebTestCase {
+}
+</code></pre></div>
+<p>CakePHPオフィシャルのCookBookでも、以下のように解説されています。</p>
+
+<blockquote>
+<p>CakeWebTestCase は、SimpleTest の WebTestCase をただ拡張したもので、特に機能追加はありません。SimpleTest の Web testing に関する文書中に記載がある全ての機能は、 CakeWebTestCase で利用できます。これはまた、 SimpleTest が持つ機能以外のものは使えないことを意味します。すなわち、 CakeWebTestCase においてフィクスチャは利用できず、テストケースにデータベースに対する更新や保存が含まれていた場合、恒久的にデータベースの値が変更されることを意味します。テストの結果は、しばしばデータベースが持つ値に基づくので、テスト手順の一部としてデータベースが期待した値を持つことを確認してください。</p>
+</blockquote>
+
+<p>しかし実際に開発の場面では、WebTestCaseを使って、ログインからの操作を試したり、データベースに依存した操作・結果を求めなければならない場面に遭遇します。そこで今回はfixutureを使えるようなWebTestCaseを作ってみます。</p>
+
+<h3>考察</h3>
+
+<p>今回fixtureを使えるWebTestCaseを作る上で、考慮したポイントは以下のとおりです。</p>
+
+<ol>
+<li>なるべく書かない</li>
+<li>Cakeのバージョンが変わっても簡単に移行したい</li>
+<li>いつかは本体に組み込んで欲しい</li>
+</ol>
+
+<p>そこで、今回はUnitTestCaseを継承している、cake<em>test</em>case.php を流用して差分のみ別クラスに作成することにしました。こうすると、後でCakeのバージョンが変わったても問題が少ないし、後で本体に組み込んでもらうときもわかりやすいと思ったからです。</p>
+
+<h3>実施</h3>
+
+<p>実施の手順は以下のとおりです。</p>
+
+<ol>
+<li>cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</li>
+<li>上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</li>
+<li>FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</li>
+<li>FixturableWebTestCase を作成</li>
+<li>bootstrap に初期化コードを追加</li>
+<li>実際のテストケースを記述</li>
+</ol>
+
+<p>それぞれの手順を詳細に解説します。</p>
+
+<h4>1.cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</h4>
+
+<p>まず流用元のテストケースをコピして、継承する元になるクラスを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>cd {アプリケーションのHOMEディレクトリ}
+mkdir app/vendors/webtest
+
+cp cake/tests/lib/cake_test_case.php app/vendors/webtest/fixturable_web_base_test_case.php
+</code></pre></div>
+<h4>2.上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</h4>
+
+<p>これはお使いのエディタを開いて、置換機能を使えばあっという間に完了です。
+app/vendors/webtest/ fixturable<em>web</em>base<em>test</em>case.php を編集してください。</p>
+
+<h4>3.FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</h4>
+
+<p>このままでは、単にCakeTestCaseの名前を変更しただけなので、そのスーパークラスをUnitTestCaseからWebTestCaseに変更します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>class FixturableWebBaseTestCase extends WebTestCase {
+    // extends を変更する
+}
+</code></pre></div>
+<h4>4.FixturableWebTestCase を作成</h4>
+
+<p>手順3でWebTestCaseを使ったCakeTestCaseと似たものができました。ただしこのままではWebアクセス時にfixtureを読み込むようにはできません。
+FixturableWebBaseTestを継承したクラスを作成します。このクラスでは、Webテスト中なのか、通常動作中なのかを判定するロジック（CakeTestCaseからの差分）を記述します。
+またWebテスト中なのか、そうでないのかを判定するために、以下の方法を検討しました。</p>
+
+<ul>
+<li>tmp/tests 以下のファイルで識別する</li>
+<li>UserAgentを使って識別する</li>
+<li>HTTP独自ヘッダで識別する</li>
+</ul>
+
+<p>まずUserAgentでテスト中か判断する方法を思いついたのですが、Webテストの場合UserAgentそのものを判断してビューを切り替えたり（特に携帯など）するので、これは方法としては最適ではないと判断し却下。
+HTTP独自ヘッダは、やはり通常運用しているときにセキュリティホールを作る事にも繋がるので、微妙なところです。ただし通常（本番）運用する場合はCakeのデバッグレベルを0にして運用すると思うので、独自ヘッダの判定前にデバッグレベルを判定すれば問題ないということも言えます。
+そこで今回は、tmp/tests以下にテンポラリファイルを作って判定するという方法を採用しています。
+app/vendors/webtest/fixturable<em>web</em>test_case.php</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="nc">App</span><span class="o">::</span><span class="nf">import</span><span class="p">(</span><span class="s1">'Vendor'</span><span class="p">,</span> <span class="s1">'webtest'</span> <span class="mf">.</span> <span class="no">DS</span> <span class="mf">.</span> <span class="s1">'fixturable_web_base_test_case'</span><span class="p">);</span>
+
+<span class="cd">/**
+ * FixturableWebTestCase class
+ */</span>
+<span class="kd">class</span> <span class="nc">FixturableWebTestCase</span> <span class="kd">extends</span> <span class="nc">FixturableWebBaseTestCase</span> <span class="p">{</span>
+    <span class="cd">/**
+     * @overwrite 
+     */</span>
+    <span class="k">function</span> <span class="n">startCase</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">_lockWebTesting</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="cd">/**
+     * @overwrite 
+     */</span>
+    <span class="k">function</span> <span class="n">endCase</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">_unlockWebTesting</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="cd">/**
+     * bootstrap.php から呼び出す
+     */</span>
+    <span class="k">function</span> <span class="n">initIfTestMode</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nb">file_exists</span><span class="p">(</span><span class="nc">FixturableWebTestCase</span><span class="o">::</span><span class="nf">_getLockFileName</span><span class="p">()))</span> <span class="p">{</span>
+            <span class="k">parent</span><span class="o">::</span><span class="nf">_initDb</span><span class="p">();</span>
+            <span class="nc">Configure</span><span class="o">::</span><span class="nf">write</span><span class="p">(</span><span class="s1">'Acl.database'</span><span class="p">,</span> <span class="s1">'test_suite'</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="cd">/**
+     * TMPファイルを作成して、Webテスト中であることを宣言
+     */</span>
+    <span class="k">function</span> <span class="n">_lockWebTesting</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nb">touch</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">_getLockFileName</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="cd">/**
+     * TMPファイルを削除して、Webテスト中でなくす
+     */</span>
+    <span class="k">function</span> <span class="n">_unlockWebTesting</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nb">unlink</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">_getLockFileName</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="k">function</span> <span class="n">_getLockFileName</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">TMP</span><span class="mf">.</span><span class="s1">'tests'</span><span class="mf">.</span><span class="no">DS</span><span class="mf">.</span><span class="s1">'fixturable.web.test.tmp'</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4>5.bootstrap に初期化コードを追加</h4>
+
+<p>最後の準備として、bootstrapに初期化コードを追加します。bootstrapはCakePHPで動作するすべてのアクションが必ず通過する最初のポイントなので、ここで利用するデータベースを切り替えるようにします。
+app/config/bootstrap.php</p>
+<div class="highlight"><pre class="highlight plaintext"><code>if(($_SERVER['PHP_SELF'] != '/webroot/test.php') &amp;&amp; Configure::read() &gt; 0) {
+  if(App::import('Vendor', 'webtest' . DS . 'fixturable_web_test_case')) {
+    FixturableWebTestCase::initIfTestMode();
+  }
+}
+</code></pre></div>
+<p>bootstrapはテストコードをtest.phpから実行しようとした場合も通過してしまうので、このURLはフィルタする必要があります。また通常運用で呼ばれないようにデバッグ値が０より大きい場合にデータベースの切り替えを実行するようにします。</p>
+
+<h4>6.実際のテストケースを記述</h4>
+
+<p>これでWebTestCaseでfixtureが使える準備は整いました。後はテストケースを記述するだけです。
+今回サンプルとして、私の執筆した「<a href="http://www.amazon.co.jp/CakePHP%E3%81%AB%E3%82%88%E3%82%8B%E5%AE%9F%E8%B7%B5Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E9%96%8B%E7%99%BA-%E5%AE%89%E8%97%A4-%E7%A5%90%E4%BB%8B/dp/4839930651/ref=sr_1_1?ie=UTF8&amp;s=books&amp;qid=1254396747&amp;sr=1-1">CakePHPによる実践Webアプリケーション開発</a>」で作ったCalendarNoteをテストしてみます。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span> 
+<span class="nc">App</span><span class="o">::</span><span class="nf">import</span><span class="p">(</span><span class="s1">'Vendor'</span><span class="p">,</span> <span class="s1">'webtest'</span> <span class="mf">.</span> <span class="no">DS</span> <span class="mf">.</span> <span class="s1">'fixturable_web_test_case'</span><span class="p">);</span>
+
+<span class="kd">class</span> <span class="nc">UsersWebTest</span> <span class="kd">extends</span> <span class="nc">FixturableWebTestCase</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">$fixtures</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="s1">'app.group'</span><span class="p">,</span> <span class="s1">'app.user'</span><span class="p">,</span> <span class="s1">'app.users_group'</span><span class="p">,</span>     <span class="s1">'app.schedule'</span><span class="p">,</span> <span class="s1">'app.schedules_user'</span><span class="p">,</span>
+        <span class="s1">'app.aco'</span><span class="p">,</span> <span class="s1">'app.aro'</span><span class="p">,</span> <span class="s1">'app.aros_aco'</span>
+    <span class="p">);</span>
+
+    <span class="k">function</span> <span class="n">startTest</span><span class="p">(</span><span class="nv">$method</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">parent</span><span class="o">::</span><span class="nf">startTest</span><span class="p">(</span><span class="nv">$method</span><span class="p">);</span>
+        <span class="nc">Configure</span><span class="o">::</span><span class="nf">write</span><span class="p">(</span><span class="s1">'Acl.database'</span><span class="p">,</span> <span class="s1">'test_suite'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">addHeader</span><span class="p">(</span><span class="s1">'Accept-Language:ja'</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">function</span> <span class="n">testLoginAndCheckSchedule</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertTrue</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'http://calendarnote.localhost/users/login'</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertTitle</span><span class="p">(</span><span class="k">new</span> <span class="nc">PatternExpectation</span><span class="p">(</span><span class="s1">'/CalendarNote/'</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertSubmit</span><span class="p">(</span><span class="s1">'Login'</span><span class="p">);</span>
+
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">clickSubmit</span><span class="p">(</span><span class="s1">'Login'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span>
+            <span class="s1">'data[User][username]'</span><span class="o">=&gt;</span><span class="s1">'hide'</span><span class="p">,</span>
+            <span class="s1">'data[User][password]'</span><span class="o">=&gt;</span><span class="s1">'password'</span><span class="p">,</span>
+        <span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertText</span><span class="p">(</span><span class="s1">'Hidetoshi Nakata'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertLink</span><span class="p">(</span><span class="s1">'ログアウト'</span><span class="p">);</span>
+
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertTrue</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'http://calendarnote.localhost/schedules/index/month/2009/01'</span><span class="p">));</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertText</span><span class="p">(</span><span class="s1">'2008年12月28日'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertTrue</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">clickLink</span><span class="p">(</span><span class="s1">'10:00-12:00 Nengashiki'</span><span class="p">));</span>
+
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertFieldByName</span><span class="p">(</span><span class="s1">'data[Schedule][title]'</span><span class="p">,</span> <span class="s1">'Nengashiki'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertFieldByName</span><span class="p">(</span><span class="s1">'data[Schedule][contents]'</span><span class="p">,</span> <span class="s1">'In Japan, there are the New Year holidays and a New-Year'</span><span class="n">s</span><span class="o">-</span><span class="n">greetings</span> <span class="n">ceremony</span> <span class="n">is</span> <span class="n">performed</span> <span class="n">to</span> <span class="n">the</span> <span class="n">first</span> <span class="n">day</span> <span class="n">of</span> <span class="n">work</span><span class="mf">.</span><span class="s1">');
+
+    }
+    function endTest($method) {
+        parent::endTest($method);
+        $this-&gt;get('</span><span class="n">http</span><span class="o">://</span><span class="n">calendarnote</span><span class="mf">.</span><span class="n">localhost</span><span class="o">/</span><span class="n">users</span><span class="o">/</span><span class="n">logout</span><span class="err">'</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>このテストシナリオは以下のとおりです。</p>
+
+<ol>
+<li>ログイン画面にアクセスできるか検証する</li>
+<li>タイトルがCalendarNoteになっているか検証する</li>
+<li>ログインボタンが出ているか検証する</li>
+<li>ユーザ名hide、パスワードpasswordでログイン（サブミット）する</li>
+<li>次の画面に、フルネームが表示されていて、ログアウトリンクがあるか検証する。</li>
+<li>2009年1月の月単位スケジュール一覧に遷移できることを検証する。</li>
+<li>2008年12月28日という文字列の表示を検証する。</li>
+<li>スケジュール詳細へのリンクが表示されることを検証する。</li>
+<li>フォームのタイトルに正しい値が入っていることを検証する。</li>
+<li>フォームのコンテンツに正しい値が入っていることを検証する。</li>
+</ol>
+
+<p>テストコードに目を向けると、最初にApp::importでテストケースの親クラスを取り込んで、テストケースの親クラスをFixturableWebTestCaseに指定する以外、ほとんど通常のモデルなどのテストコードと書き方は同じだということに気がつくでしょう。特にfixtureの記法に関しては、まったく同じです。
+これは「cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更」したために、CakeTestCaseと同じ機能が利用できるようになっているのです。
+もちろん記述方法が同じなら、実行方法も同じで、<a href="http://localhost/test.php">http://localhost/test.php</a>のようにブラウザからの実行や、コンソールからの実行なども問題ありません。CakeMateを使ってTextMate上からもテストが実行できます。もちろんコンソールやTextMateなどCLI環境から実行する場合なども、裏でHTTPアクセスするので、Apacheは動作している必要があります。
+Webテストで、どのようなブラウザ動作ができるのかは、本家のSimpleTestサイトか、こちらも私が執筆に参加した「<a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;s=books&amp;qid=1254396747&amp;sr=1-2">Webアプリケーションテスト手法</a>」にて確認してください。</p>
+
+<h3>最後に</h3>
+
+<p>本カスタマイズはPHP5.2.10、CakePHP1.2.5で検証しています。CakePHP1.2系であれば特に問題なく動作すると思いますが、うまく動作しない場合はコメントいただけると助かります。
+今後の展開としては、まずこの記事を英語にしてBakeryにアップしたいと思います。
+それをきっかけにコア開発者の目にでもとまったら、本体への組み込みなんか検討してくれるかもしれません。
+もしかして一度やろうとしてやめたのかもしれないんですけど、Cake祭り(*1)でコア開発者が日本に来るので、直接聞いてみたいなと思います。</p>
+
+<hr>
+
+<p>(*1) Cake祭り：昨年はCakePHPカンファレンスとして実施した、イベントの第２回目。今年もコア開発者が日本に来るので要注目のイベントです。今すぐ申し込みへ。
+<a href="http://matsuri.cakephp.jp/">http://matsuri.cakephp.jp/</a></p>
+
+<div style="width:425px;text-align:left" id="__ss_2102965">
+<a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare/cakephpwebtestcasefixture" title="CakePHPのWebTestCaseでfixtureを使う" rel="nofollow">CakePHPのWebTestCaseでfixtureを使う</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture">
+<param name="allowFullScreen" value="true">
+<param name="allowScriptAccess" value="never">
+<embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=php20090930pub-091001050630-phpapp02&amp;stripped_title=cakephpwebtestcasefixture" type="application/x-shockwave-flash" allowfullscreen="true" width="425" height="355" allowscriptaccess="never"></object><div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View more <a style="text-decoration:underline;" href="http://www.slideshare.net/" rel="nofollow">documents</a> from <a style="text-decoration:underline;" href="http://www.slideshare.net/kishida4slideshare" rel="nofollow">kishida4slideshare</a>.</div>
+</div>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <ul class="social-buttons cf">
+                  <li>
+                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのWebTestCaseでfixtureを使う" data-url="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+                  </li>
+                  <li>
+                    <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html&t=CakePHP%E3%81%AEWebTestCase%E3%81%A7fixture%E3%82%92%E4%BD%BF%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/10/01/cakephp-webtestcase-fixture.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+
+        </div>
+      </div>
+
+      <div id="sidewrap">
+        <div id="side">
+          <div class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
+                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
+                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
+                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
+                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
+                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
+                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
+                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" href="https://twitter.com/sizuhiko" data-widget-id="442558418625114112">@sizuhiko からのツイート</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </div>
+  </body>
+</html>
