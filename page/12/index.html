@@ -277,7 +277,121 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a></h2>
+            <h2 class="title"><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a></h2>
+  <p class="postdate"><a href="/2019/04/28.html" title="Permanent link">Sunday, April 28, 2019 05:13:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a>の続編です。</p>
+
+<p>前回までの対応で、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなりました。
+ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
+これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところだったのですが、これらの対応を解説していきます。</p>
+
+<h3>dom-module has style outside template というワーニングが出る</h3>
+
+<p>ブラウザのコンソールを確認していると <code>dom-module has style outside template</code> といったワーニングが表示されます。
+これは <code>&lt;dom-module&gt;</code> の中で <code>&lt;template&gt;</code> と <code>&lt;style&gt;</code> が並列に記述されている場合に発生します。</p>
+
+<p>なので、すべて <code>&lt;template&gt;</code> の子要素に <code>&lt;style&gt;</code> を移動しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/57ac6537723ead18bf953cbe4577a69c990bafe1">コミット</a>）。</p>
+
+<h3>動かすようにするための微調整</h3>
+
+<p>続いて1つずつの修正はそれぞれ大きくないものの、動作するまでの調整をたくさん実施しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/c1cb2e9fa4d12cc049dac8abc996cb3be0057155">コミット</a>）。</p>
+
+<h4>クリック処理が動かない</h4>
+
+<p>これは1から2の段階で廃止になった <code>listeners</code> を使っていたためで、利用箇所を <code>addEventListener</code> や、 <code>on-tap</code>, <code>on-click</code> に変更しました。</p>
+
+<h4>moment でロケールを利用しようとするとエラーになる</h4>
+
+<p>Toilet Evolution では、トイレの利用状況を表示するときに <code>10分前</code> のような表示をしているのですが、これに <code>moment.js</code> の機能(<code>toDate()</code>)を使っています。
+<code>moment</code> だけ(ロケールを使わない)なら npm でインストールして</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">moment</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">moment</span><span class="dl">'</span><span class="p">;</span>
+</code></pre></div>
+<p>と記述すればよかった(動いた)のですが、どうしてもロケールの解決がうまくいかない（Webpackするとエラーになる）ので、今回はあきらめてHTML側でグローバルに利用できる形にしました。</p>
+<div class="highlight"><pre class="highlight html"><code>  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/ja.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>いくつかWebpackとmomentのissueも見つけて解決策もありそうだったのですが、とりあえず困らないのでこの方法で。</p>
+
+<h4>style や slot が解決されない</h4>
+
+<p>modulizerで自動変換された <code>&lt;google-map-marker&gt;</code> エレメントは以下のようになっていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">$_documentContainer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="dl">'</span><span class="s1">template</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">`&lt;dom-module id="google-map-marker"&gt;
+  &lt;style&gt;
+    :host {
+      display: none;
+    }
+  &lt;/style&gt;
+  &lt;template&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/template&gt;
+&lt;/dom-module&gt;`</span><span class="p">;</span>
+
+<span class="nb">document</span><span class="p">.</span><span class="nx">head</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">content</span><span class="p">);</span>
+</code></pre></div>
+<p>もとのHTMLでの記述は以下のようになっていました。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;dom-module</span> <span class="na">id=</span><span class="s">"google-map-marker"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;template&gt;</span>
+    <span class="nt">&lt;style&gt;</span>
+      <span class="nd">:host</span> <span class="p">{</span>
+        <span class="nl">display</span><span class="p">:</span> <span class="nb">none</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="nt">&lt;/style&gt;</span>
+
+    <span class="nt">&lt;slot&gt;&lt;/slot&gt;</span>
+  <span class="nt">&lt;/template&gt;</span>
+  <span class="nt">&lt;script&gt;</span>
+</code></pre></div>
+<p>自分が作ったカスタムエレメントでは、 <code>Polymer</code> の <code>_template</code> に <code>html</code> を使うように変換されていたのですが、bowerでインストールしたコンポーネントの多くは上記のように変換されていました。これを <code>html</code> を使うようにしてみたところ解決しました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
+
+  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="s2">`
+  &lt;style&gt;
+    :host {
+      display: none;
+    }
+  &lt;/style&gt;
+  &lt;slot&gt;&lt;/slot&gt;
+`</span><span class="p">,</span>
+</code></pre></div>
+<p><code>&lt;google-map&gt;</code> エレメントも同様にうまく動作しなかったので、 <code>html</code> をつけて <code>_template</code> で返却するように対応しました。</p>
+
+<h3>さいごに</h3>
+
+<p>4回にわたって、Polymer1のプロジェクトをPolymer3に移行した解説をしてきました。
+この連載がPolymer1からアップグレードする他の方の手助けになれば幸いです。</p>
+
+<p>基本的な部分は、ほとんどmodulizerで変換できるので、これは便利だなーと思うのでした。
+Polymer3対応した依存エレメントは、どこかのタイミングでPRを出してフィードバックしたいなと思っています。</p>
+
+<p>では良いWeb Componentsライフを！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(4)" data-url="http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(4)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a></h2>
   <p class="postdate"><a href="/2019/04/27.html" title="Permanent link">Saturday, April 27, 2019 07:16:00 PM</a></p>
   <p class="tags">
       <a href="/tags/polymer.html" rel="tag">Polymer</a>
@@ -662,122 +776,6 @@ Gulpを3から4にあげたので <code>gulpfile.js</code> もモリモリと変
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a></h2>
-  <p class="postdate"><a href="/2019/04/07.html" title="Permanent link">Sunday, April 07, 2019 01:00:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phperkaigi.html" rel="tag">PHPerKaigi</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><img src="/images/blog/phperkaigi2019.jpg" alt="" /></p>
-
-<p>初めてのPHPerKaigi参加です。
-これまで予定が重なっていて参加できなかったのですが、今年は年度末開催ということで、他の予定もなく参加することができました。</p>
-
-<p>どうせなら何か話さないと、ということで</p>
-
-<ul>
-<li>Day2 の IRT: テスト〜CI/CD相談会 で、 <a href="https://twitter.com/kaz_29">@kaz_29</a> のテーブルトークの賑やかしに</li>
-<li>Day3 のアンカンファレンスで <a href="https://twitter.com/phperkaigi/status/1112168095261429761">ブラウザの次に来る（かも？しれない）仕様を知ってフロントエンドチョットデキル人になろう</a>というテーマで話す</li>
-<li>Day3 の IRT: フロントエンド相談会 で、 <a href="https://twitter.com/FruitRiin">@FruitRiin</a> のテーブルトークの賑やかしに</li>
-<li>Day3 の <a href="https://fortee.jp/phperkaigi-2019/proposal/180747ce-2451-4958-9b18-42f218ce61b3">出張版PHP勉強会@東京</a>で、メインセッションを担当</li>
-</ul>
-
-<p>他はセッションを聞いていました。</p>
-
-<h3>CI/CDとは&hellip;</h3>
-
-<p>CI/CD相談会で受けた印象は、CI == 自動テストやってます、CD == ツール使ってデプロイしてます（完全手動ではない）という雰囲気の人が多く、ほんとうのCI/CDにはまだまだ遠いなぁという感じ。それでも私がテストやろうね、といってほとんどの人が書いてない時代からは大きな変化で、いつかほんとうの意味に近づいてくれることを期待しています。</p>
-
-<h3>import maps と HTML Template Instantiation について</h3>
-
-<p>アンカンファレンスではWeb Componentsの周辺仕様の動きについて、話しました。</p>
-
-<ul>
-<li><a href="https://drafts.csswg.org/css-shadow-parts/">CSS Shadow Parts</a></li>
-<li><a href="https://github.com/WICG/import-maps">import maps</a></li>
-<li><a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Register</a></li>
-<li><a href="https://github.com/w3c/webcomponents/issues/645">HTML Modules</a></li>
-<li><a href="https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md">HTML Template Instantiation</a></li>
-</ul>
-
-<p>このうち<a href="https://drafts.csswg.org/css-shadow-parts/">CSS Shadow Parts</a>はCSSWGのドラフトになっていることもあり、概要をさらっと説明。
-<a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Register</a>と<a href="https://github.com/w3c/webcomponents/issues/645">HTML Modules</a>は、Web Components色が強いので、これも概要をさらっと。
-で、<a href="https://github.com/WICG/import-maps">import maps</a>と<a href="https://github.com/%E2%80%A6/gh%E2%80%A6/proposals/Template-Instantiation.md">HTML Template Instantiation</a>について、少し深く話しました。</p>
-
-<h4>import maps</h4>
-
-<p>これは過去のブログ記事でも登場した <code>Package name maps</code> の最新の名前です。過去のリンクからは自動的にリダイレクトされます。
-<code>bower</code> によるJavaScript依存ライブラリのインストールが、npm中心のエコシステムに変わり、ブラウザからそのモジュールを利用するには Webpack のようなもので依存解決をする必要がありました。
-しかし今日では ESModule Import がブラウザでもサポートされているので、以下のようなコードでライブラリを利用したくなります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">moment</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">moment</span><span class="dl">"</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">partition</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">lodash</span><span class="dl">"</span><span class="p">;</span>
-</code></pre></div>
-<p>しかしブラウザは <code>from</code> から読み取るときURIとして識別するので、当然サーバーからJavaScriptファイルを取れないし、Node.jsと違って <code>package.json</code> から <code>main</code> のスクリプトファイルをロードすることもできません。
-そこで <code>import maps</code> では以下のようなマッピング定義を使います。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">{</span>
-  <span class="dl">"</span><span class="s2">imports</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">"</span><span class="s2">moment</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/node_modules/moment/src/moment.js</span><span class="dl">"</span><span class="p">,</span>
-    <span class="dl">"</span><span class="s2">lodash</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/node_modules/lodash-es/lodash.js</span><span class="dl">"</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>するとブラウザはマッピングファイルから以下のように記述されたものとして解釈します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">moment</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">/node_modules/moment/src/moment.js</span><span class="dl">"</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">partition</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">/node_modules/lodash-es/lodash.js</span><span class="dl">"</span><span class="p">;</span>
-</code></pre></div>
-<p>これはWeb Componentsに関係なく、普通にHTMLからjQueryを使おうとしていた人にとってもわかりやすくなるし、Webpackからも解放されるので、はやくブラウザ実装になってほしいなぁと思っています。</p>
-
-<h4>HTML Template Instantiation</h4>
-
-<p>「テンプレートエンジンをブラウザ自体に」というのがこの仕様なわけですが、様々なフレームワークや handlebars のようなライブラリまで、テンプレートエンジンは数多くあります。ブラウザでやることは車輪の再開発なのか？という点については、RawレベルのAPIが利用可能になることでDOMの書き換えをブラウザがやってくれることはスピードアップにつながるし、ぜひとも進んでほしい仕様の一つです。
-PolymerチームのJustinなど、各ブラウザベンダーの人も議論に参加しているので、期待できます。</p>
-
-<h3>フロントエンド相談会</h3>
-
-<p>Reactを使う人、Vueを使う人、Web Componetsを推進したい人（私）など、様々なお悩み、SSRの話しなども出ました。
-技術ワードに踊らされるのではなく、それぞれの課題に対して議論できたのがとても良かったです。
-IRT楽しかったですね。</p>
-
-<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">IRTフロントエンド相談会、なんとかいい感じに終わったかと思います。 <a href="https://twitter.com/sizuhiko?ref_src=twsrc%5Etfw">@sizuhiko</a> さん回すの手伝ってくれてありがとでした！<a href="https://twitter.com/hashtag/phperkaigi?src=hash&amp;ref_src=twsrc%5Etfw">#phperkaigi</a></p>&mdash; 果物リン (@FruitRiin) <a href="https://twitter.com/FruitRiin/status/1112203030282133504?ref_src=twsrc%5Etfw">31 March 2019</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h3>出張版PHP勉強会@東京で話しました。</h3>
-
-<p>「PHPを学ぶということ」というタイトルで初心者セッションをやりました。</p>
-
-<script async class="speakerdeck-embed" data-id="ff6bd5cb036b48af9cf18ac85fdd8b31" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>最近PHP勉強会で初心者の人多いなーと感じることが多いのと、開発チームでもプログラミングこれから！みたいな人にどうしたら良いのかなーと思うことがあって、まずは勉強の入り口にどうしたら良いかというキッカケを作ることができれば良いと思いました。</p>
-
-<p>PHPコミュニティのSlackへの参加者が、このセッションをきっかけに結構増えたので、良かった！</p>
-
-<h3>さいごに</h3>
-
-<p>PHPerKaigi とても楽しかった。
-交流がメインのカンファレンスらしく、多くの人と、様々な話題について議論できました。
-さぁ、次は<a href="https://phpcon.fukuoka.jp/2019/">福岡</a>に行きますよ！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPer Kaigi 2019に参加しました" data-url="http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html&t=PHPer%20Kaigi%202019%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/07/phper-kaigi-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/11/">« Prev</a>
@@ -805,6 +803,7 @@ IRT楽しかったですね。</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
@@ -814,7 +813,6 @@ IRT楽しかったですね。</p>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
               </ul>
             </div>
           </div>
@@ -823,10 +821,10 @@ IRT楽しかったですね。</p>
             <div class="pad">
               <ul class="nobullets clearfix">
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
@@ -925,7 +923,7 @@ IRT楽しかったですね。</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2023.html">2023</a> (6)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

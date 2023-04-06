@@ -5,10 +5,59 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2023-04-05T17:08:00+09:00</updated>
+  <updated>2023-04-06T18:24:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>aws-sdk v2 が 2023 年中にメンテナンスモードになる</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html"/>
+    <id>http://blog.url.com/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html</id>
+    <published>2023-04-06T18:24:00+09:00</published>
+    <updated>2023-04-06T18:54:44+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;aws-sdk v2 を使っている CLI ツールで aws 環境を操作していたら、見慣れないメッセージが出てきました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;(node:9129) NOTE: The AWS SDK for JavaScript (v2) will be put into maintenance mode in 2023.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;AWS SDK v2 ってメンテナンスモードに入るんだ&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Twitter でも書いている人がいました&lt;/p&gt;
+
+&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Anyone else seeing this new error from &lt;a href="https://twitter.com/awscloud?ref_src=twsrc%5Etfw"&gt;@awscloud&lt;/a&gt; sdk? &lt;br&gt;&lt;br&gt;This is showing to our CLI users and is&amp;hellip; annoying to say the least. &lt;a href="https://t.co/KabEtFDKnl"&gt;pic.twitter.com/KabEtFDKnl&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Wells (@DavidWells) &lt;a href="https://twitter.com/DavidWells/status/1626321488742862848?ref_src=twsrc%5Etfw"&gt;February 16, 2023&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;これまでも複数回にわたって aws-sdk v3 の記事を書いてきましたが、これは Lambda にデプロイするアプリだから v3 に移行したのであって、CLIツールとかなら v3 に移行するモチベがあるかな&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;ぶっちゃけ Lambda とかだとランタイムに追従すると sdk も上げないといけないので対応したけど、ツールなら対応しないですよね。&lt;/p&gt;
+
+&lt;p&gt;公式のリポジトリにも、サポートについて書かれています。&lt;/p&gt;
+
+&lt;p&gt;https://github.com/aws/aws-sdk-js#version-2x-support&lt;/p&gt;
+
+&lt;p&gt;そこにリンクされている &lt;a href="https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html"&gt;メンテナンスポリシーページ&lt;/a&gt; にいくと、以下のような内容が記入されていました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;メンテナンス (フェーズ 3) -メンテナンス モードの間、AWS は SDK リリースを制限して、重大なバグ修正とセキュリティ問題のみに対処します。SDK は、新規または既存のサービスの API 更新を受け取ることも、新しいリージョンをサポートするために更新されることもありません。特に指定がない限り、メンテナンス モードのデフォルト期間は 12 か月です。&lt;/p&gt;
+
+&lt;p&gt;サポート終了 (フェーズ 4) - SDK がサポート終了に達すると、更新またはリリースを受け取ることができなくなります。以前に公開されたリリースは引き続きパブリック パッケージ マネージャーから入手でき、コードは GitHub に残ります。GitHub リポジトリはアーカイブされる場合があります。サポートが終了した SDK の使用は、ユーザーの判断で行われます。ユーザーが新しいメジャー バージョンにアップグレードすることをお勧めします。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;v2 自体がリポジトリから無くなることはなさそうですが、膨大にありそうな v2 を使った CLI ツール群はどうするのかなぁ&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;ちなみに Serverless Framerwork は PR &lt;a href="https://github.com/serverless/serverless/pull/11769"&gt;Suppress AWS SDK v2 deprecation message&lt;/a&gt; でいったんメッセージ出力を OFF にしていますが、 v3 移行は大変だろうなぁ、という感想しかないです。&lt;/p&gt;
+
+&lt;p&gt;AWS SDK v3 は、これまでの記事でも書いてますが、結構パッケージ管理が残念な感じだったりするのと、書き方もめっちゃ変わっているので Serverless Framework 規模になると書き換えもかなり工数かかりそうだなぁと（いつかはやるんだろうけど）。&lt;/p&gt;
+
+&lt;p&gt;AWS さんが簡易にコンバートできるツールを作ってくれると良いんだろうけど、オプションの書き方も変わっているところがあったりするので、単純な変換も大変そうですね。&lt;/p&gt;
+
+&lt;p&gt;上記の引用ツイートのレスの中にもあるけど、v3 のドキュメントが不親切だというのは事実だし、良い解決策が 2023 年中に見つかると良いですね。
+なんか感想ブログになっちゃいましたが、僕らのプロジェクトも v2 依存している CLI ツールは移行対象にしてなかったので、これから移行計画作らないとな、と思っています。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</title>
     <link rel="alternate" href="http://blog.url.com/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"/>
@@ -571,105 +620,6 @@ sfn の start というメソッドで StepFunctions を呼び出していると
 しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
 sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 &lt;code&gt;mockClient&lt;/code&gt; の結果で得られたモックを使っているわけでもありません。
 そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</title>
-    <link rel="alternate" href="http://blog.url.com/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html"/>
-    <id>http://blog.url.com/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html</id>
-    <published>2022-12-30T15:39:00+09:00</published>
-    <updated>2023-04-05T14:34:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;クラメソさんの &lt;a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/"&gt;[アップデート] AWS Lambdaが Node.js 18をサポートしました&lt;/a&gt; 記事のとおり、やっと AWS Lambda でも Node.js 18 が使えるようになりました。&lt;/p&gt;
-
-&lt;p&gt;現在 Node.js 14 を使って AWS Lambda で API サーバーを構築しているのですが、 Node.js 16 の LTS が 9ヶ月終了が早まったこともあり、
-このタイミングで Node.js 18 へ移行することにしました。&lt;/p&gt;
-
-&lt;p&gt;本稿では CI/CD 環境を Node.js 14 から Node.js 18 へ移行するときに実施した作業を振り返って、まとめておきます。&lt;/p&gt;
-
-&lt;p&gt;現在の構成はこんな感じです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Node.js 14 / TypeScript&lt;/li&gt;
-&lt;li&gt;CI/CD に GitHub Actions を利用&lt;/li&gt;
-&lt;li&gt;Amazonlinux ベースの &lt;a href="https://hub.docker.com/r/amazon/aws-cli"&gt;amazon/aws-cli&lt;/a&gt; コンテナをベースにパッケージを追加した独自コンテナイメージで CI/CD を実施&lt;/li&gt;
-&lt;li&gt;Serverless Framework でビルド/デプロイ&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;CI/CD イメージの Node.js を 18 にする&lt;/h2&gt;
-
-&lt;p&gt;まずはビルド/デプロイをするコンテナイメージを Node.js 18 にしていきます。
-実際に Node.js 18 をインストールしようとしたのですが、エラーになってしまいます。&lt;/p&gt;
-
-&lt;p&gt;具体的なエラーは &lt;a href="https://stackoverflow.com/questions/50564999/lib64-libc-so-6-version-glibc-2-14-not-found-why-am-i-getting-this-error"&gt;/lib64/libc.so.6: version `GLIBC_2.14&amp;rsquo; not found. Why am I getting this error?&lt;/a&gt; と一緒で、調べていくと Amazonlinux2 ベースである CentOS7 と Node.js 18 は &lt;a href="https://it.ama2pro.net/2022/05/31/node%E3%81%AEv18%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%89%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%EF%BC%88centos7%EF%BC%89/"&gt;nodeのv18を使ったらエラーになった（CentOS7）&lt;/a&gt; などにもあるように単純な話ではないようです。&lt;/p&gt;
-
-&lt;p&gt;おや？でも Lambda は Node.js 18 が使えるんですよね？どういうこと？と思いますよね。&lt;/p&gt;
-
-&lt;p&gt;Node.js のディストリビューション issue を確認すると &lt;a href="https://github.com/nodesource/distributions/issues/1367"&gt;distribution package Amazon Linux 2022 not supported&lt;/a&gt; なんてのがありました。&lt;/p&gt;
-
-&lt;h3&gt;で、Amazon Linux 2022 って何なん？！&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="https://hub.docker.com/_/amazonlinux"&gt;amazonlinux のコンテナイメージ&lt;/a&gt;をみると、 &lt;code&gt;latest&lt;/code&gt; は &lt;code&gt;amazonlinux2&lt;/code&gt; なんですが、タグをみていくと確かに &lt;code&gt;2022&lt;/code&gt; があります。
-あと現時点では aws-cli のイメージは 2022 には追従していません。&lt;/p&gt;
-
-&lt;p&gt;そこで、 amazonlinux2022 をベースにして Node.js 18 をインストールするのを試してみます。&lt;/p&gt;
-
-&lt;p&gt;しかし、ここでプロビジョニングツールが amazonlinux 2022 に対応していないことがわかります（グルグル循環して脳が溶けてくる&amp;hellip; 溶けてやがる、まだ早すぎたんだ&amp;hellip;.）。違うプロビジョニングツールも調べてみたのですが、どれも 2022 には対応していませんでした。ここでプロビジョニングツールを捨てる選択となりました。&lt;/p&gt;
-
-&lt;p&gt;（実際僕らは Chef を使っているんですが、Chef Workstation 自体に amazonlinux 2022 の対応は入っていました（&lt;a href="https://github.com/chef/omnitruck/issues/569"&gt;Omnitruck artifact does not exist for version 17 on platform Amazon Linux 2022 &lt;/a&gt;）。ただまだリリースパッケージに含まれていないので、いずれリリースされるバージョンでは対応されているでしょう。Ansibleも調べましたが、同様にまだリリースパッケージには含まれていませんでした。）&lt;/p&gt;
-
-&lt;p&gt;調べていたら、&lt;a href="https://www.geekfeed.co.jp/geekblog/amazonlinx3-amazonlinux2022-al2022"&gt;AmazonLinux3じゃなくってAmazon Linux 2022 (AL2022) だってさ。&lt;/a&gt; という記事が見つかりました。
-そんで &lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;AmazonLinux2022以降はメジャーバージョンが2年ごとにリリースされる&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;まじかー。まぁ今までの AmazonLinux2 が長かったですね。そのぐらいで OS イメージを最新にしていかないとですよね。
-ということで、今後も踏まえて CI/CD のフローを含め利用するコンテナイメージを検討しなおすことにしました。
-（2年ごとの変更がプロビジョニングツールを捨てる決定的な要因になったのは間違いない）&lt;/p&gt;
-
-&lt;h2&gt;CI/CD フローの変更&lt;/h2&gt;
-
-&lt;p&gt;現時点のフローを整理してみました&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;チェックアウト&lt;/li&gt;
-&lt;li&gt;ビルド&lt;/li&gt;
-&lt;li&gt;デプロイが必要な場合
-
-&lt;ol&gt;
-&lt;li&gt;環境のスイッチロール&lt;/li&gt;
-&lt;li&gt;デプロイ&lt;/li&gt;
-&lt;/ol&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;だいたいこんな感じです。
-これを今までは全部1つのコンテナでやっていたのですが、それぞれ分割していくことにしました。&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;チェックアウト -&amp;gt; alpine/git&lt;/li&gt;
-&lt;li&gt;ビルド -&amp;gt; amazon/aws-lambda-nodejs:18 ベースに zip/unzip を追加したもの&lt;/li&gt;
-&lt;li&gt;デプロイが必要な場合
-
-&lt;ol&gt;
-&lt;li&gt;環境のスイッチロール -&amp;gt; amazon/aws-cli ベースに jq を追加したもの&lt;/li&gt;
-&lt;li&gt;デプロイ -&amp;gt; node:18&lt;/li&gt;
-&lt;/ol&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;ビルドに関しては &lt;code&gt;node:18&lt;/code&gt; でも良かったのですが、ここは以前と同じく稼働する OS イメージと合わせています。
-今後 OS イメージを追従するというより、実際の Lambda 実行コンテナイメージを使うことで、 Node.js ランタイムにあった OS バージョンを気にせず利用できるメリットがあると考えました（サイズ大きいけど）。&lt;/p&gt;
-
-&lt;p&gt;それ以外は必要な部分に最低限のコンテナという感じですね。&lt;/p&gt;
-
-&lt;h2&gt;さいごに&lt;/h2&gt;
-
-&lt;p&gt;LTS に合わせて開発環境をアップデートしていくのは、とても大事ですね。
-記事にすると、さらっと解決したように見えますが、それぞれのツールのソースコードや issue を確認しながら進んでいたので、かなり時間を取られてしまいました。
-ただ、今後同じようにな環境でアップデートしていこうと思う人の助けになればと思います。&lt;/p&gt;
 </content>
   </entry>
 </feed>

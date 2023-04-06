@@ -277,7 +277,208 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a></h2>
+            <h2 class="title"><a href="/2018/08/13/maker-faire-tokyo-2018.html">Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました</a></h2>
+  <p class="postdate"><a href="/2018/08/13.html" title="Permanent link">Monday, August 13, 2018 04:17:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/makerfaire.html" rel="tag">MakerFaire</a>
+      <a href="/tags/mftokyo.html" rel="tag">MFTokyo</a>
+      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>MFTokyo（昨年まではMFTと省略していましたが、今年からこのように変更となりました）のデモ準備として、
+先日 <a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a>という記事を書きましたが、これはその結果報告です。</p>
+
+<h3>デモ準備</h3>
+
+<p>実際にソースを書いて、動かしてみると <strong>開封したばかりのGroveタッチセンサーが4つのうち1つだけ反応しません</strong> 。
+ハブ側の裏にあるハンダ部分を触って通電させるとタッチ状態になるので、静電側が異常だということを認識し、
+処理不良だから書い直せば大丈夫&hellip;と思い、前日の金曜日に秋葉原へ向かいしました。</p>
+
+<p>実は8/3は半透明なブギーボード BB-11 の発売日で、翌日にMFTokyoへ持って行くなら量販店で買うしかない！と思いアキヨドにも行くつもりだったのです。
+参考:<a href="https://k-tai.watch.impress.co.jp/docs/news/1130909.html">13.8インチで半透明、ブギーボード新モデルが8月3日発売</a></p>
+
+<h3>何を作ったか</h3>
+
+<p><a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a> という、ピアノアプリを作りました。</p>
+
+<p>このアプリの特徴は以下のとおりです。</p>
+
+<ul>
+<li>Polymer3で作られていて、以下のCustomElementsの実装評価を兼ねていた
+
+<ul>
+<li>web-i2c タグ</li>
+<li>grove-gesture タグ</li>
+<li>grove-touch タグ</li>
+</ul></li>
+<li>CHIRIMENでなくても動作するWebアプリである</li>
+<li>4鍵(タッチセンサーの4つが対応)しかないが、左右に手を振ることでジェスチャーセンサーが反応し、音階が移動する。CHIRIMENでない場合は左右ボタンで移動</li>
+</ul>
+
+<p>ちなみに昨年は Echigo という B2G OS ベースのボードで web-gpio エレメントを検証するために <a href="https://github.com/sizuhiko/polymerchirimen">polymerchirimen</a> というサンプルを作っていました。
+これは人感センサーに反応すると、LEDが点灯するというものでした。</p>
+
+<p>先日購入したものに追加して、以下の部品が必要になります。</p>
+
+<ul>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-0DPT">Grove - I2Cタッチセンサー</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-0DPW">Grove - I2C Hub</a></li>
+<li><a href="https://www.switch-science.com/catalog/2645/">GROVE - ジェスチャー</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4K34">Grove 4ピンコネクタ - ジャンパーピン変換ケーブル</a></li>
+<li>ラズパイに接続できるスピーカー, USBマウス(ちょっとした操作用), 電源アダプター</li>
+</ul>
+
+<p>完成画像は以下のとおりです。</p>
+
+<p><img src="/images/blog/chirimen-piano.jpg" alt="" /></p>
+
+<h3>苦労したこと</h3>
+
+<p><code>CHIRIMENでなくても動作するWebアプリ</code> を目指して作り始めたら、Raspberry Pi版のpolyfillにいくつか問題があることがわかって、それを修正しながら進めたのでギリギリまで時間がかかりました。
+こちら、まだchirimen-pianoにしか入っていませんが、近いうちに公式版へPRを送る予定です。</p>
+
+<p>あとはセンサーの初期不良は、まぁあるものと思っていた方が良いですね。
+最近あんまりハズレを引かなかったので忘れていました。</p>
+
+<h3>web-i2c-element はどうなの？</h3>
+
+<p>現時点はまだデモプログラム内での評価用ですが、今回思ったよりもうまく動作しそうなので、こちらもちゃんとエレメントとして分割したいです。
+いくつか改善したいポイントがあります。</p>
+
+<h4>no-web-i2c 対応</h4>
+
+<p>まず CHIRIMEN 以外で動作させていたとき、 <code>noscript</code> タグみたいにして書けるようにする予定です。</p>
+
+<p>現在は <code>web-i2c.js</code> にベタ打ちになっていますが</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"message"</span><span class="nt">&gt;</span>
+  このデバイスはCHIRIMENではありませんが、ピアノ演奏はお楽しみいただけます。
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>これを利用側から指定できるようにしたいと思います。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;web-i2c&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">slot=</span><span class="s">"no-web-i2c"</span><span class="nt">&gt;</span>
+    このデバイスはCHIRIMENではありませんが、ピアノ演奏はお楽しみいただけます。
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/web-i2c&gt;</span>
+</code></pre></div>
+<h4>WebI2cSensorElement 対応</h4>
+
+<p>センサーのタグは <code>PolymerElement</code> を継承して作るようにしていますが、これを WebI2cSensorElement のように親クラスを作って、センサータグ実装を楽にしたいと思っています。</p>
+
+<p><a href="https://github.com/sizuhiko/chirimen-piano/blob/master/src/chirimen-piano-app/grove-touch.js">現在のgrove-touchエレメントのソースコード</a> を、以下のように書けるようにしたいと思っています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">GroveTouch</span> <span class="kd">extends</span> <span class="nx">WebI2cSensorElement</span> <span class="p">{</span>
+  <span class="k">async</span> <span class="nx">init</span><span class="p">(</span><span class="nx">i2cSlave</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2b</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2c</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2d</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2e</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2f</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x30</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x31</span><span class="p">,</span><span class="mh">0xff</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x32</span><span class="p">,</span><span class="mh">0x02</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="mi">12</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span><span class="nx">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+      <span class="kd">var</span> <span class="nx">address</span> <span class="o">=</span> <span class="mh">0x41</span><span class="o">+</span><span class="nx">i</span><span class="p">;</span>
+      <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="p">,</span><span class="mh">0x0f</span><span class="p">);</span>
+      <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x0a</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5d</span><span class="p">,</span><span class="mh">0x04</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5e</span><span class="p">,</span><span class="mh">0x0c</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">read</span><span class="p">(</span><span class="nx">i2cSlave</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">i2cSlave</span><span class="p">.</span><span class="nx">read16</span><span class="p">(</span><span class="mh">0x00</span><span class="p">).</span><span class="nx">then</span><span class="p">((</span><span class="nx">v</span><span class="p">)</span><span class="o">=&gt;</span><span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
+      <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="nx">cnt</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">;</span><span class="nx">cnt</span> <span class="o">++</span><span class="p">){</span>
+        <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(((</span><span class="nx">v</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="nx">cnt</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)?</span><span class="kc">true</span><span class="p">:</span><span class="kc">false</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="kd">set</span><span class="p">(</span><span class="dl">'</span><span class="s1">value</span><span class="dl">'</span><span class="p">,</span> <span class="nx">array</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">})</span>
+  <span class="p">}</span>
+
+  <span class="nx">defaultInterval</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">1000</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">customElements</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">,</span> <span class="nx">GroveTouch</span><span class="p">);</span>
+</code></pre></div>
+<p>共通化のポイントは以下のような感じです。</p>
+
+<ul>
+<li>値のプロパティを <code>value</code> で共通化</li>
+<li>エレメントのプロパティをWebI2cSensorElementで定義</li>
+<li>ポートのオープンや、web-i2cエレメントとやりとりしてポートを設定するところなどをWebI2cSensorElementで定義</li>
+<li>値読み込みのインターバル制御をWebI2cSensorElementに移譲</li>
+</ul>
+
+<p>2つのI2Cセンサータグを作ってみて、このぐらいは共通化しても大丈夫そうだし、便利そうだなと思っています。</p>
+
+<h4>on-change 対応</h4>
+
+<p>現時点はアプリもPolymerで書いているので、値の変更はデータバインディングでできているのですが、最終的にはタグから <code>change</code> イベントを飛ばすようにする予定です。</p>
+
+<p>つまり利用者はPolymerを使わなくても、以下のようなHTMLコードを追加するだけで利用可能になることを想定しています。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">"en"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"node_modules/@chirimen/polyfill/polyfill.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@chirimen/web-i2c/web-i2c.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@chirimen/grove-touch/grove-touch.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@chirimen/grove-gesture/grove-gesture.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    何かしらのアプリ
+
+
+    <span class="nt">&lt;web-i2c&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">slot=</span><span class="s">"no-web-i2c"</span><span class="nt">&gt;</span>
+        このデバイスはCHIRIMENではありませんが、xxxxx。
+      <span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;grove-touch</span> <span class="na">slave-address=</span><span class="s">"0x5a"</span><span class="nt">&gt;&lt;/grove-touch&gt;</span>
+      <span class="nt">&lt;grove-gesture</span> <span class="na">slave-address=</span><span class="s">"0x73"</span><span class="nt">&gt;&lt;/grove-gesture&gt;</span>
+    <span class="nt">&lt;/web-i2c&gt;</span>
+
+    <span class="nt">&lt;script&gt;</span>
+      <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">WebComponentsReady</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">change</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="c1">// 値が変わったときの処理</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="nt">&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<h2>さいごに</h2>
+
+<p>WebComponentsを作るためのPolymerについては、 <a href="https://polymer-jp.org/">PolymerJapan</a> コミュニティで活動しています。
+毎月の集まりを <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a>でも開催しているので、参加を待っています。</p>
+
+<p>また<a href="https://chirimen.org/">CHIRIMEN</a>で、ブラウザからセンサーを動かしたいというような活動に興味があれば、コミュニティに参加ください。</p>
+
+<p>どちらもユーザー主導で活動していますので、みなさまの参加をお待ちしております。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました" data-url="http://blog.open.tokyo.jp/2018/08/13/maker-faire-tokyo-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/08/13/maker-faire-tokyo-2018.html&t=Maker%20Faire%20Tokyo%202018%20%E3%81%AB%20CHIRIMEN%E3%82%B3%E3%83%9F%E3%83%A5%E3%83%8B%E3%83%86%E3%82%A3%E3%81%A7%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/08/13/maker-faire-tokyo-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a></h2>
   <p class="postdate"><a href="/2018/08/03.html" title="Permanent link">Friday, August 03, 2018 03:41:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -676,139 +877,6 @@ Web ComponentsやReduxによって、わかりやすいものになっている�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/06/11/brackets-prettier-extention.html">Brackets prettier 拡張を作ってみた</a></h2>
-  <p class="postdate"><a href="/2018/06/11.html" title="Permanent link">Monday, June 11, 2018 01:49:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/editor.html" rel="tag">Editor</a>
-      <a href="/tags/brackets.html" rel="tag">Brackets</a>
-      <a href="/tags/prettier.html" rel="tag">Prettier</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>JavaScriptでコードを書くときは <a href="https://www.npmjs.com/package/js-beautify">JS Beautifier</a> を使ってフォーマットしていたのですが、
-<a href="http://mizchi.hatenablog.com/">mizchi&rsquo;s blog</a>の<a href="http://mizchi.hatenablog.com/entry/2018/05/31/233220">最近のフロントエンドのエディタ事情</a>で</p>
-
-<blockquote>
-<p>フォーマッタは当然のように prettier が入る。もう選択肢はなくて、猫も杓子もprettier。すでに勝負は決している。</p>
-</blockquote>
-
-<p>と書かれていたので、じゃぁ<a href="https://prettier.io/">prettier</a>入れようと思ったのがきっかけです。</p>
-
-<h3>prettier を使うには</h3>
-
-<p>私がメインで使っているエディタは <a href="http://brackets.io">Adobe Brackets</a> です。
-vs-code にも atom にも拡張があるので、Bracketsでも誰か作ってるだろう&hellip; と思ったらありませんでした。
-ここで考えたのが、以下アイデアです。</p>
-
-<ul>
-<li>gulp-watch 使って、ファイルに変更があったら自動的に変換する</li>
-<li>git の commit フックに仕込む</li>
-<li>Bracketsの拡張作る</li>
-<li>vs-code にエディタを変える</li>
-</ul>
-
-<h3>Brackets 愛が強すぎて拡張を作ってみることにした</h3>
-
-<p>まぁアレですよ。エディタの機能拡張といえば古くは（これはものすごく古い話）Emacsの拡張作ったり、Sublime使っていたころはpython使って拡張書いたりしていたので「エディタ拡張を作るとは」みたいな流儀はわかっていたつもり、でした。
-そもそもBracketsの拡張ってatomやvs-codeとどう違うのか？と思って、<a href="https://github.com/prettier/prettier-atom">atom版</a>と<a href="https://github.com/prettier/prettier-vscode">vs-code版</a>のコードを見比べましたが「お・おぅ」となって、断念しました。
-まぁBracketsって<a href="https://bitbucket.org/chromiumembedded/cef">CEF</a>ベースだからなー（<a href="https://electronjs.org">electron</a>ベースではない）、そもそもコードを流用とか考えない方が良さそうだ。</p>
-
-<h4>Brackets 拡張を作るのに参考になるサイト</h4>
-
-<p>とりあえず調べられた範囲が以下のとおり</p>
-
-<ul>
-<li><a href="https://www.adobe.com/jp/devnet/edge-code/articles/building-your-first-brackets-extension.html">初めてのBRACKETS拡張機能の作成</a>
-
-<ul>
-<li>記事が2012年で大丈夫かぁ？と思ったが、終わってみれば何も変わっていなかった</li>
-</ul></li>
-<li><a href="https://github.com/adobe/brackets/wiki/How-to-write-extensions">How to write extensions</a>
-
-<ul>
-<li>こちらは2015年に更新されていて、情報のメンテはされているようだ</li>
-</ul></li>
-<li><a href="http://brackets.io/docs/current/index.html">Brackets API</a>
-
-<ul>
-<li>詳しいAPIの使い方が書いてある <code>Show code</code> が便利というか、それ見ないとわからないよ！</li>
-</ul></li>
-</ul>
-
-<h4>どうやって作るか</h4>
-
-<p>公式サイトにも書いてあります</p>
-
-<blockquote>
-<p>For a quick start, you can paste in the Simple &ldquo;Hello World&rdquo; extension or the code from an existing extension that is similar to what you want to do.</p>
-</blockquote>
-
-<p>「既存の機能が似ている拡張のコードを参考にすると良いよ！」（おまえドキュメントを書くということを放棄しているんじゃないだろうな&hellip;</p>
-
-<h4>参考にするもの</h4>
-
-<p><a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>という、最初にも紹介した <a href="https://www.npmjs.com/package/js-beautify">JS Beautifier</a> を使えるようにする Brackets拡張です。
-普段この拡張を使っているので、参考にするにはもってこいです（機能もコードフォーマットという部分では似ている）。</p>
-
-<h4>いくつかの壁</h4>
-
-<p><a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>のコードは難しくなく、簡単に読めたのですが</p>
-
-<ul>
-<li>これテストコードとか書けないの？（まぁ書けないに近い</li>
-<li>ES6とか使えないの？</li>
-<li>ファイル分割するベストプラクティスとかないの？</li>
-</ul>
-
-<p>という部分が気になりました。
-他の拡張のコードをいくつかみたりしましたが、まぁエディタの拡張って、ちょこっとした機能だから分割するまでもないんですよね、「わかる」みたいな感じ。</p>
-
-<p>結果として</p>
-
-<ul>
-<li>テストコードは諦めた（モックのテストになりそうだったので</li>
-<li>ES6というとアレですが、 <code>const</code> <code>let</code> あたりは使えた。allow functionはエラーになってしまった</li>
-<li>ファイル分割してみた！（ベストではないかもしれないが!!</li>
-</ul>
-
-<h3>Brackets Prettier 作ったよ！</h3>
-
-<p>そんなこんなで、<a href="https://github.com/brackets-beautify/brackets-beautify">Brackets Beautify</a>のコードを <del>パクって</del> 参考に、<a href="https://github.com/sizuhiko/brackets-prettier">Brackets Prettier</a> を作りました。</p>
-
-<h4>Brackets 拡張を作ったらやること</h4>
-
-<p><a href="http://brackets-registry.aboutweb.com/">Brackets Extension Registry</a>というところに登録しておくと、エディタの <code>拡張機能マネージャ</code> からインストールできるので、世界中のBracketsユーザーが <code>prettier</code> と検索したら出てくるようになります。
-で、レジストリへの登録方法は、<a href="https://github.com/adobe/brackets/wiki/Extension-Registry-Help">公式WikiのExtension Registry Help</a>に書いてあるので、そのとおり作業を進めます。</p>
-
-<p>で、登録するとBrackets拡張のBotアカウントがツイートしてくるんですね。知らなかった。</p>
-
-<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">Brackets Prettier - 1.0.0 (NEW) <a href="https://t.co/axTV7nu5xB">https://t.co/axTV7nu5xB</a> <a href="https://t.co/3KQ31k1dED">https://t.co/3KQ31k1dED</a> <a href="https://twitter.com/brackets?ref_src=twsrc%5Etfw">@brackets</a></p>&mdash; Brackets Extensions (@brktsextensions) <a href="https://twitter.com/brktsextensions/status/1004603877402873856?ref_src=twsrc%5Etfw">7 June 2018</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h3>今後は</h3>
-
-<p>Brackets拡張の作り方わかったので、これからは俺得な拡張をもっと作っていこうと思います！
-とりあえずPolymer関係を作ろうかなー</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Brackets prettier 拡張を作ってみた" data-url="http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html&t=Brackets%20prettier%20%E6%8B%A1%E5%BC%B5%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/06/11/brackets-prettier-extention.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/16/">« Prev</a>
@@ -836,6 +904,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
@@ -845,7 +914,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
               </ul>
             </div>
           </div>
@@ -854,10 +922,10 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <div class="pad">
               <ul class="nobullets clearfix">
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
@@ -956,7 +1024,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2023.html">2023</a> (6)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

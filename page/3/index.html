@@ -277,7 +277,104 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h2>
+            <h2 class="title"><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a></h2>
+  <p class="postdate"><a href="/2022/07/12.html" title="Permanent link">Tuesday, July 12, 2022 06:23:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/swc.html" rel="tag">swc</a>
+      <a href="/tags/swc-node.html" rel="tag">swc-node</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>少し前のブログで <a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a> という記事を書いたのですが、最後のまとめで以下のように紹介していました。</p>
+
+<blockquote>
+<p>ちなみに 1.5系からは tsconfig を読み込むように変更されているのですが、現時点私たちのプロジェクトではビルドが失敗するので、まだ 1.4 系を利用しています。 問題はすでに issue TypeScript path mapping is not working. になっており、 パスエイリアスを使っているときに、うまくファイルが import できないところなのですが、これが解決されれば transformer の設定も不要になるので、 とても便利になるはずです。</p>
+</blockquote>
+
+<p>そこから他の issue を調べたりしているうちに解決策がわかったので、今回の記事で追記していきます。</p>
+
+<p><code>@swc-node/jest</code> の最新版（現時点では <code>1.5.2</code> ）を使います。</p>
+
+<h2>パスエイリアスの指定方法</h2>
+
+<p>1.5系からは tsconfig を読み込むので、 <code>jest.config.js</code> の <code>transform</code> は以下のように記述すれば良いことになっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</code></pre></div>
+<p>パスエイリアスは <code>moduleNameMapper</code> に記述されているとおり、テストコードからは <code>@/domain/entities/user-entity</code> みたいに <code>@</code> をルートにしてパスエイリアスを使えるようにしています。</p>
+
+<p>で、このままだとパスエイリアスがすべて解決されません、というのが前回までの内容でした。</p>
+
+<p>今回は調べるなかで、以下のように指定することでパスエイリアスがうまく利用できるようになったので、紹介します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span>
+      <span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">,</span>
+      <span class="c1">// ここから</span>
+      <span class="p">{</span>
+        <span class="na">paths</span><span class="p">:</span> <span class="p">{</span>
+          <span class="dl">'</span><span class="s1">@/*</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="s2">`</span><span class="p">${</span><span class="nx">__dirname</span><span class="p">}</span><span class="s2">/*`</span><span class="p">],</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+      <span class="c1">// ここまで</span>
+    <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</code></pre></div>
+<p><code>transform</code> で <code>paths</code> の指定をするとパスエイリアスが使えるようになります。
+tsconfig にも <code>paths</code> の指定が以下のようになっています</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">paths</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@/*</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span><span class="dl">"</span><span class="s2">./*</span><span class="dl">"</span><span class="p">]</span>
+  <span class="p">},</span>
+</code></pre></div>
+<p>で、tsconfig に記述しているとおりコードが書き変わると、そのまま相対パスになってしまい、 インポートパスが見つからないということになっていました。
+TypeScript は tsconfig でパスエイリアスを指定するとき <code>./*</code> のように書くとプロジェクトルートからの解釈をしてくれるのですが、 <code>swc</code> ではそのように解釈はしてくれません。
+そのため <code>jest.config.js</code> の <code>transform</code> で絶対パスに上書きするように記述します。 <code>jest.config.js</code> はJavaScriptコードなので、 <code>__dirname</code> を使って絶対パスに変更することができるようになります。</p>
+
+<p>これで安心して <code>@swc-node/jest</code> も最新版に追従できるようになりました。
+もし同じような問題になっている人の手助けになる記事になっていれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="@swc-node/jest を使ってテストを高速化する（v1.5対応版）" data-url="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html&t=@swc-node/jest%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E9%AB%98%E9%80%9F%E5%8C%96%E3%81%99%E3%82%8B%EF%BC%88v1.5%E5%AF%BE%E5%BF%9C%E7%89%88%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h2>
   <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 05:03:00 PM</a></p>
   <p class="tags">
       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -805,139 +902,6 @@ CIを高速化するのに重要です。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
-  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 05:17:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>TypeORM では、主キーやインデックスはエンティティにデコレータを記述します。
-たとえば以下のような感じです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>@PrimaryGenerationColumn</code> にはインデックス名を指定できないので、この状況で <code>migration:generate</code> を実行すると、
-TypeORM 独自のルールを使ったインデックス名で SQL が生成されます。</p>
-
-<p>一方でインデックスの場合は、たとえば <code>email</code> にユニーク制約を入れるとすると以下のように、インデックス名を指定できます。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
-  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
-  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>また関連に関してもそうで、 User - hasMany -&gt; Post のような関連があったとき、外部キー制約の名前も TypeORM ルールになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
-  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
-  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">OneToMany</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">PostEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">post</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
-  <span class="nx">posts</span><span class="p">?:</span> <span class="nx">PostEntity</span><span class="p">[];</span>
-<span class="p">}</span>
-
-<span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">PostEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">ManyToOne</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">UserEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">posts</span><span class="p">)</span>
-  <span class="nx">user</span><span class="o">!</span><span class="p">:</span> <span class="nx">UserEntity</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>そこで、 <code>@Index</code> 以外で生成されるインデックスの名前をカスタマイズしたい！という場合は <code>NamingStrategy</code> を使います。
-この <code>NamingStrategy</code> ですが、ドキュメントには詳しい解説がないので、この記事を書くことにしました。</p>
-
-<h3>NamingStrategy の作り方</h3>
-
-<p>まずはインデックス名をカスタムできるように、 <code>DefaultNamingStrategy</code> を継承し、 <code>NamingStrategyInterface</code> を実装するクラスを作ります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/DefaultNamingStrategy.ts">DefaultNamingStrategyのコード</a> を参考にカスタマイズすると良いでしょう。</p>
-
-<p>たとえばプライマリーキーの場合は以下のようになっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
-    <span class="c1">// sort incoming column names to avoid issue when ["id", "name"] and ["name", "id"] arrays</span>
-    <span class="kd">const</span> <span class="nx">clonedColumnNames</span> <span class="o">=</span> <span class="p">[...</span><span class="nx">columnNames</span><span class="p">]</span>
-    <span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">sort</span><span class="p">()</span>
-    <span class="kd">const</span> <span class="nx">tableName</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">)</span>
-    <span class="kd">const</span> <span class="nx">replacedTableName</span> <span class="o">=</span> <span class="nx">tableName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="dl">"</span><span class="s2">.</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)</span>
-    <span class="kd">const</span> <span class="nx">key</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">replacedTableName</span><span class="p">}</span><span class="s2">_</span><span class="p">${</span><span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)}</span><span class="s2">`</span>
-    <span class="k">return</span> <span class="dl">"</span><span class="s2">PK_</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">RandomGenerator</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
-  <span class="p">}</span>
-</code></pre></div>
-<p>プライマリーキーに設定されているカラム名をソートしてから <code>_</code> で結合して sha1 に変換したものを利用しています。</p>
-
-<p>たとえばプロジェクトのルールで、プライマリーキーは <code>PK_テーブル名</code> で良い場合は、以下のようなコードでオーバーライドして変更します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
-  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">table</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">);</span>
-    <span class="k">return</span> <span class="s2">`PK_</span><span class="p">${</span><span class="nx">pascalCase</span><span class="p">(</span><span class="nx">table</span><span class="p">)}</span><span class="s2">`</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>pascalCase</code> は <a href="https://www.npmjs.com/package/change-case">change-case</a> のようなライブラリ利用を想定しています。</p>
-
-<h3>NamingStrategy で変更できる名前</h3>
-
-<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/NamingStrategyInterface.ts">NamingStrategyInterfaceのコード</a>を見るとわかります。
-よく使いそうなものは、以下のあたりでしょうか。</p>
-
-<ul>
-<li>primaryKeyName 主キー名。デフォルトでは <code>PK_{sha1した値}</code></li>
-<li>foreignKeyName 外部キー名。デフォルトでは <code>FK_{sha1した値}</code></li>
-<li>indexName 複合キー名。デフォルトでは <code>IDX_{sha1した値}</code></li>
-</ul>
-
-<p>もちろんこれ以外にもたくさんカスタマイズできる名前はあるので、マイグレーションファイルに生成された名称がプロジェクトルールに沿わない場合に
-遭遇したら、インターフェースやデフォルトの実装を見てみると良いでしょう。</p>
-
-<h3>カスタム NamingStrategy の指定方法</h3>
-
-<p>マイグレーションコマンドから利用する DataSource のオプションに指定します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">],</span>
-  <span class="nx">namingStrategy</span><span class="p">:</span> <span class="k">new</span> <span class="nx">CustomNamingStrategy</span><span class="p">()</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>namingStrategy</code> を指定して、 <code>npm run migration:generate</code> するとプロジェクトルールに沿った名前でマイグレーションファイルを生成できます。</p>
-
-<p><code>package.json</code> のスクリプト例</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<h3>さいごに</h3>
-
-<p>公式ドキュメントの情報が不足しているところなので、この記事が少しでも役立てば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM でプライマリーキーや外部キーの名前を変更する" data-url="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html&t=TypeORM%20%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%9E%E3%83%AA%E3%83%BC%E3%82%AD%E3%83%BC%E3%82%84%E5%A4%96%E9%83%A8%E3%82%AD%E3%83%BC%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E5%A4%89%E6%9B%B4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/2/">« Prev</a>
@@ -963,6 +927,7 @@ TypeORM 独自のルールを使ったインデックス名で SQL が生成さ�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
@@ -972,7 +937,6 @@ TypeORM 独自のルールを使ったインデックス名で SQL が生成さ�
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a> <span>2022/07/12</span></li>
               </ul>
             </div>
           </div>
@@ -981,10 +945,10 @@ TypeORM 独自のルールを使ったインデックス名で SQL が生成さ�
             <div class="pad">
               <ul class="nobullets clearfix">
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
@@ -1083,7 +1047,7 @@ TypeORM 独自のルールを使ったインデックス名で SQL が生成さ�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (5)</li>
+                  <li><a href="/2023.html">2023</a> (6)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
