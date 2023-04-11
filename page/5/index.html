@@ -277,7 +277,126 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a></h2>
+            <h2 class="title"><a href="/2022/05/02/pong-swoosh-updates.html">pong-swoosh のアップデートまとめ</a></h2>
+  <p class="postdate"><a href="/2022/05/02.html" title="Permanent link">Monday, May 02, 2022 04:39:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
+      <a href="/tags/pong-swoosh.html" rel="tag">pong-swoosh</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>昨年リリースした <a href="https://its-succ.github.io/pong-swoosh/">pong-swoosh</a> ですが、いつくかのアップデートを重ねてより使いやすくなっている、と感想もいただいております。
+そこで、これまでのアップデートをまとめて紹介します。</p>
+
+<h2>βバージョン</h2>
+
+<p>実はブログで公表する以前に、身内で試していたβバージョンがあり、そのときはTOPページでチャンネルを開設すると、</p>
+
+<ul>
+<li>コントローラページ</li>
+<li>スピーカーページ</li>
+</ul>
+
+<p>の2つのURLを共有してもらうように、表示されていました。</p>
+
+<p>すると、2つ共有するのが面倒であるといった意見があり、エントランスページというのを作り、そこに2つのURLとQRコードを載せることにしました。
+これが処理リリースバージョン（以前のブログ <a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a> で紹介したものです。</p>
+
+<h2>初期バージョン</h2>
+
+<p>しばらくはデザインの変更はなく、Socket.io 周辺で接続が切れたり、Herokuのインスタンスが再起動したときの再接続などを解消するのがメインでした。</p>
+
+<ul>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/50">チャンネルは削除イベントが送信されたときに削除する</a></li>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/52">接続できない場合にスナックバーが表示されるように修正</a></li>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/58">リロードやHeroku再起動時も動作が継続できるようにした</a></li>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/64">サーバーとの接続が回復したら、自動的に接続するように対応した</a></li>
+</ul>
+
+<p>これらの対処で基本的な安定接続が保たれ、ユーザー体験を改善することにフォーカスしていきました。</p>
+
+<h2>UIの改善</h2>
+
+<p>ここで、いくつかの改善が実施されました。</p>
+
+<ul>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/62">デフォルト効果音の変更と音量の調整</a></li>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/65">スピーカー画面に参加人数を表示した</a></li>
+</ul>
+
+<p>音量がバラバラな感じだったので、調整しました。
+参加人数に関しては、表示して欲しいという要望があったので、スピーカー画面に表示するよう追加されました。</p>
+
+<ul>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/66">チャンネル作成中はローディング画面に切り替えて、操作できないようにしておく</a></li>
+</ul>
+
+<p>Herokuのインスタンスがしばらくアクセスされていない、初期起動の状態だとチャンネル作成に時間がかかり
+何度も作成ボタンを押してしまうトラブルがあったので、すぐにローディング画面へ切り替えるように。</p>
+
+<ul>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/68">参加者画面を追加して、エントランスの代わりにした</a></li>
+</ul>
+
+<p>初期のコンセプトでもあった</p>
+
+<blockquote>
+<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
+かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。
+そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
+スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
+もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
+</blockquote>
+
+<p>この考え方、エントランスページからスピーカーはPC、コントローラはスマホ、というのが思いの外PCのみでも操作で良い人が多いということがわかりました。
+なので、エントランスページはなくして、共有されたURLがいきなり参加者側のアプリケーション画面という流れにしました。
+なので、共有したURLから画面遷移する必要がありません。
+参加者画面にはスマホでコントローラを表示できるQRコードを表示するようにしたので、もしスマホから操作という場合も従来のステップ数からは
+変更なく利用できるようになっています。</p>
+
+<h2>速度の改善</h2>
+
+<ul>
+<li><a href="https://github.com/its-succ/pong-swoosh/pull/85">効果音はクライアント側で読み込むように変更</a></li>
+</ul>
+
+<p>これまではSocket.ioのメッセージの中にバイナリで効果音を送信するようにしていたのですが、同じオリジンに効果音を設置するようにし、
+ブラウザから効果音をロードする変更を実施しました。
+これによって、効果音ボタンを押したときにブロードキャストされるメッセージは効果音IDぐらいになってので、送信コストが下がりより大人数でも時差なく
+効果音が鳴るようになりました（これまでは30人ぐらいのイベントだと少しタイムラグがあった）。</p>
+
+<h2>テストコードの追加</h2>
+
+<p>OSSでの活動でもあるので、多くの人から改善リクエストを受け付けられるように、サーバーサイドからテストコードを追加しています。
+まだ途中ですが、フロントエンドがSveltteということもあり、そのテストツールでもある <a href="https://github.com/lukeed/uvu">uvu</a> を利用しています。</p>
+
+<h2>実は pong-swoosh はプライベートβから１周年</h2>
+
+<p>pong-swoosh の初期実装をプライベートβで利用し始めたのは、ちょうど1年前のGW明けでした。
+そのときに、まだオンラインカンファレンスやミーティングがどのぐらい続くのかわからない中、まだ必要としてくれる人がいれば、という思いではじめてきて
+1年が経過しようとしています。</p>
+
+<p>まだオンラインの需要はあるようですので、引き続き pong-swoosh の改善をしていきたいと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="pong-swoosh のアップデートまとめ" data-url="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html&t=pong-swoosh%20%E3%81%AE%E3%82%A2%E3%83%83%E3%83%97%E3%83%87%E3%83%BC%E3%83%88%E3%81%BE%E3%81%A8%E3%82%81" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a></h2>
   <p class="postdate"><a href="/2021/07/11.html" title="Permanent link">Sunday, July 11, 2021 05:40:00 PM</a></p>
   <p class="tags">
       <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
@@ -753,180 +872,6 @@ Aliasプラグイン便利なので、はやく修正されると良いなー（
     </div>
 
   </div>
-  <h2 class="title"><a href="/2020/02/16/serverless-ghe-dependabot.html">Serverless Frameworkでプライベートパッケージを利用するときの注意点</a></h2>
-  <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 12:25:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/serverless-framework.html" rel="tag">Serverless Framework</a>
-      <a href="/tags/ghe.html" rel="tag">GHE</a>
-      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2020/02/16/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a>の続編です。
-少し前提となる条件があるので、読んでいただけるとスムーズに進みます。</p>
-
-<h3>ある日事件は起こった</h3>
-
-<p>毎朝出社すると、dependabotから出てくるPRをチェックしてマージしています。
-プロジェクトでGHEにプライベートなnpmパッケージを作っていて、前日その更新をしたのでアプリ側にPRが来ていました。
-修正内容は自分たちが実施したものなので、何も疑うことはなくマージ。テストも通過していました。</p>
-
-<p>developブランチにマージすると、開発環境へデプロイするようになっているので、そのままデプロイされました。
-特に問題はないように見えます。</p>
-
-<h4>あのー、サーバーからエラーが戻ってくるんですけど&hellip;</h4>
-
-<p>目の前にはネイティブアプリチームがいます。</p>
-
-<p>「あのー、サーバーのAPIからエラーが戻ってくるんですけど、何かしました？」</p>
-
-<p>あ、さっきデプロイしたけど、プライベートパッケージ更新しただけだぞ&hellip;</p>
-
-<h4>エラー通知が飛んでくる</h4>
-
-<p>ほどなく監視からエラーが。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
-    </span><span class="nl">"errorType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Runtime.ImportModuleError"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"errorMessage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"stack"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-        </span><span class="s2">"Runtime.ImportModuleError: Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at _loadUserApp (/var/runtime/UserFunction.js:100:13)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Object.module.exports.load (/var/runtime/UserFunction.js:140:17)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Object.&lt;anonymous&gt; (/var/runtime/index.js:45:30)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Module._compile (internal/modules/cjs/loader.js:778:30)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Module.load (internal/modules/cjs/loader.js:653:32)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at tryModuleLoad (internal/modules/cjs/loader.js:593:12)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Function.Module._load (internal/modules/cjs/loader.js:585:3)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at Function.Module.runMain (internal/modules/cjs/loader.js:831:12)"</span><span class="p">,</span><span class="w">
-        </span><span class="s2">"    at startup (internal/bootstrap/node.js:283:19)"</span><span class="w">
-    </span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p><a href="https://www.npmjs.com/package/psl">psl</a> というnpmパッケージを使っているのですが、それが見つからないよ、と。</p>
-
-<p>この箇所はユニットテストも通過しているし、なんでだろう？と思い、S3にアップロードされているzipを展開すると確かに node_modules に psl は入っていません&hellip;</p>
-
-<h3>Serverless Framework におけるパッケージング</h3>
-
-<p><code>sls deploy</code> や <code>sls package</code> を使ってzipを作成するとき、node_modules には <code>dependencies</code> だけが入り、 <code>devDependencies</code> は取り除かれます。
-Lambdaなどはzipファイルのサイズに制限があるので、これはとても便利な機能です。</p>
-
-<p>psl の利用箇所を調べるため、 <code>package-lock.json</code> を探してみます。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"xxxx-node-fetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fe
-tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fetch
-.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.7.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"winston"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.2.1"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"winston-cloudwatch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.3.0"</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="err">,</span><span class="w">
-</span></code></pre></div>
-<p>これはプライベートパッケージでGHEのリポジトリを参照しています。
-これ以外の利用箇所を探してみました。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.88.0"</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/request/-/request-2.88.0.tgz"</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg=="</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nl">"aws-sign2"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.7.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"aws4"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.8.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"caseless"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.12.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"combined-stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.6"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"extend"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~3.0.2"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"forever-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.6.1"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"form-data"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.3.2"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"har-validator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.1.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"http-signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.2.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"is-typedarray"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"isstream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.1.2"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"json-stringify-safe"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.0.1"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"mime-types"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.1.19"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"oauth-sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.9.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"performance-now"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"qs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~6.5.2"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"safe-buffer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^5.1.2"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.4.3"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"tunnel-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.6.0"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"uuid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.3.2"</span><span class="w">
-      </span><span class="p">},</span><span class="w">
-      </span><span class="nl">"dependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.4.1"</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz"</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha1-wNWmOycYgArY4esPpSachN1BhF4="</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.4.3"</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz"</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ=
-="</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
-          </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.1.24"</span><span class="p">,</span><span class="w">
-            </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.4.1"</span><span class="w">
-          </span><span class="p">}</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-      </span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p>そうすると、 <code>request</code> パッケージが参照する <code>tough-cookie</code> が利用しているのがわかります。 <code>&quot;dev&quot;: true,</code> になっているので、devDependenciesに指定されているということですね。</p>
-
-<p>ただ、このようなケースはまぁまぁある（依存しているパッケージによっては dependencies だったり devDependencies であったりする）ので、Serverless Framework で良しなにしてくれるはずです。
- 実際、昨日までは問題なかったのに？？</p>
-
-<p>### DependabotのPRを見る</p>
-
-<p><code>package-lock.json</code> の変更だけで以下のようなdiffになっていました。</p>
-<div class="highlight"><pre class="highlight diff"><code><span class="gd">-     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#112cf335236d974538ba02993d5ef7bbbbc3ec4c",
--     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop",
-</span><span class="gi">+     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
-+     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
-</span></code></pre></div>
-<p><code>package.json</code> には <code>&quot;xxxx-node-fetch&quot;: &quot;git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop&quot;,</code> のように指定されていて、developから最新を取得するようになっています。</p>
-
-<p>PRでは <code>version</code> 以外にも <code>from</code> が <code>#develop</code> のようなブランチ指定から、コミットハッシュ指定に変わっているのがわかります。</p>
-
-<h3>dependencies ではブランチ指定をやめる</h3>
-
-<p>lockファイルの <code>from</code> 指定が変わり、package.json の dependencies と釣り合いが取れなくなることで、dependencies に必要のないライブラリと Serverless Framework が認識するようで zip ファイルに含まれなくなっていました。</p>
-
-<p>この状態でも <code>npm i</code> や <code>npm ci</code> ではパッケージはインストールできるので UnitTest は通過します。</p>
-
-<p>このような事象から、私たちは一旦 <code>package.json</code> に記述するときにブランチ指定をやめて、コミットハッシュ指定に変更することとしました（つまり from を合わせるということです）。
-この修正で無事 zip に psl が入って問題を解決することができました。</p>
-
-<h3>さいごに</h3>
-
-<p>本来であればOSSにできそうなものは普通にnpmにあげるとかした方が良いのですが、調整が困難なのと非常に短期間でプロジェクトが進んでいたのでOSSにはできませんでした。
-また、OSSにできないプライベートなパッケージなどを作る場合は、ローカルレジストリ作った方が良いな、とも思いました（ブランチ指定とかコミットハッシュでなく、ちゃんとバージョン管理できるし）。</p>
-
-<p>プライベートなnpmレジストリを作るには、<a href="https://qiita.com/propella/items/6f1bb5db5225fba6cd85">独自の npm registry を使う</a> が参考になりそうです。</p>
-
-<p>また AWS を使っているのであれば、<a href="https://aws.amazon.com/jp/about-aws/whats-new/2019/09/new-quick-starts-deploy-jfrog-artifactory-on-aws/">新しいクイックスタートを使用して JFrog Artifactory を AWS にデプロイ</a> という公式記事があるので、参考になりそうです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Serverless Frameworkでプライベートパッケージを利用するときの注意点" data-url="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html&t=Serverless%20Framework%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%91%E3%83%83%E3%82%B1%E3%83%BC%E3%82%B8%E3%82%92%E5%88%A9%E7%94%A8%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AE%E6%B3%A8%E6%84%8F%E7%82%B9" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/4/">« Prev</a>
@@ -954,6 +899,7 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
@@ -963,7 +909,6 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -974,11 +919,11 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
                     <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
@@ -1074,7 +1019,7 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (6)</li>
+                  <li><a href="/2023.html">2023</a> (7)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

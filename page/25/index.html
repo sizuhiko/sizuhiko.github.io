@@ -277,7 +277,282 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a></h2>
+            <h2 class="title"><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a></h2>
+  <p class="postdate"><a href="/2015/04/19.html" title="Permanent link">Sunday, April 19, 2015 03:19:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakebox.html" rel="tag">Cakebox</a>
+      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>CakePHP3の開発環境を構築するのは、以前にも書いたとおり <a href="https://github.com/FriendsOfCake/vagrant-chef">FriendsOfCake/vagrant-chef</a> を便利に使っていたのですが、先日 Twitter の TL に流れてきた <a href="https://github.com/alt3/cakebox">Cakebox</a> というのが気になっていたので、使ってみました。</p>
+
+<p>結論としては「<code>CakePHPで何かつくってみたいなら、使わない理由がない</code>」ということです。</p>
+
+<h3>Cakeboxとは</h3>
+
+<p>CakeboxはAlt&lt;3 Because projects need loveというオランダのプロジェクトのリポジトリにあり、アムステルダムの<a href="https://github.com/bravo-kernel">bravo-kernel</a>氏が中心になって作っているようです。またCakePHPのコアデベロッパでもある<a href="https://github.com/ceeram">ceeram</a>氏もcontributeしているので、アムステルダムでは著名なプロジェクトなのかもしれません。</p>
+
+<p><a href="http://cakebox.readthedocs.org/en/latest/features/">Cakeboxの詳しいドキュメント</a>に書いてあるとおり、chefでubuntuベースのboxファイルを生成し、cakeboxではそれを使ってvagrantとvirtualboxで起動する流れです。</p>
+
+<p>後で説明しますが、便利なコンソールアプリがあり、それ自体がCakePHP3でできているので、CakePHP3のアプリケーションサンプルとしても役立つのではないかと思います。</p>
+
+<p>boxファイルに入っているソフトウェアは上記ドキュメントに詳しく書いてあるので、そちらを参照してください。</p>
+
+<h3>なんと簡単、環境構築</h3>
+
+<h4>Cakeboxのインストール</h4>
+
+<p>最初にCakeboxをダウンロード（クローン）します。以下はCakeboxのREADMEに書いてあるままの内容です。
+注意点として、以下の前提条件が必要となります。</p>
+
+<ul>
+<li>VirtualBox 4.0 以上</li>
+<li>Vagrant 1.6.0 以上</li>
+</ul>
+
+<p>どちらかが満たされていないと、まったく起動しないので注意してください（私は踏みましたw）。</p>
+<div class="highlight"><pre class="highlight shell"><code>git clone https://github.com/alt3/cakebox.git
+<span class="nb">cd </span>cakebox
+<span class="nb">cp </span>Cakebox.yaml.default Cakebox.yaml
+vagrant up
+</code></pre></div>
+<p>設定ファイル（yaml）には、詳細な設定を指定できるようですが、いったん何も設定しなくても問題はありませんでした。
+以下のようなログが出力されます。
+最初はCakeboxのboxファイルをCDNからダウンロードするので時間がかかります。
+予め時間があり、回線に余裕があるときにvagrant upだけは済ませておくと良いですね。</p>
+<div class="highlight"><pre class="highlight shell"><code>Bringing machine <span class="s1">'default'</span> up with <span class="s1">'virtualbox'</span> provider...
+<span class="o">==&gt;</span> default: Importing base box <span class="s1">'cakebox'</span>...
+<span class="c"># ... 省略</span>
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Please wait... installing Cakebox Commands and Dashboard
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: <span class="k">*</span> Self-updating Composer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating Composer cache permissions
+<span class="o">==&gt;</span> default: <span class="k">*</span> Creating project
+<span class="o">==&gt;</span> default: <span class="k">*</span> Composer installing
+<span class="o">==&gt;</span> default: Installation completed successfully!
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: CakePHP v3.0.0 Console
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Self-updating cakebox
+<span class="o">==&gt;</span> default: Self-updating Composer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating cache permissions
+<span class="o">==&gt;</span> default: Updating Cakebox Commands and Dashboard
+<span class="o">==&gt;</span> default: <span class="k">*</span> Detecting branch
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating git repository
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating composer packages
+<span class="o">==&gt;</span> default: Updating CakePHP Code Sniffer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Composer updating
+<span class="o">==&gt;</span> default: Updating HHVM configuration
+<span class="o">==&gt;</span> default: <span class="k">*</span> Creating system start/stop links
+<span class="o">==&gt;</span> default: <span class="k">*</span> Correcting HHVM session.save_path
+<span class="o">==&gt;</span> default: <span class="k">*</span> Restarting service
+<span class="o">==&gt;</span> default: Updating Elasticsearch configuration
+<span class="o">==&gt;</span> default: <span class="k">*</span> Decreasing required memory
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating initialization script
+<span class="o">==&gt;</span> default: <span class="k">*</span> Stopping service
+<span class="o">==&gt;</span> default: Self-update completed successfully
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: CakePHP v3.0.0 Console
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Setting Cakebox Dashboard protocol to http
+<span class="o">==&gt;</span> default: Command completed successfully
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="c"># ... 省略</span>
+
+<span class="o">==&gt;</span> default: Machine <span class="s1">'default'</span> has a post <span class="sb">`</span>vagrant up<span class="sb">`</span> message. This is a message
+<span class="o">==&gt;</span> default: from the creator of the Vagrantfile, and not from Vagrant itself:
+<span class="o">==&gt;</span> default: 
+<span class="o">==&gt;</span> default: Your box is ready and waiting.
+<span class="o">==&gt;</span> default: 
+<span class="o">==&gt;</span> default: <span class="o">=&gt;</span> Login to your Dashboard by browsing to http://10.33.10.10
+<span class="o">==&gt;</span> default: <span class="o">=&gt;</span> Login to your virtual machine by running: vagrant ssh
+</code></pre></div>
+<p>boxファイルのインストールが終わると、ダッシュボードアプリをインストールし、そのアプリのCLIを使ってアプリ自身と、各種モジュールを設定するようです。</p>
+
+<p>ここまで終わったら、指示どおり <code>http://10.33.10.10</code> にアクセスしてみましょう。</p>
+
+<p><img src="/images/blog/cakebox_init.png" alt="" /></p>
+
+<p>かっこいいダッシュボード画面が表示されました。こういうのがあるとテンション上がりますよね！</p>
+
+<h4>アプリケーションの構築</h4>
+
+<p>Cakeboxを使って開発環境が構築できたら、CakePHP3アプリケーションを構築してみましょう。<code>vagrant ssh</code>でCakeboxにログインします。</p>
+<div class="highlight"><pre class="highlight shell"><code>localhost:cakebox <span class="nv">$ </span>vagrant ssh
+Welcome to Ubuntu 14.04.1 LTS <span class="o">(</span>GNU/Linux 3.13.0-24-generic x86_64<span class="o">)</span>
+</code></pre></div>
+<p>CakeboxのREADMEに書いてあるとおり、<code>cakebox</code>コマンドを使ってアプリケーションを生成します。とりあえずCakePHP3のブログチュートリアルを作ってみたいと思います。</p>
+<div class="highlight"><pre class="highlight shell"><code>vagrant@cakebox:~<span class="nv">$ </span>cakebox application add blog-tutorial.app
+<span class="nt">---------------------------------------------------------------</span>
+CakePHP v3.0.0 Console
+<span class="nt">---------------------------------------------------------------</span>
+Creating application http://blog-tutorial.app
+
+Configuring installer
+Creating installation directory
+Composer installing CakePHP 3.x application sources
+Creating virtual host
+<span class="k">*</span> Successfully created PHP-FPM virtual host
+Creating databases
+<span class="k">*</span> Successfully created main database
+<span class="k">*</span> Successfully created <span class="nb">test </span>database
+Configuring permissions
+Updating configuration files
+Application created using:
+  database <span class="o">=&gt;</span> blog-tutorial_app
+  framework <span class="o">=&gt;</span> cakephp
+  framework_human <span class="o">=&gt;</span> CakePHP 3.x
+  framework_short <span class="o">=&gt;</span> cakephp3
+  installation_method <span class="o">=&gt;</span> composer
+  majorversion <span class="o">=&gt;</span> 3
+  path <span class="o">=&gt;</span> /home/vagrant/Apps/blog-tutorial.app
+  <span class="nb">source</span> <span class="o">=&gt;</span> cakephp/app
+  url <span class="o">=&gt;</span> blog-tutorial.app
+  webroot <span class="o">=&gt;</span> /home/vagrant/Apps/blog-tutorial.app/webroot
+
+Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
+
+Installation completed successfully
+</code></pre></div>
+<p>はい、終わり。<code>hostsファイルに追加してね</code> というメッセージが出ているので、hostsファイルに追加します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ vim /etc/hosts
+
+# この行を追加します
+10.33.10.10 blog-tutorial.app
+</code></pre></div>
+<p>さっそく <code>http://blog-tutorial.app</code> にアクセスしてみましょう。</p>
+
+<p><img src="/images/blog/cakebox_createapp.png" alt="" /></p>
+
+<p>うわー、すげー。
+ディレクトリの権限とか、DBの設定とか全部できちゃっているよ。
+CakePHP3で <code>composer create-project</code> やったことあればわかると思うのですが、ここまで設定するのもちょっと面倒です。</p>
+
+<p>Cakeboxのダッシュボード画面も見てみましょう。</p>
+
+<p><img src="/images/blog/cakebox_createdapp_dashbord.png" alt="" /></p>
+
+<p>アプリケーションが1つ、データベースが2つ、バーチャルホストが2つ（最初は1なので1つ増えてます）になっています。
+つまり <code>cakebox application add</code> 実行すると</p>
+
+<ul>
+<li>CakePHP3の <code>composer create-project</code> でスケルトン作って</li>
+<li>nginxのsite-availablesにバーチャルホスト追加して</li>
+<li>DB（mysql）にdefaultとtestの2つのDBを作って</li>
+<li>CakePHP3のconfigをモロモロ設定、パーミッションも設定</li>
+</ul>
+
+<p>してくれるというわけです。なんと便利、そして簡単なんでしょう。
+<a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/blog.html">blogチュートリアルの1ページ目</a>のうち、<code>Creating the Blog Database</code> のテーブル生成以外のステップは（nginxの設定まで）コマンド一つで終わりです。</p>
+
+<h3>ブログチュートリアルのテーブル作成</h3>
+
+<p>せっかくなので、マイグレーションプラグインを使って、テーブルを生成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant@cakebox:~$ cd Apps/blog-tutorial.app/
+vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations create CreateArticles
+Welcome to CakePHP v3.0.1 Console
+---------------------------------------------------------------
+App : src
+Path: /home/vagrant/Apps/blog-tutorial.app/src/
+---------------------------------------------------------------
+using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
+using migration base class Phinx\Migration\AbstractMigration
+using default template
+created ./config/Migrations/20150419074519_create_articles.php
+</code></pre></div>
+<p>upとdownを以下のように記述します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">up</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nv">$table</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">table</span><span class="p">(</span><span class="s1">'articles'</span><span class="p">);</span>
+        <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'title'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">50</span><span class="p">])</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'body'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'modified'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">create</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">down</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">dropTable</span><span class="p">(</span><span class="s1">'articles'</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="cp">?&gt;</span>
+</code></pre></div>
+<p>マイグレーションを実行してテーブルを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations migrate
+
+Welcome to CakePHP v3.0.1 Console
+---------------------------------------------------------------
+App : src
+Path: /home/vagrant/Apps/blog-tutorial.app/src/
+---------------------------------------------------------------
+using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
+using environment default
+using adapter mysql
+using database blog-tutorial_app
+
+ == 20150419074519 CreateArticles: migrating
+ == 20150419074519 CreateArticles: migrated 0.1178s
+
+All Done. Took 0.1780s
+</code></pre></div>
+<p>これでチュートリアルの1ページ目は終了です。</p>
+
+<h3>ブログチュートリアルを進めよう</h3>
+
+<p>チュートリアルって環境構築ではまるケースが多い（特に今まで使ったことないフレームワークとか特に）のですが、このように簡単に始められるのは大きいですね。
+あとは<a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/part-two.html">パート２</a>の内容を、進めていけば大丈夫です。
+ここではチュートリアルそのものを解説するわけではないので、ワープします。
+指定されたファイルに、そのままコピペしていけば大丈夫です。</p>
+
+<p>コピペしたあとにテストという投稿を追加してみた結果が以下のとおりです。</p>
+
+<p><img src="/images/blog/cakebox_tutorial_part2.png" alt="" /></p>
+
+<h3>さいごに</h3>
+
+<p>Cakeboxを使ってブログチュートリアルを進めてみましたが、もし今までCakePHPを使ったことがなくても、CakePHP2は使っていたけど、3はまだ、という人にも環境構築のステップが簡略されているのは、とても大きいと思います。</p>
+
+<p>実はCakebox <code>Multi-Framework PHP Development Environment</code> と書いてあるとおり、CakePHP3だけのためにあるわけではないようです。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="c"># Fresh preconfigured PHP framework applications</span>
+<span class="nv">$ </span>cakebox application add mycake3.app
+<span class="nv">$ </span>cakebox application add mycake2.app <span class="nt">--majorversion</span> 2
+<span class="nv">$ </span>cakebox application add mylaravel.app <span class="nt">--framework</span> laravel
+</code></pre></div>
+<p>なんとCakePHP2もいけるし、今話題の laravel5 の環境も作れるみたいですよ！
+これは現時点でのサポート状況ということで、今後増えていくことも想定されます。
+これはもう Cakebox を試してみるしかないですね。</p>
+
+<p>そんなCakePHP3ですが、<a href="https://coedo-cakephp.doorkeeper.jp/events/23199">CakePHP3 もくもく会（勉強会） #14</a> が 2015-04-28（火）19:00 - 21:30　に Co-Edoで開催されます。
+PHP勉強会と日程かぶっていますが、もしCakePHP3に興味があればこちらにも参加してみてください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Cakebox を使ってCakePHP3アプリケーションを作ってみよう" data-url="http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html&t=Cakebox%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6CakePHP3%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%82%88%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a></h2>
   <p class="postdate"><a href="/2015/03/14.html" title="Permanent link">Saturday, March 14, 2015 05:45:00 PM</a></p>
   <p class="tags">
       <a href="/tags/java.html" rel="tag">Java</a>
@@ -1107,97 +1382,6 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a></h2>
-  <p class="postdate"><a href="/2014/10/13.html" title="Permanent link">Monday, October 13, 2014 08:11:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91.html" rel="tag">オブジェクト指向</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2014/10/11 に行われた<a href="http://phpcon.php.gr.jp/w/2014/">PHPカンファレンス2014</a>で発表をしてきました。</p>
-
-<p><img src="/images/blog/phpconference2014.jpg" alt="" /></p>
-
-<p><a href="http://gihyo.jp/news/report/01/phpcon2014/0001?page=2">Photo by gihyo.jp</a></p>
-
-<p>スライドは以下の内容です。</p>
-
-<script async class="speakerdeck-embed" data-id="74562820350401328a4766ded83ef86d" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>PHPカンファレンスでは公募セッションは最大30分のため、なぜ今回このようなタイトルを発表しようと思ったか、という背景については話ことができませんした。こちらのブログでは、スライドの共有と共に、その辺りの経緯について書いておきたいと思います。</p>
-
-<h3>なぜ今オブジェクト指向か？</h3>
-
-<p>オブジェクトデザインは原著から数えると、もう12年になろうとする訳です。これはセッションの中でも話したのですが、2003年当時はまだWebのフレームワークもまだ今日のようなものでなく、多くの会社は各社オレオレフレームワークを作っていた時代です。
-オブジェクト指向が必要ないような使い捨てサイトならまだしも、受託やサービスなどソースコードを維持したり、機能アップをするような場面ではオブジェクト指向が必要だと考え、今のアジャイルムーブメントかそれ以上に語られていたはずです。</p>
-
-<p>オレオレフレームワークを作ったことがある人は、オブジェクト指向やデザインパターンをよく勉強してそのあり方を議論したものです。
-そのような人たちが、現在の入門プログラマーに「オブジェクト指向がわかってない」と言っても、そもそも通じないと思ったのがきっかけでです。</p>
-
-<p>ここ4,5年の間にWebからプログラミングを始めた人（Webフレームワーク世代）は、すでに素晴らしいWebフレームワークがあり、その上でプログラミングをすることを要求されます。言語そのもの、たとえばPHPなら「イラストでよくわかるPHP はじめてのWebプログラミング入門」や「よくわかるPHPの教科書」あたりを読んでから、各フレームワークの本や公式チュートリアルを片手にアプリケーション開発を始めています。
-つまりオレオレフレームワーク世代のオッサンが通過したオブジェクト指向やデザインパターンの経験に基づいてソースコードに手厳しいコメントを付けても、受けた方も辛いだけなのです。</p>
-
-<h3>今どのような弊害が起きているのか</h3>
-
-<p>で、このようなWebフレームワーク世代はCakePHPやその他のWebフレームワーク（MVC的なもの）を使って、MVCの枠に収めようとしてFatコントローラになったりしやすいのです。
-なぜなら特定のディレクトリにフレームワークが指定した方法で書いていれば、良くわかんないけどうまく動いてしまうのです。フレームワークすげーな！という訳です。
-それ以外の書き方は知らないし、どこにも書いてないのです。
-結局、適切にクラス分割ができないため、結果として与えられた範囲の枠組みで問題はない、と考えているような状況を見かけるのです。
-classってPHPの文法です、キリッ！とか言われたことはないですが、まぁ無くはないのかな…と。</p>
-
-<p>じゃぁフレームワークの本に、その概念や考え方を書くべきだという声もあるかもしれません。私もCakePHP本の執筆に携わったことがあり、耳の痛い話です。しかしフレームワークの本では、すべてのフレームワークについての説明もページ数的に困難な中、OOPやMVCの概念のような内容を解説するのは困難なことも事実です。</p>
-
-<h3>そこで話してみようと思った</h3>
-
-<p>もちろん、オブジェクト指向ムーブメント世代のオッサンであってもオブジェクト指向をみんな理解しているかというと、そういう訳ではありません（まぁ少なくともみんな読書会なんかして勉強はしていたような気がします）。
-今時のWebフレームワーク世代だって、しっかり勉強している意識高い人はいっぱいいるし、知っています。
-ただ最近プログラミングを始めた人は、技術の移り変わりが激しいし、言語やフレームワークはどんどんバージョンアップするし、なかなか基礎的な事に対する勉強時間を作るのが難しいのではないかな、と思うのです。
-しかもオブジェクト指向の勉強って難しいし「銀の弾丸」は無いわけです。最近そういった勉強会の話もあまり聞きません。
-ではどのあたりから始めると良いだろう？という当たりを付けられるセッションをしてみたいと思ったのです。</p>
-
-<p>私が技術支援で入った中で良く感じている問題はオブジェクト指向プログラミングというより、そもそものオブジェクト指向がうまく理解されていないと思ったので以下のポイントに絞った内容にしたいと思いました。</p>
-
-<ul>
-<li>オブジェクトとは何なのか</li>
-<li>オブジェクトを導出するにはどうしたら良いのか</li>
-<li>今回のPHPカンファレンスのテーマは「知りたい，があなたを変えていく」</li>
-</ul>
-
-<p>これらの要件に合うのは、責務駆動設計の中心的原理とテクニックを解説した「オブジェクトデザイン」の紹介が最適で、30分という時間に適している（知りたい==何か持ち帰って始めることができる）と思ったのです。</p>
-
-<h3>どうだったか</h3>
-
-<p>セッションをやっている間、いつも盛り上がっていないと不安なので、小ネタを差し込むのですが、皆さん真面目に聞きに来ていただいたので、講演者から見るとダダ滑りでした（個人的な感想です）。ただ<a href="https://joind.in/talk/view/12043">joind.in</a>のコメントを読ませていただいたり、顔見知りの方に確認した範囲では何かしら体験を持ち帰っていただけたようで「知りたい」につながったのかな、と思っています。</p>
-
-<p>もし私の講演を聴いていただいてコメントまだな方は、<a href="https://joind.in/talk/view/12043">コチラに</a>一言いただけると嬉しいです。<a href="https://joind.in/talk/view/12043">joind.in</a>は匿名でのコメントもできますので、ご安心ください。</p>
-
-<p>また、今回の目玉？！セッションであった「ウェブエンジニアに必要なセキュリティスキルとは 徳丸浩 x 大垣靖男」の対談セッションでも思ったのですが、お二人の話の大きな相違点のベースである<code>現実論</code>と<code>理想論</code>のケースはセキュリティだけではなく、オブジェクト指向についても同じだな、と思いました。
-私はすべての人がオブジェクト指向を理解して進めるのが理想だと思うし、アジャイル原則の<code>私たち</code>はオブジェクト指向を理解しているプログラマーであるべき、と思っています。ただすべての人がそうでないというのも理解できるので、理解度はともかくオブジェクト指向と向き合って欲しいなと思っています。そこから何かが変わると良いな、と。</p>
-
-<h3>裏話</h3>
-
-<p>実は、セッションを応募するとき、PHPカンファレンスでは重複して申し込めると聞いていたので、オブジェクト指向超入門（上）と、オブジェクト指向超入門（下）の2セッションにして合わせて60分で申し込もうと思ったのですが、それは通らなそう(www)と思って自重しました。
-またどこかで60分セッションやれる機会があれば、やってみたいなと思うのでした。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました" data-url="http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html&t=PHP%20Conference%202014%E3%81%A7%E3%80%8C%E6%93%AC%E4%BA%BA%E5%8C%96%E3%81%8B%E3%82%89%E5%A7%8B%E3%82%81%E3%82%8BPHPer%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91%E8%B6%85%E5%85%A5%E9%96%80%E3%80%8D%E3%82%92%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/24/">« Prev</a>
@@ -1225,6 +1409,7 @@ classってPHPの文法です、キリッ！とか言われたことはないで
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
@@ -1234,7 +1419,6 @@ classってPHPの文法です、キリッ！とか言われたことはないで
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
                   <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -1245,11 +1429,11 @@ classってPHPの文法です、キリッ！とか言われたことはないで
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
                     <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
@@ -1345,7 +1529,7 @@ classってPHPの文法です、キリッ！とか言われたことはないで
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (6)</li>
+                  <li><a href="/2023.html">2023</a> (7)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

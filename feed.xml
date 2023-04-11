@@ -5,10 +5,69 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2023-04-06T18:24:00+09:00</updated>
+  <updated>2023-04-11T16:33:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html"/>
+    <id>http://blog.url.com/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html</id>
+    <published>2023-04-11T16:33:00+09:00</published>
+    <updated>2023-04-11T17:02:45+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;先日 &lt;a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html"&gt;aws-sdk v2 が 2023 年中にメンテナンスモードになる&lt;/a&gt; という記事を書いて、実際自分たちで作っていた aws-sdk v2 でできていた CLI ツールも aws-sdk v3 に切り替えました。&lt;/p&gt;
+
+&lt;h3&gt;CLIツールを v3 に移行したら、利用するアプリ側がコンパイルエラーになる&lt;/h3&gt;
+
+&lt;p&gt;で、それを Lambda にデプロイするアプリの devDependencies に反映してみたところ、また型エラーが出るようになりました。&lt;/p&gt;
+
+&lt;p&gt;CLIツールでは &lt;code&gt;@aws-sdk/client-lambda@3.310.0&lt;/code&gt; に依存していて、 Lambda アプリ側は &lt;code&gt;@aws-sdk/client-lambda@3.254.0&lt;/code&gt; を使っていたためです。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;error TS2345: Argument of type &amp;lsquo;typeof LambdaClient&amp;rsquo; is not assignable to parameter of type &amp;lsquo;InstanceOrClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&amp;gt;&amp;rsquo;.
+      Type &amp;lsquo;typeof LambdaClient&amp;rsquo; is not assignable to type &amp;lsquo;ClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&amp;gt;&amp;rsquo;.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;で、それぞれの型定義への依存は &lt;code&gt;&amp;quot;@aws-sdk/types&amp;quot;: &amp;quot;*&amp;quot;&lt;/code&gt; になっているので、lock ファイルの状態次第でそれぞれでバージョンが異なるものが入る場合があります。
+そこで型が一致しない問題が発生してきます。&lt;/p&gt;
+
+&lt;p&gt;CLI ツールでは実行時に aws-sdk が必要になるので、 dependencies に設定していて、CLIツールを使う方のアプリは devDependencies に設定しているわけですが、それぞれの dependencies からインストールされる &lt;code&gt;@aws-sdk/types&lt;/code&gt; がドッチ？問題になってしまうという&amp;hellip;&lt;/p&gt;
+
+&lt;h3&gt;解決策&lt;/h3&gt;
+
+&lt;p&gt;今回は自分たちで作ったライブラリだったので、CLIツール側の aws-sdk を devDependencies に変更して、CLIツールを使うアプリ側の aws-sdk 利用状況に依存するように変更しました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;peerDependencies&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;^3.0.0&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;これでアプリ側が &lt;code&gt;@aws-sdk/client-lambda&lt;/code&gt; を使っていればそのバージョンに依存するようになるし、使っていなければ 3系の最新が入るようになります。&lt;/p&gt;
+
+&lt;p&gt;ここで、この aws-sdk v3 シリーズを読んでいただいた懸命な皆様はお気づきだと思いますが &lt;a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"&gt;Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる&lt;/a&gt; でも書いた&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;peerDependencies&lt;/code&gt; が指定されていたら、バージョンを揃えるために自分でインストールする&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;これが重要になってきます。
+なので、自分で作ったライブラリで peerDependencies に指定したら、結局アプリ側で使ってなくてもバージョンを揃えるのに追加でインストールした方が良いということです。&lt;/p&gt;
+
+&lt;h3&gt;aws-sdk v3 を安心して使うためには（追記）&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;peerDependencies&lt;/code&gt; が指定されていたら、バージョンを揃えるために自分でインストールする&lt;/li&gt;
+&lt;li&gt;関数/クラス以外、たとえば enum の値などは基本的に利用しない&lt;/li&gt;
+&lt;li&gt;自作ライブラリで aws-sdk v3 に依存する場合は &lt;code&gt;peerDependencies&lt;/code&gt; に指定する&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;大事なこと4つ目を追加しました。&lt;/p&gt;
+
+&lt;p&gt;aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>aws-sdk v2 が 2023 年中にメンテナンスモードになる</title>
     <link rel="alternate" href="http://blog.url.com/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html"/>
@@ -465,161 +524,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
 
 &lt;p&gt;このように使い分けることで、テストコードを書いていきたいですね。
 簡単ではありますが、aws-sdk-client-mock はどのように aws-sdk をモックしているのか？ を紹介しました。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</title>
-    <link rel="alternate" href="http://blog.url.com/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"/>
-    <id>http://blog.url.com/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html</id>
-    <published>2023-01-04T11:00:00+09:00</published>
-    <updated>2023-04-05T14:34:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;先日も紹介したクラメソさんの &lt;a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/"&gt;[アップデート] AWS Lambdaが Node.js 18をサポートしました&lt;/a&gt; 記事でもふれられていましたが、Node.js が 18 になるのに伴い、イメージ内の aws-sdk が v3 になりました。
-Node.js 16 までは v2 系だったのですが、ここでは多くの変更が発生しています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;npm install する対象が &lt;code&gt;aws-sdk&lt;/code&gt; から &lt;code&gt;@aws-sdk/client-xxx&lt;/code&gt; のように AWS のサービスごとのクライアントライブラリになった&lt;/li&gt;
-&lt;li&gt;書き方が、各クライアントを &lt;code&gt;new&lt;/code&gt; して &lt;code&gt;send&lt;/code&gt; でコマンドを送信する記述に統一された&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;大きくはこの2点でしょうか。
-私たちは aws-sdk の利用に関してリポジトリパターンの中に閉じ込めているので、基本的にそこだけ対応すれば良いのですが、API で同期実行だったものが非同期実行に変更となっているので、そこだけはインターフェースを Promise に変更する必要があります。
-これは実際のコマンド内部は同期で問題ないけど、 &lt;code&gt;Client.send(command)&lt;/code&gt; が基本的に Promise を返却するようになったための副作用だと思ってください。
-（ aws-sdk v2 のときは &lt;code&gt;command().promise()&lt;/code&gt; のようにすると、非同期コマンドは Promise を返却するようになっていたのですが、この &lt;code&gt;promise()&lt;/code&gt; 部分がなくなり、基本的な戻りは Promise になっています）&lt;/p&gt;
-
-&lt;h2&gt;具体的なコードで見る v2 と v3 の違い&lt;/h2&gt;
-
-&lt;p&gt;StepFuntions を実行するコードで違いをみてみましょう。&lt;/p&gt;
-
-&lt;h3&gt;v2 のコード&lt;/h3&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;StepFunctions&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StepFunctions&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-&lt;span class="p"&gt;}).&lt;/span&gt;&lt;span class="nx"&gt;promise&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;v3 のコード&lt;/h3&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;parse&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/util-arn-parse&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;results&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;  
-&lt;span class="p"&gt;}));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;StepFunctions では、利用するライブラリ名が &lt;code&gt;aws-sdk/client-sfn&lt;/code&gt; になりました。
-ほとんどの場合は、サービス名を使っています（たとえば S3 なら aws-sdk/client-s3 だし、 S3Client です）が、StepFunctions の場合は &lt;code&gt;sfn&lt;/code&gt; に省略されているので注意が必要です。（僕はこの略名に気付くまでメチャクチャ探したことを告白しておきます）&lt;/p&gt;
-
-&lt;p&gt;クライアントライブラリを探すときは &lt;a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/"&gt;AWS SDK for JavaScript v3&lt;/a&gt; の公式ドキュメントを参照すると良いのですが、ぱっとみてサービス名からクライアントライブラリが見つけられない場合は、それっぽい略名から探してみると良いでしょう。&lt;/p&gt;
-
-&lt;p&gt;v2 と v3 を比較するとわかりますが、大きな変更でないことはわかると思います。&lt;/p&gt;
-
-&lt;h2&gt;v3 移行するときに役立つドキュメント&lt;/h2&gt;
-
-&lt;p&gt;次に v3 移行するときに役立つドキュメントを紹介していきます。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/"&gt;AWS SDK for JavaScript v3&lt;/a&gt; &lt;/li&gt;
-&lt;li&gt;&lt;a href="https://aws.amazon.com/jp/blogs/news/service-error-handling-modular-aws-sdk-js/"&gt;AWS SDK for JavaScript (v3) モジュールでのエラー処理&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/blob/main/UPGRADING.md"&gt;Upgrading Notes (2.x to 3.x)&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;1つ目は公式のSDKドキュメントですね。クライアントライブラリを探すときも、コマンド名を確認するときにも良く参照します。&lt;/p&gt;
-
-&lt;p&gt;2つ目はエラーハンドリングのやり方の違いについてです。詳しくはドキュメントを読めばわかるのですが、従来はエラーの判定方法が 
-&lt;code&gt;(&amp;lt;AWSError&amp;gt;e).code === &amp;#39;ExecutionDoesNotExist&amp;#39;&lt;/code&gt; みたいにしていたのを &lt;code&gt;e instanceof ExecutionDoesNotExist&lt;/code&gt; のように例外クラスのインスタンスとして判定できるようになっています。これも v3 に移行するときに注意したいポイントです。&lt;/p&gt;
-
-&lt;p&gt;3つ目はSDKのv3へのアップグレードガイドで、主に破壊的変更があった部分について解説されています。単純に XxxxClient と XxxxCommand に変更したときに型エラーが出たときは、このドキュメントを読んで破壊的変更（変数名の変更や、JSON構造の変更など）がないか確認すると解決への近道になります。&lt;/p&gt;
-
-&lt;p&gt;ただし、先ほどの例で書いた StepFunctions のコンストラクタのように&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;region&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;リージョンが v3 から必須パラメータになったのですが、こういった変更は動かしてみるまでわからないことが多いので、ユニットテストを書いておくことは重要です。&lt;/p&gt;
-
-&lt;h2&gt;ユニットテスト&lt;/h2&gt;
-
-&lt;p&gt;私たちは以下のサービスについては、モックせずにローカルで代替ライブラリを使って結合テストを行なっています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;S3 : &lt;a href="https://www.npmjs.com/package/s3rver"&gt;S3rver&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;SQS: &lt;a href="https://github.com/softwaremill/elasticmq"&gt;ElasticMQ&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;RDS: &lt;a href="https://www.npmjs.com/package/better-sqlite3"&gt;better-sqlite3&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;v2 でのユニットテスト&lt;/h3&gt;
-
-&lt;p&gt;上記以外について、v2 のときは以下のようにモックしていました。ここでは Jest での書き方を紹介します。
-sfn の start というメソッドで StepFunctions を呼び出していると想定してください。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// startExecution の引数チェック用&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;startExecution&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// startExecution の戻り値モック用&lt;/span&gt;
-&lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mock&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="na"&gt;StepFunctions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;jest&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fn&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;mockImplementation&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="na"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockImplementation&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;promise&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;startExecution&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
-        &lt;span class="p"&gt;}),&lt;/span&gt;
-      &lt;span class="p"&gt;};&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="p"&gt;};&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-
-&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockReset&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-  &lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockReset&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-
-&lt;span class="nx"&gt;startExecution&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mockResolvedValue&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;startExecutionMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;mock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;calls&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toEqual&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
-  &lt;span class="p"&gt;[{&lt;/span&gt; &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}]&lt;/span&gt;
-&lt;span class="p"&gt;]);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;v2 でのモックは面倒でしたね。&lt;/p&gt;
-
-&lt;h3&gt;v3 でのユニットテスト&lt;/h3&gt;
-
-&lt;p&gt;v3 で aws-sdk をモックするときは &lt;a href="https://github.com/m-radzikowski/aws-sdk-client-mock"&gt;AWS SDK v3 Client mock&lt;/a&gt; を利用します。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Library recommended by the AWS SDK for JavaScript team - see the introductory post on the AWS blog.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;ということで公式にもオススメされるライブラリということで良いですね。&lt;/p&gt;
-
-&lt;p&gt;上記の v3 でのテストコードは以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock-jest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reset&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-
-&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;resolves&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toHaveReceivedNthCommanddWith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;モックライブラリを使うと、v2 のときより可読性も良くわかりやすくなっています。&lt;/p&gt;
-
-&lt;h2&gt;さいごに&lt;/h2&gt;
-
-&lt;p&gt;ここまで aws-sdk を v2 から v3 にする方法をまとめてみました。
-&lt;code&gt;aws-sdk-client-mock&lt;/code&gt; 便利ですね。
-しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
-sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 &lt;code&gt;mockClient&lt;/code&gt; の結果で得られたモックを使っているわけでもありません。
-そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。&lt;/p&gt;
 </content>
   </entry>
 </feed>
