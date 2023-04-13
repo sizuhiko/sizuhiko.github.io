@@ -277,7 +277,224 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2019/05/05/try-import-maps.html">TRY import maps</a></h2>
+            <h2 class="title"><a href="/2019/05/13/generate-import-maps-json.html">import-mapsのjsonファイルを生成するツールを作ってみた</a></h2>
+  <p class="postdate"><a href="/2019/05/13.html" title="Permanent link">Monday, May 13, 2019 06:18:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回 <a href="/2019/05/05/try-import-maps.html">TRY import maps</a> ということで、<a href="https://github.com/WICG/import-maps">import maps</a> を試してみる記事を書きました。
+最後に</p>
+
+<blockquote>
+<p>JSON定義を自動生成するスクリプトが出ないか期待したいですね（がんばって自作するのもあり）。</p>
+</blockquote>
+
+<p>という記述をしたのですが、その後調べたら <a href="https://github.com/WICG/import-maps/issues/60">How to convert package-lock.json to import maps? #60</a> というissue が上がっているのを見て、いくつか <code>yarn</code> のサンプルが出ていたりして、これ自作できるのでは？と思い、作ってみました。</p>
+
+<p><a href="https://www.npmjs.com/package/gen-import-maps-json">gen-import-maps-json</a> です。</p>
+
+<p>READMEのとおりで簡単に動きます。</p>
+
+<h3>しくみ</h3>
+
+<p>とても小さいJavaScriptのコードです。以下のような手順で処理しています。</p>
+
+<ol>
+<li>コマンドが実行されたディレクトリにある <code>package-lock.json</code> ファイルを読み込む</li>
+<li>devDependencies のモジュールは除外する</li>
+<li>Web Components の polyfill は除外する</li>
+<li>対象モジュールの <code>package.json</code> を読み取って、 <code>main</code> ファイルのパスを入手する</li>
+<li>メインファイルのモジュール名と、相対パスをキーにした、map情報を書き出す</li>
+</ol>
+
+<h3>ためしてみる</h3>
+
+<p>前回と同じく<a href="https://github.com/Polymer-Japan/litelement-first-element">Polymer-Japan/litelement-first-element</a> のコードを使って実行してみます。</p>
+
+<p>生成できたJSONは以下のとおりです。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"@polymer/font-roboto/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/font-roboto"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-demo-helpers/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-flex-layout/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icon/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icons/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icons"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-iconset-svg/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-iconset-svg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-location/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-location/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-meta/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/iron-meta"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/marked-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/marked-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/polymer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/polymer-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@polymer/prism-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/prism-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@webcomponents/shadycss/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@webcomponents/shadycss"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/shadycss.min.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"clipboard/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"clipboard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/dist/clipboard.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"delegate/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"delegate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/src/delegate.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"good-listener/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"good-listener"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/src/listen.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lit-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lit-html/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"marked/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"marked"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prismjs/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"prismjs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"select/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"select"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/src/select.js"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tiny-emitter/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tiny-emitter"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/index.js"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>前回のJSONは以下のとおりでした。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"@polymer/iron-demo-helpers/demo-pages-shared-styles"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-demo-helpers/demo-snippet"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-snippet.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/polymer-legacy.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/polymer-legacy.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/font-roboto/roboto.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/lib/utils/html-tag.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/utils/html-tag.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/marked-element/marked-element.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/prism-element/prism-highlighter.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-highlighter.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/prism-element/prism-theme-default.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-theme-default.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"marked/lib/marked.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"prismjs/prism.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/polymer/lib/elements/dom-module.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/polymer/lib/elements/dom-module.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"lit-html/lib/shady-render"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lib/shady-render.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"lit-html/lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icons/iron-icons.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-icon/iron-icon.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"@polymer/iron-meta/iron-meta.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>だいぶ違いますね！</p>
+
+<p>このツールを作ることで、<a href="https://github.com/WICG/import-maps">import maps</a> の仕様理解が深まりました。</p>
+
+<ul>
+<li>キー名に対応するパスが1つの場合、値は配列でなく文字列で良い</li>
+<li>パッケージが複数のモジュールを持っている場合、 キー名を <code>/</code> で終了すると他のファイルを参照できる。くわしくは <a href="https://github.com/WICG/import-maps#packages-via-trailing-slashes">&ldquo;Packages&rdquo; via trailing slashes</a> を参照ください</li>
+</ul>
+
+<p>これで、定義ファイルを自動生成できます。</p>
+
+<h3>実行してみる</h3>
+
+<p>前回と同じくPHPのビルトインサーバーを利用します。
+ツールで生成できた JSON をHTMLに追加しておきましょう。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ php -S localhost:8080 -t .
+</code></pre></div>
+<p>前回と同じように、無事デモが動作しました。</p>
+
+<h3>JSONを外部ファイルにしてみる</h3>
+
+<p>いろいろとissueを見たりしているうちに、JSON記述は外部ファイルが使えるかも？と思ったので、import-mapsの定義をファイルに変更してみます。
+ツールで出力されたJSONを <code>import-maps.json</code> というファイル名にして、以下のようにHTMLの記述を変更します。</p>
+<div class="highlight"><pre class="highlight html"><code>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"importmap"</span> <span class="na">src=</span><span class="s">"import-maps.json"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>ページをリロードしてみると Dev Tool のコンソールに <strong><em>External import maps are not yet supported.</em></strong> と表示されました。
+まだサポートされてなかった&hellip;</p>
+
+<p>ということで、サポートを待ちましょう。</p>
+
+<h3>さいごに</h3>
+
+<p>仕様は文面だけで読んでいると、わかっているつもりでも、実際のユースケースではわかっていないことも多いと実感しました。
+ツールやデモプログラムを作って、実際に手に馴染ませることが重要ですね。</p>
+
+<p>それと、polyfill の除外がWeb Components固定になっているので、今後の展望としては、ignoreするモジュールを定義ファイルで指定できるようにしたいなーと思っています。</p>
+
+<p>今後も <a href="https://github.com/WICG/import-maps">import maps</a> の最新状況を追いかけていきたいと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="import-mapsのjsonファイルを生成するツールを作ってみた" data-url="http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html&t=import-maps%E3%81%AEjson%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/05/try-import-maps.html">TRY import maps</a></h2>
   <p class="postdate"><a href="/2019/05/05.html" title="Permanent link">Sunday, May 05, 2019 11:40:00 AM</a></p>
   <p class="tags">
       <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
@@ -692,122 +909,6 @@ PSR-15ほどはないようです。ということで独断と偏見（ダウ�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a></h2>
-  <p class="postdate"><a href="/2019/04/30.html" title="Permanent link">Tuesday, April 30, 2019 09:28:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/psr.html" rel="tag">PSR</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>平成最後の記事は、PHP。
-久々のPHP記事ですが、<a href="https://www.php-fig.org/psr/psr-15">PSR-15</a>に準拠したリクエストハンドラーライブラリの実装を比較してみようと思います。</p>
-
-<h3>PSR-15とは？</h3>
-
-<p>HTTPメッセージを使用するリクエストハンドラーと、ミドルウェアコンポーネントの共通インターフェースです。</p>
-
-<p>それ<a href="http://www.php-fig.org/psr/psr-7/">PSR-7</a>なのでは？という鋭い人は、
-<a href="https://twitter.com/tanakahisateru">@tanakahisateru</a>さんのスライド
-<a href="https://speakerdeck.com/tanakahisateru/17ninatutafalseka">PHP-FIGのHTTP処理標準の設計はなぜPSR-7/15/17になったのか</a>を参照ください。</p>
-
-<p>PSR-7については、だいぶ知れ渡っていると思うので、PSR-15のリクエストハンドラーに着目していきます。</p>
-
-<h3>PHP-15のリクエストハンドラーに対応したライブラリ</h3>
-
-<p><a href="https://packagist.org/?query=PSR-15&amp;tags=psr-15">PackagistでPSR-15を検索</a>してみました。
-たくさんありますね。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
-なお「フレームワーク」と書いてあるものは除外しています。
-例えば <a href="https://github.com/zendframework/zend-expressive">zend-expressive</a>は <code>minimalist PSR-7 middleware framework for PHP</code> と書いてあるとおりなので。
-<a href="http://www.slimframework.com/">Slim</a>などのマイクロフレームワークも同様です。</p>
-
-<ul>
-<li><a href="https://github.com/thephpleague/route">league/route</a></li>
-<li><a href="https://github.com/northwoods/router">northwoods/router</a></li>
-<li><a href="https://github.com/sunrise-php/http-router">sunrise/http-router</a></li>
-<li><a href="https://github.com/middlewares/request-handler">middlewares/request-handler</a></li>
-</ul>
-
-<p>の4つを使って<a href="https://github.com/sizuhiko/psr15-requesthandler-examples">サンプルプログラム集</a>を作ってみました。</p>
-
-<h3>sizuhiko/psr15-requesthandler-examples</h3>
-
-<h4>PSR-7</h4>
-
-<p>まず前提事項として、PSR-7対応のライブラリが必要です。
-本サンプルでは、主に <a href="https://github.com/zendframework/zend-diactoros">zendframework/zend-diactoros</a> を使っています。
-<a href="https://github.com/sunrise-php/http-router">sunrise/http-router</a>の例ついては、同系統に<a href="https://github.com/sunrise-php/http-message">sunrise/http-message</a>と<a href="https://github.com/sunrise-php/http-server-request">sunrise-php/http-server-request</a>があるので、それを利用しています。
-PSR-7のライブラリが違うと、どのような記述の違いがあるのかわかりやすいでしょう。</p>
-
-<h4>サンプルの内容</h4>
-
-<p><a href="https://github.com/sizuhiko/psr15-requesthandler-examples">サンプルプログラム集</a>を <code>clone</code> するか、ダウンロードして、READMEの手順に従ってください。</p>
-
-<p>ドキュメントルート(<code>/</code>)にアクセスすると、<code>Hello, World!</code> 出すだけの簡単なものです。</p>
-
-<h4>サンプルコードの流れ</h4>
-
-<p>で、結局PSR-15とは？みたいな話になるわけですが、どの例も以下のような流れで動いています</p>
-
-<ul>
-<li>PSR-7 でHTTPリクエスト(<code>Psr\Http\Message\RequestInterface</code>)を受け取る</li>
-<li>PSR-15の <code>Psr\Http\Server\MiddlewareInterface</code> か <code>Psr\Http\Server\RequestHandlerInterface</code> でいい感じに PSR-7のHTTPレスポンス(<code>Psr\Http\Message\ResponseInterface</code>) を生成する。</li>
-<li>PSR-7 のHTTPレスポンスをエミットする</li>
-</ul>
-
-<p>つまり、真ん中の部分を処理することになります。</p>
-
-<h4>リクエストハンドラ</h4>
-
-<p><a href="https://github.com/sizuhiko/psr15-requesthandler-examples/tree/master/src">サンプルのsrcフォルダ</a>の下には</p>
-
-<ul>
-<li>Middlewares</li>
-<li>RequestHandlers</li>
-</ul>
-
-<p>があり、それぞれ <code>Psr\Http\Server\MiddlewareInterface</code> か <code>Psr\Http\Server\RequestHandlerInterface</code> を実装したクラスが置いてあります。
-で、それぞれのリクエストハンドラーからは、適したハンドラが呼び出されるようになっています。</p>
-
-<p>このサンプルでは PSR-17 (HTTP Factories) を先行導入し、PSR-11 (Container Interface) に対応したライブラリでDIしてますが、
-そのあたりは、次回以降で解説します。</p>
-
-<p>ミドルウエアもリクエストハンドラも同じように<code>Hello, World!</code>をレスポンスボディに入れるだけです。</p>
-
-<h3>このサンプルをとおして言いたかったこと</h3>
-
-<p>このサンプルでは、ドキュメントルートだけの簡単な実装でしたが、ルーターの設定を追加するだけで、
-実際のアプリケーションでも使えるようになることがわかると思います。</p>
-
-<p>もちろん実際にはDBにアクセスする必要もあったりするわけですが、そこには<a href="https://www.php.net/manual/ja/intro.pdo.php">PHP Data Objects(PDO)</a>があり、
-実際のDBの差分を吸収してくれます。
-そこで利用するSQLは標準であり、Webの標準よりも長い期間利用されています。</p>
-
-<p>フレームワークを利用してアプリケーションを作ることは、速く簡単に構築できます。
-しかしフレームワークに依存せずPHPの標準を使うことで、柔軟にライブラリを変えても、自分のビジネスロジックを流用することができるようになります。</p>
-
-<p>もちろん今日のフレームワークの多くが PSR 対応を進めていますので、フレームワークを使っていても、より互換性が高いアプリケーションを作ることができるようになるかもしれません。</p>
-
-<p><a href="/2019/05/01/psr-17-libraries.html">次回はPSR-17について、いくつかのライブラリを紹介</a>します。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PSR-15リクエストハンドラーのライブラリ比較" data-url="http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html&t=PSR-15%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%8F%E3%83%B3%E3%83%89%E3%83%A9%E3%83%BC%E3%81%AE%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E6%AF%94%E8%BC%83" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/30/psr-15-libraries.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/10/">« Prev</a>
@@ -835,6 +936,7 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
@@ -844,7 +946,6 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -852,6 +953,15 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
@@ -859,16 +969,7 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/jest.html" rel="tag">Jest</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -955,7 +1056,7 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (7)</li>
+                  <li><a href="/2023.html">2023</a> (8)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

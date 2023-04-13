@@ -277,7 +277,42 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
+            <h2 class="title"><a href="/2009/03/07/cakephp-tokyo.html">CakePHPハンズオン＠Tokyo#2が実施されました。</a></h2>
+  <p class="postdate"><a href="/2009/03/07.html" title="Permanent link">Saturday, March 07, 2009 11:03:25 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://events.php.gr.jp/events/show/70">CakePHPハンズオン＠Tokyo#2</a>にサポーターとして参加してきました。  </p>
+
+<p>えーXAMPP方面でいくらかヘルプできたかな？と。  </p>
+
+<p>後は皆さん以外とスムーズに進んでいたようで、感心が高く事前に予習している感がありました。すごーい。  </p>
+
+<p>反省としては、あんまり本のCMができなかったことでしょうか:ko:   </p>
+
+<p>来週九州でCakePHP勉強会があるので、共著の皆様に宣伝をお願いする事にします・・・</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPハンズオン＠Tokyo#2が実施されました。" data-url="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html&t=CakePHP%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%EF%BC%A0Tokyo%232%E3%81%8C%E5%AE%9F%E6%96%BD%E3%81%95%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/03/07/cakephp-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2009/02/04/cakephp1-2-1-8004-auth-scaffold.html">CakePHP1.2.1.8004 で AuthコンポーネントとScaffoldを併用する際の注意事項</a></h2>
   <p class="postdate"><a href="/2009/02/04.html" title="Permanent link">Wednesday, February 04, 2009 10:02:22 AM</a></p>
   <p class="tags">
       <a href="/tags/authcomponent.html" rel="tag">AuthComponent</a>
@@ -798,114 +833,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h2>
-  <p class="postdate"><a href="/2008/08/25.html" title="Permanent link">Monday, August 25, 2008 11:08:41 AM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第七回は、マウスイベントを取得する手順を整理します。  </p>
-
-<h3>■今回サンプルの完成イメージ</h3>
-
-<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
-
-<p>前回はスクロール処理とアニメーション効果を付けてみました。今回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して変更していきます。今回は、mxmlファイルのみ修正していきます。  </p>
-
-<h3>■ファイルの準備</h3>
-
-<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_7/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
-
-<ul>
-<li>reflector.as3proj</li>
-<li>reflector.mxml</li>
-<li>ImageReflector.as</li>
-<li>TransformUtil.as</li>
-</ul>
-
-<p>前回から修正したのは、reflector.mxmlだけです。  </p>
-
-<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
-
-<h3>■マウスの基本動作はクリックと移動</h3>
-
-<p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
-      paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
-      mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
-      mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
-</code></pre></div>
-<p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
-
-<ol>
-<li><p>mouseUp : マウスのボタンが押された後、放されたときに発生する  </p></li>
-<li><p>mouseDown : マウスとボタンが押されたときに発生する  </p></li>
-<li><p>mouseMove : マウスポインターが動いたときに発生する  </p></li>
-<li><p>mouseOut : マウスポインターがHBOXから出たときに発生する  </p></li>
-</ol>
-
-<p>のような意味を持っています。</p>
-
-<h3>■マウスがどこで操作されたのか調べる</h3>
-
-<p>マウスイベントは表示領域で取得しますが、対象のHBOXには様々な子コントロールが含まれています。本サンプルで使っているのは</p>
-
-<ul>
-<li>カバー写真</li>
-<li>横スクロールバー</li>
-</ul>
-
-<p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
-料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>if(event.target.parent is HScrollBar)
-</code></pre></div>
-<p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
-
-<h3>■マウスが領域外に出たときを考慮する</h3>
-
-<p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
-
-<p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
-</code></pre></div>
-<p>のように、記述します。  </p>
-
-<p>似たイベントで、MouseEvent.ROLL_OUTがありますが、これはHTMLの:hoverのような実装をする際に使うイベントです。つまり対象のコントロールの上に来た・離れたというのを制御します。</p>
-
-<h3>■クロスドメインの注意事項</h3>
-
-<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
-
-<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
-
-<p>まずPHPのコードは過去記事を参考にしてください。  </p>
-
-<h3>■次回予告</h3>
-
-<p>画像間の隙間をなくして、ホンモノのように画像が重なって表示されている効果を実装してみます。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する" data-url="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(%EF%BC%97)%20%EF%BD%9E%E3%83%9E%E3%82%A6%E3%82%B9%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E5%8F%96%E5%BE%97%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/35/">« Prev</a>
@@ -932,6 +859,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
@@ -941,7 +869,6 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -949,6 +876,15 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
@@ -956,16 +892,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/jest.html" rel="tag">Jest</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -1052,7 +979,7 @@ mx_internal var layoutObject:BoxLayout = new BoxLayout();
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (7)</li>
+                  <li><a href="/2023.html">2023</a> (8)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

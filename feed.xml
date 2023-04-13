@@ -5,10 +5,50 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2023-04-11T16:33:00+09:00</updated>
+  <updated>2023-04-13T14:54:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html"/>
+    <id>http://blog.url.com/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html</id>
+    <published>2023-04-13T14:54:00+09:00</published>
+    <updated>2023-04-13T15:09:00+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;昨年 &lt;a href="/2022/05/03/swc-node-jest.html"&gt;@swc-node/jest を使ってテストを高速化する&lt;/a&gt; という記事を書きました。
+その時点で ts-jest でのテストが遅くて、 &lt;code&gt;@swc-node/jest&lt;/code&gt; に切り替えていました。&lt;/p&gt;
+
+&lt;p&gt;その後 &lt;code&gt;@swc-node/jest&lt;/code&gt; もなんやかんやあって、たまに動かなくなったりして issue 投稿して直してもらったりいろいろあったのですが、最近 ts-jest の状況を見てみたら、こんな記述がありました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Starting from v28.0.0, ts-jest will gradually opt in adoption of esbuild/swc more to improve the performance. To make the transition smoothly, we introduce legacy presets as a fallback when the new codes don&amp;rsquo;t work yet.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;from https://kulshekhar.github.io/ts-jest/docs/getting-started/presets&lt;/p&gt;
+
+&lt;p&gt;なんと、高速化のために esbuild/swc を使うようになったって。まじかー&lt;/p&gt;
+
+&lt;h3&gt;早速 ts-jest に変えてみた&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;@swc-node/jest&lt;/code&gt; から &lt;code&gt;ts-jest&lt;/code&gt; に変更して、 &lt;code&gt;jest.config.js&lt;/code&gt; を &lt;code&gt;preset&lt;/code&gt; に変更。
+テストを実行してみると、確かに速くなってる！&lt;/p&gt;
+
+&lt;p&gt;手元のプロジェクトだと、 &lt;code&gt;ts-jest&lt;/code&gt; にかかる時間は、 &lt;code&gt;@swc-node/jest&lt;/code&gt; + &lt;code&gt;tsc&lt;/code&gt; の時間とほぼ一致していました。
+&lt;code&gt;ts-jest&lt;/code&gt; ではコンパイルエラーも検知されるので、つまりそういうことでしょう。&lt;/p&gt;
+
+&lt;h3&gt;また ts-jest で大丈夫！&lt;/h3&gt;
+
+&lt;p&gt;ということで、 jest の実行に swc や esbuild を使うことや、tsconfig と違う設定を考慮したりとかなく、TypeScript のコードを jest でテストできるようになりました。&lt;/p&gt;
+
+&lt;p&gt;私たちのプロジェクトは、早速すべて ts-jest@29 に切り替えました。
+もし問題がある場合は、 Preset にレガシーモードを指定すると esbuild や swc を使わないようにできるようですが、そもそも一度 swc に切り替えてテストできていれば、問題なく ts-jest に戻れるはずです。&lt;/p&gt;
+
+&lt;p&gt;今後は TypeScript + jest での開発環境に ts-jest のご利用をお勧めします。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</title>
     <link rel="alternate" href="http://blog.url.com/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html"/>
@@ -453,77 +493,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
 
 &lt;p&gt;aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
 同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</title>
-    <link rel="alternate" href="http://blog.url.com/2023/02/02/how-mock-aws-sdk-client-mock.html"/>
-    <id>http://blog.url.com/2023/02/02/how-mock-aws-sdk-client-mock.html</id>
-    <published>2023-02-02T17:05:00+09:00</published>
-    <updated>2023-04-05T14:34:43+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;前回の記事&lt;a href="https://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）&lt;/a&gt;で&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;code&gt;aws-sdk-client-mock&lt;/code&gt; 便利ですね。
-しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
-sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 &lt;code&gt;mockClient&lt;/code&gt; の結果で得られたモックを使っているわけでもありません。
-そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;書いたとおり、どうやってモックしているのか、紹介していきます。&lt;/p&gt;
-
-&lt;h2&gt;前回のおさらい&lt;/h2&gt;
-
-&lt;p&gt;aws-sdk v3 でのテストコードは以下のようになることを紹介しました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock-jest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-sdk-client-mock&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;beforeEach&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;reset&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-
-&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;on&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;resolves&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="nx"&gt;executionArn&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;resuls&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;sfnArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;results&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toBe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;executionArn&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nx"&gt;expect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;SFNClientMock&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toHaveReceivedNthCommanddWith&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;arn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;モックするときは &lt;code&gt;mockClient(SFNClient)&lt;/code&gt; とクラスを渡しているだけでしたね。
-生成した &lt;code&gt;SFNClientMock&lt;/code&gt; はテストクラスでしか利用していません。&lt;/p&gt;
-
-&lt;h2&gt;aws-sdk-client-mock の実装を見てみる&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/m-radzikowski/aws-sdk-client-mock/blob/main/packages/aws-sdk-client-mock/src/mockClient.ts"&gt;mockClientのコード&lt;/a&gt;を見てみましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;mockClient&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;object&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;MetadataBearer&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-    &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;InstanceOrClassType&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="nx"&gt;AwsClientStub&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;Client&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;instance&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;isClientInstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;prototype&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;ふむふむ &lt;code&gt;mockClient&lt;/code&gt; の引数がインスタンスかどうか調べて、クラスだったら prototype が利用されるわけですか。
-さらに見てみると&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;sendStub&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;stub&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;send&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;SinonStub&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;Command&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TInput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nb"&gt;Promise&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;TOutput&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;なるほど &lt;code&gt;send&lt;/code&gt; メソッドをスタブしてますね。
-あー、つまりクラスを指定すると、 prototype 定義が置き換わっちゃうわけですね。&lt;/p&gt;
-
-&lt;h2&gt;使い分けが必要&lt;/h2&gt;
-
-&lt;p&gt;prototype が置き換わることで &lt;code&gt;mockClient&lt;/code&gt; に渡したクラスの &lt;code&gt;send&lt;/code&gt; はすべてのシーンでスタブに置き換わります。
-テストしたい実装側でクライアントのインスタンスをDIなどで注入していない場合は、この方法で良いですね。
-逆にシーンによっては、実際に send を実行したい場合は困ってしまいます。&lt;/p&gt;
-
-&lt;p&gt;localstack などを使って部分的にインテグレーションテストをしたい場合は、なるべくインスタンスをDIできる仕組みにした方が良いでしょう。
-インスタンスを生成するメソッドを作って、それをモックして &lt;code&gt;mockClient&lt;/code&gt; の戻り値を返すようにしても良いですね。&lt;/p&gt;
-
-&lt;p&gt;とくにイングレーションテストとかなく、すべてのクライアント呼び出しをモックするのであれば、クラス指定が楽ですね。&lt;/p&gt;
-
-&lt;p&gt;このように使い分けることで、テストコードを書いていきたいですね。
-簡単ではありますが、aws-sdk-client-mock はどのように aws-sdk をモックしているのか？ を紹介しました。&lt;/p&gt;
 </content>
   </entry>
 </feed>

@@ -277,7 +277,295 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2014/06/27/cake3-mokumoku-5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a></h2>
+            <h2 class="title"><a href="/2014/08/17/cakephp2-plugin-travis.html">CakePHP2のプラグインをTravis.ciで継続的インテグレーションする</a></h2>
+  <p class="postdate"><a href="/2014/08/17.html" title="Permanent link">Sunday, August 17, 2014 04:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3.html" rel="tag">継続的インテグレーション</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>春先ぐらいからBlogの更新が滞っていましたが、その要因となったアレが大分落ち着いてきたので、たまっていたネタを順番に書き出します。</p>
+
+<p>CakePHP2のプラグインを作成／公開していて、継続的インテグレーションってどうするの？と思っていました。
+もちろんユニットテスト書いてあるし、素晴らしい協力者の方がPull Requestを送ってくれれば、developブランチに取り込んでテストしたりします。</p>
+
+<p>Githubを徘徊していると、よく見る</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_1.png" alt="" /></p>
+
+<p>これを表示したいと思ったのです。</p>
+
+<p>ただCakePHP2のプラグインは当然それだけではユニットテストを実行できません。CakePHPのアプリケーションがあって、テスト用データベースとその設定があって…、ぬーん。
+早い話、テスト用のアプリケーション作って、そこからテスト実行すれば良いの？ということをずっと思っていました。</p>
+
+<h3>CakePHPの有名プラグインはどうしているのだろう？</h3>
+
+<p>と思い、最初にチェックしたのはCakeDC/searchプラグイン。
+大抵のアプリケーションで使う、もっともメジャーなプラグインではないかと思います。
+Searchプラグインにも、あのビルド成功やダウンロード数、バージョン番号の画像が表示されています。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_2.png" alt="" /></p>
+
+<p><code>.travis.yml</code> ファイルがあるので、内容を確認してみます。
+すると、</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">before_script</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">git clone https://github.com/burzum/travis.git --depth 1 ../travis</span>
+  <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
+  <span class="pi">-</span> <span class="s">if [ "$PHPCS" != 1 ]; then</span>
+            <span class="s">echo "</span>
+                <span class="s">require_once APP . DS . 'vendor' . DS . 'phpunit' . DS . 'phpunit' . DS . 'PHPUnit' . DS . 'Autoload.php';</span>
+            <span class="s">" &gt;&gt; ../cakephp/app/Config/bootstrap.php;</span>
+    <span class="s">fi</span>
+</code></pre></div>
+<p><code>https://github.com/burzum/travis.git</code>をcloneしてきて、何かやっているようです。</p>
+
+<h3>CakePHPプラグインを簡単にTravis.ciで継続的インテグレーションできる</h3>
+
+<p>早速、ページにアクセスしてみると、どうもそれはあの<code>FriendsOfCake</code>からForkされたもののようです。
+<code>FriendsOfCake</code>の<a href="https://github.com/FriendsOfCake/travis">元リポジトリ</a>を確認します。</p>
+
+<blockquote>
+<p>Easy travis setup for CakePHP plugins
+This repository helps easy travis integration for CakePHP plugins, primarily focused on FriendsOfCake projects, but can be used within any plugin when satisfying the requirements.</p>
+</blockquote>
+
+<p>おぉ、正に私の求めていたもの。</p>
+
+<h4>Fabricateに導入してみた</h4>
+
+<p>最近作った中で、最も思い入れのあるCakePHPプラグイン<code>Fabricate</code>を継続的インテグレーションするため、上記の<code>FriendsOfCake/travis</code>を導入してみます。</p>
+
+<p><code>Quick Install</code>に書いてるとおり、以下の手順で進めます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd</span> ~/develop/fabricate
+
+git clone https://github.com/FriendsOfCake/travis.git
+
+<span class="nb">export </span><span class="nv">PLUGIN_NAME</span><span class="o">=</span><span class="s2">"Fabricate"</span>
+
+travis/setup.sh
+
+<span class="nb">rm</span> <span class="nt">-rf</span> travis
+</code></pre></div>
+<p>私がやったときはこの手順ではなかったのですが、最近変わったみたいです…
+まぁ細かい事は気にせずですね。</p>
+
+<p>実行すると、以下のファイルが自動生成されます。</p>
+
+<ul>
+<li>.travis.yml : Travis.ciで継続的インテグレーションを実行するための設定ファイル</li>
+<li>Test/Case/AllFabricateTest.php : プラグインのユニットテストをすべて実行するテストスイート。すでにこの命名規則で生成されていれば作られません。</li>
+</ul>
+
+<p>以前のバージョンでは</p>
+
+<ul>
+<li><code>.editorconfig</code></li>
+<li><code>.semver</code></li>
+<li><code>.travis.yml</code></li>
+<li><code>.AllPluginNameTest.php</code></li>
+<li><code>composer.json</code></li>
+<li><code>CONTRIBUTING.markdown</code></li>
+<li><code>LICENSE.txt</code></li>
+<li><code>README.markdown</code></li>
+</ul>
+
+<p>が生成されていましたが、継続的インテグレーションには必要がないファイルも混在していたので、整理されたものと思います。</p>
+
+<p>後はTravis.ciにサインアップして、リポジトリを追加するだけです。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_3.png" alt="" /></p>
+
+<p>実は、これが最初のビルド。<code>PLUGIN_NAME</code>をexportしていなかったので、正しくテストの実行が動いていませんでした。<code>PLUGIN_NAME</code>はちゃんとexportするようにした方が良いです。
+.travis.ymlの<code>PLUGIN_NAME</code>を<code>Fabricate</code>に設定して実行した結果が以下の画面です。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_4.png" alt="" /></p>
+
+<p>現在のtravis.gitではPHP5.4以上のようなので、問題ないのですが、当時（と言っても数ヶ月前）はPHP5.3もテスト対象になっていたので、ショートArrayシンタックスを使っている私のコードはテストが失敗していました。.travis,ymlのPHP部分を以下のように変更して</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">php</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="m">5.4</span>
+  <span class="pi">-</span> <span class="m">5.5</span>
+</code></pre></div>
+<p>pushすると、ビルド結果は以下のようになります。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_5.png" alt="" /></p>
+
+<p>PHPCS以外は成功しています。</p>
+
+<p>PHPCSではCakePHPのコード標準がチェックされます。
+CakePHPの標準コードチェックだと厳しい部分だったり、パラメータを変更してチェックさせたくないディレクトリがあったりすると思うので、<code>PHPCS_ARGS</code>でphpcsを実行するときのパラメータを上書きできるようになっています。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">matrix</span><span class="pi">:</span>
+  <span class="na">include</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">php</span><span class="pi">:</span> <span class="m">5.4</span>
+      <span class="na">env</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">COVERALLS=1</span>
+    <span class="pi">-</span> <span class="na">php</span><span class="pi">:</span> <span class="m">5.4</span>
+      <span class="na">env</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="s">PHPCS=1</span>
+        <span class="pi">-</span> <span class="s">PHPCS_ARGS="-p -s --extensions=php --standard=ruleset.xml --ignore='*/Test/*,*/Vendor/*' ."</span>
+
+</code></pre></div>
+<p>拡張子phpのファイルを対象とし、TestやVendorのディレクトリを対象外として実行します。
+ruleset.xmlは以下のようにしました。</p>
+<div class="highlight"><pre class="highlight xml"><code><span class="nt">&lt;ruleset</span> <span class="na">name=</span><span class="s">"Custom Standard"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"CakePHP"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.PrivateNoUnderscore"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.ProtectedNoUnderscore"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.ProtectedNoUnderscore"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidFunctionName.ScopeNotCamelCaps"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.NamingConventions.ValidVariableName.MemberVarNotCamelCaps"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;exclude</span> <span class="na">name=</span><span class="s">"CakePHP.WhiteSpace.TabAndSpace"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/rule&gt;</span>
+<span class="nt">&lt;/ruleset&gt;</span>
+
+</code></pre></div>
+<p>CakePHPのコード標準ではprivateやprotectedの変数、関数の先頭にアンダースコアが求められるので、それを無効にしたのと、キャメルケースではない変数や関数名を使いたい箇所があったので、それを無効にしています。
+最後の<code>CakePHP.WhiteSpace.TabAndSpace</code>では、以下のように<code>=</code>のインデント位置を合わせたコードがエラーになってしまうので、無効にしています（わかりづらいですが、=の位置が揃っています）。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="k">public</span> <span class="k">function</span> <span class="n">__construct</span><span class="p">(</span><span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">name</span>  <span class="o">=</span> <span class="nv">$name</span><span class="p">;</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">items</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3>どうなっているのか？</h3>
+
+<p>プラグインのリポジトリには<code>.travis.yml</code>が追加されるぐらいです。
+この設定内で、FriendsOfCakeのtravisリポジトリがcloneされ、以下に記述されている手順が実行されます。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">before_script</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">git clone -b master https://github.com/FriendsOfCake/travis.git --depth 1 ../travis</span>
+  <span class="pi">-</span> <span class="s">../travis/before_script.sh</span>
+
+<span class="na">script</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">../travis/script.sh</span>
+
+<span class="na">after_success</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">../travis/after_success.sh</span>
+</code></pre></div>
+<p>実行されるパターンは.travis.ymlに記述されている<code>php</code>と<code>env-matrix</code>の組み合わせと、<code>matrix</code>のパターンになります。</p>
+
+<ul>
+<li>PHP5.4, DB=mysql CAKE_VERSION=2.4</li>
+<li>PHP5,4, DB=mysql CAKE_VERSION=2.5</li>
+<li>PHP5.5, DB=mysql CAKE_VERSION=2.4</li>
+<li>PHP5,5, DB=mysql CAKE_VERSION=2.5</li>
+<li>PHP5.4, COVERALLS=1</li>
+<li>PHP5.4, PHPCS=1</li>
+</ul>
+
+<p>この6パターン毎に、<code>before_script</code>、<code>script</code>、<code>after_success</code>が呼び出されます。</p>
+
+<h4>事前準備</h4>
+
+<p><code>before_script.sh</code>は実行準備のためのスクリプトで、PHPCSが1にセットされている場合は、以下のとおりpearチャンネルからCakePHPのコード標準とphpcsが依存関係としてインストールされます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$PHPCS</span><span class="s2">"</span> <span class="o">=</span> <span class="s1">'1'</span> <span class="o">]</span><span class="p">;</span> <span class="k">then
+    </span>pear channel-discover pear.cakephp.org
+    pear <span class="nb">install</span> <span class="nt">--alldeps</span> cakephp/CakePHP_CodeSniffer
+    phpenv rehash
+    <span class="nb">exit </span>0
+<span class="k">fi</span>
+</code></pre></div>
+<p>続いて、CakePHP本体が1つ親のディレクトリにインストールされます。Travis.ciではプラグインのリポジトリが最初にcloneされるのですが、結果として以下のようなディレクトリ構成となります。</p>
+
+<ul>
+<li>$HOME/sizuhiko/Fabricate : プラグイン本体</li>
+<li>$HOME/sizuhiko/travis : FriendsOfCakeのtravis.gitクローン先</li>
+<li>$HOME/sizuhiko/cakephp : CakePHP本体</li>
+<li>$HOME/sizuhiko/cakephp/app/Plugin/$PLUGIN_NAME : プラグイン本体がコピーされる先</li>
+</ul>
+
+<p>上記ディレクトリ構成ができた後で、composer で依存関係を解決します。COVERALLS用のカバレッジレポートも生成されるようにファイルが準備されます。</p>
+
+<h4>実行</h4>
+
+<p><code>script.sh</code>がPHPCSが1の場合はphpcsを、それ以外の場合はユニットテストを実行します。</p>
+
+<h4>実行が成功したら</h4>
+
+<p><code>after_success.sh</code>がCOVERALLSのカバレッジレポートを生成します。</p>
+
+<h3>そして現在</h3>
+
+<p>最初のスクリーンショットがFabricateの現在の状態です。すべて成功しています。</p>
+
+<p>最後にREADMEにバッジを表示させる方法を紹介します。</p>
+
+<h4>Travis.ciのバッジを表示する</h4>
+
+<p>Travis.ciの画面にアクセスして</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_6.png" alt="" /></p>
+
+<p><code>build:failing</code>のように表示されている画像をクリックします。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_7.png" alt="" /></p>
+
+<p>ブランチを選択して、表示形式からマークダウンを選択したら、表示内容をREADME.mdに貼り付けます。</p>
+
+<h4>カバレッジのバッジを表示する</h4>
+
+<p>カバレッジは<a href="https://coveralls.io/">COVERALLS</a>というサービスを使って表示します。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_8.png" alt="" /></p>
+
+<p>サイトにアクセスして、サインアップはGithubのアカウントでできるの簡単です。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_9.png" alt="" /></p>
+
+<p>サインアップ後に、上部のメニュー表示から<code>REPOS</code>を選択して、</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_10.png" alt="" /></p>
+
+<p><code>ADD REPO</code>をクリックしてリポジトリを追加します。
+その後、追加したリポジトリのページを表示します。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_11.png" alt="" /></p>
+
+<p>今度は表示される画像ではなく、<code>GET BADGE URL</code>というボタンをクリックします。このあたりのUIは統一されると嬉しいですね&hellip;</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_12.png" alt="" /></p>
+
+<p>いろいろな記述形式のコードが表示されるのでマークダウンのコードを選択してREADME.mdに貼り付けます。</p>
+
+<h4>ダウンロード数、バージョンを表示する</h4>
+
+<p>ここからはCIとは関係ないのですが、よく見るバッジであるダウンロード数とバージョン番号も表示してみたいと思います。</p>
+
+<p><a href="https://poser.pugx.org">Badge Poser</a>というサイトにアクセスします。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_13.png" alt="" /></p>
+
+<p>ダウンロード数やバージョン番号は、Packagistで表示されている情報を画像に変換するので、リポジトリがPackagistに登録されていることが条件となります。
+<code>Show the markdown for your Badges</code>にダウンロード数を表示したいPackagistのパッケージ名を入力します。</p>
+
+<p><img src="/images/blog/cakephp2_plugin_ci_14.png" alt="" /></p>
+
+<p>表示形式からマークダウンを選択して、コードをREADME.mdに貼り付けます。</p>
+
+<h3>最後に</h3>
+
+<p>CakePHPのプラグインを継続的インテグレーションする方法は、実はとても簡単でした。
+これを機に、まだプラグインを継続的インテグレーションしていない<code>そこのあなた</code>も、Travis.ciとCOVERALLSを使って継続的インテグレーションをしてみましょう。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2のプラグインをTravis.ciで継続的インテグレーションする" data-url="http://blog.open.tokyo.jp/2014/08/17/cakephp2-plugin-travis.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/08/17/cakephp2-plugin-travis.html&t=CakePHP2%E3%81%AE%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92Travis.ci%E3%81%A7%E7%B6%99%E7%B6%9A%E7%9A%84%E3%82%A4%E3%83%B3%E3%83%86%E3%82%B0%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/08/17/cakephp2-plugin-travis.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/06/27/cake3-mokumoku-5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a></h2>
   <p class="postdate"><a href="/2014/06/27.html" title="Permanent link">Friday, June 27, 2014 02:19:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -982,137 +1270,6 @@ $ Console/cake bake view Posts
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/03/22/web-testing-2014.html">テスト駆動web開発勉強会 Vol.1で発表しました</a></h2>
-  <p class="postdate"><a href="/2014/03/22.html" title="Permanent link">Saturday, March 22, 2014 03:24:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/tdd.html" rel="tag">TDD</a>
-      <a href="/tags/bdd.html" rel="tag">BDD</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2014/3/18に<a href="http://blog.coworking.tokyo.jp/">コワーキングスペース茅場町Co-Edo</a>で開催された「<a href="http://tdd-web.doorkeeper.jp/events/9439">テスト駆動web開発勉強会 Vol.1</a>」で「Webアプリケーションテスト手法2014」の発表をしました。</p>
-
-<p>第一回目ということと、1時間枠と限られた時間の中でCakePHPとJavaScriptについてのテストの話をしたので、ざっくりした内容となっています。</p>
-
-<p>今後ハンズオンなども計画しているようなので、DoorKeeperのページをチェックしておくと良いかなーと思います。
-また当日は「<a href="https://japheego.jp/">Java,PHPエンジニアの派遣、求人を探すならJapheego（ジャフィーゴ）</a>」さんに懇親会スポンサーになっていただき、美味いビールとSUBWAYのサンドイッチをいただきました。感謝!
-勉強会の懇親会はピザが多いのですが、連続すると飽きるのでたまには<a href="http://demae-can.com/shop/menu/3007411/">SUBWAYのデリバリー</a>とか良いと思いますよ！（SUBWAY大好きです）</p>
-
-<div id="file_embed">
-    <div id="embedded_doc"><p class="no_javascript">To see files inline you need to enable JavaScript.<br />Yahoo has some <a href="http://help.yahoo.com/l/us/yahoo/help/faq/browsers/browsers-63474.html" target="_blank">instructions for enabling JavaScript</a> if you&rsquo;re unsure how to do it.</p></div>
-
-    <script type="text/javascript">
-    var scribd_doc = scribd.Document.getDoc(213088053, 'key-c8og2igawuh9o7wx4j7');
-
-    var onDocReady = function(e){
-        // scribd_doc.api.setPage(3);
-    }
-
-    scribd_doc.addParam('jsapi_version', 2);
-    scribd_doc.addEventListener('docReady', onDocReady);
-    scribd_doc.addParam('height', 494);
-    scribd_doc.addParam('width', 600);
-    scribd_doc.write('embedded_doc');
-    </script>
-
-    <p class="download"><a href="http://twileshare.com/uploads/WebTest201403_pub.pdf" class="big_green_button_link" title="Filename: WebTest201403_pub.pdf">Download this file</a></p>
-</div>
-
-<p>最後に、当日紹介したサンプルのCakePHPテストコードを掲載しておきます。</p>
-
-<h5>モデルのテスト例：</h5>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="kd">class</span> <span class="nc">PostTest</span> <span class="kd">extends</span> <span class="nc">CakeTestCase</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="nv">$fixture</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'app.Post'</span><span class="p">,</span> <span class="s1">'app.Comment'</span><span class="p">];</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="n">setUp</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">model</span> <span class="o">=</span> <span class="nc">ClassRegistry</span><span class="o">::</span><span class="nf">init</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">model</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">getMockForModel</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">model</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">getMockForModel</span><span class="p">(</span><span class="s1">'Post'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'save'</span><span class="p">]);</span>
-    <span class="p">}</span>
-
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testタイトルがない場合はバリデーションエラーになること</span><span class="p">()</span> <span class="p">{</span>
-
-    <span class="p">}</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testデータベースへの保存に失敗した場合はfalseが戻ること</span><span class="p">()</span> <span class="p">{</span>
-
-    <span class="p">}</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testデータベースへの保存に成功した場合はtrueが戻ること</span><span class="p">()</span> <span class="p">{</span>
-
-    <span class="p">}</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testデータベースに新規登録できること</span><span class="p">()</span> <span class="p">{</span>
-
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>モデルの初期化方法には3つのやり方があり、通常は<code>ClassRegistry::init()</code>で良いのですが、モデルをモックしたい場合は<code>getMockForModel()</code>というCakeTestCaseが用意してくれているモデル専用のモックジェネレータを使います。第二引数にメソッドの配列を指定するとパーシャルモックとなり、特定のメソッドのみモックします。</p>
-
-<h5>コントローラのテスト例:</h5>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="kd">class</span> <span class="nc">PostsControllerTest</span> <span class="kd">extends</span> <span class="nc">ControllerTestCase</span> <span class="p">{</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">setUp</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">controller</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">generate</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,[</span>
-            <span class="s1">'components'</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">'Session'</span><span class="p">,</span>
-                <span class="s1">'RequestHandler'</span><span class="o">=&gt;</span><span class="p">[</span><span class="s1">'isPost'</span><span class="p">],</span>
-            <span class="p">],</span>
-            <span class="s1">'models'</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">'Post'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'findById'</span><span class="p">,</span><span class="s1">'delete'</span><span class="p">],</span>
-            <span class="p">],</span>
-            <span class="s1">'methods'</span> <span class="o">=&gt;</span> <span class="p">[</span>
-                <span class="s1">'redirect'</span><span class="p">,</span> <span class="s1">'render'</span><span class="p">,</span>
-            <span class="p">],</span>
-        <span class="p">]);</span>
-    <span class="p">}</span>
-
-    <span class="cd">/**
-     * @expectedException NotFoundException
-     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">test存在しない記事を表示するとNotFound例外になること</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">testAction</span><span class="p">(</span><span class="s1">'/posts/view/999'</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="cd">/**
-     * @expectedException BadRequestException
-     */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">test保存がPOST以外で呼び出されたらBadResuest例外になること</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">testAction</span><span class="p">(</span><span class="s1">'/posts/save/1'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'method'</span> <span class="o">=&gt;</span> <span class="s1">'get'</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">test削除が成功したらindexにリダイレクトする</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">controller</span><span class="o">-&gt;</span><span class="nc">Post</span><span class="o">-&gt;</span><span class="nf">expects</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">once</span><span class="p">())</span><span class="o">-&gt;</span><span class="nf">method</span><span class="p">(</span><span class="s1">'delete'</span><span class="p">)</span>
-                <span class="o">-&gt;</span><span class="nf">with</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">equalTo</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">-&gt;</span><span class="nf">will</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">returnValue</span><span class="p">(</span><span class="kc">true</span><span class="p">));</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">controller</span><span class="o">-&gt;</span><span class="nf">expects</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">once</span><span class="p">())</span><span class="o">-&gt;</span><span class="nf">method</span><span class="p">(</span><span class="s1">'redirect'</span><span class="p">)</span>
-                <span class="o">-&gt;</span><span class="nf">with</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">equalTo</span><span class="p">(</span><span class="s1">'index'</span><span class="p">));</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">testAction</span><span class="p">(</span><span class="s1">'/posts/delete/1'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'method'</span> <span class="o">=&gt;</span> <span class="s1">'delete'</span><span class="p">]);</span>
-    <span class="p">}</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">test新しいトピックを追加できたら画面にメッセージが戻ること</span><span class="p">()</span> <span class="p">{</span>
-
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>コントローラのテストをするとき、testActionメソッドを呼び出すわけですが、そのときコントローラ自体をモックするには<code>ControllerTestCase</code>が用意してくれているコントローラ専用のモックジェネレータである<code>generate()</code>を利用します。generateで作成したインスタンスをテストケースクラスの<code>controller</code>メンバ変数にセットすることでControllerTestCaseがURLからディスパッチするときに、このモックオブジェクトを利用してくれます。</p>
-
-<p>コントローラから依存関係にある、コンポーネント、モデルについてそれぞれサンプルのようにモックでき、コントローラ自体のメソッドも<code>methods</code>に列挙することでモックできます。例えば<code>redirect()</code>や<code>render()</code>などがよく使われると思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="テスト駆動web開発勉強会 Vol.1で発表しました" data-url="http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html&t=%E3%83%86%E3%82%B9%E3%83%88%E9%A7%86%E5%8B%95web%E9%96%8B%E7%99%BA%E5%8B%89%E5%BC%B7%E4%BC%9A%20Vol.1%E3%81%A7%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/22/web-testing-2014.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/26/">« Prev</a>
@@ -1140,6 +1297,7 @@ $ Console/cake bake view Posts
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
@@ -1149,7 +1307,6 @@ $ Console/cake bake view Posts
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -1157,6 +1314,15 @@ $ Console/cake bake view Posts
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
@@ -1164,16 +1330,7 @@ $ Console/cake bake view Posts
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/jest.html" rel="tag">Jest</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -1260,7 +1417,7 @@ $ Console/cake bake view Posts
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (7)</li>
+                  <li><a href="/2023.html">2023</a> (8)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

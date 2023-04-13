@@ -277,7 +277,65 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a></h2>
+            <h2 class="title"><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a></h2>
+  <p class="postdate"><a href="/2023/04/13.html" title="Permanent link">Thursday, April 13, 2023 02:54:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/ts-jest.html" rel="tag">ts-jest</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>昨年 <a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a> という記事を書きました。
+その時点で ts-jest でのテストが遅くて、 <code>@swc-node/jest</code> に切り替えていました。</p>
+
+<p>その後 <code>@swc-node/jest</code> もなんやかんやあって、たまに動かなくなったりして issue 投稿して直してもらったりいろいろあったのですが、最近 ts-jest の状況を見てみたら、こんな記述がありました。</p>
+
+<blockquote>
+<p>Starting from v28.0.0, ts-jest will gradually opt in adoption of esbuild/swc more to improve the performance. To make the transition smoothly, we introduce legacy presets as a fallback when the new codes don&rsquo;t work yet.</p>
+</blockquote>
+
+<p>from https://kulshekhar.github.io/ts-jest/docs/getting-started/presets</p>
+
+<p>なんと、高速化のために esbuild/swc を使うようになったって。まじかー</p>
+
+<h3>早速 ts-jest に変えてみた</h3>
+
+<p><code>@swc-node/jest</code> から <code>ts-jest</code> に変更して、 <code>jest.config.js</code> を <code>preset</code> に変更。
+テストを実行してみると、確かに速くなってる！</p>
+
+<p>手元のプロジェクトだと、 <code>ts-jest</code> にかかる時間は、 <code>@swc-node/jest</code> + <code>tsc</code> の時間とほぼ一致していました。
+<code>ts-jest</code> ではコンパイルエラーも検知されるので、つまりそういうことでしょう。</p>
+
+<h3>また ts-jest で大丈夫！</h3>
+
+<p>ということで、 jest の実行に swc や esbuild を使うことや、tsconfig と違う設定を考慮したりとかなく、TypeScript のコードを jest でテストできるようになりました。</p>
+
+<p>私たちのプロジェクトは、早速すべて ts-jest@29 に切り替えました。
+もし問題がある場合は、 Preset にレガシーモードを指定すると esbuild や swc を使わないようにできるようですが、そもそも一度 swc に切り替えてテストできていれば、問題なく ts-jest に戻れるはずです。</p>
+
+<p>今後は TypeScript + jest での開発環境に ts-jest のご利用をお勧めします。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた" data-url="http://blog.open.tokyo.jp/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html&t=ts-jest%20%E3%81%8C%20esbuild/swc%20%E3%82%92%E3%83%88%E3%83%A9%E3%83%B3%E3%82%B9%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%BC%E3%81%AB%E4%BD%BF%E3%81%A3%E3%81%A6%E9%AB%98%E9%80%9F%E5%8C%96%E3%81%97%E3%81%A6%E3%81%84%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a></h2>
   <p class="postdate"><a href="/2023/04/11.html" title="Permanent link">Tuesday, April 11, 2023 04:33:00 PM</a></p>
   <p class="tags">
       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
@@ -717,95 +775,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a></h2>
-  <p class="postdate"><a href="/2023/04/03.html" title="Permanent link">Monday, April 03, 2023 03:47:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <h3>dependabot で @aws-sdk/client のバージョンアップがコンパイルエラーになる</h3>
-
-<p>少し久しぶりの記事になってしまいましたが、この間も Node.js v18 / aws-sdk v3 への移行を行なっています。
-一部のリポジトリではコードの移行は終わって、 dependabot でライブラリの最新追従を行なっているのですが、以下のようなコンパイルエラーが出るようになりました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>error TS2345: Argument of type 'typeof LambdaClient' is not assignable to parameter of type 'InstanceOrClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
-  Type 'typeof LambdaClient' is not assignable to type 'ClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
-</code></pre></div>
-<p>aws-sdk v3 では複数の aws サービスを使っていると複数のパッケージに依存するようになるのですが、複数のバージョンアップが dependabot によって PR されるうち、一部のアプデだけ上記のようなエラーになります。</p>
-
-<h3>issue を探してみる</h3>
-
-<p>aws-sdk の issue を調べていくと、それっぽいものがありました。</p>
-
-<p><a href="https://github.com/aws/aws-sdk-js-v3/issues/3390">Typescript compilation problems since 3.52.0 in lib-dynamodb</a></p>
-
-<p>この issue 自体はクローズされていないのですが、コメントのスレッドの中に有用な情報がありました。</p>
-
-<ul>
-<li><code>@aws-sdk/types</code> が依存に入っていて、異なるバージョンの client-xxx があるとエラーになる（なんで package-lock.json を消してから npm i しなおすとうまくいくよ -&gt; そんなんやるか！）</li>
-<li><code>@aws-sdk/client-xxxx</code> の各クライアントはすべて最新バージョンに追従してください</li>
-</ul>
-
-<p>のようなものです（要約してあります）。</p>
-
-<p>aws-sdk@v3 はサービスごとにパッケージを分割することで v2 と比べて良い、というのがウリなはずなんですが、これではパッケージ管理崩壊しているのでは？と思わなくもないですが、まぁ各クライアントのバージョンを合わせれば良いだけなので、従うことにしました。
-ちなみにこの時点では複数の <code>@aws-sdk/client-xxx</code> を全て最新版に追従することで解消されました。</p>
-
-<h3>この問題が発生する状況</h3>
-
-<p>この問題が発生する状況は以下のとおりです。</p>
-
-<ul>
-<li>すでに1つ以上の <code>@aws-sdk/client-xxxx</code> を入れていて、後日機能追加によって別のクライアントをインストールするとき</li>
-<li>dependabot でパッケージごとにバージョンアップの PR が発動する</li>
-</ul>
-
-<h3>おすすめの対応</h3>
-
-<p>なので、現時点でのオススメの対応は以下のとおりです。</p>
-
-<ul>
-<li>新しく <code>@aws-sdk/client-xxxx</code> を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する</li>
-<li>dependabot による更新を <code>@aws-sdk/*</code> については無効にする</li>
-</ul>
-
-<p>Github Actions の dependabot でアプデを無効にするには、 dependabot.yml を以下のように記述すれば良いです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">version</span><span class="pi">:</span> <span class="m">2</span>
-<span class="na">updates</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="na">package-ecosystem</span><span class="pi">:</span> <span class="s1">'</span><span class="s">npm'</span>
-    <span class="na">directory</span><span class="pi">:</span> <span class="s1">'</span><span class="s">/'</span>
-    <span class="na">ignore</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">dependency-name</span><span class="pi">:</span> <span class="s1">'</span><span class="s">@aws-sdk/*'</span>
-        <span class="c1"># aws-sdk に対するすべての更新を無視</span>
-</code></pre></div>
-<p>私たちは AWS Lambda の Node.js v18 ランタイムを使っているので、aws-sdk はランタイムにグローバルインストールされているから、あえて最新版に追従しなくても問題ないというのが主な理由です。
-新しいクライアント追加のときに最新に追従すれば十分という判断です。</p>
-
-<h3>さいごに</h3>
-
-<p>aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
-同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v3 で TS2345 が出てコンパイルエラーになる" data-url="http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html&t=aws-sdk%20v3%20%E3%81%A7%20TS2345%20%E3%81%8C%E5%87%BA%E3%81%A6%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%AB%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
         <b>1</b>
@@ -828,6 +797,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
@@ -837,7 +807,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
                   <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
-                  <li><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -845,6 +814,15 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
@@ -852,16 +830,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-                    </li>
-                    <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/jest.html" rel="tag">Jest</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -948,7 +917,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (7)</li>
+                  <li><a href="/2023.html">2023</a> (8)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
