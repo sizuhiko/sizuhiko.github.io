@@ -5,10 +5,221 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2023-04-13T14:54:00+09:00</updated>
+  <updated>2023-04-18T12:21:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>AWS SDK v3 のモジュールと利用方法</title>
+    <link rel="alternate" href="http://blog.url.com/2023/04/18/generation-code-aws-sdk-v3.html"/>
+    <id>http://blog.url.com/2023/04/18/generation-code-aws-sdk-v3.html</id>
+    <published>2023-04-18T12:21:00+09:00</published>
+    <updated>2023-04-18T15:01:28+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;このところ何度か aws-sdk v3 について記事を書いてきましたが、こちらは現時点でのベストプラクティスというか、追記を含むまとめ記事になります。&lt;/p&gt;
+
+&lt;h3&gt;ランタイムに含まれないモジュールがある？&lt;/h3&gt;
+
+&lt;p&gt;aws-sdk を使って Lambda から Lambda を実行するときのコードは、公式のExampleコードを見ると以下のようになっています。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js"&gt;https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LogType&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;createClientForDefaultRegion&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;../../libs/utils/util-aws-sdk.js&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="cm"&gt;/** snippet-start:[javascript.v3.lambda.actions.Invoke] */&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;invoke&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;funcName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;createClientForDefaultRegion&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;command&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+    &lt;span class="na"&gt;FunctionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;funcName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="na"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="na"&gt;LogType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;LogType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Tail&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;});&lt;/span&gt;
+
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LogResult&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;command&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Buffer&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toString&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;logs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Buffer&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;LogResult&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;base64&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toString&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;logs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;span class="cm"&gt;/** snippet-end:[javascript.v3.lambda.actions.Invoke] */&lt;/span&gt;
+
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;invoke&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;ここで注目して欲しいのは&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Payload: JSON.stringify(payload),
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;の部分なのですが、これは TypeScript で記述すると型違反でエラーになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="cm"&gt;/**
+     * &amp;lt;p&amp;gt;The JSON that you want to provide to your Lambda function as input.&amp;lt;/p&amp;gt;
+     *          &amp;lt;p&amp;gt;You can enter the JSON directly. For example, &amp;lt;code&amp;gt;--payload '\{ "key": "value" \}'&amp;lt;/code&amp;gt;. You can also
+     *       specify a file path. For example, &amp;lt;code&amp;gt;--payload file://payload.json&amp;lt;/code&amp;gt;.&amp;lt;/p&amp;gt;
+     */&lt;/span&gt;
+    &lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;?:&lt;/span&gt; &lt;span class="nb"&gt;Uint8Array&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;公式 Example のコードの意味とは&amp;hellip; というところですが、&lt;/p&gt;
+
+&lt;p&gt;で、そういう issue やら SlackOverflow があって&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/issues/4623"&gt;https://github.com/aws/aws-sdk-js-v3/issues/4623&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;toUint8Array&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/util-utf8&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;({});&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+      &lt;span class="na"&gt;FunctionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;LAMBDA_ARN&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestResponse&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;toUint8Array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="p"&gt;}),&lt;/span&gt;
+  &lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;こんな感じで &lt;code&gt;Uint8Array&lt;/code&gt; に変換する必要があります。
+そこで &lt;code&gt;@aws-sdk/util-utf8&lt;/code&gt; を使ったのですが、これが Node.js v18 の Lambda インスタンスだと見つからないとエラーになります。&lt;/p&gt;
+
+&lt;h3&gt;執筆時点での Lambda インスタンスの sdk バージョンは 3.188.0&lt;/h3&gt;
+
+&lt;p&gt;以下のページから現在のランタイムに入っている sdk バージョンがわかります。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html"&gt;https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;執筆時点では 3.188.0 なので、 GitHub リポジトリでそのタグのコードを見てみると、確かにそんなパッケージはありません。
+それどころか、 &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; と &lt;code&gt;@aws-sdk/util-utf8-browser&lt;/code&gt; という2つのパッケージに分かれていました。
+どうも、3.300.0 あたりでパッケージを統合したようです。&lt;/p&gt;
+
+&lt;p&gt;NPMのレジストリをみると、&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://www.npmjs.com/package/@aws-sdk/util-utf8-node"&gt;https://www.npmjs.com/package/@aws-sdk/util-utf8-node&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Deprecated package&lt;/p&gt;
+
+&lt;p&gt;This internal package is deprecated in favor of @aws-sdk/util-utf8.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;のように書いてあります。&lt;/p&gt;
+
+&lt;p&gt;ちなみに、最新の GitHub リポジトリからは、 &lt;code&gt;util-utf8-node&lt;/code&gt; が完全に削除されています。&lt;/p&gt;
+
+&lt;h3&gt;状況を整理し、これから発生することを整理&lt;/h3&gt;
+
+&lt;p&gt;つまり、 3.188.0 で &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; を使っていて、Lambda の zip に sdk を含めていない人は、ランタイムのアップデートで突然 Lambda が動かなくなる可能性があるということです。&lt;/p&gt;
+
+&lt;p&gt;これはセマンティックバージョニングとしては破壊的変更なのでメジャーバージョンアップ相当ですが、そもそも aws-sdk がセマンティックバージョニングされているかどうかはわかりません（たぶんされていない）。&lt;/p&gt;
+
+&lt;p&gt;僕は長い間、公式ドキュメント「.zip ファイルアーカイブで Node.js Lambda 関数をデプロイする」に書いてある&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;関数が標準ライブラリまたは AWS SDK ライブラリにのみ依存する場合は、これらのライブラリを .zip ファイルに含める必要はありません&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html"&gt;https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;というポリシーを信じていました。
+著名な Serverless Framework でもデフォルトの挙動では zip ファイルを作成するときに aws-sdk を除外するようになってます。&lt;/p&gt;
+
+&lt;h3&gt;道を間違える前に AWS さんに確認してみた&lt;/h3&gt;
+
+&lt;p&gt;僕の懸念は&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;aws-sdk は zip に含めるべきか？&lt;/li&gt;
+&lt;li&gt;後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;というあたりです。&lt;/p&gt;
+
+&lt;h4&gt;aws-sdk は zip に含めるべきか？&lt;/h4&gt;
+
+&lt;p&gt;こちらは「はい」が正解ということです。
+&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/best-practices.html"&gt;AWS Lambda 関数を使用するためのベストプラクティス&lt;/a&gt; に &lt;code&gt;関数のデプロイパッケージ内で依存関係を制御します&lt;/code&gt; という部分があり、zip に含めた方が良いとなっています。&lt;/p&gt;
+
+&lt;p&gt;しかし aws-sdk のサイズはモジュール化されているとはいえ、Lambdaの上限サイズを考えるとかなりの割合を占めてしまうので、できればランタイムを使いたいとことです。&lt;/p&gt;
+
+&lt;h4&gt;後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？&lt;/h4&gt;
+
+&lt;p&gt;こちらの回答をふりかえる前に、aws-sdk v3 のモジュール構造について補足しておきます。
+GitHub のリポジトリにある README &lt;a href="https://github.com/aws/aws-sdk-js-v3#generated-code"&gt;Generated Code&lt;/a&gt;] によると以下のとおりです。ざっくり要約しました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;v3 コードベースは、AWSサービスが公開しているモデルから生成されています。
+smithy-typescript で &lt;code&gt;/clients&lt;/code&gt; サブディレクトリ内のコードを生成し、これらのパッケージは @aws-sdk/client-XXXX のような名前になります。&lt;/p&gt;
+
+&lt;p&gt;クライアントは、 &lt;code&gt;/packages&lt;/code&gt; にあるユーティリティコードに依存します。これらのコードは手動で記述されていて、通常あまり役に立ちません。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;/lib&lt;/code&gt; には高レベルのライブラリがあります。 client をラップして操作しやすくするライブラリです。よくある例は &lt;code&gt;@aws-sdk/lib-dynamodb&lt;/code&gt; で Amazon DynamoDB のアイテムの操作を簡素化するものや、 &lt;code&gt;@aws-sdk/lib-storage&lt;/code&gt; で S3 の multipartUpload での並列アップロードを簡素化するものです。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;続けて、以下のようにも書いてあります。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;/packages 手動でコード更新が行われる場所で、 NPM に @aws-sdk/XXXX で公開されています。特別なプレフィックスはありません。&lt;/li&gt;
+&lt;li&gt;/clients  このディレクトリのコードは自動生成され、 /packages に依存します。AWS のサービスと 1 対 1 です。通常、手動編集はここでは行わないでください。@aws-sdk/client-XXXX で NPM に公開されます。&lt;/li&gt;
+&lt;li&gt;/lib このディレクトリは、 /clients に依存します。既存の AWS サービスと操作をラップして、Javascript での作業を容易にします。@aws-sdk/lib-XXXX で NPM に公開されています。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;上記以外にも private というのもあったりしますが、これは名前からも明らかに非公開のモジュールだとわかります。
+NPM 公開されていて、僕らが利用することができるものが client / packages / lib にあるといった感じでしょうか。&lt;/p&gt;
+
+&lt;p&gt;上記3つのディレクトリについての AWS アップデートポリシーは以下のようなものになるそうです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;client ユーザーが利用する想定のモジュールであり、破壊的変更は行われない&lt;/li&gt;
+&lt;li&gt;lib ユーザーが利用する想定のモジュールであり、破壊的変更は行われない&lt;/li&gt;
+&lt;li&gt;package client からの利用を想定している内部モジュールなので破壊的変更の可能性がある（ただしドキュメントに明示されていない）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;package に入っているもので、README に利用方法が解説されているもの、たとえば S3 の署名付きURLを発行するためのライブラリ &lt;a href="https://github.com/aws/aws-sdk-js-v3/tree/main/packages/s3-request-presigner"&gt;@aws-sdk/s3-request-presigner&lt;/a&gt; はユーザーからの利用が想定されていて、破壊的変更は行われないようです。
+しかし、README にAPIの解説がないものについては内部利用を想定しているため、破壊的変更もありえると。&lt;/p&gt;
+
+&lt;p&gt;後者は private ディレクトリに入れた方が良いのでは？と思わなくはないですが、何か理由があるんでしょうかね。&lt;/p&gt;
+
+&lt;p&gt;今回のようにドキュメントに記述がない &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; を使いたい場合は zip に必ず含むようにしましょう。
+それ以外は zip の容量が厳しければ v2 のときと同じようにランタイムに依存する方が良いと思います。aws-sdk の更新頻度がかなり多いので、どれがセキュリティパッチかわからないし、できればランタイムでの更新に期待したいという思いもあります。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;これまでの aws-sdk v3 / Node.js v18 への移行記事を一覧にしてみます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/2023/04/03/aws-sdk-v3-ts2345.html"&gt;aws-sdk v3 で TS2345 が出てコンパイルエラーになる&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/2023/04/04/aws-sdk-v3-compile-error-2.html"&gt;aws-sdk v3 でコンパイルエラーになる - その２&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"&gt;Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html"&gt;aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;本記事&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;私の思う現時点でのベストプラクティス&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CIのイメージは公式の Lambda Docker イメージが便利&lt;/li&gt;
+&lt;li&gt;aws-sdk v3 のユニットテストには aws-sdk-client-mock が良い&lt;/li&gt;
+&lt;li&gt;aws-sdk の各モジュールのバージョンは揃えて、なるべく最新を使おう&lt;/li&gt;
+&lt;li&gt;aws-sdk 関数/クラス以外、たとえば enum の値などは基本的に利用しない&lt;/li&gt;
+&lt;li&gt;peerDependencies に書いてあるモジュールもバージョンを揃えてインストールしよう&lt;/li&gt;
+&lt;li&gt;packages にあるドキュメントなしのモジュールを使う場合は、zip に含める
+
+&lt;ul&gt;
+&lt;li&gt;zip の容量に余裕があれば aws-sdk はすべて含めた方が良い&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;現時点はかなりクセがあるというか、ノウハウが必要であるというのが現実だと思います。
+とくに AWS Lambda + aws-sdk v3 + TypeScript の場合にはですね。&lt;/p&gt;
+
+&lt;p&gt;ぶっちゃけ TypeScript でなければコンパイルエラーや型違反についての問題もないし、しいていえば zip に含めるかどうか？ぐらいです。
+とはいえ、みんなもう Node.js ランタイム選ぶなら TypeScript 使うだろうと思うので、これまでの記事のノウハウが役に立てば幸いです。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</title>
     <link rel="alternate" href="http://blog.url.com/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html"/>
@@ -421,78 +632,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
 &lt;p&gt;こんなの discussions に変更した上で放置していて良いのか？&amp;hellip;&lt;/p&gt;
 
 &lt;p&gt;とても悲しい状況ですが、同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>aws-sdk v3 で TS2345 が出てコンパイルエラーになる</title>
-    <link rel="alternate" href="http://blog.url.com/2023/04/03/aws-sdk-v3-ts2345.html"/>
-    <id>http://blog.url.com/2023/04/03/aws-sdk-v3-ts2345.html</id>
-    <published>2023-04-03T15:47:00+09:00</published>
-    <updated>2023-04-05T16:19:13+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;h3&gt;dependabot で @aws-sdk/client のバージョンアップがコンパイルエラーになる&lt;/h3&gt;
-
-&lt;p&gt;少し久しぶりの記事になってしまいましたが、この間も Node.js v18 / aws-sdk v3 への移行を行なっています。
-一部のリポジトリではコードの移行は終わって、 dependabot でライブラリの最新追従を行なっているのですが、以下のようなコンパイルエラーが出るようになりました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;error TS2345: Argument of type 'typeof LambdaClient' is not assignable to parameter of type 'InstanceOrClassType&amp;lt;Client&amp;lt;ServiceInputTypes, MetadataBearer, any&amp;gt;&amp;gt;'.
-  Type 'typeof LambdaClient' is not assignable to type 'ClassType&amp;lt;Client&amp;lt;ServiceInputTypes, MetadataBearer, any&amp;gt;&amp;gt;'.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;aws-sdk v3 では複数の aws サービスを使っていると複数のパッケージに依存するようになるのですが、複数のバージョンアップが dependabot によって PR されるうち、一部のアプデだけ上記のようなエラーになります。&lt;/p&gt;
-
-&lt;h3&gt;issue を探してみる&lt;/h3&gt;
-
-&lt;p&gt;aws-sdk の issue を調べていくと、それっぽいものがありました。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/issues/3390"&gt;Typescript compilation problems since 3.52.0 in lib-dynamodb&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;この issue 自体はクローズされていないのですが、コメントのスレッドの中に有用な情報がありました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;@aws-sdk/types&lt;/code&gt; が依存に入っていて、異なるバージョンの client-xxx があるとエラーになる（なんで package-lock.json を消してから npm i しなおすとうまくいくよ -&amp;gt; そんなんやるか！）&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; の各クライアントはすべて最新バージョンに追従してください&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;のようなものです（要約してあります）。&lt;/p&gt;
-
-&lt;p&gt;aws-sdk@v3 はサービスごとにパッケージを分割することで v2 と比べて良い、というのがウリなはずなんですが、これではパッケージ管理崩壊しているのでは？と思わなくもないですが、まぁ各クライアントのバージョンを合わせれば良いだけなので、従うことにしました。
-ちなみにこの時点では複数の &lt;code&gt;@aws-sdk/client-xxx&lt;/code&gt; を全て最新版に追従することで解消されました。&lt;/p&gt;
-
-&lt;h3&gt;この問題が発生する状況&lt;/h3&gt;
-
-&lt;p&gt;この問題が発生する状況は以下のとおりです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;すでに1つ以上の &lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; を入れていて、後日機能追加によって別のクライアントをインストールするとき&lt;/li&gt;
-&lt;li&gt;dependabot でパッケージごとにバージョンアップの PR が発動する&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;おすすめの対応&lt;/h3&gt;
-
-&lt;p&gt;なので、現時点でのオススメの対応は以下のとおりです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;新しく &lt;code&gt;@aws-sdk/client-xxxx&lt;/code&gt; を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する&lt;/li&gt;
-&lt;li&gt;dependabot による更新を &lt;code&gt;@aws-sdk/*&lt;/code&gt; については無効にする&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Github Actions の dependabot でアプデを無効にするには、 dependabot.yml を以下のように記述すれば良いです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
-&lt;span class="na"&gt;updates&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;package-ecosystem&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;npm'&lt;/span&gt;
-    &lt;span class="na"&gt;directory&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;/'&lt;/span&gt;
-    &lt;span class="na"&gt;ignore&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;dependency-name&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;@aws-sdk/*'&lt;/span&gt;
-        &lt;span class="c1"&gt;# aws-sdk に対するすべての更新を無視&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;私たちは AWS Lambda の Node.js v18 ランタイムを使っているので、aws-sdk はランタイムにグローバルインストールされているから、あえて最新版に追従しなくても問題ないというのが主な理由です。
-新しいクライアント追加のときに最新に追従すれば十分という判断です。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
-同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
 </content>
   </entry>
 </feed>

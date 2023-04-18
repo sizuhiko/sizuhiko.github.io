@@ -277,7 +277,83 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/12/09/assistant-developer-conference-vol-1.html">Assistant Developer Conference vol.1で仕事でやっていることの発表をしました</a></h2>
+            <h2 class="title"><a href="/2018/12/09/kddi-digital-gate-hacks.html">KDDI DIGITAL GATE HACKSのお手伝いをしてきました</a></h2>
+  <p class="postdate"><a href="/2018/12/09.html" title="Permanent link">Sunday, December 09, 2018 06:11:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>KDDI学生向けハッカソン<a href="https://www.kdghacks.com/">KDDI DIGITAL GATE HACKS 2018</a>でチューターとしてお手伝いをしてきました。
+どんなハッカソンなのかは<a href="https://techplay.jp/event/697271">TECH PLAYのイベントサイト</a>の方がわかりやすいかも。</p>
+
+<p><a href="https://soracom.jp/products/module/wio_lte_m1_nb1/">SORACOMのWio LTE M1/NB1</a>を使って、家での生活をワクワクさせるIoTサービスを創るイベントです。</p>
+
+<p>たくさんの大学生/大学院生が参加されて、みなさん優秀だったのでチューターとしては特にやることも少なくて、とにかく楽しいという感想が残るイベントでした。</p>
+
+<p>詳細はイベント主催であるKDDIさんからブログが公開されるのではないかと思うので、準備秘話というか「Wio LTE M1/NB1」(以後WioLTE青)のつらさを書いておきます。</p>
+
+<p>WioLTEとはSeeedが開発しSORACOMで販売しているボードです。
+これまでに</p>
+
+<ul>
+<li><a href="https://soracom.jp/products/module/wio_lte">Wio LTE JP Version</a> 以降WioLTE赤</li>
+<li><a href="https://soracom.jp/products/module/wio_3g_soracom_edition">Wio 3G SORACOM Edition</a></li>
+</ul>
+
+<p>が発売されています。WioLTE青はKDDIのSIMが利用できるのが特徴です。</p>
+
+<p>ということで、チューターはサンプルプログラムを作ったりといった準備をしていました。
+私は個人的にWioLTE赤を購入して使っていたので、その感覚でWioLTE青を使い始めたのですが、似ているのですが、だいぶ違うものなので、これから触る人は少し注意が必要です。</p>
+
+<h3>WioLTE青の良いところ</h3>
+
+<ul>
+<li>KDDIのSIMが使える</li>
+<li>DFUモードが不要なので、Arduino IDEからのプログラムの書き込みが簡単</li>
+</ul>
+
+<h3>WioLTE青の困ったところ</h3>
+
+<ul>
+<li>サンプルが少ない。でも今回たくさん作ったので<a href="https://github.com/kdg-hacks/kdg-hacks-examples">kdg-hacks-examples</a>が役に立つと良いな、と思っています。</li>
+<li>I2C通信にWireが使えない。WireI2Cを使うので既存のArduino向けライブラリを簡単に使えない。</li>
+<li>WioLTE赤と違って使っている人が少ないのでノウハウが少ない</li>
+<li>WioLTE赤は5Vセンサーでも電源だけ5Vを給電すれば5Vセンサー値も読み取れたが、どうもそれはできないっぽい</li>
+<li>interrupts/noInterruptsメソッドがArduino-Coreに実装されていないので、タイミング重要なNeoPixelといったテープLEDが使えなかった（ライブラリ使うとコンパイルとおらない）</li>
+<li><a href="https://github.com/SeeedJP/stm32f4ArduinoCore">STM32F405/407のArduinoCore</a>の実装がプアなので、Arduinoだと思うとハマる</li>
+</ul>
+
+<p>ということでGroveのセンサーだいたい使える、と思っていると5V必要だったりするセンサーが絶望的に動きません。</p>
+
+<h3>でも良いボード</h3>
+
+<p>IoTでWiFiとかかなりつらいし、LTE使えるだけでも魅力てきなので、例えば苦手な部分はArduinoで実装してI2Cスレーブとして、WioLTEから操作するのはアリかな、というか、そういう使い方が良いと思っています。悩まなくて良いし、開発スピードも増します。</p>
+
+<h3>まとめ</h3>
+
+<p>学生向けハッカソンへの参加はとても新鮮で楽しかったです。
+また機会があればイベントに協力していきたいなと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="KDDI DIGITAL GATE HACKSのお手伝いをしてきました" data-url="http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html&t=KDDI%20DIGITAL%20GATE%20HACKS%E3%81%AE%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%82%92%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/12/09/assistant-developer-conference-vol-1.html">Assistant Developer Conference vol.1で仕事でやっていることの発表をしました</a></h2>
   <p class="postdate"><a href="/2018/12/09.html" title="Permanent link">Sunday, December 09, 2018 06:00:00 PM</a></p>
   <p class="tags">
       <a href="/tags/actions-on-google.html" rel="tag">Actions on Google</a>
@@ -540,90 +616,6 @@ Downloading archive: https://s3.amazonaws.com/travis-php-archives/binaries/ubunt
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/09/24/google-cloud-builder-php72.html">Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする</a></h2>
-  <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 06:52:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/googlecloudbuilder.html" rel="tag">GoogleCloudBuilder</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は、<a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a>の中で紹介している<a href="https://github.com/sizuhiko/gccb-php-se-sample">Google Cloud Builderを利用してGAEのPHP SEへ自動デプロイするサンプルコード</a>を最新に更新した解説記事です。</p>
-
-<h3>何が変わったのか？</h3>
-
-<p>PHPカンファレンス関西2018時点では以下のようになっていました。</p>
-
-<ul>
-<li>GAEのPHPは5.5</li>
-<li>Google Cloud Container Builder を利用</li>
-</ul>
-
-<p>今日では以下のようになっています。</p>
-
-<ul>
-<li>GAEのPHPで7.2が利用可能に</li>
-<li>Cloud Container Builder は Cloud Build という名前に変更</li>
-</ul>
-
-<h4>gcloud コマンド利用上での変更</h4>
-
-<p>Dockerのバージョンがあがったことで <code>gcloud</code> コマンドから <code>docker</code> コマンドを実行するときに認証設定が必要になりました。
-READMEにも反映していますが、以下のコマンドを実行しておく必要があります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ gcloud auth configure-docker
-</code></pre></div>
-<p><code>gcloud</code> コマンドをアップデートしてみましたが、「PUSH TO DEPLOY のトリガーをセットする」については、まだできませんでした。
-<a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds/create">projects.builds/create API</a>は実装されているようなので、CLIから実行できるようになるのを心待ちにしています。</p>
-
-<h4>composer イメージの更新</h4>
-
-<p>PHP7.2を利用できるようになったので、 <code>composer/composer:php5</code> のDockerイメージを <code>composer/composer:alpine</code> に変更しました。
-<code>composer/composer</code> でも良かったのですが、 <code>alpine</code> ベースの方が軽量だし、いいですよね。</p>
-
-<h4>app.yaml の更新</h4>
-
-<p>基本的にここがメインなのですが、以下のような変更点があります。</p>
-
-<ul>
-<li>runtime を <code>php72</code> に変更</li>
-<li><code>handlers</code> の <code>application_readable</code> は常に <code>true</code> に</li>
-<li><code>skip_files</code> でデプロイしないファイルの指定は <code>.gcloudignore</code> ファイルへ移行する</li>
-<li><code>/</code> アクセスされたときの <code>script</code> 指定は <code>auto</code> に（ただし <code>index.php</code> か <code>public/index.php</code> の場合のみで、他はパスを指定）</li>
-</ul>
-
-<p>こういった変更は、<a href="https://cloud.google.com/appengine/docs/standard/php7/php-differences">Compatibility issues between PHP 5.5 and PHP 7.2</a>にまとめられています。
-※ <code>skip_files</code> については書いていないので、実際にマイグレーションして確認は必要です（これは5.5から7.2の変更というよりは <code>gcloud</code> コマンドのバージョンアップに伴うものだから書いていないのかもしれないです）。</p>
-
-<h3>デプロイしてみよう</h3>
-
-<p>あとは、用意したコマンドを順番に実行してデプロイ環境を整備してから、 <code>git push</code> するだけで、PHP7.2のアプリケーションがデプロイできます。
-githubのリポジトリが <code>Cloud Source Repositories</code> にミラーされるところなどは変わっていませんでした。</p>
-
-<h3>さいごに</h3>
-
-<p>この内容は <a href="https://phpcondo.connpass.com/event/93953/">プレPHPカンファレンス北海道</a> で発表する予定だったのですが、地震の影響でイベントが中止となったため、このブログにまとめました。</p>
-
-<p>どこかで機会があれば、GAEとPHP7.2について発表してみたいなと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする" data-url="http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html&t=Google%20Cloud%20Builder%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%20PHP7.2%20%E3%81%AE%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20GAE%20%E3%81%AB%E7%B6%99%E7%B6%9A%E7%9A%84%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/15/">« Prev</a>
@@ -651,6 +643,7 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
@@ -660,7 +653,6 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
                   <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
-                  <li><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a> <span>2022/12/18</span></li>
               </ul>
             </div>
           </div>
@@ -668,6 +660,12 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
@@ -676,12 +674,6 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-                    </li>
-                    <li class="size0">
-                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
@@ -771,7 +763,7 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (8)</li>
+                  <li><a href="/2023.html">2023</a> (9)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
