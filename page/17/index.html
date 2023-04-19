@@ -277,7 +277,146 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/09/24/google-cloud-builder-php72.html">Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする</a></h2>
+            <h2 class="title"><a href="/2018/10/23/cakephp2-plugin-travis-issue.html">CakePHP2プラグインをTravisCIでビルドしているときに気をつけること</a></h2>
+  <p class="postdate"><a href="/2018/10/23.html" title="Permanent link">Tuesday, October 23, 2018 10:58:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/cakephp2.html" rel="tag">CakePHP2</a>
+      <a href="/tags/travisci.html" rel="tag">TravisCI</a>
+      <a href="/tags/ci.html" rel="tag">CI</a>
+      <a href="/tags/fabricate.html" rel="tag">Fabricate</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>先日 <a href="https://twitter.com/tenkoma">@tenkoma</a> さんが、<a href="https://github.com/sizuhiko/Fabricate">Fabricate</a> に <a href="https://github.com/sizuhiko/Fabricate/pull/30">PR</a> をくれました。
+しかももう枯れてる <a href="https://github.com/sizuhiko/Fabricate/tree/cakephp2">CakePHP2版</a> に。ありがたやー、と思っていましたら&hellip;</p>
+
+<p><a href="https://travis-ci.org/sizuhiko/Fabricate/builds/443036544">CIのビルドが失敗</a>しています。</p>
+
+<p>おや？<a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/246923803">直前までは通過</a>していて、<a href="https://github.com/sizuhiko/Fabricate/pull/30">READMEのtypoが修正された</a>だけなんですが&hellip;</p>
+
+<p>（ただ直前は1年も前なのだが&hellip;）</p>
+
+<h3>ためしにRebuildしてみる</h3>
+
+<p>そういう小手先の問題ではないようだ&hellip;.</p>
+
+<h3>TravisCIに書いてあるスクリプトの手順をローカルで実行してみる</h3>
+
+<p>うまく動く&hellip;</p>
+
+<h3>ビルド失敗の問題とは</h3>
+
+<p><a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/444524331">失敗ビルドの一例</a>でわかるとおり、PHPUnitのバージョンが期待値ではありません。</p>
+
+<p>CakaPHP2ではPHPUnit3.7系しか使えません。
+<a href="https://github.com/cakephp/cakephp/blob/2.x/lib/Cake/TestSuite/CakeTestSuiteDispatcher.php#L135">CakeTestSuiteDispatcherでPHPUnitのロード</a>を試みていて、もしロードできないと<a href="https://github.com/cakephp/cakephp/blob/2.x/lib/Cake/Console/Command/TestShell.php#L179">TestShellでエラー</a>になります。</p>
+
+<p>CakePHP2のプラグインのテストを簡単に実行できるようにするため<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>を使っています。
+このTravis用ツールは、PHPUnit3.7をインストールして、 <code>Vendor</code> の下にリンクしてくれるので、うまくPHPUnitは見つかるはずなのですが。</p>
+
+<p>想定される原因としては、以下のような感じです。</p>
+
+<ul>
+<li>PHPUnitが見つからない</li>
+<li>新しいPHPUnitが見つかった</li>
+</ul>
+
+<h3>CakePHPの日本語Slackで相談してみる</h3>
+
+<p>https://cakesf.slack.com/archives/C1FT02VQA/p1539927224000100</p>
+
+<blockquote>
+<p>CakePHP2系のプラグインをTravis CIでテストするのに
+https://github.com/FriendsOfCake/travis
+を使っているのですが、PHPUnitへの参照がうまくできなくなっていて、解決した人っていたりしますか？
+個人的に修正できそうなんて、試してみようかと思ったのですが、すでに対応済みの人がいたらなーと思い、聞いてみたいです</p>
+</blockquote>
+
+<p>他のCakePHP2プラグインはビルド通っているのか？</p>
+
+<ul>
+<li>https://github.com/lampager/lampager-cakephp2 は5ヶ月ぐらい前に<a href="https://travis-ci.org/lampager/lampager-cakephp2/builds/387421969">通過している</a>。でもPHPUnitのバージョンが新しい</li>
+<li>https://github.com/cakephp/debug_kit/tree/2.2 はPHPUnit3.7使っているけど、 <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> を使ってない。ビルドは<a href="https://travis-ci.org/cakephp/debug_kit/builds/429846172">最近通過</a>している</li>
+<li>https://github.com/tsmsogn/Pas/ は <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> を使っていて、Slackで相談したらビルドまでしていただけた。ありがたや。<a href="https://travis-ci.org/tsmsogn/Pas/builds/249863706">通過</a>している。</li>
+</ul>
+
+<h3>とにかくいろいろ試す</h3>
+
+<p>試すのに、別のブランチを切れば良かったのですが、まぁ簡単になおるだろうと <code>Fabricate/cakephp2</code> ブランチで作業したのは、ちょっと後悔しています&hellip;.</p>
+
+<ul>
+<li>◎ <a href="https://github.com/FriendsOfCake/travis/blob/master/before_script.sh">FriendsOfCake/travisのbefore_script.sh</a> を呼び出す方法が、 <code>travis_wait</code> 付きに変わっていたので<a href="https://github.com/sizuhiko/Fabricate/commit/046548930effc61affab8acd0b64b974d52005d8">追従した</a>。ビルドが不安定なことがあったが安定した</li>
+<li>× <a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a> をローカルに fork して、ログを仕込んだりしてビルドを試みた（何も意味はなかった）</li>
+<li>× <a href="https://github.com/FriendsOfCake/travis/blob/master/before_script.sh">FriendsOfCake/travisのbefore_script.sh</a> で <code>composer global install</code> しているPHPUnitを削除して <code>composer require</code> で入れてみた（変化なし）</li>
+<li>× <code>include_path</code> の先頭にPHPUnitへのパスを設定してみた（変化なし）</li>
+<li>△ Slackで <code>CAKE_REF</code> 使うと良いかも？というアドバイスをいただいたので、入れてみた。PHPUnitへの参照としては変化がなかったけど、有用そうなのでそのまま採用した。</li>
+<li>× 既存で <code>composer.json</code> があるのが、<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>を使っている他のプラグインと違ったので、 <code>.travis.yml</code> の <code>before_script</code> で消してみた（変化なし）</li>
+</ul>
+
+<p>で、TravisCIの画面（のビルド結果コンソールではない部分）を見比べていたら、テストが通過している画面にはワーニングが表示されていて、自分のビルドには出ていないことが判明。
+さらに<a href="https://travis-ci.org/sizuhiko/Fabricate/jobs/246923803">過去に通過していたビルド</a>にもワーニングが表示されていることを確認した。</p>
+
+<h3>何のワーニング？</h3>
+
+<blockquote>
+<p>This job ran on our Precise environment, which is in the process of being decommissioned. Please read about the status of the rollout on the blog, and take note that you can explicitly stay on Precise by specifying dist: precise in your .travis.yml.</p>
+</blockquote>
+
+<p>意訳すると「このビルドは、Precise環境で実行されたけど、廃止予定です。もし続けて使いたければ .travis.yml に <code>dist：precise</code> と書いておけばOK。続きはBlogで」みたいなことです。
+<a href="https://blog.travis-ci.com/2017-08-31-trusty-as-default-status">the blog</a>も見ておいてください。</p>
+
+<h3>precise 指定でビルドしてみる</h3>
+
+<p><code>.travis.yml</code> に <code>dist：precise</code> を追加してみると&hellip;.</p>
+
+<p>ビルドが通過しました！！</p>
+
+<p>ついでに古い composer.lock と composer.json も更新/削除しておきました。</p>
+
+<h3>詳しく調べた</h3>
+
+<p>現在のTravisでビルドするLinuxイメージは <code>trusty</code> なのですが、そこでPHP5.4などを利用しようとすると以下のようなメッセージがビルドコンソール中に表示されます。</p>
+
+<blockquote>
+<p>5.4 is not pre-installed; installing
+Downloading archive: https://s3.amazonaws.com/travis-php-archives/binaries/ubuntu/14.04/x86<em>64/php-5.4.tar.bz2
+9.31s$ curl -s -o archive.tar.bz2 $archive</em>url &amp;&amp; tar xjf archive.tar.bz2 &ndash;directory /</p>
+</blockquote>
+
+<p>ということで、PHPのイメージファイルをダウンロード＆解凍してみました。
+すると、PHPUnitが同梱されています。
+そのバージョンは <code>PHPUnit 4.8.35</code> でした。
+そこかー、それ参照しちゃいましたか&hellip;</p>
+
+<h3>まとめ</h3>
+
+<p>CakePHP2プラグインを作ったことがあって、最近ビルドしていない方は漏れなく同様の事象になると思います。
+これは<a href="https://github.com/FriendsOfCake/travis">FriendsOfCake/travis</a>使っている、使っていないに関係なくです。</p>
+
+<p>あなたの <code>.travis.yml</code> に <code>dist：precise</code> が設定されていなければ、今のうちに追加しておきましょう。</p>
+
+<p>ではステキなCakePHPライフを！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2プラグインをTravisCIでビルドしているときに気をつけること" data-url="http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html&t=CakePHP2%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92TravisCI%E3%81%A7%E3%83%93%E3%83%AB%E3%83%89%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AB%E6%B0%97%E3%82%92%E3%81%A4%E3%81%91%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/10/23/cakephp2-plugin-travis-issue.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/09/24/google-cloud-builder-php72.html">Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする</a></h2>
   <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 06:52:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -780,84 +919,6 @@ WEB自体、トライしてくれる人は少なかったのですが、当日�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a></h2>
-  <p class="postdate"><a href="/2018/08/03.html" title="Permanent link">Friday, August 03, 2018 03:41:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/googlecloudcontainerbuilder.html" rel="tag">GoogleCloudContainerBuilder</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2018/7/14 に行われた<a href="https://2018.kphpug.jp/">PHPカンファレンス関西2018</a>に参加してきました。</p>
-
-<h3>今年も参加</h3>
-
-<p>昨年と同じく<a href="http://www.gfo-sc.jp">GRAND FRONT OSAKA</a>で開催されました。</p>
-
-<p>夜はスピーカーとスタッフの前夜祭から、コミュニティ前夜祭と合流しての2次会へと流れ、タクシーでホテルに戻りました。その後、3次会、4次会があったとかないとか&hellip;（これ毎年のコピペですwww）</p>
-
-<h3>PHPカンファレンス関西2018</h3>
-
-<p>PHPカンファレンス関西は3トラック+スポンサーブースです。朝一番の講演に参加者が多いのも特徴ですね。
-今年はあまりセッションは聞かずに参加者と話したり、アンカンファレンスでPHPの非同期処理について話を聞いていたりしました。</p>
-
-<p>私の発表はGAEへの継続的デプロイだったのですが、なんとタイムテーブルを見ると、私の前に</p>
-
-<ul>
-<li>Amazonの中の人が <code>PHPアプリケーションのコンテナ化入門</code> というタイトルで CI/CD の話をするらしい</li>
-<li>Herokuの中の人が <code>HerokuでPHPアプリ開発速度を倍にする</code> というタイトルで 継続的デリバリー機能 の話をするらしい</li>
-</ul>
-
-<p>ということでネタ丸かぶり？とか、私だけ中の人じゃないよ！とか心配になったので、この2つのセッションはしっかり前の席で聞きました。</p>
-
-<h3>GAEにPHPアプリを継続的デプロイする方法について発表しました</h3>
-
-<p>昨年に引き続きPHPネタですが、主にはDockerとGoogle Cloud Container Builderの話でした。</p>
-
-<script async class="speakerdeck-embed" data-id="1bf79bdf3f264135868d28194fcab3a5" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>GAEを使っていて当然コードがPUSHされたらデプロイしたくなるのですが、何が良いのかよくわからない時期があって、調べて試した結果を発表するに至りました。
-調べた過程で、まぁどんなツールを使っていても gcloud コマンドさえ動けば、あとはGAEと接続するための認証情報をそのCI/CDツールに最適な方法で管理するだけで、どんなものでも良いということがわかりました。
-ただ、Cloud Container Builder使うとプライベートな空間を使えるわりには結構安いし、良いのではないかと思ったわけです。</p>
-
-<p>デプロイのデモもギリギリ間に合って、ほっとしました。リポジトリの README に詳しい説明が書いてあるので、そちらを見ながらコードを動かしてみてください。</p>
-
-<p><a href="https://github.com/sizuhiko/gccb-php-se-sample">PHPカンファレンス関西2018デモプログラム</a></p>
-
-<p>今回の発表をするのに<a href="https://qiita.com/ryutah/items/663f97feb87571f972cc">30分でできる(当社比) Google Cloud Container Builderを利用した AppEngine SE環境への自動デプロイ</a>という記事が大変参考になったのですが、
-GCPのコンソール（画面）から操作するのは、環境の再現性がなくて嫌だなーと思ったので、 gcloud コマンドを駆使して自動構築できるようにしました。
-これは今回、かなり頑張ったところです。そしてデモ環境を何度も壊して作り直すことができたので、リハーサルも捗りました。</p>
-
-<h3>大阪を堪能</h3>
-
-<p>最終日は恒例の <code>ねぎ焼き やまもと</code> へ。
-今年はPHPerを4人(昨年は3人)引き連れ、梅田エスト店にやってきました。
-そのあと有志で明石焼き/たこ焼きを食べに行って、聖地タイガースショップで買い物をして帰京しました。</p>
-
-<h3>さいごに</h3>
-
-<p>また来年も参加／発表したいので、1年の努力を惜しまずに&hellip;</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました" data-url="http://blog.open.tokyo.jp/2018/08/03/phpcon-kansai-2018.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/08/03/phpcon-kansai-2018.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9%E9%96%A2%E8%A5%BF2018%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6GAE%E3%81%AB%E7%B6%99%E7%B6%9A%E7%9A%84%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/08/03/phpcon-kansai-2018.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/16/">« Prev</a>
@@ -885,6 +946,7 @@ GCPのコンソール（画面）から操作するのは、環境の再現性�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
@@ -894,7 +956,6 @@ GCPのコンソール（画面）から操作するのは、環境の再現性�
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
-                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
               </ul>
             </div>
           </div>
@@ -1005,7 +1066,7 @@ GCPのコンソール（画面）から操作するのは、環境の再現性�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (9)</li>
+                  <li><a href="/2023.html">2023</a> (10)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

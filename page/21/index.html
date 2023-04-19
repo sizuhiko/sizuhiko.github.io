@@ -277,7 +277,233 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/01/30/polymer-co-edo-meetup-10.html">Polymer.co-edo meetup ＃10 を開催しました</a></h2>
+            <h2 class="title"><a href="/2018/02/06/dialogflow-v2.html">Dialogflow V1 API Webhook アプリを V2 対応できるミドルウェアを作った</a></h2>
+  <p class="postdate"><a href="/2018/02/06.html" title="Permanent link">Tuesday, February 06, 2018 12:41:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/dialogflow.html" rel="tag">Dialogflow</a>
+      <a href="/tags/googlehome.html" rel="tag">GoogleHome</a>
+      <a href="/tags/actionsongoogle.html" rel="tag">ActionsOnGoogle</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>みなさんスマートホーム使っていますか？
+これからはスマートホームの時代ですね（棒）</p>
+
+<p>ということで、今日本では一番売れているというGoogleHomeのアプリを(Actions on Googleを使って)作ってみようと思うと以下の選択肢があります。</p>
+
+<ul>
+<li>Dialogflow
+
+<ul>
+<li>GUIから音声対話を構築してアシスタントアプリを作成する</li>
+</ul></li>
+<li>Smart home
+
+<ul>
+<li>IoT機器（家電）を操作するアシスタントアプリを作成する（昔の呼び名で言うところのダイレクトアクション）</li>
+</ul></li>
+<li>Actions SDK
+
+<ul>
+<li>SDKとコマンドラインを使ってアシスタントアプリを作成する</li>
+</ul></li>
+<li>Converse.AI
+
+<ul>
+<li>Dialogflowと似ているけど違うサービスでアシスタントアプリを作成する</li>
+</ul></li>
+<li>Trivia
+
+<ul>
+<li>トリビアアプリを作るためのテンプレート</li>
+</ul></li>
+<li>Personality Quiz
+
+<ul>
+<li>クイズアプリを作るためのテンプレート</li>
+</ul></li>
+<li>Flash Cards
+
+<ul>
+<li>アシスタントアプリ学習用のフラッシュカードテンプレート</li>
+</ul></li>
+</ul>
+
+<p>まぁおおよそは、以下から選択するわけですが、違いがあります。</p>
+
+<ul>
+<li>Dialogflow（構文解析/機械学習機能がある）</li>
+<li>Actions SDK（構文解析などは自分でやる必要がある）</li>
+</ul>
+
+<p>後者はガチで、前者は簡単にサービスを開始できます。
+この記事は、前者のDialogflowについて書いていきます。</p>
+
+<h3>Dialogflow</h3>
+
+<p>もともとは <code>Api.ai</code> というサービスで Google が買収しました。</p>
+
+<blockquote>
+<p>参考記事：<a href="https://robotstart.info/2017/10/17/google-dialogflow-api-ai.html">Googleに買収された自然言語対話プラットフォーム「API.AI」が「Dialogflow」に名称変更！</a></p>
+</blockquote>
+
+<p>GoogleHomeのアプリは以下のような流れで実行されます。</p>
+
+<ol>
+<li>GoogleHome（マイク）</li>
+<li>Googleアシスタント（音声→テキスト = Speach to Texxt = STT）</li>
+<li>Dialogflow（構文解析/学習）</li>
+<li>Webhook（必須ではないけど、独自のロジックを書くなら呼べる）</li>
+</ol>
+
+<p>で、来た道を戻り、</p>
+
+<ol>
+<li>WebhookまたはDialogflowからテキストを返却</li>
+<li>Googleアシスタント（テキスト→音声 = Text to Speach = TTS）</li>
+<li>GoogleHome（スピーカー）</li>
+</ol>
+
+<p>で私たちは音声を聞くことができるのです。</p>
+
+<p>Dialogflow単体でいうと、Googleアシスタントだけではなく、LINEやSlackのBOTも作れます。</p>
+
+<p>※より詳しく何ができるのかは <a href="https://qiita.com/tags/dialogflow">QiitaのDialogflowタグ記事一覧</a> を参照ください。</p>
+
+<h3>Dialogflow API</h3>
+
+<p>DialogflowにはAPIがあり、主な利用用途は以下のとおりです。</p>
+
+<ul>
+<li>GUIを使わずにCLIから操作できる
+
+<ul>
+<li>クライアントアプリを作る</li>
+<li>アプリの設定を自動化する</li>
+</ul></li>
+<li>Webhookのインターフェース</li>
+</ul>
+
+<p>現在の安定板はV1ですが、V2がbeta1として存在しています。</p>
+
+<p><a href="https://dialogflow.com/docs/reference/v2-comparison">V1とV2の違いは公式サイトに書かれています</a>。</p>
+
+<p>また、DialogflowにはEnterprise Edition(現在はベータ版)というのがあって、商用アプリを作る人にはきになるところです。
+<a href="https://cloud.google.com/dialogflow-enterprise/quotas?hl=ja">Dialogflowの割り当てと制限</a>を見るとわかるように、Standard Edition（無料版）には制限があります。
+ただし制限だけに限っていうと、先ほどのV1とV2の違いページに書かれているのですが、</p>
+
+<blockquote>
+<p>Note: These quotas are not applied to requests coming from Google Assistant integration used with Standard Edition agents.</p>
+</blockquote>
+
+<p>Googleアシスタント経由で使っている分には、Standard Editionでも制限はないということです。</p>
+
+<h3>なぜV2を使うのか</h3>
+
+<p>たとえば以下のような作業はV1ではできません</p>
+
+<ul>
+<li>Dialogflowプロジェクト設定のimport/exportを自動化する（デプロイを自動化するのに必要）</li>
+<li>Enterprise Editionにとにかく加入して安心したい？（Enterprise Editionは V2 API が必須です）</li>
+<li>LINEやSlackのBOTを作りたいけど、制限を解除したい</li>
+</ul>
+
+<p>また、DialogflowのWebhookアプリを作るのには、以下の2つから選択します。</p>
+
+<ul>
+<li>JSONを直接やりとりする</li>
+<li><a href="https://github.com/actions-on-google/actions-on-google-nodejs">Node.jsの公式ライブラリ</a>を使う</li>
+</ul>
+
+<p>当然、後者の方が簡単にアプリを作成できるので、宗教上の理由でNode.js使いたくないという理由がなければ後者の方が良いですね。
+ただしリンク先のGitHubみればわかりますが、現時点は </p>
+
+<blockquote>
+<p>Please note that Dialogflow v2 is not currently supported by this client library.</p>
+</blockquote>
+
+<p>ということです。</p>
+
+<h3>とりあえず作ってみた</h3>
+
+<p>いろいろなことがあって、現時点V2使わないといけないかもしれない。
+でもV1にも簡単に戻れるようにしたい、みたいな「ふわっとした」状況ってあるじゃないですか。</p>
+
+<p>Dialogflowのデプロイも自動化したいよね、とか。</p>
+
+<p>ということで簡単に「お試し」できるように、リクエストとレスポンスのJSONをV2/V1変換するミドルウェアを作りました。
+ミドルウェアにしたのは簡単に取り外せるようにするためです。</p>
+
+<ul>
+<li><a href="https://www.npmjs.com/package/dialogflow-fulfillment-v2-middleware">NPM: dialogflow-fulfillment-v2-middleware</a></li>
+<li><a href="https://github.com/sizuhiko/dialogflow-fulfillment-v2-middleware">GitHub: dialogflow-fulfillment-v2-middleware</a></li>
+</ul>
+
+<p>V1のアプリは以下のようなコードになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="p">{</span> <span class="nx">DialogflowApp</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">actions-on-google</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">welcome</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./actions/welcome</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">actionMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Map</span><span class="p">();</span>
+<span class="nx">actionMap</span><span class="p">.</span><span class="kd">set</span><span class="p">(</span><span class="dl">'</span><span class="s1">input.welcome</span><span class="dl">'</span><span class="p">,</span> <span class="nx">welcome</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">dialogflow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DialogflowApp</span><span class="p">({</span><span class="na">request</span><span class="p">:</span> <span class="nx">req</span><span class="p">,</span> <span class="na">response</span><span class="p">:</span> <span class="nx">res</span><span class="p">});</span>
+<span class="nx">dialogflow</span><span class="p">.</span><span class="nx">handleRequest</span><span class="p">(</span><span class="nx">actionMap</span><span class="p">);</span>
+</code></pre></div>
+<p>V2のアプリにしたい場合は、エントリポイントのJSだけを変更して、以下のようにすることを想定しています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="p">{</span> <span class="nx">DialogflowApp</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">actions-on-google</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">connect</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">connect</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">dialogflowV2</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./dialogflow-fulfillment-v2-middleware</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">welcome</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./actions/welcome</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">actionMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Map</span><span class="p">();</span>
+<span class="nx">actionMap</span><span class="p">.</span><span class="kd">set</span><span class="p">(</span><span class="dl">'</span><span class="s1">input.welcome</span><span class="dl">'</span><span class="p">,</span> <span class="nx">welcome</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">connect</span><span class="p">();</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">dialogflowV2</span><span class="p">.</span><span class="nx">v2to1</span><span class="p">());</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">((</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">dialogflow</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DialogflowApp</span><span class="p">({</span><span class="na">request</span><span class="p">:</span> <span class="nx">req</span><span class="p">,</span> <span class="na">response</span><span class="p">:</span> <span class="nx">res</span><span class="p">});</span>
+  <span class="nx">dialogflow</span><span class="p">.</span><span class="nx">handleRequest</span><span class="p">(</span><span class="nx">actionMap</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">app</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">dialogflowV2</span><span class="p">.</span><span class="nx">v1to2</span><span class="p">(</span><span class="nx">response</span><span class="p">));</span>
+</code></pre></div>
+<p><a href="https://www.npmjs.com/package/connect">connect</a>というミドルウェアレイヤーを使って、DialogflowのWebhookアプリでミドルウェアを使えるようにしています。
+これはGoogle Cloud Functionsを使った場合の想定で、AWS Lambdaを使った場合は、expressとか使うと思うので、expressのミドルウェアとして差し込んでもらえれば大丈夫です。</p>
+
+<ul>
+<li>v2to1() V2リクエストをV1リクエストに変換するミドルウェア</li>
+<li>v1to2(response) V1レスポンスをV2レスポンスに変換するラッパー</li>
+</ul>
+
+<p>2つのAPIがPublicになっています。</p>
+
+<h3>さいごに</h3>
+
+<p>JSONを変換するだけの簡単な実装ですが、手元のアプリではV2に切り替えてもうまく動作しました。</p>
+
+<p>まだテストコードとかないので、Pull Requestお待ちしております（もちろんそのうち書く予定ですが&hellip;）。</p>
+
+<p>うまく動作しない！などあれば、Issueで報告ください（日本語でOK）。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Dialogflow V1 API Webhook アプリを V2 対応できるミドルウェアを作った" data-url="http://blog.open.tokyo.jp/2018/02/06/dialogflow-v2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/02/06/dialogflow-v2.html&t=Dialogflow%20V1%20API%20Webhook%20%E3%82%A2%E3%83%97%E3%83%AA%E3%82%92%20V2%20%E5%AF%BE%E5%BF%9C%E3%81%A7%E3%81%8D%E3%82%8B%E3%83%9F%E3%83%89%E3%83%AB%E3%82%A6%E3%82%A7%E3%82%A2%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/02/06/dialogflow-v2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/01/30/polymer-co-edo-meetup-10.html">Polymer.co-edo meetup ＃10 を開催しました</a></h2>
   <p class="postdate"><a href="/2018/01/30.html" title="Permanent link">Tuesday, January 30, 2018 10:46:00 AM</a></p>
   <p class="tags">
       <a href="/tags/polymer.html" rel="tag">Polymer</a>
@@ -698,187 +924,6 @@ Windows をお使いの方だと <code>砂時計</code> なわけですが、そ
     </div>
 
   </div>
-  <h2 class="title"><a href="/2017/06/18/cakefest-2017.html">CakeFest2017に参加してきた</a></h2>
-  <p class="postdate"><a href="/2017/06/18.html" title="Permanent link">Sunday, June 18, 2017 05:10:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>昨年は国内のPHPカンファレンスをすべて廻ることにしたので、2年ぶり。
-なんと2年前と同じN.Yで、同じペース大学です。</p>
-
-<h2>CakeFest2017最初の驚きは出発直前</h2>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">久々にCakeFestのサイト見たら、ランサーズがスポンサーになっている！</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/872266274126024704">2017年6月7日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">そうなんですよ〜。スポンサーに名乗りを上げました。 <a href="https://twitter.com/hashtag/%E3%83%A9%E3%83%B3%E3%82%B5%E3%83%BC%E3%82%BA?src=hash">#ランサーズ</a> <a href="https://t.co/3b4BNnTwLT">https://t.co/3b4BNnTwLT</a></p>&mdash; なかじまん@ランサーズ (@nakajiman) <a href="https://twitter.com/nakajiman/status/872442319848341504">2017年6月7日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>ということで、ランサーズがスポンサーになっていました。すごい！
-ちょうどCakeFestと同じ日に行われたPHPカンファレンス福岡で、CakePHP3へのアップデート発表していましたね。
-最近はCakePHP3のコードリーディング勉強会も開催していて、CakePHPコミュニティの活発さが増しているように思います。</p>
-
-<h2>2年ぶり2回目のN.Y</h2>
-
-<p>さて、前回は後半に1日休みを取っていたのですが、ちょうど休みの日と、東京に戻る日が雨だったのですが、今年は到着した日こそ寒かったものの、2日目から帰るまで真夏の暑さでした&hellip;</p>
-
-<p>N.Yに浮かれたので、ヤンキーススタジアムで野球を見てきました。</p>
-
-<h2>カンファレンス初日</h2>
-
-<p>初日で印象に残ったこと。</p>
-
-<h3>世界情勢を反映したCakeFest</h3>
-
-<p>カンファレンス最初のKeyNoteはORMの主開発者でもある José Rodríguez だったのですが、世界情勢を反映しオンラインでの講演となりました。
-世界情勢とは入出国に関連することであるそうなのです。昨今の世界情勢を考えるとなるほど、難しいですね。
-直接会えないのは残念でしたが、内容はビデオで公開されているので、閲覧可能です。</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/Sm6fSRBrU98" frameborder="0" allowfullscreen></iframe>
-
-<p>CakePHPの開発を通じで得たOSSとの関わり方が話されているのですが、チーム開発にも役立つTipsがたくさん含まれていましたので、まだの方はぜひ。
-今後のCakeのコードをこういう風に変えていこうかな、みたいな話も含まれています（メソッドチェインにする理由など）。</p>
-
-<h3>流行りのキーワード多め</h3>
-
-<p>Dockerや、CI/CD、PWAからコンテナ管理まで、技術的には国やコミュニティは関係なく、よく聞く話題が多いです。
-初日にLTもあって、どうしようか悩んでエントリーまでしたのですが、先着順のため後2人で時間切れ&hellip;（ちなみにPHPカンファンレス関西でも話す予定だったRoboを紹介してみる予定でした）</p>
-
-<p>動画は公開されていないのですが、Mark StoryのLTがすごく興味深くて、どうやってOSS活動に時間をとっているか、という内容で、生き方がカッコイイと思いました（公開されないと思うけど、公開されたらみて欲しい）。</p>
-
-<h3>Mixer</h3>
-
-<p><a href="https://github.com/CakeDC/mixer">Mixer</a>はLTで発表されたのですが、<a href="https://github.com/CakeDC/oven">Oven</a>に続く新しいCakeDCの取り組みのようです。OvenはCLI(composer)をほとんど使わずCakePHPアプリの初期状態を構築するのに役立つわけですが、そこにプラグインを追加するためのUIです。
-将来はマーケットプレイスの要素も見据えているそうですが、まだ具体的な計画はないようです。
-CakeDCとしては何かビジネスの種になれば良いということなのかなーと。</p>
-
-<h3>その他で興味深かった話</h3>
-
-<p><a href="https://github.com/gothinkster/cakephp-realworld-example-app">RealWorld</a> というTodoMVCのCakePHPバックエンドサンプルで、いろいろなフロントエンドとバックエンドのサンプルプログラムが提供されているので、比較評価および他の言語やF/Wでどう書くの？的な学習に適していそうです。リンクをたどると他のバックエンドのコードやフロントエンドもあります。</p>
-
-<p><a href="https://github.com/dereuromark/cakephp-ide-helper">IDE Helper plugin for CakePHP</a>。PHPStormおよびIntelliJで動くプラグインということで（私は使っていないので試していないのですが、デモを見た感じではかなり良さそうでした）。</p>
-
-<h3>初日の最後はソーシャルパーティ</h3>
-
-<p>カンファレンス初日の夜は恒例のソーシャルパーティ。2年前と同じBarで行われました。
-いつものカンファレンス参加者やコア開発者と話したりする貴重な時間です。
-そういえば何も写真撮らなかった！！（2年前は撮っていた）。
-いろいろな話をして、その後ピザ食べに行ってホテルに戻りました&hellip;（日本のカンファレンスとあまり変わりません）</p>
-
-<h2>カンファレンス2日目の様子</h2>
-
-<p>2日目で印象に残ったこと。</p>
-
-<h3>カンファレンスが始まらない</h3>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">スケジュールどおりの時間で進まないのが CakeFest ですw</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/873882111450677248">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>こう書くと、CakeFestって毎年そんな話してない？と言われるかもしれないですが、参加者は少なくても割と時間通りには始まっていますw。
-なぜ始まらないかというと、ペース大学のAV担当者が来ていなくて、プロジェクターの出し方がわからない！ということ。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">えええええ・・・・</p>&mdash; TAKAHASHI Kunihiko (@kunit) <a href="https://twitter.com/kunit/status/873893627897954304">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>さて、日本との時差13時間で、ライブ配信を見ていた方は気になってしょうがなかったでしょうね。この時点での遅れはSNSなどで通知もされていなかったし。
-運良く、私は @kunit さんのつぶやきを見つけ返信しておきました。
-その後、発表順番を変更したり、休憩時間を変更したりと慌ただしくもなんとか始まりました。最終的にはCakeFestのSlackチャンネルで修正されたスケジュールが発表されました。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">情報ありがとうございますー</p>&mdash; TAKAHASHI Kunihiko (@kunit) <a href="https://twitter.com/kunit/status/873911710322577412">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h3>いよいよ真打登場</h3>
-
-<p>さていよいよ Mark Story のセッションです。CakePHP4への展望が語られます。
-と、その中でCakePHPのLTSが発表され、これも大きいニュースと思います。
-動画が公開されているので、ぜひご覧ください。</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/DtH__Iz9Mjs" frameborder="0" allowfullscreen></iframe>
-
-<h3>その他で興味深かった話</h3>
-
-<p>今回 N.Y ということで、様々なオーガナイズをしてくれた地元の @savant のセッション。
-CakePHPに関連するインフラがどのようになっているのか。お金がないのでOSSで頑張っているよ、という内容で、みんなが開発する上でも有用な情報が満載です。ぜひ！</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/264ho9xqeJU" frameborder="0" allowfullscreen></iframe>
-
-<h3>恒例の</h3>
-
-<p>Real Cake が出ました！！</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">And we end <a href="https://twitter.com/hashtag/CakeFest2017?src=hash">#CakeFest2017</a> NYC with an amazing cake! Faster. Stronger. Tastier <a href="https://twitter.com/hashtag/CakePHP?src=hash">#CakePHP</a> <a href="https://t.co/ZEaCZW29mC">pic.twitter.com/ZEaCZW29mC</a></p>&mdash; CakePHP (@cakephp) <a href="https://twitter.com/cakephp/status/874024715614027783">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">Cutting off the Cake <a href="https://t.co/2dacUpj4TY">https://t.co/2dacUpj4TY</a></p>&mdash; CakePHP (@cakephp) <a href="https://twitter.com/cakephp/status/874025225590939648">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h3>集合写真</h3>
-
-<p>最後にみんなで集合写真を撮りました。
-初日にTシャツをもらうのですが、そのときに2日目に集合写真撮るから来てきてね、と受付で伝えられます（ので、みんなちゃんとTシャツを着ている&hellip;はずw）</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">And that&rsquo;s a wrap for <a href="https://twitter.com/hashtag/CakeFest2017?src=hash">#CakeFest2017</a> NYC! Was fun and we enjoyed hosting everyone for another fantastic CakeFest! <a href="https://twitter.com/hashtag/CakePHP?src=hash">#CakePHP</a> <a href="https://t.co/i1reTAjajQ">pic.twitter.com/i1reTAjajQ</a></p>&mdash; CakePHP (@cakephp) <a href="https://twitter.com/cakephp/status/874035983121035265">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>今年は @PhpNut が特に楽しそうで、自撮り写真を公開しましたw</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">So many countries at <a href="https://twitter.com/hashtag/CakeFest2017?src=hash">#CakeFest2017</a> NYC. This year I was so impressed with speakers and the attendees were amazing. C U in Nashville 2018 <a href="https://t.co/yP77wnyCG2">pic.twitter.com/yP77wnyCG2</a></p>&mdash; Larry E. Masters (@PhpNut) <a href="https://twitter.com/PhpNut/status/874326494163738624">2017年6月12日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h2>さいごに</h2>
-
-<p>CakeFestはライブ配信もだいぶ良くなって、日本で見ていてもそれほどストレスはないようです。動画も公開されるので、後追いは可能です（クオリティもいいです）。
-ではなぜ現地に行くのか！
-それはコアデベロッパーと直接話して、CakePHPがどのような思いで作られていたり、どんなコアデベロッパーが作っているのかを体感することで、より深く知れたり、CakePHPへの想いが増す、ということに尽きます。
-もちろん休憩時間などに、直接 Mark や(今回来てなかったけど) Jose に質問することができるのも CakeFest だけです。
-また日本での利用シーンやコミュニティの活動を知ってもらうというのも重要です。</p>
-
-<p>実際に到着した日には、コアデベロッパーの Brian が「近所のビアバーで飲んでいるから」というので参加しましたし、カンファレンス初日はパーティ、2日目の夜もJoseやMarkに誘ってもらい飲みに行きました（飲んでばっかりですね！w）。実は2日目夜は体調を少し崩していて、あんまりビール飲めなかったのですが、楽しい夜でした（私の開発した Toilet Evolutionが大ウケだったので自慢しておきます）。
-コアデベロッパーと知り合いになると、CakePHPのコードを修正してPRを出すときも、なんかお互い親近感が湧くじゃないですか！（個人的主観です）</p>
-
-<p>今年は以下の写真(+1名ワークショップだけ出られていた方がいました)のように4名(+1)ということで、最近毎年このぐらい日本からの参加者もいて楽しいです。</p>
-
-<p><img src="/images/blog/cakefest2017_jpn_table.jpg" alt="" /></p>
-
-<p>そうそう、いつも来年の場所を言ったりするのに、今年なかったねーなんて話をしていたのですが、 Nashville だそうですよ（Larryがスライドに入れるのを忘れてたそうだ）。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">Found the missing slide from my talk. <a href="https://twitter.com/hashtag/CakeFest2018?src=hash">#CakeFest2018</a> Nashville. <a href="https://t.co/fnfbNHNA65">pic.twitter.com/fnfbNHNA65</a></p>&mdash; Larry E. Masters (@PhpNut) <a href="https://twitter.com/PhpNut/status/873726887541051393">2017年6月11日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>みんなで行けると良いですね！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2017に参加してきた" data-url="http://blog.open.tokyo.jp/2017/06/18/cakefest-2017.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2017/06/18/cakefest-2017.html&t=CakeFest2017%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2017/06/18/cakefest-2017.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/20/">« Prev</a>
@@ -906,6 +951,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
@@ -915,7 +961,6 @@ CakePHPに関連するインフラがどのようになっているのか。お�
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
                   <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
-                  <li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a> <span>2022/12/30</span></li>
               </ul>
             </div>
           </div>
@@ -1026,7 +1071,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (9)</li>
+                  <li><a href="/2023.html">2023</a> (10)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
