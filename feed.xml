@@ -5,10 +5,65 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2023-04-19T16:12:00+09:00</updated>
+  <updated>2023-05-02T15:00:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>tsyringe を TypeScript 5 で使う方法</title>
+    <link rel="alternate" href="http://blog.url.com/2023/05/02/tsyringe-with-typescript-5.html"/>
+    <id>http://blog.url.com/2023/05/02/tsyringe-with-typescript-5.html</id>
+    <published>2023-05-02T15:00:00+09:00</published>
+    <updated>2023-05-02T15:17:42+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://github.com/microsoft/tsyringe"&gt;tsyringe&lt;/a&gt; は、Microsoft のオーガナイゼーションにある、JavaScript/TypeScript用のDIコンテナです。&lt;/p&gt;
+
+&lt;p&gt;Microsoft は TypeScript の親だし、DIコンテナあるんだったら使うよなーというぐらいの理由で使っていましたが、ここ数年はアップデートのリリースがありません。
+この記事を書いている時点での最新版は、2020/11/9 に出た &lt;a href="https://github.com/microsoft/tsyringe/releases/tag/v4.4.0"&gt;v4.4.0&lt;/a&gt; です。&lt;/p&gt;
+
+&lt;h3&gt;TypeScript 5 でコンパイルエラーになる&lt;/h3&gt;
+
+&lt;p&gt;tsyringe を TypeScript 5 で利用しようとすると、コンパイルエラーになります。
+で、さすがに利用者が多いライブラリだけあって、すぐ issue &lt;a href="https://github.com/microsoft/tsyringe/issues/221"&gt;TypeScript 5.0 Support of tighter parameter decorator checking&lt;/a&gt; が出ました。
+しばらくしたら PR &lt;a href="https://github.com/microsoft/tsyringe/pull/226"&gt;fix: allow propertyKey to be undefined&lt;/a&gt; も出ました。PRが 2023/3/26 に出て、マージされたのは 2023/4/17 です。&lt;/p&gt;
+
+&lt;p&gt;それから2週間ぐらい経過しましたが、リリースされる気配はありません&amp;hellip;.&lt;/p&gt;
+
+&lt;h3&gt;でも TypeScript 5 を使いたいんや&lt;/h3&gt;
+
+&lt;p&gt;まぁそう思いますよね。
+僕らのプロジェクトでもそう思ったんで、パッチを作りました。&lt;/p&gt;
+
+&lt;p&gt;プロジェクトルート(package.json とか置いているディレクトリ)に &lt;code&gt;tsyringe.d.ts&lt;/code&gt; を置いて、型定義をオーバーライドする感じです。
+例えば以下のような感じです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tsyringe/dist/typings/index&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nx"&gt;declare&lt;/span&gt; &lt;span class="nx"&gt;namespace&lt;/span&gt; &lt;span class="nx"&gt;t&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;inject&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="nx"&gt;token&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;InjectionToken&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+  &lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;target&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;propertyKey&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;string&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="nx"&gt;symbol&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;parameterIndex&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;number&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;injectable&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;injectable&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="nx"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;DependencyContainer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;まずコンパイルエラーになるのは &lt;code&gt;inject&lt;/code&gt; 関数なので、それをオーバーライドします。
+次に、プロジェクトで import している関数や型があれば、それぞれ &lt;code&gt;const&lt;/code&gt; や &lt;code&gt;type&lt;/code&gt; で宣言して require した内容からそのまま export するようにしました。&lt;/p&gt;
+
+&lt;p&gt;これはマージされている PR が型定義ぐらいしか修正しておらず、実装に関しては何も修正されていなかったので、問題なしと判断して型定義だけをオーバーライドしたパッチを作ることにしました。&lt;/p&gt;
+
+&lt;h3&gt;で、どうなの？&lt;/h3&gt;
+
+&lt;p&gt;現時点動作に問題はなく、普通に TypeScript 5 で tsyringe が使えています。
+PRがマージされて、すぐリリースされるんじゃないか？と思ったので、この内容を記事にする必要もないかな？と思っていたのですが、
+リリースされる気配を感じないので、僕らのやっている方法が少しでも役に立てばと思い、記事にしました。
+はやく TypeScript 5 対応が正式リリースされて欲しいですね。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>LocalStack を使って aws-sdk の Integration Test を実行する</title>
     <link rel="alternate" href="http://blog.url.com/2023/04/19/integration-test-using-localstack.html"/>
@@ -423,153 +478,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
 
 &lt;p&gt;上記の引用ツイートのレスの中にもあるけど、v3 のドキュメントが不親切だというのは事実だし、良い解決策が 2023 年中に見つかると良いですね。
 なんか感想ブログになっちゃいましたが、僕らのプロジェクトも v2 依存している CLI ツールは移行対象にしてなかったので、これから移行計画作らないとな、と思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</title>
-    <link rel="alternate" href="http://blog.url.com/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"/>
-    <id>http://blog.url.com/2023/04/05/aws-sdk-v3-changed-enum-to-const.html</id>
-    <published>2023-04-05T17:08:00+09:00</published>
-    <updated>2023-04-05T17:43:52+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;「Lambda アプリが突然動かなくなる」なんて、どうせバグなんでしょーというのが当然のリアクションですが、これは本当にバグなのか&amp;hellip;&lt;/p&gt;
-
-&lt;p&gt;本当にあった怖い話をします。&lt;/p&gt;
-
-&lt;h3&gt;ある日、Lambda アプリが突然動かなくなる&lt;/h3&gt;
-
-&lt;p&gt;Node.js v18 のライタイムで動く Lambda にデプロイされているアプリで、ある日突然エラーが出るようになりました。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;original: TypeError: Cannot read properties of undefined (reading ‘RUNNING’)&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;この部分ですが TypeScript のコードでは以下のようになっていました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nx"&gt;DescribeExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;ExecutionDoesNotExist&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;StartExecutionCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;paginateListExecutions&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-sfn&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="c1"&gt;// 省略&lt;/span&gt;
-
-&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;latest&lt;/span&gt;&lt;span class="p"&gt;?.&lt;/span&gt;&lt;span class="nx"&gt;status&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RUNNING&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;ExecutionStatus&lt;/code&gt; は StepFunctions のクライアントで export されている値です。
-StepFuntions のジョブが実行中かどうか判定している箇所で。少し前まで普通に動いていたのに&amp;hellip;.&lt;/p&gt;
-
-&lt;h3&gt;Lambda アプリの構成&lt;/h3&gt;
-
-&lt;p&gt;AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。&lt;/p&gt;
-
-&lt;h3&gt;node コンソールで確認してみる&lt;/h3&gt;
-
-&lt;p&gt;手元では devDependencies に &lt;code&gt;@aws-sdk/client-sfn&lt;/code&gt; が入っているので、 node コンソールに入って require を実行してみました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;&amp;gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&amp;gt; ExecutionStatus
-{
-  ABORTED: 'ABORTED',
-  FAILED: 'FAILED',
-  RUNNING: 'RUNNING',
-  SUCCEEDED: 'SUCCEEDED',
-  TIMED_OUT: 'TIMED_OUT'
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;ふむ、問題なさそうだが？&lt;/p&gt;
-
-&lt;p&gt;最新版の aws-sdk で変わったのだろうか？
-一時的に最新版にバージョンアップをしてみて、確認してみます&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;&amp;gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&amp;gt; ExecutionStatus
-undefined
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;えええええええーーー&lt;/p&gt;
-
-&lt;h3&gt;aws-sdk の該当箇所の修正履歴をチェックする&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/pull/4587"&gt;hore(codegen): export enums as const&lt;/a&gt;&lt;/p&gt;
-
-&lt;h4&gt;元のコード&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
- * @public
- */&lt;/span&gt;
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kr"&gt;enum&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nx"&gt;ABORTED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;FAILED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;RUNNING&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;SUCCEEDED&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nx"&gt;TIMED_OUT&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;変更後のコード&lt;/h4&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
- * @public
- * @enum
- */&lt;/span&gt;
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;ABORTED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;FAILED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;RUNNING&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;おいおい、これって &lt;code&gt;@public&lt;/code&gt; なのに後方互換性なくなっとるだろ&amp;hellip;.&lt;/p&gt;
-
-&lt;h3&gt;なぜ undefined になるのか&lt;/h3&gt;
-
-&lt;p&gt;enum はコンパイルされて JavaScript になると以下のようなコードになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;ABORTED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;FAILED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;RUNNING&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;SUCCEEDED&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;TIMED_OUT&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;})(&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;exports&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ExecutionStatus&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{}));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;でも &lt;code&gt;export const as const&lt;/code&gt; になると、JavaScript にはコンパイルされることなく、変数の利用箇所に埋め込みの形になります。&lt;/p&gt;
-
-&lt;p&gt;最初にも書きましたが、 aws-sdk v2 では普通だった&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;こういう運用はすでにオワコンなんでしょうか？
-いやでも、v3 になってもランタイムに aws-sdk は入っています。&lt;/p&gt;
-
-&lt;p&gt;少なくとも &lt;code&gt;ExecutionStatus&lt;/code&gt; が内部変数で export されてない private な値だったら良いのですが、これはさすがにマズイんじゃないですかね？awsさん。&lt;/p&gt;
-
-&lt;h3&gt;この問題が発生するケース&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;AWS Lambda でランタイムの aws-sdk を使っていて、TypeScript から enum の値を参照していた場合（同一の変更ですべての enum が const に書き変わっています）&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;amplify とか Lambda でなくコンパイルされているケースでは問題は起きませんが、いやこういうのサクッと変更しちゃダメだと思うんですが&amp;hellip;
-しかもランタイム側に入っているので、動作している Lambda アプリケーションが突然動作しなくなります。&lt;/p&gt;
-
-&lt;h3&gt;aws-sdk v3 を安心して使うためには（追記）&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;peerDependencies&lt;/code&gt; が指定されていたら、バージョンを揃えるために自分でインストールする&lt;/li&gt;
-&lt;li&gt;関数/クラス以外、たとえば enum の値などは基本的に利用しない&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;大事なこと3つ目を追加しました。&lt;/p&gt;
-
-&lt;p&gt;aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。&lt;/p&gt;
 </content>
   </entry>
 </feed>

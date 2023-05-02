@@ -277,7 +277,140 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h2>
+            <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
+  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 05:17:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>TypeORM では、主キーやインデックスはエンティティにデコレータを記述します。
+たとえば以下のような感じです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>@PrimaryGenerationColumn</code> にはインデックス名を指定できないので、この状況で <code>migration:generate</code> を実行すると、
+TypeORM 独自のルールを使ったインデックス名で SQL が生成されます。</p>
+
+<p>一方でインデックスの場合は、たとえば <code>email</code> にユニーク制約を入れるとすると以下のように、インデックス名を指定できます。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
+  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
+  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>また関連に関してもそうで、 User - hasMany -&gt; Post のような関連があったとき、外部キー制約の名前も TypeORM ルールになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
+  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
+  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">OneToMany</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">PostEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">post</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
+  <span class="nx">posts</span><span class="p">?:</span> <span class="nx">PostEntity</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">PostEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">ManyToOne</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">UserEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">posts</span><span class="p">)</span>
+  <span class="nx">user</span><span class="o">!</span><span class="p">:</span> <span class="nx">UserEntity</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>そこで、 <code>@Index</code> 以外で生成されるインデックスの名前をカスタマイズしたい！という場合は <code>NamingStrategy</code> を使います。
+この <code>NamingStrategy</code> ですが、ドキュメントには詳しい解説がないので、この記事を書くことにしました。</p>
+
+<h3>NamingStrategy の作り方</h3>
+
+<p>まずはインデックス名をカスタムできるように、 <code>DefaultNamingStrategy</code> を継承し、 <code>NamingStrategyInterface</code> を実装するクラスを作ります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/DefaultNamingStrategy.ts">DefaultNamingStrategyのコード</a> を参考にカスタマイズすると良いでしょう。</p>
+
+<p>たとえばプライマリーキーの場合は以下のようになっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
+    <span class="c1">// sort incoming column names to avoid issue when ["id", "name"] and ["name", "id"] arrays</span>
+    <span class="kd">const</span> <span class="nx">clonedColumnNames</span> <span class="o">=</span> <span class="p">[...</span><span class="nx">columnNames</span><span class="p">]</span>
+    <span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">sort</span><span class="p">()</span>
+    <span class="kd">const</span> <span class="nx">tableName</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="nx">replacedTableName</span> <span class="o">=</span> <span class="nx">tableName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="dl">"</span><span class="s2">.</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="nx">key</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">replacedTableName</span><span class="p">}</span><span class="s2">_</span><span class="p">${</span><span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)}</span><span class="s2">`</span>
+    <span class="k">return</span> <span class="dl">"</span><span class="s2">PK_</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">RandomGenerator</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>プライマリーキーに設定されているカラム名をソートしてから <code>_</code> で結合して sha1 に変換したものを利用しています。</p>
+
+<p>たとえばプロジェクトのルールで、プライマリーキーは <code>PK_テーブル名</code> で良い場合は、以下のようなコードでオーバーライドして変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
+  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">table</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">);</span>
+    <span class="k">return</span> <span class="s2">`PK_</span><span class="p">${</span><span class="nx">pascalCase</span><span class="p">(</span><span class="nx">table</span><span class="p">)}</span><span class="s2">`</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>pascalCase</code> は <a href="https://www.npmjs.com/package/change-case">change-case</a> のようなライブラリ利用を想定しています。</p>
+
+<h3>NamingStrategy で変更できる名前</h3>
+
+<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/NamingStrategyInterface.ts">NamingStrategyInterfaceのコード</a>を見るとわかります。
+よく使いそうなものは、以下のあたりでしょうか。</p>
+
+<ul>
+<li>primaryKeyName 主キー名。デフォルトでは <code>PK_{sha1した値}</code></li>
+<li>foreignKeyName 外部キー名。デフォルトでは <code>FK_{sha1した値}</code></li>
+<li>indexName 複合キー名。デフォルトでは <code>IDX_{sha1した値}</code></li>
+</ul>
+
+<p>もちろんこれ以外にもたくさんカスタマイズできる名前はあるので、マイグレーションファイルに生成された名称がプロジェクトルールに沿わない場合に
+遭遇したら、インターフェースやデフォルトの実装を見てみると良いでしょう。</p>
+
+<h3>カスタム NamingStrategy の指定方法</h3>
+
+<p>マイグレーションコマンドから利用する DataSource のオプションに指定します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="nx">namingStrategy</span><span class="p">:</span> <span class="k">new</span> <span class="nx">CustomNamingStrategy</span><span class="p">()</span>
+<span class="p">});</span>
+</code></pre></div>
+<p><code>namingStrategy</code> を指定して、 <code>npm run migration:generate</code> するとプロジェクトルールに沿った名前でマイグレーションファイルを生成できます。</p>
+
+<p><code>package.json</code> のスクリプト例</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<h3>さいごに</h3>
+
+<p>公式ドキュメントの情報が不足しているところなので、この記事が少しでも役立てば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM でプライマリーキーや外部キーの名前を変更する" data-url="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html&t=TypeORM%20%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%9E%E3%83%AA%E3%83%BC%E3%82%AD%E3%83%BC%E3%82%84%E5%A4%96%E9%83%A8%E3%82%AD%E3%83%BC%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E5%A4%89%E6%9B%B4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h2>
   <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 11:34:00 AM</a></p>
   <p class="tags">
       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -823,162 +956,6 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a></h2>
-  <p class="postdate"><a href="/2021/07/11.html" title="Permanent link">Sunday, July 11, 2021 05:40:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
-      <a href="/tags/svelte.html" rel="tag">Svelte</a>
-      <a href="/tags/socket-io.html" rel="tag">Socket.io</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回のBlog更新が1年半近く前の、最後のオフラインイベントだったでしょうか&hellip;.
-それから、書くまでもありませんが、イベントや仕事がすべてオンラインで行われるようになりました。</p>
-
-<p>私たちインターネットに関連する仕事をしているものは、特に在宅でも同じように仕事を進めています（僕の場合は家の環境が劣悪というのはありますが）。</p>
-
-<p>変わったのは勉強会やカンファレンス、コミュニティ活動がオンラインになったり、そもそも開催されなくなったりといったことがあります。</p>
-
-<p>僕も昨年中はずっとモチベーションもダダ下がりで、ただ仕事をして何となくYoutubeで動画見るみたいな繰り返しを送っていました。
-オンラインの勉強会やカンファレンスにも参加する気になれなかった、というのが本当のところです。</p>
-
-<p>お前は懇親会とか飲み会メインだろ？とか言われると、まぁ否定もできないのですが、リアルな共感が得られない（廊下カンファレンスができない）とか、ちゃんとした理由もあったりします。
-僕は必ず前方の席で参加するし、リアクションも他の人と比べるとある方かなーと思っています。
-オンラインは、どうしても講義形式になりがちだし、参加している人同士がこういうことに関心があるんだとか、面白いと思ったり感動したりするんだな、ということは得られないな、と思っています。
-もちろんチャットやTwitterなど、文字と盛り上がりが共有できたり、ログとして残ったりするんですが、どうしてもWeb会議システムで登壇者の顔、スライドを観ながらチャットも、となると注意力が分散したり、スクリーン数の限界とかにも達するなーと思っています。</p>
-
-<p>目は2つしかない。</p>
-
-<h3>社内勉強会きっかけ</h3>
-
-<p>さて少し話題は変わりますが、僕は所属している会社でIoT勉強会というのを主催していて、これまでトイレ利用状況可視化サービス<a href="https://toiletevolution.space/#/about">Toilet Evolution</a>、常駐先などから社員証で出退勤できるデバイスとサービス<a href="https://github.com/its-succ/dakoku-web">dakoku</a>といったものを開発してきました。
-IoT勉強会はデバイスなんかを作ることもあったので、会社で購入した工具なんかを共有で使ったりしていたわけですが、同様にオンラインとなると難しくなります。
-そこで、何とかオンライン時代のサービスをIoTという文脈で作り出せないかな、と思い続けてきて今回の効果音共有サービスを開発するに至りました。
-IoTはモノのインターネットですが、オンラインイベントに参加する盛り上がりや人の感情をモノと見立てて、インターネットで共有するのがオンラインイベントでは有益なのでは？と思っています。</p>
-
-<h2>pong-swoosh</h2>
-
-<p>在宅になって、ずっとFMラジオを聴きながら仕事をしていたりするのですが、DJの人が拍手なんかをサウンドマシーンで出すシーンがありますよね。
-あれを <code>ポン出し</code> なんて言ったりします。
-今回作ったサービスは、ポン（効果音）を投げる（チャットの文字送信みたいなイメージ）というところから、pong swoosh という名前にしました。
-（日本酒が好きだからポンシュ、なんてことじゃないです。）</p>
-
-<h2>どんなサービスか</h2>
-
-<p>pong-swooshは、Web会議システムを利用しながら効果音を送受信して、盛り上がりを共有するシステムです。
-使い方は簡単なので、まずは使ってみましょう。</p>
-
-<h3>まずはチャンネルを作成する</h3>
-
-<p>チャンネルとは効果音を共有する部屋の単位です。pong-swooshは効果音チャットシステムのようなものなので、チャットでよく使うチャンネルという単語を利用しています。</p>
-
-<p><a href="https://its-succ.github.io/pong-swoosh/">トップページ</a>にアクセスして、チャンネル名を入力して作成します。</p>
-
-<p><img src="/images/blog/pong-swoosh-top.png" alt="" /></p>
-
-<p>そうすると、チャンネルのURLが表示されるので、これを参加者に共有します。
-1URLだけなので、イベントサイトだったり、Web会議のチャットだったりで共有できますね。</p>
-
-<p><img src="/images/blog/pong-swoosh-created.png" alt="" /></p>
-
-<p>コピーアイコンで簡単にクリップボードにもコピーできます。</p>
-
-<h3>参加者がアクセスする</h3>
-
-<p>共有されたURLにアクセスすると、エントランスページが表示されます。</p>
-
-<p><img src="/images/blog/pong-swoosh-entrance.png" alt="" /></p>
-
-<p>pong-swooshには</p>
-
-<ul>
-<li>コントローラー画面（効果音を送信する画面</li>
-<li>スピーカー画面（効果音を再生する画面</li>
-</ul>
-
-<p>というものがあります。
-なぜ画面を分けたか？というのには理由があります。</p>
-
-<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
-かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。</p>
-
-<p>そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
-スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
-もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
-
-<h3>コントローラー画面</h3>
-
-<p>このスクショは、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
-
-<p><img src="https://user-images.githubusercontent.com/132000/125040797-01ed9200-e0d3-11eb-813d-9def687f7c9a.png" width="300px" border="1"></p>
-
-<p>コントローラー画面には効果音を参加者に共有(送信)するボタンと、実際にどんな音が鳴るのか送信せずに確認する <code>視聴</code> リンクがあります。</p>
-
-<h3>スピーカー画面</h3>
-
-<p>このスクショも、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
-
-<p><img src="https://user-images.githubusercontent.com/132000/125053337-f48ad480-e0df-11eb-9c2e-77dbfb522b47.png" alt="" /></p>
-
-<p>ボリュームのスライダーがあるので、各自の環境に応じて音量を調整できます。
-音量は参加者の人数と同じ効果音を同時(1秒以内)にリアクションした人の数で変化します。
-計算式は以下のとおりです。</p>
-
-<blockquote>
-<p>Math.sin(Math.PI * 90 * (同時にリアクションした人の数 / チャンネル参加者数) /180) * 2;</p>
-</blockquote>
-
-<p>最初は直線的に音量が上がるようになっていたのですが、途中から円弧に沿って上がるように変更しています。
-同時にリアクションした人の数を集計するのに、RedisのINCR/DECRコマンドを使っています。
-チャンネル名と効果音IDをキーにINCRで人数を加算して、1秒後にDECRするといったことで音量が変化します。</p>
-
-<h3>技術的な話</h3>
-
-<p>前にも書きましたが、pong-swooshは効果音チャットシステムのようなものです。
-サーバーとの送受信には<a href="https://socket.io/">socket.io</a>が使われていて、効果音が送信されてくるとチャンネル参加者にブロードキャストされます。
-簡単なチャットプログラムを作ったことがあれば容易に想像できるシステムです。
-バックエンドはNode.jsで書かれていて、現在はHeroku（無料プラン）にデプロイされています。
-フロントエンドはSvelteを使っていて、GitHub Pagesにデプロイされています。
-バックエンドは手動デプロイですが、フロントエンドはGitHub Actionsでmainにマージされると自動的にデプロイされるようになっています。</p>
-
-<p>勉強会メンバーで開発していますが、ソースコードは公開されています。
-https://github.com/its-succ/pong-swoosh</p>
-
-<h3>さいごに</h3>
-
-<p>pong-swooshは、現在自分が担当しているプロジェクトのスクラムイベントと、会社の部門メンバーが月一で集まるミーティングで利用して改善を重ねてきました。
-スプリントレビューのデモや、ふりかえり、プレゼンテーションなどの場で効果音を使ってリアクションを共有しています。</p>
-
-<p>それまでは画面越しに拍手をしてみたり（音は出さず映像で）だったのですが、pong-swooshを使うことで賑やかになったといったフィードバックをもらったりしています。</p>
-
-<p>もちろんこういった共有の方法が合う場面、合わない場面などあるかもしれないのですが、もし興味があれば使ってみてください。
-そんなに重い処理もないので、Herokuの無料枠で使ってもらっていても問題ないかな？と思っています。</p>
-
-<p>もし使ってみてフィードバックがあれば、GitHubのissueなどに報告してもらえると嬉しいです。
-もちろんPRという形で参加いただくのもWelcomeです。</p>
-
-<p>いつかオフラインで昔のように勉強会やカンファレンスができるときが来ると良いのですが、
-もうしばらくオンラインが続きそうな感じでもあります。
-そんなとき pong-swoosh が少しでもお役に立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した" data-url="http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html&t=%E3%82%AA%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%81%AE%E7%9B%9B%E3%82%8A%E4%B8%8A%E3%81%8C%E3%82%8A%E3%82%92%E5%8A%B9%E6%9E%9C%E9%9F%B3%E3%81%A7%E5%85%B1%E6%9C%89%E3%81%99%E3%82%8B%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%20pong-swoosh%20%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/4/">« Prev</a>
@@ -1006,6 +983,7 @@ https://github.com/its-succ/pong-swoosh</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
@@ -1015,7 +993,6 @@ https://github.com/its-succ/pong-swoosh</p>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
-                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
               </ul>
             </div>
           </div>
@@ -1023,14 +1000,14 @@ https://github.com/its-succ/pong-swoosh</p>
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-                    </li>
-                    <li class="size2">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/jest.html" rel="tag">Jest</a>
@@ -1126,7 +1103,7 @@ https://github.com/its-succ/pong-swoosh</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (11)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

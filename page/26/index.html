@@ -277,7 +277,274 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a></h2>
+            <h2 class="title"><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a></h2>
+  <p class="postdate"><a href="/2015/03/14.html" title="Permanent link">Saturday, March 14, 2015 05:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/java.html" rel="tag">Java</a>
+      <a href="/tags/ci.html" rel="tag">CI</a>
+      <a href="/tags/bamboo.html" rel="tag">Bamboo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>現在作業支援している現場では Atlassian JIRA,Bitbucket,Bambooと、コミュニケーションツールとしてChatWorkを使っています。
+CIツールであるBambooは通知機能としてEmail,HipChat,IMに対応しているのですが、汎用的な通知機能は持っていないので、ChatWorkプラグインを自作してみました。</p>
+
+<p><a href="https://github.com/sizuhiko/bamboo-chatwork-notification">Bamboo ChatWork Plugin</a></p>
+
+<p>ここではBambooのプラグインを作る手順と、そのときにハマったポイントなどを解説します。</p>
+
+<h3>はじめに</h3>
+
+<p>BambooのプラグインをAtlassian SDKをインストールします。
+<a href="https://developer.atlassian.com/docs/getting-started/set-up-the-atlassian-plugin-sdk-and-build-a-project">Set up the Atlassian Plugin SDK and Build a Project</a>からプラットフォームにあったSDKをインストールします。</p>
+
+<p>SDKをインストールしたら<a href="https://developer.atlassian.com/docs/getting-started/set-up-the-atlassian-plugin-sdk-and-build-a-project/explore-the-installed-sdk-and-the-atlas-commands">Step 3: Try an atlas command</a>のとおり以下のコマンドを実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">mkdir </span>作業ディレクトリ名
+<span class="nb">cd </span>作業ディレクトリ名
+atlas-run-standalone <span class="nt">--product</span> bamboo
+</code></pre></div>
+<p><code>atlas-run-standalone</code>を実行すると、大量の<code>maven install</code>が動きます。
+かなり時間がかかるので、ネットワークが速い環境と、時間にゆとりがあるときに実行した方が良いです。</p>
+
+<h3>プラグインのスケルトンを生成する</h3>
+
+<p>以下のコマンドを実行してください。
+<code>sh
+atlas-create-bamboo-plugin
+</code>
+以下の表の入力を求められるので、適切に入力します。
+<table>
+<tr><th>Define value for groupId</th><td>作成するプラグインのパッケージパスを指定</td></tr>
+<tr><th>Define value for artifactId</th><td>作成するプラグインの名前を指定</td></tr>
+<tr><th>Define value for version</th><td>作成するプラグインのバージョンを指定</td></tr>
+<tr><th>Define value for package</th><td>groupIdとartifactIdを結合した値を指定</td></tr>
+</table>
+入力した内容はpom.xmlに反映されるだけなので、後でpom.xmlを編集すれば大丈夫です。</p>
+
+<p>プラグイン名のディレクトリに<code>pom.xml</code> と <code>src/main</code> フォルダに以下のファイルが自動生成されます。</p>
+
+<ul>
+<li>{Define value for package}のパス/MyPluginComponent.java</li>
+<li>{Define value for package}のパス/MyPluginComponentImpl.java</li>
+<li>/resources/atlassian-plugin.xml</li>
+</ul>
+
+<p>正直、自動生成されたコードは役に立たないので、削除してしまって良いでしょう。
+<code>atlassian-plugin.xml</code>はデフォルト値になっているので、適切に編集します（これは後で大丈夫です）。</p>
+
+<p>以下のコマンドを入力して、プラグイン環境を実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd </span>プラグインの名前
+atlas-run
+</code></pre></div>
+<p><code>atlas-run</code>を実行すると、大量の<code>maven install</code>が動きます。
+かなり時間がかかるので、ネットワークが速い環境と、時間にゆとりがあるときに実行した方が良いです（２度目）。</p>
+
+<h3>プラグインを実装する</h3>
+
+<p>Bambooの通知プラグインとして、最初からインストールされているものはHipChat通知プラグインです。
+とりあえずプラグインを作るための情報があまりに少ないので（Wikiを見て進めても肝心な箇所ほどJavaDocを見ろになってしまう。だがJavaDocを見てもわかるはずがない）、通知プラグインを作りたいと思った人はHitChatプラグインまたは、私の作ったChatWorkプラグインをコピー＆ペーストするのがお勧めです。</p>
+
+<p>私もまず<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin">HipChatプラグインのソースコード</a>を参考にしました。</p>
+
+<p>HipChatプラグインやChatWorkプラグインのコードを見るとわかりますが、実装するファイルはわずかです。
+<code>src/main</code>ディレクトリに以下のファイルを配備します。</p>
+
+<ul>
+<li>AbstractNotificationRecipientを継承した通知プラグインの設定画面コントローラ</li>
+<li>NotificationTransportを実装した通知プラグインの通知コントローラ</li>
+<li>resources/atlassian-plugin.xml（プラグインの設定ファイル）</li>
+<li>Freemaker形式のテンプレートファイル（設定入力画面、設定表示画面、通知メッセージなど）</li>
+</ul>
+
+<p>実装する量は多くなく、コツさえ掴めば通知プラグインを作るのは難しくありません。コツさえ掴めば&hellip;ですが。</p>
+
+<h4>通知プラグインの設定画面コントローラを作成する</h4>
+
+<p>ChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java">ChatworkNotificationRecipient.java</a>というクラスを作成しました。
+作成したというよりはHipChatプラグインの<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin/src/212f5e97f1f97a93535cec3cf074adc9ed5525be/src/main/java/com/atlassian/bamboo/hipchat/HipchatNotificationRecipient.java?at=master">HipchatNotificationRecipient.java</a>を丸々コピーして微修正した程度です。</p>
+
+<p>実際に差分を見るとわかりますが、クラス名など変更した程度です。</p>
+
+<p>このコントローラに対応する画面は<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/resources/atlassian-plugin.xml#L24-L28">atlassian-plugin.xml</a>で指定します。</p>
+<div class="highlight"><pre class="highlight xml"><code><span class="nt">&lt;notificationRecipient</span> <span class="na">key=</span><span class="s">"recipient.chatwork"</span> <span class="na">name=</span><span class="s">"Chatwork Recipient"</span> <span class="na">class=</span><span class="s">"jp.tokyo.open.bamboo.plugin.chatwork.ChatworkNotificationRecipient"</span> <span class="na">weight=</span><span class="s">"10"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;description&gt;</span>ChatWork<span class="nt">&lt;/description&gt;</span>
+    <span class="nt">&lt;resource</span> <span class="na">type=</span><span class="s">"freemarker"</span> <span class="na">name=</span><span class="s">"edit"</span> <span class="na">location=</span><span class="s">"templates/plugins/notifications/chatwork/editNotification.ftl"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;resource</span> <span class="na">type=</span><span class="s">"freemarker"</span> <span class="na">name=</span><span class="s">"view"</span> <span class="na">location=</span><span class="s">"templates/plugins/notifications/chatwork/viewNotification.ftl"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/notificationRecipient&gt;</span>
+</code></pre></div>
+<p><code>resource</code>の<code>name</code>が<code>edit</code>である場合、設定編集画面のファイルパスを指定します。
+<code>view</code>の場合は、導入済み通知プラグインが設定一覧に表示される画面部品のファイルパスを指定します。</p>
+
+<p>実際の画面を見てみましょう</p>
+<div class="highlight"><pre class="highlight plaintext"><code>[@ww.textfield labelKey="chatwork.api.token" name="chatWorkApiToken" value="${chatWorkApiToken!}" required='true'/]
+[@ww.textfield labelKey="chatwork.room" name="chatWorkRoom" value="${chatWorkRoom!}" required='true'/]
+[@ww.checkbox labelKey="chatwork.notify" name="chatWorkNotifyUsers" value="${chatWorkNotifyUsers!?string}"/]
+</code></pre></div>
+<p>これはFreemakerというテンプレートエンジンを使っているのですが、なんとなく想像できるレベルです。
+HTMLと似ています。labelKeyはリソースファイルに定義した内容をバインドするので国際化対応できます。</p>
+
+<h5>ここで<code>コツ１</code></h5>
+
+<p>Freemakerのテンプレート上の<code>name</code>属性と、コントローラクラスの<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java#L32-L34">設定入力画面の項目名</a>
+がマッピングされています。</p>
+
+<p>この画面はBambooで通知設定を入力するときに以下のようなHTMLに変換されます。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkApiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+<span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkRoom"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+<span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"chatWorkNotifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+</code></pre></div>
+<p>想像どおりですか？
+注意しなければならないのは「設定画面にはすべてのプラグインのHTMLが並ぶ」ということです。
+えっ？何を言っているかわからない？ではどのようになっているかというと以下のようなHTMLになるのです。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hipchat-plugin"</span> <span class="na">style=</span><span class="s">"display:none"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"chatwork-plugin"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkApiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkRoom"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"chatWorkNotifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>このようなフォームが生成されていて、選択した通知の部分だけが見えるようになるのです。
+カンの良い人は気付いたかもしれません。
+私は最初HipChatプラグインをコピペして、項目名を変更していなかったので、以下のようなHTMLが生成されていて、うまくフォームから値を取得できませんでした。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hipchat-plugin"</span> <span class="na">style=</span><span class="s">"display:none"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"chatwork-plugin"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>同一フォームに同じname属性を持つHTMLが生成されて、submitされるのでコントローラのpopulateメソッドのMapに正しく値が入らなくなっていました。
+なのでなるべく重複しない名前を指定しておくことが重要です。
+ところが標準の通知プラグインであるHipChatが一等地の名前を持っているのです。Bambooとしてどのような名前規則を推奨しているのかドキュメントには記載していないので、パッケージ名を付加するなどの工夫が必要です。</p>
+
+<p>なお保存すると、保存完了メッセージが表示されるのですが、このメッセージのカスタマイズ方法はわかっていません。
+そもそもカスタマイズできるのか調査中ですが、Bambooのコードはオープンソースではないので&hellip;(ry</p>
+
+<h4>通知プラグインの通知コントローラを作成してChatWorkに通知する</h4>
+
+<p>ChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationTransport.java">ChatworkNotificationTransport.java</a>というクラスを作成しました。
+作成したというよりはHipChatプラグインの<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin/src/212f5e97f1f97a93535cec3cf074adc9ed5525be/src/main/java/com/atlassian/bamboo/hipchat/HipchatNotificationTransport.java?at=master">HipchatNotificationTransport.java</a>を丸々コピーして修正しました。</p>
+
+<p>まず通知には通知メッセージが必要ですよね。
+通知メッセージをFreemakerのテンプレートで記述したいのですが、ここで圧倒的なドキュメント不足に遭遇します。
+ほぼ自力での解決はムリなので、Bambooの標準テンプレートをコピペして作業した方が良いでしょう。</p>
+
+<p>HipChatプラグインのソースコードを見ると、特に通知クラスを作ったり、通知のテンプレートを指定することはしていないようです。
+Bambooの通知機能はHipChatに連携することに依存していて、HipChatはBamboo標準のテンプレートを使っています。
+<a href="https://developer.atlassian.com/display/BAMBOODEV/Notification+Plugin+Modules">通知プラグインを作るためのドキュメント</a>を確認します。
+<a href="https://developer.atlassian.com/display/BAMBOODEV/Building+a+Notification+Plugin">Building a Notification Plugin</a>を読むと、カスタムリスナーを登録する手順が書いてありますが、独自の通知タイプを作らない限りこのとおりやらなくても大丈夫です。
+実際、私もカスタムリスナーを作成してドキュメント通りやってみたのですが、うまく動作しませんでした。atlassian-plugin.xmlにリスナー定義を追加してやってみたりしたのですが&hellip;.</p>
+
+<h5>ここで<code>コツ２</code></h5>
+
+<p>そこでChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java#L136">ChatworkNotificationRecipientからChatworkNotificationTransportのインスタンスを作成するとき</a>に、<code>TemplateRenderer</code>というFreemakerのテンプレートを操作できるインスタンスを渡すようにしました。ChatworkNotificationTransportで独自に取得することはできないようです。
+ChatworkNotificationRecipientではDIによって値がセットされるようになっているようです（ドキュメントなし）。</p>
+
+<p><code>ChatworkNotificationTransport::sendNotification()</code>メソッドが送信指示として呼び出されるので、TemplateRendererを使って独自テンプレートを呼び出して文字列に変換します。
+文字列変換したメッセージをChatWork APIを使って指定したルームに送信するだけです。</p>
+
+<p>以下の部分がChatWork用に実装したコードです。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>    static String getChatworkApiURL(String room) {
+        return CHATWORK_API_URL.replaceAll("\\{room_id\\}", room);
+    }
+
+
+    private String getChatworkContent() {
+        String templateLocation = "templates/plugins/notifications/chatwork/BuildCompleted.ftl";
+        return templateRenderer.render(templateLocation, populateContext());
+    }
+
+    private Map&lt;String, Object&gt; populateContext()
+    {
+        Map&lt;String, Object&gt; context = Maps.newHashMap();
+        context.put("build", plan);
+        context.put("buildSummary", resultsSummary);
+        return context;
+    }
+</code></pre></div>
+<p><code>getChatworkContent()</code>を使ってFreemakerテンプレートからメッセージを取得します。
+実際のテンプレートファイルは以下のよな内容です。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>[#-- @ftlvariable name="build" type="com.atlassian.bamboo.build.Buildable" --]
+[#-- @ftlvariable name="buildSummary" type="com.atlassian.bamboo.resultsummary.BuildResultsSummary" --]
+[#include "/notification-templates/notificationCommons.ftl"]
+[#include "/notification-templates/notificationCommonsText.ftl" ]
+[#assign authors = buildSummary.uniqueAuthors/]
+
+[#if buildSummary.successful][#lt]
+[info][title][@buildNotificationTitleText build buildSummary/] was SUCCESSFUL[/title]
+[@showRestartCount buildSummary/]
+[#if buildSummary.testResultsSummary.totalTestCaseCount &gt;0] [@showTestSummary buildSummary.testResultsSummary/][/#if].
+[#if authors?has_content] [@showAuthorSummary authors/][/#if][#lt]
+${baseUrl}/browse/${buildSummary.planResultKey}/
+[/info]
+[#else][#lt]
+[info][title][@buildNotificationTitleText build buildSummary/] has FAILED[/title]
+[@showRestartCount buildSummary/]
+[#if buildSummary.testResultsSummary.totalTestCaseCount &gt;0] [@showTestSummary buildSummary.testResultsSummary/][/#if].
+[#if authors?has_content] [@showAuthorSummary authors/][/#if][#lt]
+${baseUrl}/browse/${buildSummary.planResultKey}/
+[/info]
+[/#if][#lt]
+</code></pre></div>
+<p>先ほども書きましたが、これをJavaDocの情報を元に生成するのはほぼムリ、というか完全にムリです。
+最初の手順でインストールしたSDKの中に実際のBambooがインストールされるので、Bambooのwarファイルが展開された<code>WEB-INF/classes/notification-templates</code>のBuildCompleted.ftlファイルの内容をコピペして、ChatWorkメッセージ記法に合わせて修正しています。</p>
+
+<p>後はSDKで実行したBambooにプラグインをインストールして、デバッグしながら確認するのが近道です。</p>
+
+<h4>プラグインをビルドする</h4>
+
+<p>プラグインは管理画面からjarファイルとしてアップロードします。
+そのためコンソールから以下のコマンドを実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd </span>プラグインの名前
+atlas-mvn clean package
+</code></pre></div>
+<p>atlas-mvnはmvnのラッパーのようなのですが、mvnを直接実行するのでなく、こちらのコマンドを使った方が良いみたいです。
+あとは通常のmavenのビルドと一緒ですが、初回はまた大量のmvn installが動くのでネットワークと時間には余裕を持って挑みましょう。</p>
+
+<p>ビルドが終わるとtargetディレクトリにjarファイルが生成されます。</p>
+
+<h3>さいごに</h3>
+
+<p>ChatWork通知プラグインとHipChat通知プラグインの差分はほんとうにわずかで、それほど難しいものではありません。
+Bambooの通知プラグインモジュールで得た経験は以下のようなところです。</p>
+
+<ul>
+<li>ドキュメント読めばなんとなくわかるけど、「詳しくはJavaDocへ」でつまづく（心が折れる）</li>
+<li>入力画面など生成されたものはブラウザのデバッガを使って、名前空間がバッティングしていないか確認が必要</li>
+<li>EclipseのJDなどを使って、Bamboo自体のソースコードをリバースして調べながら実装しないとムリ</li>
+</ul>
+
+<p>プロジェクト都合じゃないとなかなかBambooとか使ったりする機会がないのですが、もしBamboo使うことになって通知プラグインを作りたいと思った方は参考にしていただければと思います。</p>
+
+<p>長くなったので、このあたりで終わりにしますが、他にもいろいろわかったことはあるので、また気が向いたら書こうかなと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="BambooのChatWork通知プラグインを作成しました" data-url="http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html&t=Bamboo%E3%81%AEChatWork%E9%80%9A%E7%9F%A5%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a></h2>
   <p class="postdate"><a href="/2015/03/14.html" title="Permanent link">Saturday, March 14, 2015 03:44:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -931,162 +1198,6 @@ classってPHPの文法です、キリッ！とか言われたことはないで
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a></h2>
-  <p class="postdate"><a href="/2014/09/23.html" title="Permanent link">Tuesday, September 23, 2014 02:19:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="http://coedo-cakephp.doorkeeper.jp/events/15008">9/19に茅場町Co-Edoで行われたCakeFest2014報告会</a>でも話した内容をベースに記事にしました。</p>
-
-<p>すでに同日に発表された<a href="http://www.engineyard.co.jp/blog/2014/cakephp3-future-preview/">@yandoさんの記事「マドリードで見たCakePHP3の明るい未来」</a>が秀逸なので、CakePHP3の動向については<a href="http://www.engineyard.co.jp/blog/2014/cakephp3-future-preview/">その記事</a>をご覧ください。</p>
-
-<p>では私は何を書くかというと、報告会でも話したCakeFest2014の全体感と、来年10周年を迎えるCakePHPを盛り上げる為にみんなでCakeFestに行こう！という気分になってもらえると良いな、というまとめになっています（ちょっとはCakePHP3についても書くよ）。</p>
-
-<h3>CakeFestの歴史</h3>
-
-<p><img src="/images/blog/cakefest_2014_1.png" alt="" /></p>
-
-<p>CakeFestは2008年に始まって、今回で8回目になります。
-<a href="http://lanyrd.com/search/?q=CakeFest">参考URL:lanyrd.com</a></p>
-
-<ul>
-<li>2008/02 フロリダ・オーランド</li>
-<li>2008/12 ブエノスアイレス（参考URLの年は間違っています）</li>
-<li>2009/07 ベルリン</li>
-<li>2010/09 シカゴ</li>
-<li>2011/09 マンチェスター</li>
-<li>2012/08 マンチェスター</li>
-<li>2013/08 サンフランシスコ</li>
-<li>2014/08 マドリッド</li>
-</ul>
-
-<p>初年度を除いて、およそ1年に1回世界中からコミュニティのメンバーが集まる<code>お祭り</code>です。</p>
-
-<p>2回目のブエノスアイレスを除いてアメリカとヨーロッパで開催されており、私が始めて参加した4回目のシカゴからは8月終わりor9月初めに開催されるようになりました。
-コアデベロッパーは家族や彼女と来ていたりするので、夏休みも兼ねているのではないか、という<code>緩い</code>イベントだった..だったのです。</p>
-
-<p>緩い理由は例えば<a href="http://lanyrd.com/2012/cakefest/">2012年(マンチェスター)のスケジュール</a>を見てもらえるとわかりますが、9時に始まって16時ぐらいには終了です。このときは2トラックだったこともあり、セッション数としては少なくはないのですが、泊まりのカンファレンスイベントとしては割とあっさり終了する感じです。このあとはLTやりたい人がいればやるみたいな、日本のキッチリしたイベントの仕切りやテキパキ感というよりは参加者がお茶やビールを片手に交流する時間がたっぷり取られているという感じだったのです。</p>
-
-<h3>2014年は違っていた</h3>
-
-<p>私もCFP（Call For Paper）にセッションの応募をしたのですが、落選してしまいました。
-で、<a href="http://lanyrd.com/2014/cakefest/">確定したスケジュール</a>を見て、ビックリしたのです。
-朝は9時からと例年通りですが、終わる時間が！！なんと21時ですよ。つまり12時間。これはちょっとしたPHP Matsuri状態ではないですか。</p>
-
-<p>今年はシングルトラックでしたが、あんまりBreakタイムがなかったので、各自の判断でカンファレンスルームの外で話したりしていた状況ではありました。</p>
-
-<p>なお私が知る限りのCakeFestの中では、最もイベントとしてのテキパキ感とかはあったように思います。これもコミュニティマネージャであるJames Watts氏の活躍があってこその事。CakeFestの仕切りも3回目という事でだいぶ慣れてきたのかなーとも思います。</p>
-
-<h3>CakePHPの中の人たち</h3>
-
-<p>そういえば、あまりCakePHPの中の人たちって使っていてもCakeFestに参加しないと知らないのではないかと思い、コアチームのメンバーの顔と名前が一致するように、2枚の写真で紹介します。</p>
-
-<p><img src="/images/blog/cakefest_2014_2.png" alt="" />
-<a href="https://www.flickr.com/photos/afilina/sets/72157646706228796/">photo by Anna Fillina.</a></p>
-
-<p>左からJames Watts、Jose Gonzalez(@savant)、Larry Masters(@phpnut)（敬称略）</p>
-
-<p>こちらの写真は私がスペインに到着した夜の出来事なのですが、まぁお酒もだいぶ入っているところでの余興みたいな感じだったのでしょう。私はフライトの疲れでビールを1杯飲んで部屋に戻ってしまったので見ていなかったのですが、こんな感じでホテルのバースペースで盛り上がったり、そのあと朝4時まで繁華街へ飲みに行ったりしていたみたいです。
-毎年朝方まで飲んでいる参加者がいるのもCakeFestの一部です（その影響か午前中はホテルの部屋から出て来ない人も多数ですがw）。</p>
-
-<p>で、写真の後どうなったか、というと<a href="https://www.youtube.com/watch?v=M9RsahWsO2s&amp;feature=youtu.be">コチラの動画</a>から確認できます。</p>
-
-<p>ここ数年はコアチームへのQ&amp;Aセッションがあります。こちらでもCakePHPの中の人たちを確認することができます。</p>
-
-<p><img src="/images/blog/cakefest_2014_3.png" alt="" />
-<a href="https://www.flickr.com/photos/afilina/sets/72157646706228796/">photo by Anna Fillina.</a></p>
-
-<p>左からMarc Ypes(@ceeram)、Mark Story、Mark Scherer(@dereuromark)、Larry Masters(@phpnut)、José L. Rodríguez(@jose<em>zap)、Jose Gonzalez(@savant)、Renan Gonçalves(@renan</em>saddam)、James Watts（敬称略）</p>
-
-<h3>CakePHP1.3の終了と2系の今後</h3>
-
-<p>Q&amp;Aセッションはカンファレンス1日目のお昼直後に実施されたのですが、午前中にMark Story氏からCakePHP3の話と、1.3のサポート終了の話があったので、その2つについて質問が集中していました。1.3のサポート終了に関しては、何とちょうど先週顧客にCakePHP1.3を使った案件の提案をしたばかりなのに、どうしたら良い？何とかならないの？！というビックリするようなQを聞きました。先日も1.3のアップデートがあったり、1.3自体非常に長い間使われているのだなぁと思いました。その後、質問をした人になんでこれから1.3使うの？と聞いたら、資産があるから、という事でした。
-こちらのAは、ベストな方法はマイグレーションすることだけど、3ではなくCakePHP2にするのが良いという話と、1.3の件は通常のCakePHPとしてはムリだけど、CakeDCとして考えられなくもない。まぁビジネスだね、という回答でした。
-とはいえ、たぶんCakeDCも1.3の面倒を見続けるのは現実解ではないので、マイグレーションのサポートをする事で解決をするのではないかなーと思われます。</p>
-
-<p>日本でもまだCakePHP1.xを使っているサイトなど残っていると思いますが、3へのジャンプは難しいと思うので、まず2系にしておくことが重要になるでしょう。
-2系についてはまだ3年はサポートと今回明言されています。じゃぁまた3年後には3にしないといけないの？！という話はあるかもしれませんが、1から2系へはアップグレードシェルがあるのと、3のアップグレードシェルができたとして、2系からのアップグレードのみ対応であると推測されるので、まずは2系なのかなと思います。これは上記のコアチームのQ&amp;Aでの回答からも妥当な判断と思います。</p>
-
-<h3>CakePHP3で気になっていたこと</h3>
-
-<p><a href="http://coedo-cakephp.doorkeeper.jp/events">CakePHP3のもくもく会</a>で、何度もCakePHP3を試しているのですが、昨年ビヘイビアって無くなるって言ってなかったか？と思い、ORM担当の大きいJoseこと@jose_zapに確認しました。答えとしては、いろいろ考えたけど、コールバックの関係もあって互換性を考え残すことにした。もちろんTraitにしてEventマネージャを使うアプローチは素晴らしいし、できればそちらを使ってほしいけど、コアとしてはビヘイビアも残すよ、ということでした。</p>
-
-<h3>恒例のリアルケーキ</h3>
-
-<p><img src="/images/blog/cakefest_2014_4.png" alt="" /></p>
-
-<p>今となっては恒例となったリアルケーキ。実はCakeFestで始めてケーキが登場したのは、2010年のシカゴだったと記憶しています。
-キッカケは日本で開催されたCakePHPカンファレンス東京で、当時のCakePHP開発マネージャだった@gwoo氏を招いてCakePHP型のケーキを出したのがとてもウケが良く、それが本家でも採用されたと。CakeFestには日本コミュニティのDNAが含まれています！</p>
-
-<p>この直後、コアチームとして新しく入った@dereuromarkがファーストバイトならぬカップケーキ投げの手荒い歓迎を受けたり、サプライズイベントがあったり、楽しくケーキを食べながら交流を深めて解散となりました。</p>
-
-<h3>CakeFest2014で感じたこと</h3>
-
-<p>CakeFestに参加すると、良く知った常連さんと、始めての人がいて、なるべく始めて会った人と話すようにいつも心がけています。</p>
-
-<p>各国でのCakePHPの普及状況や、コミュニティの活動などの話を聞くのですが、ドイツから参加してきていた人の話によると、CakePHP(PHP)のイベントをやりたいけど、なかなか人が集まらなくて苦労している。日本ではどうなの？という話から、日本の状況を説明すると、とても日本のコミュニティが羨ましいという感想をもらいました。これはドイツ以外の参加者からも同様の反応をもらったのですが、まぁ日本というか東京など都市部には人が密集していてやりやすい状況なのかな、とも思います。そういった環境面やコミュニティ活動を積極的にやってくれる人がいるので都市部のエンジニアは特に恵まれた状況だと思います。もっと勉強会やイベントに出て交流しましょう！</p>
-
-<p>今年は(も)シングルトラックだったのでほぼ全てのセッションを見る事ができたのですが、CakePHPと関連するセッションは、コアチームに集中していて、他のセッションはPHP全般だったり、JavaScriptだったり、HTML(CSS)だったりとCakePHPに関する話題は例年以上に少なかったような気がします。
-これはCakePHP2のライフサイクルがだいぶ長くなっていて新しい話題が少なめなのと、まだ3は早すぎるという状況もあったのではないかと思います。
-来年はコアチーム以外からも3の話題がもっと出てくるのではないかと思います。</p>
-
-<p><a href="https://joind.in/event/view/1767">CakeFest2014のjoind.in</a>にスライドのリンクがあるので、ぜひCakePHP3のセッションについては見て欲しいのと、公式のPodCastが配信されているので、そちらも聞くとCakePHP3について理解が深まると思います。</p>
-
-<p>CakePHPに関する話題以外で、ぜひスライドをチェックして欲しいのは</p>
-
-<ul>
-<li>Writing code that lasts presented by Rafael Dohms</li>
-<li>Why You Can&rsquo;t Test presented by Chris Hartjes</li>
-</ul>
-
-<p>どちらもPHP界では有名人で、同じ内容を各国のカンファレンスで講演しているので、どこかで見ているかもしれませんが、一度はチェックしてみてください。</p>
-
-<h3>LTもやったし、BDDプラグインの人として声をかけられたり、交流できた</h3>
-
-<p>また初日のLTで<a href="http://www.scribd.com/fullscreen/237573895?access_key=key-PU2ZrgYtFK3zBQXqkE2l&amp;allow_share=false&amp;escape=false&amp;show_recommendations=false&amp;view_mode=slideshow"><code>Data Generator for Testing CakePHP Application</code></a>（いつものテストデータの作り方の英語バージョンです）をやりまして、反響もたくさんもらいました。
-CakeFestのスピーカーの中には、特にCakeと関係ないけどPHPのセッションとして応募してくる人もいるので、他のフレームワークには対応しないの？とか、Fakerと連動するにはどうするの？などなど。
-CakeFestではLTは当日募集で、手を挙げればもれなく喋れるので、海外カンファレンスでのプレゼン登竜門としては最適と思います。</p>
-
-<p>それと自分の自己紹介スライドのアイコンから、BDDプラグインの人でしょ？と声をかけられたりもして、Breakタイム少なかった割によく話したなーという印象でした。</p>
-
-<p>また例年以上？に日本自体に関心がある人がいて、日本語喋れるノルウェーからの参加者（漫画大好き）だったり、日本食について聞いてくる地元スペインの人だったり、3次会でカラオケ行こうと誘われたり、フクシマの話をしたり、PHP以外の話でも交流ができました。</p>
-
-<p>「海外のカンファレンスとか行ったことないし、大変そう」という方がほとんだと思います。私もお世辞にも英語得意でない（割と適当）けど、何とか交流できています。CakeFestであれば、ここ数年@yandoさんや私が参加していますし、行きたいと宣言すれば一緒に行く人が見つかるかもしれません。</p>
-
-<p>もし会社勤めのエンジニアだと休みが取れない、経費出ない、など難しい事情があるかもしれないのですが、ぜひ上司と交渉して来れるようになると良いなと思っています。参加して得られることは文章では書けないぐらい大きいです。</p>
-
-<h3>コミュニティマネージャからのメッセージ</h3>
-
-<p>最後にコミュニティマネージャであるJames Watts氏から、キーノートに関連して日本のコミュニティへメッセージをいただきましたので、動画をシェアします。
-では来年のCakeFestで会いましょう！</p>
-
-<video id="video" class="vd" controls  poster="https://dl.dropboxusercontent.com/u/29781137/cakefest_2014/cakefest_2014.jpg" width="600">
-<source src="https://dl.dropboxusercontent.com/u/29781137/cakefest_2014/cakefest_2014.m4v">
-</video>
-
-<p>最初のトラブルは、テラスの石畳と砂利の間に足を取られて転びそうになったのです&hellip; </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2014に参加しました" data-url="http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html&t=CakeFest2014%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/25/">« Prev</a>
@@ -1114,6 +1225,7 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
@@ -1123,7 +1235,6 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
-                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
               </ul>
             </div>
           </div>
@@ -1131,14 +1242,14 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-                    </li>
-                    <li class="size2">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/jest.html" rel="tag">Jest</a>
@@ -1234,7 +1345,7 @@ CakeFestではLTは当日募集で、手を挙げればもれなく喋れるの�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (11)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

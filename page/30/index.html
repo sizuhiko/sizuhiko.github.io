@@ -277,7 +277,138 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h2>
+            <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
+  <p class="postdate"><a href="/2013/10/12.html" title="Permanent link">Saturday, October 12, 2013 08:10:45 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/fablicator.html" rel="tag">fablicator</a>
+      <a href="/tags/fixture.html" rel="tag">fixture</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;Fabricate は Ruby の Fabricator に影響を受けたもので、データを簡単にすばやく生成する CakePHP2 用のプラグインです。  </p>
+
+<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
+
+<p>動作確認しているバージョンはCakePHP2.3.10, CakePHP2.4.1ですが、他のバージョンでもCakePHP2系なら動くと思います。  </p>
+
+<h3>インストール方法</h3>
+
+<p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>    "extra": {
+        "installer-paths": {
+            "Plugin/Fabricate": ["sizuhiko/fabricate"]
+        }
+    },
+    "require": {
+        "composer/installers": "*",
+        "sizuhiko/fabricate": "*"
+    }
+</code></pre></div>
+<p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
+
+<p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>CakePlugin::load('Fabricate');
+</code></pre></div>
+<h3>概要</h3>
+
+<p>Fabricateプラグインには3つのメソッドがあります。  </p>
+
+<ul>
+<li>Fabricate::attributes<em>for(:model</em>name, :number<em>of</em>generation, :callback) : CakePHPの属性配列をデータ付きで返します（複数件生成可能）</li>
+<li>Fabricate::build(:model_name, :callback) : CakePHPのモデルインスタンスを返します（1件のみ生成可能）</li>
+<li>Fabricate::create(:model<em>name, :number</em>of_generation, :callback) : 指定された件数分データベースに生成する</li>
+</ul>
+
+<h3>用途</h3>
+
+<p>このプラグインは以下のような用途にとても向いています。  </p>
+
+<ul>
+<li>ページングのテストをするのに大量にデータを生成したい</li>
+<li>fixture だと各テストケースで同じデータが生成されてしまうけど、各テストケース毎に違うデータを生成したい。かつテスト対象のカラム以外は適当な値が自動的に入って欲しい</li>
+<li>Bddプラグイン（CakePHPのBehatインテグレーションプラグイン）のステップで「Postモデルに100件のデータが登録されていること」みたいなのを書きたいのに、簡単に記述できないなぁと思ったとき</li>
+</ul>
+
+<h3>使い方＆サンプル</h3>
+
+<h4>attributes_for</h4>
+<div class="highlight"><pre class="highlight plaintext"><code>$results = Fabricate::attributes_for('Post', 10, function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+
+// $results is followings :
+array (
+  0 =&gt; 
+  array (
+    'id' =&gt; 1,
+    'title' =&gt; 'Lorem ipsum dolor sit amet',
+    'body' =&gt; 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+    'created' =&gt; '2013-10-09 12:40:28',
+    'updated' =&gt; '2013-10-09 12:40:28',
+  ),
+  1 =&gt; 
+  array (
+  ....
+</code></pre></div>
+<p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br>
+第二引数に生成するレコード件数を指定します。<br>
+ただ、全部自動的だと困るという場合があるので、3つ目の引数にコールバック関数を指定可能になっています。このコールバック関数は、10件のデータを生成する場合、都度計10回呼び出されます。<br>
+戻り値として、属性名をキーに値を持つ連想配列を指定すると、都度array_mergeが実行されます（recursiveではありません）。<br>
+データの自動生成処理は、CakePHPのコアにあった FixtureTask の _generateRecords() というメソッドを拝借してきて、そのまま利用しています。<br>
+CakePHPでfixtureを生成したときrecordsに入っている内容と同じ物になります。  </p>
+
+<p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
+
+<p>また、第二引数、第三引数は省略可能ですので、  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 1件だけ生成
+Fabricate::attributes_for('Post');
+// 1件だけコールバックを指定して生成
+Fabricate::attributes_for('Post', function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+// 10件生成
+Fabricate::attributes_for('Post', 10);
+</code></pre></div>
+<p>というバリエーションでも利用可能です。  </p>
+
+<h4>build</h4>
+
+<p>とりあえず本家のFabricatorに近づけたたくて作ったメソッドですが、CakePHPではモデルのインスタンスを複数同時に持てないので、正直使い勝手としては微妙です（作者が言うなという話ですが）。  </p>
+
+<h4>create</h4>
+
+<p>最も簡単にデータをデータベースに保存するなら、このメソッドで十分です。<br>
+attributes<em>forで作ったレコードをすべてデータベースに保存します。<br>
+引数の使い方はattributes</em>forと同一になっています。  </p>
+
+<h3>きっかけと今後</h3>
+
+<p>ページングのテストを書こうとして、とにかく面倒になってきて「<strong>何でCakePHPにはFabricatorがないんだー</strong>」というノリで、カッとなって作った系ですので、機能的には最低限になっています。<br>
+かつたぶん最新のFabricatorのクローンとも言い難い状況です。  </p>
+
+<p>またカッとなったら、最新のFabricatorの機能に近づけようかな〜、どなかた使っていただける方がいればご要望、機能追加は GitHubのIssue、Pull Requestでお願いします。  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータ Fabricate を作りました" data-url="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BF%20Fabricate%20%E3%82%92%E4%BD%9C%E3%82%8A%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h2>
   <p class="postdate"><a href="/2013/09/13.html" title="Permanent link">Friday, September 13, 2013 02:09:19 PM</a></p>
   <p class="tags">
       <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
@@ -772,86 +903,6 @@ When the sample application program became runnable a little more well, I want t
     </div>
 
   </div>
-  <h2 class="title"><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a></h2>
-  <p class="postdate"><a href="/2012/09/22.html" title="Permanent link">Saturday, September 22, 2012 04:09:09 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://www.amazon.co.jp/CakePHP2-%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80-WEB-PRESS-plus/dp/4774153249/ref=sr_1_1?ie=UTF8&amp;qid=1348298990&amp;sr=8-1"><img src="http://ec2.images-amazon.com/images/I/519jJILRR1L._SL500_AA300_.jpg" alt="" /></a></p>
-
-<p>表題のとおりCakePHP2.x系をターゲットにした本がいよいよ9/29に発売となります（池袋ジュンク堂では本日より10冊の先行発売があった模様です）。  </p>
-
-<p>本書のほとんどを企画の安藤さんが書いたのですが、わたしも共著のメンバーとして10章 プラグイン、11章 コンソール、12章 ユニットテスト を担当しました。</p>
-
-<h2>本書のオススメ・ポイント</h2>
-
-<p>執筆の一員という立場で手前味噌なのですが、まだポチっとしていない方の背中を押すという意味で、５つ紹介します。</p>
-
-<ul>
-<li>豪華な執筆陣</li>
-<li>最新のバージョン2.2への追従</li>
-<li>よりチェックされた本文とサンプルコード</li>
-<li>便利なチートシート付き</li>
-<li>隠れポイント</li>
-</ul>
-
-<h3>豪華な執筆陣</h3>
-
-<p>本の帯にも書かれている「コミュニティ主要メンバーが最前線のノウハウを凝縮」という部分に現れているとおり、著者それぞれはCakePHPの勉強会や、翻訳、本体へのパッチ送付、Blogなどで勢力的に活動しており、得意な分野について担当するという意味では共著のメリットを最大限に活かした本と言えます。  </p>
-
-<p>そういう意味で各章には、これまでのCakePHP本にはなかったTipsが含まれていると思います。「実践入門」というタイトルですが、現在CakePHPを使っている方にも何か新しい気付きがあると良いなと思っています。</p>
-
-<h3>最新のバージョン2.2への追従</h3>
-
-<p>本書の始まりはCakePHP2.0の頃であり、「もしかしたら発売する頃には2.1になっているかもね」と言われていたものです。それが気付くと2.1はリリースになり、まだ2.2はリリースとは遠いところにある存在でした。2.1に対応した内容がほぼFixしたころに、2.2が驚く程の速さでリリース（ほんとの直前には2.2.1）となりさらに追従というようなサイクルでした。もちろん本書を手に取っていただけるとわかるのですが、数カ所「このバージョンでは・・・」という記述が見られるようにバージョン違いによる説明が含まれているのも特徴です。</p>
-
-<h3>よりチェックされた本文とサンプルコード</h3>
-
-<p>今まで何度か執筆に参加したのですが、今回は期間も内容もかなりタフなものだったと思います。それはバージョン追従の問題だったり、なるべく多くの内容を詰め込みたいがページ数には上限があり内容を精査したりといったことです。そんな中でも技評の担当者の方が、本の全体を通しての統一感といったところに細かくチェックしてくれていて、共著にありがちなバラバラ感が少なく通して読んだときの違和感もないと思います。また最新バージョンでサンプルコードの動作確認を都度してくれた（これは今までにない経験）ので、サンプルコードを実際に動かして試してみたいという人にも、ここ動かないなぁという迷いが少ないと思います（もちろん著者もチェックしているつもりなのですが、内容の改変などにコード部分が追いついていないということもまま・・・汗）。</p>
-
-<h3>便利なチートシート</h3>
-
-<p>巻末の30ページに渡り記述されているチートシートは本当に便利で、これは現在CakePHPで開発している人にもとても役立つものになっていると思います。これだけでも本書を手元に置く価値があるかも？！</p>
-
-<h3>隠れポイント</h3>
-
-<p><img src="/images/blog/0DSC_0030.JPG" alt="" /> 
-最後にお気に入りポイントを1つ。  </p>
-
-<p>本のカバーを外すと裏表紙にCakePHPの公式マークがプリントされています。ぜひチェックしてみてください。</p>
-
-<h2>さいごに</h2>
-
-<p>さて執筆陣も6名となり、本のサインをコンプリートしたいと思う人にはかなり難しい状況と思います。ところが、それが叶う可能性が11/3,11/4にありますよ（という宣伝）。  </p>
-
-<p>11/3,11/4にPHP Matsuri 2012が福岡にて開催されます。  </p>
-
-<p><a href="http://www.phpmatsuri.net/2012/">http://www.phpmatsuri.net/2012/</a>  </p>
-
-<p>このイベントの青年団がページの下にアイコン表示されていますが、なんと著者6名全員が青年団！！  </p>
-
-<p>つまりMatsuriに参加するとサインがコンプリートすると思いますので、今すぐサイトからチケットを申し込みましょう（数に限りがあります）。個人スポンサーもお待ちしています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2 実践入門 が出ます" data-url="http://blog.open.tokyo.jp/2012/09/22/cakephp2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/09/22/cakephp2.html&t=CakePHP2%20%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80%20%E3%81%8C%E5%87%BA%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/09/22/cakephp2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/29/">« Prev</a>
@@ -879,6 +930,7 @@ When the sample application program became runnable a little more well, I want t
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
@@ -888,7 +940,6 @@ When the sample application program became runnable a little more well, I want t
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
-                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
               </ul>
             </div>
           </div>
@@ -896,14 +947,14 @@ When the sample application program became runnable a little more well, I want t
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-                    </li>
-                    <li class="size2">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/jest.html" rel="tag">Jest</a>
@@ -999,7 +1050,7 @@ When the sample application program became runnable a little more well, I want t
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (11)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

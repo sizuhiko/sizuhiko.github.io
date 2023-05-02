@@ -277,7 +277,152 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
+            <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
+  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 04:12:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/composer.html" rel="tag">composer</a>
+      <a href="/tags/phpunit.html" rel="tag">phpunit</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>現在以下のような環境を設置して開発をしています。</p>
+
+<ul>
+<li>ホストOS: Windows7 </li>
+<li>仮想環境: Vagrant + VirtualBox</li>
+<li>ゲストOS: CentOS 6.4</li>
+<li>開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  &hellip;</li>
+</ul>
+
+<h3>事件その1: Bddプラグインがインストールできなくなった</h3>
+
+<p>ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど&hellip;」
+という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。</p>
+
+<p>それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
+で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
+現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに</p>
+<div class="highlight"><pre class="highlight plaintext"><code>"pear-phpunit/Object_Freezer": "*"
+</code></pre></div>
+<p>のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。</p>
+
+<h3>事件その2: PHPUnitがインストールできない!</h3>
+
+<p>で、Vagrant環境で更新してみたら&hellip;.</p>
+<div class="highlight"><pre class="highlight plaintext"><code>composer update sizuhiko/Bdd
+</code></pre></div>
+<p>失敗&hellip;.</p>
+
+<p>しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
+ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。</p>
+
+<p>でcomposer.jsonにはPHPUnitの記述が</p>
+<div class="highlight"><pre class="highlight plaintext"><code>"phpunit/phpunit": "3.7.*"
+</code></pre></div>
+<p>のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 <code>composer install</code> を実行すると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>.....
+  - Installing phpunit/php-token-stream (dev-master 292f4d5)
+    Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
+
+  - Installing phpunit/php-file-iterator (dev-master acd6903)
+    Cloning acd690379117b042d1c8af1fafd61bde001bf6bb
+
+  - Installing phpunit/php-code-coverage (1.2.x-dev 3a60a66)
+    Cloning 3a60a660998e8d41d5ea81ff8d96ead546bce150
+
+[RuntimeException]
+Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;
+&amp; git reset -- hard '3a60a660998e8d41d5ea81ff8d96ead546bce150'
+
+error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
+would be overwritten by merge.
+</code></pre></div>
+<p>のようにエラーになります。</p>
+
+<h3>事件その3: Issueが光の速さで取り消される</h3>
+
+<p>ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。</p>
+
+<p><a href="https://github.com/sebastianbergmann/phpunit/issues/1144">Can&rsquo;t install 3.7.x to Linux environment by composer</a></p>
+
+<p>ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。</p>
+
+<h3>原因を調べてみた</h3>
+
+<p>まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。</p>
+
+<p>ここで composer がどのようにライブラリを取得するか考えてみたところ、</p>
+
+<ul>
+<li>packagist からリポジトリ情報をダウンロード</li>
+<li>phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）</li>
+<li><code>git clone git@github.com:sebastianbergmann/phpunit.git</code> が実行される</li>
+<li>リリースを指定しているので一致するタグがチェックアウトされる <code>git checkout ....</code></li>
+</ul>
+
+<p>この最後のステップで「Untracked working tree file」になり失敗するのです。</p>
+
+<p>PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。</p>
+
+<p>自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功&hellip;. えぇぇー！</p>
+
+<p>その環境は Vagrant上のCentOSでなく、素のWindowsでした。
+何かがおかしい&hellip;.</p>
+
+<p>そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。</p>
+
+<p>composer update （この日は何度実行したろう&hellip;.）  &hellip;&hellip; 成功した！！！！でも、なんで？！</p>
+
+<h3>違いに悩むと&hellip;</h3>
+
+<p>成功したところ：</p>
+
+<ul>
+<li>素のWindows</li>
+<li>Vagrant仮想環境内の /tmp/work/app</li>
+</ul>
+
+<p>失敗したところ：</p>
+
+<ul>
+<li>Vagrantのsync<em>folderである /var/www/html/your</em>app/app (CentOSから見えるディレクトリ)
+windows上だと c:¥develop¥your_app¥app みたいなところ</li>
+</ul>
+
+<p>もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！</p>
+
+<p>という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。</p>
+
+<h3>まとめ</h3>
+
+<p>ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
+その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。</p>
+
+<p>上記のような <code>Failed to execute git checkout ...</code> エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。</p>
+
+<p>まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&hellip;</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="VagrantでComposerからPHPUnitをインストールするときに注意したいこと" data-url="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html&t=Vagrant%E3%81%A7Composer%E3%81%8B%E3%82%89PHPUnit%E3%82%92%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AB%E6%B3%A8%E6%84%8F%E3%81%97%E3%81%9F%E3%81%84%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
   <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 11:13:26 AM</a></p>
   <p class="tags">
       <a href="/tags/middleman.html" rel="tag">middleman</a>
@@ -693,137 +838,6 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
     </div>
 
   </div>
-  <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
-  <p class="postdate"><a href="/2013/10/12.html" title="Permanent link">Saturday, October 12, 2013 08:10:45 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/fablicator.html" rel="tag">fablicator</a>
-      <a href="/tags/fixture.html" rel="tag">fixture</a>
-      <a href="/tags/test.html" rel="tag">Test</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;Fabricate は Ruby の Fabricator に影響を受けたもので、データを簡単にすばやく生成する CakePHP2 用のプラグインです。  </p>
-
-<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
-
-<p>動作確認しているバージョンはCakePHP2.3.10, CakePHP2.4.1ですが、他のバージョンでもCakePHP2系なら動くと思います。  </p>
-
-<h3>インストール方法</h3>
-
-<p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>    "extra": {
-        "installer-paths": {
-            "Plugin/Fabricate": ["sizuhiko/fabricate"]
-        }
-    },
-    "require": {
-        "composer/installers": "*",
-        "sizuhiko/fabricate": "*"
-    }
-</code></pre></div>
-<p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
-
-<p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>CakePlugin::load('Fabricate');
-</code></pre></div>
-<h3>概要</h3>
-
-<p>Fabricateプラグインには3つのメソッドがあります。  </p>
-
-<ul>
-<li>Fabricate::attributes<em>for(:model</em>name, :number<em>of</em>generation, :callback) : CakePHPの属性配列をデータ付きで返します（複数件生成可能）</li>
-<li>Fabricate::build(:model_name, :callback) : CakePHPのモデルインスタンスを返します（1件のみ生成可能）</li>
-<li>Fabricate::create(:model<em>name, :number</em>of_generation, :callback) : 指定された件数分データベースに生成する</li>
-</ul>
-
-<h3>用途</h3>
-
-<p>このプラグインは以下のような用途にとても向いています。  </p>
-
-<ul>
-<li>ページングのテストをするのに大量にデータを生成したい</li>
-<li>fixture だと各テストケースで同じデータが生成されてしまうけど、各テストケース毎に違うデータを生成したい。かつテスト対象のカラム以外は適当な値が自動的に入って欲しい</li>
-<li>Bddプラグイン（CakePHPのBehatインテグレーションプラグイン）のステップで「Postモデルに100件のデータが登録されていること」みたいなのを書きたいのに、簡単に記述できないなぁと思ったとき</li>
-</ul>
-
-<h3>使い方＆サンプル</h3>
-
-<h4>attributes_for</h4>
-<div class="highlight"><pre class="highlight plaintext"><code>$results = Fabricate::attributes_for('Post', 10, function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-
-// $results is followings :
-array (
-  0 =&gt; 
-  array (
-    'id' =&gt; 1,
-    'title' =&gt; 'Lorem ipsum dolor sit amet',
-    'body' =&gt; 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
-    'created' =&gt; '2013-10-09 12:40:28',
-    'updated' =&gt; '2013-10-09 12:40:28',
-  ),
-  1 =&gt; 
-  array (
-  ....
-</code></pre></div>
-<p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br>
-第二引数に生成するレコード件数を指定します。<br>
-ただ、全部自動的だと困るという場合があるので、3つ目の引数にコールバック関数を指定可能になっています。このコールバック関数は、10件のデータを生成する場合、都度計10回呼び出されます。<br>
-戻り値として、属性名をキーに値を持つ連想配列を指定すると、都度array_mergeが実行されます（recursiveではありません）。<br>
-データの自動生成処理は、CakePHPのコアにあった FixtureTask の _generateRecords() というメソッドを拝借してきて、そのまま利用しています。<br>
-CakePHPでfixtureを生成したときrecordsに入っている内容と同じ物になります。  </p>
-
-<p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
-
-<p>また、第二引数、第三引数は省略可能ですので、  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>// 1件だけ生成
-Fabricate::attributes_for('Post');
-// 1件だけコールバックを指定して生成
-Fabricate::attributes_for('Post', function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-// 10件生成
-Fabricate::attributes_for('Post', 10);
-</code></pre></div>
-<p>というバリエーションでも利用可能です。  </p>
-
-<h4>build</h4>
-
-<p>とりあえず本家のFabricatorに近づけたたくて作ったメソッドですが、CakePHPではモデルのインスタンスを複数同時に持てないので、正直使い勝手としては微妙です（作者が言うなという話ですが）。  </p>
-
-<h4>create</h4>
-
-<p>最も簡単にデータをデータベースに保存するなら、このメソッドで十分です。<br>
-attributes<em>forで作ったレコードをすべてデータベースに保存します。<br>
-引数の使い方はattributes</em>forと同一になっています。  </p>
-
-<h3>きっかけと今後</h3>
-
-<p>ページングのテストを書こうとして、とにかく面倒になってきて「<strong>何でCakePHPにはFabricatorがないんだー</strong>」というノリで、カッとなって作った系ですので、機能的には最低限になっています。<br>
-かつたぶん最新のFabricatorのクローンとも言い難い状況です。  </p>
-
-<p>またカッとなったら、最新のFabricatorの機能に近づけようかな〜、どなかた使っていただける方がいればご要望、機能追加は GitHubのIssue、Pull Requestでお願いします。  </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータ Fabricate を作りました" data-url="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BF%20Fabricate%20%E3%82%92%E4%BD%9C%E3%82%8A%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/28/">« Prev</a>
@@ -851,6 +865,7 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
@@ -860,7 +875,6 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
                   <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
-                  <li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> <span>2023/01/04</span></li>
               </ul>
             </div>
           </div>
@@ -868,14 +882,14 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-                    </li>
-                    <li class="size2">
-                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/jest.html" rel="tag">Jest</a>
@@ -971,7 +985,7 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (11)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
