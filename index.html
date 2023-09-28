@@ -277,7 +277,235 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a></h2>
+            <h2 class="title"><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a></h2>
+  <p class="postdate"><a href="/2023/09/27.html" title="Permanent link">Wednesday, September 27, 2023 05:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/github.html" rel="tag">github</a>
+      <a href="/tags/git.html" rel="tag">git</a>
+      <a href="/tags/monorepo.html" rel="tag">monorepo</a>
+      <a href="/tags/npm.html" rel="tag">npm</a>
+      <a href="/tags/workspace.html" rel="tag">workspace</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>背景</h3>
+
+<p>プロジェクトで複数のAPIサーバーや、マイクロサービスなどを展開するのに、OpenAPI の定義を置くリポジトリを個々に作っていたのですが、メンテナンス性を考えてマルチプルレポからモノレポへ移行することにしました。</p>
+
+<p>基本的に OpenAPI の定義（yamlファイル）の内容と、デプロイ先（AWS S3のWebホスティング先バケット）が違うぐらいで、それ以外の内容はまったく一緒であるリポジトリが複数ある感じです。</p>
+
+<ul>
+<li>app-a-apidoc</li>
+<li>app-b-apidoc</li>
+<li>service-account-apidoc</li>
+<li>service-payment-apidoc</li>
+</ul>
+
+<p>みたいなマルチプルレポを <code>apidoc</code> モノレポへまとめていきます。</p>
+
+<p>各 apidoc は <a href="https://www.npmjs.com/package/swagger-ui-dist">swagger-ui-dist</a> に yaml ファイルを入れて、Webホスティングしている S3 バケットにデプロイしています。
+ビルドスクリプトは gulp で、デプロイは serverless framework に serverless-s3-sync プラグインを入れて実行しています。</p>
+
+<h3>リポジトリの移行の準備</h3>
+
+<p>リポジトリを移行するにあたり <a href="https://medium.com/@chris_72272/keeping-git-history-when-converting-multiple-repos-into-a-monorepo-97641744d928">Keeping git history when converting multiple repos into a monorepo</a> という記事がとても役にたったので、こちらの手順を参考にして紹介していきます。</p>
+
+<h4>ディレクトリ構造決定</h4>
+
+<p>まず最初にモノレポ移行後のディレクトリ構造を検討します。
+よくある npm のパッケージをモノレポにしている場合だと</p>
+<div class="highlight"><pre class="highlight plaintext"><code>packages
+  +-- package-a
+  +-- package-b
+</code></pre></div>
+<p>みたいな階層にすることが多いんじゃないかな？と思います。
+参考記事だと <code>projects/*</code> のような感じですね。
+aws-sdk v3 だと clients や lib, packages など目的別にいろいろ分けているようです。</p>
+
+<p>そこで今回私たちは</p>
+<div class="highlight"><pre class="highlight plaintext"><code>apps
+  +-- a
+  +-- b
+services
+  +-- account
+  +-- payment
+</code></pre></div>
+<p>みたいなディレクトリ構造にしました。これはそれぞれのプロジェクトや、まとめたいリポジトリにもよるので、個別に検討しましょう。</p>
+
+<h4>既存リポジトリのディレクトリ変更</h4>
+
+<p>ディレクトリ構造が決まったら、既存リポジトリをそのディレクトリに合わせて階層を変更します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>cd app-a-apidoc
+mkdir -p apps/a
+git mv -k * apps/a
+git mv -k .* apps/a
+git commit -m "chore: move all files into apps/a"
+</code></pre></div>
+<ol>
+<li>既存リポジトリをチェックアウトしたディレクトリに移動</li>
+<li>モノレポにしたときのディレクトリツリーを作成</li>
+<li>2のディレクトリ下にすべてのファイルを移動。移動には <code>git mv</code> コマンドを使う</li>
+<li>コミット</li>
+</ol>
+
+<p>この作業を移行対象のすべての既存リポジトリで実施していきます。</p>
+
+<h4>モノレポの作成</h4>
+
+<p>GitHub上でリポジトリを作ってチェックアウトするか、 <code>git init</code> コマンドでローカルにモノレポのフォルダを準備します。
+続いて、モノレポリポジトリにワークスペースのルートディレクトリを作っておきます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mkdir apps
+mkdir services
+</code></pre></div>
+<p><code>git remote add</code> を使ってローカルディレクトリのリポジトリ（既存リポジトリのディレクトリ変更でディレクトリ変更してコミットしたもの）を追加します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git remote add -f app-a-apidoc ../app-a-apidoc
+git remote add -f app-b-apidoc ../app-b-apidoc
+git remote add -f service-account-apidoc ../service-account-apidoc
+git remote add -f service-payment-apidoc ../service-payment-apidoc
+</code></pre></div>
+<p>で、それらをモノレポの中にマージしていきます。マージするブランチが <code>main</code> であると仮定します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git merge app-a-apidoc/main --allow-unrelated-histories
+git merge app-b-apidoc/main --allow-unrelated-histories
+git merge service-account-apidoc/main --allow-unrelated-histories
+git merge service-payment-apidoc/main --allow-unrelated-histories
+</code></pre></div>
+<p>最後にリモートを削除しましょう。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git remote remove app-a-apidoc
+git remote remove app-b-apidoc
+git remote remove service-account-apidoc
+git remote remove service-payment-apidoc
+</code></pre></div>
+<h3>モノレポの設定</h3>
+
+<p>ここまでで既存のリポジトリを1つのモノレポにコミットログ付きで合体できました。
+続いて、モノレポで開発作業ができるように環境整備をしましょう。</p>
+
+<h4>ワークスペースを設定する</h4>
+
+<p>モノレポのルートディレクトリで <code>npm init</code> コマンドを実行して <code>package.json</code> を作ります。
+作成した <code>package.json</code> にワークスペースに関する設定を追加します。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">private</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="dl">"</span><span class="s2">workspaces</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="dl">"</span><span class="s2">apps/*</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">services/*</span><span class="dl">"</span>
+  <span class="p">],</span>
+</code></pre></div>
+<h4>依存関係の設定</h4>
+
+<p>続いて、各リポジトリで使っていた <code>devDependencies</code> や <code>dependencies</code> の依存関係をモノレポのルートディレクトリにある <code>package.json</code> に移動します。
+通常は各リポジトリ共通のものだけですが、今回の apidoc ではすべて共通だったので、そのままコピペしました。</p>
+
+<p>ワークスペース（apps や services）にある <code>package.json</code> の <code>devDependencies</code> や <code>dependencies</code> を削除し、 <code>package-lock.json</code> も削除します。</p>
+
+<p>最後にルートディレクトリで <code>npm i</code> を実行して依存関係をインストールします。</p>
+
+<h4>各 apidoc の整理</h4>
+
+<p><code>.npmrc</code> や <code>.gitignore</code> , <code>.editorconfig</code> など必要な設定ファイルをワークスペースからルートディレクトリに移動しておきます。</p>
+
+<p>その他共通になったものはルートディレクトリ下に移動しておくと良いでしょう。</p>
+
+<h4>GitHub Actions の統合</h4>
+
+<p>ワークスペース（apps や services）にある <code>.github</code> をどれかルートディレクトリに移動して、ワークスペース側からは削除します。
+単に全部のワークスペースをビルドしたりデプロイするだけなら <code>-ws</code> オプションを追加するとすべてのワークスペースに対してコマンドを実行するようになります。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
+</code></pre></div>
+<p>まぁでも通常はそんなことなく、以下のパターンを考慮する必要があります。</p>
+
+<ul>
+<li>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</li>
+<li>ワークスペースのファイルが修正された</li>
+</ul>
+
+<p>前者はすべてのワークスペースに対して Action を実行したほうが良いのですが、後者は変更があったワークスペースだけの実行に絞り込みたいところです。</p>
+
+<p>そこで利用できるのが <a href="https://github.com/AlexShukel/get-changed-workspaces-action">Get changed workspaces action</a> です。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">get-changed-workspaces</span><span class="pi">:</span>
+    <span class="na">outputs</span><span class="pi">:</span>
+      <span class="na">packages</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.packages }}</span>
+      <span class="na">empty</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.empty }}</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Check out repository code</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Find changed workspaces</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">AlexShukel/get-changed-workspaces-action@v2.0.0</span>
+        <span class="na">id</span><span class="pi">:</span> <span class="s">changed-packages</span>
+  <span class="na">deploy</span><span class="pi">:</span>
+    <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">get-changed-workspaces</span><span class="pi">]</span>
+    <span class="na">if</span><span class="pi">:</span> <span class="s">${{ !fromJson(needs.get-changed-workspaces.outputs.empty) }}</span>
+    <span class="na">strategy</span><span class="pi">:</span>
+      <span class="na">matrix</span><span class="pi">:</span>
+        <span class="na">package</span><span class="pi">:</span> <span class="s">${{ fromJson(needs.get-changed-workspaces.outputs.packages) }}</span>  
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} deploy</span>
+</code></pre></div>
+<p>この Action を使うと変更があったワークスペースの名前を配列型式で取得できます。
+ワークスペースに変更がないときは <code>empty</code> でわかるので、 <code>if</code> 文で制御して何もしないように設定も可能です。</p>
+
+<p>で、特定のワークスペースに対して npm コマンドを実行したい場合は <code>-w ワークスペース名</code> オプションを指定します。</p>
+
+<p>そこで、 <code>.github/workflows</code> には以下のファイルを設置することにしました。</p>
+
+<ul>
+<li>build-all.yml</li>
+<li>build.yml</li>
+</ul>
+
+<p>前者は <code>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</code> を想定していて、以下のような条件で起動したら、 <code>-ws</code> オプションですべてのワークスペースで実行されるようにしています。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">on</span><span class="pi">:</span>
+  <span class="na">workflow_dispatch</span><span class="pi">:</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">package.json</span>
+      <span class="pi">-</span> <span class="s">package-lock.json</span>
+    <span class="na">branches</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">master</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">deploy</span><span class="pi">:</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
+</code></pre></div>
+<p>後者は <code>Get changed workspaces action</code> を使って個別のワークスペースビルドされるように設定しました。</p>
+
+<h3>さいごに</h3>
+
+<p>マルチプルレポ、モノレポ、それぞれに良いところはあると思います。
+必ずモノレポが良いというものでもないでしょう。
+それぞれのプロジェクトやリポジトリの運用を見極めて選択していきたいですね。</p>
+
+<p>マルチプルレポからモノレポへ移行するときに、本記事が参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="マルチプルレポをモノレポへコミットログを残しながら移行する" data-url="http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html&t=%E3%83%9E%E3%83%AB%E3%83%81%E3%83%97%E3%83%AB%E3%83%AC%E3%83%9D%E3%82%92%E3%83%A2%E3%83%8E%E3%83%AC%E3%83%9D%E3%81%B8%E3%82%B3%E3%83%9F%E3%83%83%E3%83%88%E3%83%AD%E3%82%B0%E3%82%92%E6%AE%8B%E3%81%97%E3%81%AA%E3%81%8C%E3%82%89%E7%A7%BB%E8%A1%8C%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a></h2>
   <p class="postdate"><a href="/2023/05/02.html" title="Permanent link">Tuesday, May 02, 2023 03:00:00 PM</a></p>
   <p class="tags">
       <a href="/tags/tsyringe.html" rel="tag">tsyringe</a>
@@ -708,81 +936,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
     </div>
 
   </div>
-  <h2 class="title"><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a></h2>
-  <p class="postdate"><a href="/2023/04/11.html" title="Permanent link">Tuesday, April 11, 2023 04:33:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>先日 <a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> という記事を書いて、実際自分たちで作っていた aws-sdk v2 でできていた CLI ツールも aws-sdk v3 に切り替えました。</p>
-
-<h3>CLIツールを v3 に移行したら、利用するアプリ側がコンパイルエラーになる</h3>
-
-<p>で、それを Lambda にデプロイするアプリの devDependencies に反映してみたところ、また型エラーが出るようになりました。</p>
-
-<p>CLIツールでは <code>@aws-sdk/client-lambda@3.310.0</code> に依存していて、 Lambda アプリ側は <code>@aws-sdk/client-lambda@3.254.0</code> を使っていたためです。</p>
-
-<blockquote>
-<p>error TS2345: Argument of type &lsquo;typeof LambdaClient&rsquo; is not assignable to parameter of type &lsquo;InstanceOrClassType<Client<ServiceInputTypes, MetadataBearer, any>&gt;&rsquo;.
-      Type &lsquo;typeof LambdaClient&rsquo; is not assignable to type &lsquo;ClassType<Client<ServiceInputTypes, MetadataBearer, any>&gt;&rsquo;.</p>
-</blockquote>
-
-<p>で、それぞれの型定義への依存は <code>&quot;@aws-sdk/types&quot;: &quot;*&quot;</code> になっているので、lock ファイルの状態次第でそれぞれでバージョンが異なるものが入る場合があります。
-そこで型が一致しない問題が発生してきます。</p>
-
-<p>CLI ツールでは実行時に aws-sdk が必要になるので、 dependencies に設定していて、CLIツールを使う方のアプリは devDependencies に設定しているわけですが、それぞれの dependencies からインストールされる <code>@aws-sdk/types</code> がドッチ？問題になってしまうという&hellip;</p>
-
-<h3>解決策</h3>
-
-<p>今回は自分たちで作ったライブラリだったので、CLIツール側の aws-sdk を devDependencies に変更して、CLIツールを使うアプリ側の aws-sdk 利用状況に依存するように変更しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">peerDependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">"</span><span class="s2">@aws-sdk/client-lambda</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.0.0</span><span class="dl">"</span>
-  <span class="p">},</span>
-</code></pre></div>
-<p>これでアプリ側が <code>@aws-sdk/client-lambda</code> を使っていればそのバージョンに依存するようになるし、使っていなければ 3系の最新が入るようになります。</p>
-
-<p>ここで、この aws-sdk v3 シリーズを読んでいただいた懸命な皆様はお気づきだと思いますが <a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> でも書いた</p>
-
-<blockquote>
-<p><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</p>
-</blockquote>
-
-<p>これが重要になってきます。
-なので、自分で作ったライブラリで peerDependencies に指定したら、結局アプリ側で使ってなくてもバージョンを揃えるのに追加でインストールした方が良いということです。</p>
-
-<h3>aws-sdk v3 を安心して使うためには（追記）</h3>
-
-<ul>
-<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
-<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
-<li>関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
-<li>自作ライブラリで aws-sdk v3 に依存する場合は <code>peerDependencies</code> に指定する</li>
-</ul>
-
-<p>大事なこと4つ目を追加しました。</p>
-
-<p>aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう" data-url="http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html&t=aws-sdk%20v3%20%E3%82%92%E4%BD%BF%E3%81%86%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%9F%E3%81%A8%E3%81%8D%E3%81%AF%E3%80%81%E3%81%AA%E3%82%8B%E3%81%B9%E3%81%8F%20peerDependencies%20%E3%81%AB%E8%A8%AD%E5%AE%9A%E3%81%97%E3%82%88%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
         <b>1</b>
@@ -805,6 +958,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
@@ -814,7 +968,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
-                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
               </ul>
             </div>
           </div>
@@ -925,7 +1078,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (11)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

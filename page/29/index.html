@@ -277,7 +277,111 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
+            <h2 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h2>
+  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 05:04:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。</p>
+
+<h3>動的にプレフィックスルーティングを追加するには</h3>
+
+<p>公式ドキュメントの解説のとおり、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// routes.php
+Router::connect(
+    "/site-proxy/:controller",
+    array('action' =&gt; 'index', 'prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true)
+);
+
+// core.phpなど
+Configure::write('Routing.prefixes', array('site-proxy'));
+</code></pre></div>
+<p>のように記述します。</p>
+
+<p>RouterTest.phpのテストコードを見たら</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$request = new CakeRequest();
+$request-&gt;addParams(array(
+    'controller' =&gt; 'registrations', 'action' =&gt; 'admin_index',
+    'plugin' =&gt; null, 'prefix' =&gt; 'admin', 'admin' =&gt; true,
+    'ext' =&gt; 'html'
+));
+</code></pre></div>
+<p>みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。</p>
+
+<p>実際コントローラで</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
+</code></pre></div>
+<p>みたいに書くと、View上で $this-&gt;html-&gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。</p>
+
+<h3>ハマりポイント</h3>
+
+<p>View上でフォームを作成するときに</p>
+<div class="highlight"><pre class="highlight plaintext"><code>echo $this-&gt;Form-&gt;create('Post');
+</code></pre></div>
+<p>のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// FormHelper::create() L367付近
+if ($options['action'] === null &amp;&amp; $options['url'] === null) {
+    $options['action'] = $this-&gt;request-&gt;here(false);
+} elseif (empty($options['url']) || is_array($options['url'])) {
+</code></pre></div>
+<p>URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。</p>
+
+<p>で、CakeRequest::here() とはどんなコードか見てみると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>public function here($base = true) {
+    $url = $this-&gt;here;
+    if (!empty($this-&gt;query)) {
+        $url .= '?' . http_build_query($this-&gt;query, null, '&amp;');
+    }
+    if (!$base) {
+        $url = preg_replace('/^' . preg_quote($this-&gt;base, '/') . '/', '', $url, 1);
+    }
+    return $url;
+}
+</code></pre></div>
+<p>のようになっていて、要は現在のURL（$this-&gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。</p>
+
+<h3>まとめ</h3>
+
+<p>解決方法としては</p>
+
+<ul>
+<li>Form::create() で <code>url</code> オプションを追加する</li>
+<li><p>addParams するときに here を変更する</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 例）
+$request-&gt;addParams(array(
+    'admin' =&gt; true,
+    'prefix' =&gt; 'admin',
+))-&gt;addPaths(array(
+    'here' =&gt; '/admin/this/interesting/index',
+))
+</code></pre></div></li>
+</ul>
+
+<p>あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&hellip;    </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること" data-url="http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html&t=CakePHP%E3%81%A7%E5%8B%95%E7%9A%84%E3%81%AB%E3%83%97%E3%83%AC%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%BF%BD%E5%8A%A0%E3%81%97%E3%81%9F%E3%81%A8%E3%81%8D%E3%81%AB%E6%B0%97%E3%82%92%E3%81%A4%E3%81%91%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
   <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 04:12:00 PM</a></p>
   <p class="tags">
       <a href="/tags/composer.html" rel="tag">composer</a>
@@ -732,112 +836,6 @@ HTML5カルタとは</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a></h2>
-  <p class="postdate"><a href="/2013/11/04.html" title="Permanent link">Monday, November 04, 2013 06:11:42 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/fabricate.html" rel="tag">fabricate</a>
-      <a href="/tags/fixture.html" rel="tag">fixture</a>
-      <a href="/tags/test.html" rel="tag">Test</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  </p>
-
-<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
-
-<h3>変更概要</h3>
-
-<ul>
-<li>closure だけでなく、array 形式での属性値変更が可能に</li>
-<li>初期連番をconfigで指定可能に</li>
-<li>sequenceメソッドで柔軟な採番が可能に</li>
-</ul>
-
-<h3>array形式での属性値変更</h3>
-
-<p>これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。<br>
-これを直接引数でarrayを指定できるようにしました。  </p>
-
-<p>従来の記述方法：  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-</code></pre></div>
-<p>新しくサポートした記述方法：  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
-});
-</code></pre></div>
-<p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
-
-<p>$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  </p>
-
-<h3>初期連番をconfigで指定</h3>
-
-<p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::config(function($config) {
-    $config-&gt;sequence_start = 100;
-});
-</code></pre></div>
-<p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
-config関数を使わない場合は、従来通り1から開始されます。  </p>
-
-<h3>sequenceメソッドで柔軟な採番</h3>
-
-<p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
-この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::attributes_for('Post', 10, function($data, $world){
-    return [
-        'id'=&gt; $world-&gt;sequence('id'),
-        'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
-    ];
-});
-</code></pre></div>
-<p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
-$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
-
-<p>sequenceメソッドは、3つの利用方法に対応しています。  </p>
-
-<ul>
-<li><p>configで設定された開始値(または1)から開始する連番にする：   </p>
-
-<p>$world-&gt;sequence(&lsquo;id&rsquo;)</p></li>
-<li><p>開始番号を指定して連番にする：  </p>
-
-<p>$world-&gt;sequence(&lsquo;id&rsquo;, 10) // この例では10から開始する</p></li>
-<li><p>独自形式のユニーク文字列を作成する：  </p>
-
-<p>$world-&gt;sequence(&lsquo;title&rsquo;, function($i){ return &ldquo;Title {$i}&rdquo;; }
-// または開始番号を指定して
-$world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$i}&rdquo;; }</p></li>
-</ul>
-
-<p>一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  </p>
-
-<p>本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。<br>
-つまり呼び出し毎に開始番号から採番されます。  </p>
-
-<p>もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。<br>
-おそらく対応としては config で定義でできるようにすると思います&hellip;（併用でなく、プロセスか生成毎かを選択するイメージ）  </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました" data-url="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BFFabricate%E3%81%ABsequence%E3%81%AA%E3%81%A9%E3%81%AE%E6%A9%9F%E8%83%BD%E3%82%92%E8%BF%BD%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/28/">« Prev</a>
@@ -865,6 +863,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
@@ -874,7 +873,6 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
-                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
               </ul>
             </div>
           </div>
@@ -985,7 +983,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (11)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

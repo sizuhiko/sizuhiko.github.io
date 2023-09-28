@@ -277,7 +277,181 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a></h2>
+            <h2 class="title"><a href="/2020/02/16/serverless-ghe-dependabot.html">Serverless Frameworkでプライベートパッケージを利用するときの注意点</a></h2>
+  <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 12:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/serverless-framework.html" rel="tag">Serverless Framework</a>
+      <a href="/tags/ghe.html" rel="tag">GHE</a>
+      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2020/02/16/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a>の続編です。
+少し前提となる条件があるので、読んでいただけるとスムーズに進みます。</p>
+
+<h3>ある日事件は起こった</h3>
+
+<p>毎朝出社すると、dependabotから出てくるPRをチェックしてマージしています。
+プロジェクトでGHEにプライベートなnpmパッケージを作っていて、前日その更新をしたのでアプリ側にPRが来ていました。
+修正内容は自分たちが実施したものなので、何も疑うことはなくマージ。テストも通過していました。</p>
+
+<p>developブランチにマージすると、開発環境へデプロイするようになっているので、そのままデプロイされました。
+特に問題はないように見えます。</p>
+
+<h4>あのー、サーバーからエラーが戻ってくるんですけど&hellip;</h4>
+
+<p>目の前にはネイティブアプリチームがいます。</p>
+
+<p>「あのー、サーバーのAPIからエラーが戻ってくるんですけど、何かしました？」</p>
+
+<p>あ、さっきデプロイしたけど、プライベートパッケージ更新しただけだぞ&hellip;</p>
+
+<h4>エラー通知が飛んでくる</h4>
+
+<p>ほどなく監視からエラーが。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"errorType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Runtime.ImportModuleError"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"errorMessage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stack"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"Runtime.ImportModuleError: Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at _loadUserApp (/var/runtime/UserFunction.js:100:13)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.module.exports.load (/var/runtime/UserFunction.js:140:17)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.&lt;anonymous&gt; (/var/runtime/index.js:45:30)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Module._compile (internal/modules/cjs/loader.js:778:30)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Module.load (internal/modules/cjs/loader.js:653:32)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at tryModuleLoad (internal/modules/cjs/loader.js:593:12)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Function.Module._load (internal/modules/cjs/loader.js:585:3)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Function.Module.runMain (internal/modules/cjs/loader.js:831:12)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at startup (internal/bootstrap/node.js:283:19)"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p><a href="https://www.npmjs.com/package/psl">psl</a> というnpmパッケージを使っているのですが、それが見つからないよ、と。</p>
+
+<p>この箇所はユニットテストも通過しているし、なんでだろう？と思い、S3にアップロードされているzipを展開すると確かに node_modules に psl は入っていません&hellip;</p>
+
+<h3>Serverless Framework におけるパッケージング</h3>
+
+<p><code>sls deploy</code> や <code>sls package</code> を使ってzipを作成するとき、node_modules には <code>dependencies</code> だけが入り、 <code>devDependencies</code> は取り除かれます。
+Lambdaなどはzipファイルのサイズに制限があるので、これはとても便利な機能です。</p>
+
+<p>psl の利用箇所を調べるため、 <code>package-lock.json</code> を探してみます。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"xxxx-node-fetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fe
+tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fetch
+.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.7.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winston"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.2.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winston-cloudwatch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.3.0"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p>これはプライベートパッケージでGHEのリポジトリを参照しています。
+これ以外の利用箇所を探してみました。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.88.0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/request/-/request-2.88.0.tgz"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg=="</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"aws-sign2"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.7.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"aws4"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.8.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"caseless"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.12.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"combined-stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.6"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"extend"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~3.0.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"forever-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.6.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"form-data"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.3.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"har-validator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.1.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"http-signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.2.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"is-typedarray"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"isstream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.1.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"json-stringify-safe"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.0.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"mime-types"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.1.19"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"oauth-sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.9.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"performance-now"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"qs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~6.5.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"safe-buffer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^5.1.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.4.3"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tunnel-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.6.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"uuid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.3.2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"dependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.4.1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha1-wNWmOycYgArY4esPpSachN1BhF4="</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.4.3"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ=
+="</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.1.24"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.4.1"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>そうすると、 <code>request</code> パッケージが参照する <code>tough-cookie</code> が利用しているのがわかります。 <code>&quot;dev&quot;: true,</code> になっているので、devDependenciesに指定されているということですね。</p>
+
+<p>ただ、このようなケースはまぁまぁある（依存しているパッケージによっては dependencies だったり devDependencies であったりする）ので、Serverless Framework で良しなにしてくれるはずです。
+ 実際、昨日までは問題なかったのに？？</p>
+
+<p>### DependabotのPRを見る</p>
+
+<p><code>package-lock.json</code> の変更だけで以下のようなdiffになっていました。</p>
+<div class="highlight"><pre class="highlight diff"><code><span class="gd">-     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#112cf335236d974538ba02993d5ef7bbbbc3ec4c",
+-     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop",
+</span><span class="gi">+     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
++     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
+</span></code></pre></div>
+<p><code>package.json</code> には <code>&quot;xxxx-node-fetch&quot;: &quot;git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop&quot;,</code> のように指定されていて、developから最新を取得するようになっています。</p>
+
+<p>PRでは <code>version</code> 以外にも <code>from</code> が <code>#develop</code> のようなブランチ指定から、コミットハッシュ指定に変わっているのがわかります。</p>
+
+<h3>dependencies ではブランチ指定をやめる</h3>
+
+<p>lockファイルの <code>from</code> 指定が変わり、package.json の dependencies と釣り合いが取れなくなることで、dependencies に必要のないライブラリと Serverless Framework が認識するようで zip ファイルに含まれなくなっていました。</p>
+
+<p>この状態でも <code>npm i</code> や <code>npm ci</code> ではパッケージはインストールできるので UnitTest は通過します。</p>
+
+<p>このような事象から、私たちは一旦 <code>package.json</code> に記述するときにブランチ指定をやめて、コミットハッシュ指定に変更することとしました（つまり from を合わせるということです）。
+この修正で無事 zip に psl が入って問題を解決することができました。</p>
+
+<h3>さいごに</h3>
+
+<p>本来であればOSSにできそうなものは普通にnpmにあげるとかした方が良いのですが、調整が困難なのと非常に短期間でプロジェクトが進んでいたのでOSSにはできませんでした。
+また、OSSにできないプライベートなパッケージなどを作る場合は、ローカルレジストリ作った方が良いな、とも思いました（ブランチ指定とかコミットハッシュでなく、ちゃんとバージョン管理できるし）。</p>
+
+<p>プライベートなnpmレジストリを作るには、<a href="https://qiita.com/propella/items/6f1bb5db5225fba6cd85">独自の npm registry を使う</a> が参考になりそうです。</p>
+
+<p>また AWS を使っているのであれば、<a href="https://aws.amazon.com/jp/about-aws/whats-new/2019/09/new-quick-starts-deploy-jfrog-artifactory-on-aws/">新しいクイックスタートを使用して JFrog Artifactory を AWS にデプロイ</a> という公式記事があるので、参考になりそうです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Serverless Frameworkでプライベートパッケージを利用するときの注意点" data-url="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html&t=Serverless%20Framework%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%91%E3%83%83%E3%82%B1%E3%83%BC%E3%82%B8%E3%82%92%E5%88%A9%E7%94%A8%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AE%E6%B3%A8%E6%84%8F%E7%82%B9" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a></h2>
   <p class="postdate"><a href="/2020/02/15.html" title="Permanent link">Saturday, February 15, 2020 11:17:00 AM</a></p>
   <p class="tags">
       <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
@@ -630,73 +804,6 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/12/08/phpcon2019.html">PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました</a></h2>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:33:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>12/1に開催された<a href="https://phpcon.php.gr.jp/2019/">PHPカンファレンス</a>に参加＆登壇してきました。</p>
-
-<p><img src="/images/blog/phpcon2019-visual-02.png" alt="" /></p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> 到着 (@ 大田区産業プラザPiO in 大田区, 東京都) <a href="https://t.co/ycLLHX1Pwk">https://t.co/ycLLHX1Pwk</a> <a href="https://t.co/ttXiGBi9BK">pic.twitter.com/ttXiGBi9BK</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200936870328320002?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
-
-<p>早速ですが、当日のスライドです。</p>
-
-<script async class="speakerdeck-embed" data-id="53981d585eb44ebc928e5ccf1450c926" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>実はこの発表そのものは、<a href="/2019/09/22/phpcondo-2019.html">PHPカンファレンス北海道 2019で「PHPを学ぶということ」について発表してきました</a>で登壇したときとまったく同じ内容です。
-スライド内容の話などは、こちらの記事を辿ってください。</p>
-
-<p>変更箇所としては、今回PHPUnit生みの親である<a href="https://twitter.com/s_bergmann">Sebastian Bergmann</a>のゲストセッションがあったので、
-これは海外から来ていて日本在住のプログラマーとか、結構来るのでは？と思い英語を併記しました。
-さらに発表の最初で「英語で字幕読んでね」みたいな挨拶も入れたのですが、反応薄かったので皆さん日本語でokだったようですw</p>
-
-<p>北海道では30分だったセッションが、今回は25分です。
-この5分をどうしても巻かないといけなくて、全体的に説明が雑になったりして、やっぱり30分以下は無理だな&hellip;と思いました。
-すみません。
-でも伝えたい重要なところは、ちゃんと時間をかけて話ました。</p>
-
-<h2>2019年最後のPHPカンファレンス</h2>
-
-<p>ということで、例のスタンプラリーも全制覇はできませんでした(LaraConは気づいたらチケット売り切れてた)が、7つ。
-よく参加しました。特典として、大きい像がスタンプ1つあたり1,000円引きだったので、1万円の像を3,000円でお買い上げしてきました。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2019</a> <a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> デカ象ヤバい <a href="https://t.co/iKP5Jedh6O">pic.twitter.com/iKP5Jedh6O</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
-
-<p>小さい像はスピーカー特典でした。</p>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h2>さいごに</h2>
-
-<p>20回目の節目となるPHPカンファレンスで登壇できたのは、とても良かったです。
-心残りなのはSebastianのセッションが自分の1つ前だったので、彼の登壇後話せなかったのと、
-懇親会にはいるだろ？と思ったら、早めに退席されてしまっていて、まったく話せなかったことです。
-まぁでもまだどこかで会えるよね？という期待を抱いて生きていきます。
-彼のセッション聞いて、OSS開発のモチベも上がったので、来年はOSS開発いろいろ頑張るぞー</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました" data-url="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92019%E3%81%A7%E3%80%81%E3%80%8CPHP%E3%82%92%E5%AD%A6%E3%81%B6%E3%81%A8%E3%81%84%E3%81%86%E3%81%93%E3%81%A8%E3%80%8D%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/6/">« Prev</a>
@@ -724,6 +831,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
@@ -733,7 +841,6 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
-                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
               </ul>
             </div>
           </div>
@@ -844,7 +951,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (11)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

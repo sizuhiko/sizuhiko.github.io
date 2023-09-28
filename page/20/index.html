@@ -277,7 +277,125 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/05/20/jsfest-2018-spring.html">初夏のJavaScript祭 in サーキュレーションビル ForPro で Polymer3.0 の LT をしました</a></h2>
+            <h2 class="title"><a href="/2018/05/29/polymer-co-edo-meetup-14.html">Polymer.co-edo meetup ＃14 を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/05/29.html" title="Permanent link">Tuesday, May 29, 2018 11:55:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年5回目となる <a href="https://polymercoedo.doorkeeper.jp/events/74678">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>今回は先日開催された Google I/O &lsquo;18 から Polymer のセッション動画を見ながら Polymer3 のリリース記念パーティとして、食べ飲みしながら情報共有したいと思っています。</p>
+</blockquote>
+
+<p>ということで、ピザとビールを片手に Polymer 談義が盛り上がりました。</p>
+
+<h3>Google I/O で発表された内容のリンク集</h3>
+
+<p><a href="https://www.facebook.com/groups/416344608738146/">Polymer Japan の Facebook グループ</a>には、Google I/Oの翌日に貼りましたが、こちらにもまとめておきます。</p>
+
+<h4>セッション動画</h4>
+
+<ul>
+<li><a href="https://www.youtube.com/watch?v=7CUO7PyD5zA&amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf&amp;index=13&amp;t=4s">Web Components and the Polymer Project: Polymer 3.0 and beyond</a></li>
+<li><a href="https://www.youtube.com/watch?v=we3lLo-UFtk&amp;index=16&amp;list=PLNYkxOF6rcIC4NQeXpdAy0RbOACI66Hvf">PWA starter kit: build fast, scalable, modern apps with Web Components</a></li>
+</ul>
+
+<h4>セッションで紹介されたサイトなど</h4>
+
+<h5>Web Components and the Polymer Project: Polymer 3.0 and beyond</h5>
+
+<ul>
+<li><a href="https://tabatkins.github.io/specs/css-shadow-parts/">CSS Shadow Parts</a></li>
+<li><a href="https://github.com/w3c/webcomponents/issues/716">Custom Element Registers</a></li>
+<li><a href="https://github.com/domenic/package-name-maps">Package name maps</a></li>
+<li>HTML Modules
+
+<ul>
+<li><a href="https://github.com/w3c/webcomponents/issues/645">https://github.com/w3c/webcomponents/issues/645</a></li>
+<li><a href="https://github.com/PolymerLabs/html-modules-toolkit">https://github.com/PolymerLabs/html-modules-toolkit</a></li>
+</ul></li>
+<li><a href="https://github.com/…/gh…/proposals/Template-Instantiation.md">HTML Template Instantiation</a></li>
+</ul>
+
+<h5>PWA starter kit: build fast, scalable, modern apps with Web Components</h5>
+
+<ul>
+<li><a href="https://github.com/Polymer/pwa-starter-kit">PWA Starter Kit</a></li>
+<li><a href="https://github.com/Polymer/pwa-helpers">pwa-helpers</a></li>
+<li><a href="https://github.com/…/pwa…/wiki/4.-Redux-and-state-management">Redux and state management</a></li>
+<li><a href="https://github.com/…/pwa-starte…/wiki/7.-Application-testing">Application testing</a></li>
+<li><a href="https://github.com/…/pwa-start…/wiki/5.-Building-&amp;-Deploying">Building &amp; Deploying</a></li>
+</ul>
+
+<h3>Polymer の過去/現在</h3>
+
+<p>Polymer 3.0 のリリースに関して、Polymer がいつ発案されて、どうやって進んできたのか、という話から始まりました。
+とても古いGoogle I/Oの写真を使ったりして、Web Components がどんな問題を解決しようとしていて、Chromeチームとしてどのように取り組んできたか、がわかります。</p>
+
+<p>ブラウザ/JavaScriptを中心としたフロントエンドのトレンドは変化が大きく、最初にWeb Componentsを発案したころと、現在では細かいところに問題が多く残っていたのは事実です。
+ただ一方でPWAに代表されるように、モバイルアプリでできることをブラウザでもできるようにする取り組みも、大きな進歩を遂げています。</p>
+
+<p>PolymerがGoogle内部でどのような位置付けになっているのかを図るのは難しいのですが、少なくとも多くのプロジェクトで利用されていることは間違いないです。</p>
+
+<p>そして「現在の最適解」がPolymer3であるわけです。
+動画の中でも <code>Too weird</code> として紹介されていた、 polyfill/perceived silo/bower/HTML imports の解決に取り組んできたということです。</p>
+
+<p>polyfill については、モバイルブラウザ（iPhoneならsafari/Androidならchrome）では、Polymer3.0の仕様であればpolyfillを必要としない対応状況です。
+perceived silo （自己中心的、というかWeb Components == Polymer みたいに受け取られていた批判みたいなもの）については、 
+<a href="https://custom-elements-everywhere.com/">Custom Elements Everywhere</a>でも公開されているとおり、AngularやVueなどPolymer以外のJavaScriptフレームワークでも利用できることがわかります。
+bowerについては、発案当時はフロントエンドでは非常に流行っていた、けど今はということで npm に。
+HTML importsの仕様化はあきらめ、多くのブラウザが実装する ES Module Import へと。</p>
+
+<p>そう、Web Components は、今日ではメインストリームになるのです。</p>
+
+<p>一部のツールはまだPreviewですが、フィードバックを待っているということで、特に何もなければ大きな変化はなく、リリースになるのではないでしょうか？</p>
+
+<ul>
+<li><a href="https://custom-elements-everywhere.com/">lit-html</a></li>
+<li><a href="https://github.com/Polymer/polymer-modulizer">polymer-modulizer</a></li>
+</ul>
+
+<h3>未来</h3>
+
+<p>PWA Starter Kitで作れるアプリのコードを見るとわかるのですが、 lit-html を使うことで Polymer 感？みたいなのは非常に薄まります。PolymerElementじゃなくなるし。
+ただ lit-html は Polymer3 をベースに作られているし（互換性は少ないけど）、Polymerチームは多くの Web Components を公開しています。
+Polymerは、Web Components を使って課題を解決するのに役立つ下回りを整備してくれるライブラリやフレームワークとしてまだまだ価値があると思っています。</p>
+
+<p>あとは、Polyemrチームが取り組んでいる、上記で紹介した今後の仕様に期待しています。
+特に <code>HTML Modules</code> について、ES Module Import によって HTML部分が HTML in JavaScript になるわけです。
+「どうしてもHTMLで書けた方が良いじゃん！」というPolymerチームの意思というか（私もそうですが）HTML Importsはダメだったけど、これなら良いでしょ！私たちはHTMLで書きたいんですよ！愛が溢れています。</p>
+
+<h3>次回は</h3>
+
+<p>6/25(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>PWA starter kit のハンズオンをやって、Polymer3 や lit-html を体験してみたいな、と思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃14 を開催しました" data-url="http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html&t=Polymer.co-edo%20meetup%20%EF%BC%8314%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/29/polymer-co-edo-meetup-14.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/05/20/jsfest-2018-spring.html">初夏のJavaScript祭 in サーキュレーションビル ForPro で Polymer3.0 の LT をしました</a></h2>
   <p class="postdate"><a href="/2018/05/20.html" title="Permanent link">Sunday, May 20, 2018 11:34:00 AM</a></p>
   <p class="tags">
       <a href="/tags/polymer.html" rel="tag">Polymer</a>
@@ -610,211 +728,6 @@ HTMLだけならテキストでそれほど容量もないし、画像ほど重�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/02/27/polymer-co-edo-meetup-11.html">Polymer.co-edo meetup ＃11 を開催しました</a></h2>
-  <p class="postdate"><a href="/2018/02/27.html" title="Permanent link">Tuesday, February 27, 2018 03:24:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>今年2回目となる <a href="https://polymercoedo.doorkeeper.jp/events/70895">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p>今回の議題は</p>
-
-<blockquote>
-<p>Web Componentsを作るにあたり、いくつか必要な開発ツールがあるので、その解説と体験がメインになります。</p>
-</blockquote>
-
-<p>ということで、必要なツールと、その使い方／書き方について学習しました。</p>
-
-<ul>
-<li>polymer-cli の使い方</li>
-<li>polymer test を使ってみよう</li>
-</ul>
-
-<h3>開発環境をととのえる</h3>
-
-<p>ちょうど少し前に<a href="https://www.youtube.com/user/ChromeDevelopers/">YouTubeのGoogle Chrome Developersチャンネル</a>に<a href="https://www.youtube.com/user/ChromeDevelopers/search?query=Building+an+Element+in+Polymer2">Building an Element in Polymer 2という動画シリーズ1から5</a>がアップされました。
-こちらの動画は英語ですが、字幕をONにして日本語に自動翻訳すれば、英語が苦手な方でも問題なく理解できるようになっていますので、ぜひご覧ください。</p>
-
-<p>今回は<a href="https://www.youtube.com/watch?v=NU4TGxYZEjs">Building an Element in Polymer 2: Install Tools &amp; Initialize Project (Part 1 of 5)</a>が議題とマッチしていたので、一旦ビデオを見ならが進めました。</p>
-
-<p>はじめに <code>polymer-cli</code> をインストールしましょう。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ npm install -g polymer-cli
-</code></pre></div>
-<p>動画の中でも言っていますが、いろいろなものが入るので、結構時間がかかります。</p>
-
-<p>次に <code>bower</code> をインストールします。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ npm install -g bower
-</code></pre></div>
-<p><code>polymer help</code> や <code>bower help</code> などを実行して、コマンドが正常にインストールされているか確認しましょう。</p>
-
-<h3>自動テストのしくみ</h3>
-
-<p>Polymer はテストコマンドとして <code>polymer test</code> を用意しています。
-このコマンドは、<a href="https://github.com/Polymer/polymer-cli">polymer-cliのリポジトリ</a>で<a href="https://github.com/Polymer/polymer-cli/blob/master/src/commands/test.ts">ソースコード</a>を読むとわかりますが、このコマンドは<a href="https://github.com/Polymer/web-component-tester">web-component-tester</a>へのエイリアスとなっています。</p>
-
-<p><code>web-component-tester</code> は Polymerチームによって開発されていますが、Polymer用というわけではなく、Web Components をテストするために既存のテスティングフレームワークを統合したものです。
-<a href="https://github.com/Polymer/web-component-tester/blob/master/README.md">README</a>にも書いてあるとおり、フロントエンドやNode.jsでは馴染みのある、以下のようなツールを使って構成されています。</p>
-
-<ul>
-<li><a href="http://mochajs.org/" title="Mocha Test Framework">Mocha</a> as a test framework.</li>
-<li><a href="http://chaijs.com/" title="Chai Assertion Library">Chai</a> assertions.</li>
-<li><a href="https://github.com/caolan/async" title="Async.js">Async</a> to keep your sanity.</li>
-<li><a href="https://lodash.com/" title="Lo-Dash">Lodash</a> (3.0) to repeat fewer things.</li>
-<li><a href="http://sinonjs.org/" title="Sinon.JS">Sinon</a> and <a href="https://github.com/domenic/sinon-chai" title="Chai assertions for Sinon">sinon-chai</a> to test just your things.</li>
-<li><a href="https://github.com/PolymerElements/test-fixture" title="Easy DOM fixture testing">test-fixture</a> for easy fixture testing with <code>&lt;template&gt;</code> tags.</li>
-<li><a href="https://github.com/GoogleChrome/accessibility-developer-tools" title="A collection of audit rules checking for common accessibility problems, and an API for running these rules in an HTML page.">accessibility-developer-tools</a> through <code>a11ySuite</code> for simple, automated Accessibility testing.</li>
-</ul>
-
-<p>テストスイートの書き方は、Mocha でテストを書いたことがあれば、それほど違和感はないと思います。
-Web Components をテストするのに、追加されているのが test-fixture で、テストするエレメントのテンプレートを複数定義しておき、テストで必要な時だけDOMへ追加できます。</p>
-
-<p>またWebサイトはアクセシビリティにも配慮すべきなので、a11ySuite で自動的に問題がないかどうかを検証できます。
-参考サイト：<a href="https://html5experts.jp/shumpei-shiraishi/24671/">Webアプリのアクセシビリティを追求せよ！「インクルーシブ」なマークアップを議論しながら学んでみた</a></p>
-
-<p>web-component-tester はブラウザを起動してテストを行います。Web Componentsはブラウザの上で動作することを確認することが重要だからです。
-しかし、さまざまなブラウザやOSのバージョンマトリクスを用意するのは困難です。
-そこで<a href="https://saucelabs.com/">Sauce Labs</a>のようなマルチOS/マルチブラウザで動作できるSaaSを利用するのが良いでしょう。
-テスト困難はお金で解決できます。
-web-component-testerでは、そのためのプラグインが標準で用意されているので、Sauce Labsならすぐに利用できます。
-私は<a href="http://www.browserstack.com/">Browserstack</a>を使いたい！、という場合は、<a href="https://github.com/hotforfeature/wct-browserstack">Browserstack用プラグイン</a>がOSSで公開されているので、試してみてください。</p>
-
-<p>また、テストで起動するブラウザは、自動的に判定されるので、特定のブラウザだけ実行したい場合などは、<code>wct.conf.json</code> というファイルを作ってREADMEを参考に設定します。</p>
-
-<p>もちろんCIでの実行にも配慮されていて、 Gulp や Grunt から実行するインターフェースも用意されています。</p>
-
-<h3>テストを実行してみる</h3>
-
-<p>実際にどうやってテストが実行されるのか、既存のエレメントで確認しました。
-利用したエレメントは、以下の2つです。</p>
-
-<ul>
-<li><a href="https://github.com/PolymerElements/paper-progress">PolymerElements/paper-progress</a></li>
-<li><a href="https://github.com/PolymerElements/gold-email-input">PolymerElements/gold-email-input</a></li>
-</ul>
-
-<p>どちらも、以下の手順でテストを実行できます。</p>
-
-<ul>
-<li><code>git clone</code> する</li>
-<li>clone 先にディレクトリを移動</li>
-<li><code>bower install</code> を実行</li>
-<li><code>polymer test</code> を実行</li>
-</ul>
-
-<p>端末にインストールされているブラウザが自動的に起動して、テストが実行されます。
-起動したブラウザは、2ペインになっていて、左側にテスト中のDOM、右側にはテスト結果が表示されます。</p>
-
-<h3>既存のエレメントから、基本的なテストの書き方を学ぼう</h3>
-
-<p>それぞれのリポジトリのテストコードを読んで、テストコードの書き方を学びます。</p>
-
-<p>まず、どちらのリポジトリも、ルートディレクトリに <code>test</code> というディレクトリがあります。
-web-component-testerはデフォルトで、このディレクトリ名を利用するので、よほどのことがない限りこの名前を利用します。</p>
-
-<p>次に test ディレクトリには index.html と、それ以外のテストファイル（複数でも、サブディレクトリでも）を配置します。
-まず index.html が読み込まれるので、テストスイートを初期化します。
-ほとんどの Web Components で書き方はコピペで良く、変更が必要なのは title タグと、以下のテストスイートに列挙するファイルの一覧だけです。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="nx">WCT</span><span class="p">.</span><span class="nx">loadSuites</span><span class="p">([</span>
-      <span class="dl">'</span><span class="s1">basic.html</span><span class="dl">'</span><span class="p">,</span>
-      <span class="dl">'</span><span class="s1">basic.html?dom=shadow</span><span class="dl">'</span>
-    <span class="p">]);</span>
-</code></pre></div>
-<p>重要なこととして、web-component-testerは、デフォルトでは Shadow DOM をOFFにしてテストを実行します。つまり 1行目の <code>basic.html</code> は Shady DOM でテストが実行されます。
-もし、Shadow DOM でもテストしたい場合は、2行目のようにパラメータを追加する必要があります。</p>
-
-<h4>テストヘルパーの役割</h4>
-
-<p>実際のテストコードを見ると、以下のようなテストヘルパーをインクルードしています。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../../iron-test-helpers/test-helpers.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../../iron-test-helpers/mock-interactions.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>テストヘルパーを導入すると、テストコードを書くのが容易になります。
-代表的なヘルパーメソッドを紹介します。</p>
-
-<ul>
-<li>flushAsynchronousOperations : Custom Elements のライフサイクルコールバックを強制的に実行します</li>
-<li>forceXIfStamp : <code>dom-if</code> を利用しているとき、データバインディングで変更された値の再描画を強制的に実行します。通常はライフサイクルコールバックに入り、非同期で書き換わります</li>
-<li>pressSpace : 指定したエレメント上でスペースキーが押されたことをエミュレーションします</li>
-<li>tap : 指定したエレメントでタップ操作をエミュレーションします</li>
-</ul>
-
-<p>これらの操作は、ヘルパーなしに書くと冗長だったり、それだけで疲れてしまうものですが、ヘルパーを利用することでタグ本来の挙動を確認することに集中できます。</p>
-
-<p>また、paper-progress のようにCSSアニメーションを利用する Web Components のテストでは、asyncPlatformFlush を使っています。
-<a href="https://github.com/Polymer/web-component-tester/blob/ed21e16c1b91da0e9a64b32af7f726b3c8613a0d/browser/environment/helpers.ts#L162">このメソッドは web-component-tester で定義されています</a>が、現時点では DEPRECATED なので、 <code>flush</code> を利用することが推奨されています。</p>
-
-<p>flush は flushAsynchronousOperations と似ていますが、コールバックで呼び出されるか、同期実行になるかが異なります。
-<a href="https://www.polymer-project.org/2.0/docs/tools/tests#hybrid-elements-test-local-dom">公式ドキュメントでは flush を利用するように書いている</a>ので、flushを使って書いた方が良いでしょう。
-<code>dom-if</code> や <code>dom-repeat</code> などデータバインディングの結果としてDOMの構造が書き換わる場合、変更は非同期で実行されるため、必ず flush が必要です。
-私もプロダクション開発のテストコードでは、頻繁に flush を使うことがあります。</p>
-
-<h4>それ以外のテストのTIPS</h4>
-
-<p>今回はこのあたりで終了時間が少なくなったので、公式ドキュメントで案内されているテストの書き方について、いくつか解説しました。</p>
-
-<ul>
-<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-methods">エレメントのメソッドをスタブする方法</a></li>
-<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#create-stub-elements">エレメント自体をスタブする方法</a></li>
-<li><a href="https://www.polymer-project.org/2.0/docs/tools/tests#ajax">Ajaxのテスト方法</a></li>
-</ul>
-
-<p>これらは実際にテストを書くと必要になるので、TIPSとしてリンクを残しておきます。</p>
-
-<h3>FAQ</h3>
-
-<blockquote>
-<p>サーバーサイド言語の単体テストは、メソッドを実行して戻り値などを検証するけど、Web Components はプロパティで値を指定して、描画後の状態を取得して検証するの？</p>
-</blockquote>
-
-<p>基本的には、そのような解釈でも問題ないです。
-ただし Web Components にはメソッドも定義できるので、こちらはサーバサイドのテストと同様に記述することも可能です（実際そういう需要があるかは別として）。</p>
-
-<blockquote>
-<p>仮想環境を使っていると面倒</p>
-</blockquote>
-
-<p>たしかに web-component-tester はブラウザを起動して Selenium(Web Driver)を使ってテストするので Vagrant や Virtualbox を使った開発環境ではやりずらいです。
-なるべくホストOSの環境で開発するのがオススメです。</p>
-
-<h3>次回は</h3>
-
-<p>3/26(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
-
-<p>いよいよ、実際に今回アイデア出ししたエレメントを作っていきたいと思います。
-今後もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
-新しいエレメントのアイデアも募集しています。</p>
-
-<h3>さいごに</h3>
-
-<p>写真忘れなかったw！</p>
-
-<p><img src="/images/blog/20180226_211052344.jpg" alt="" /></p>
-
-<p>ワークショップの解説をしている私と参加者、という雰囲気です。</p>
-
-<!-- References -->
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃11 を開催しました" data-url="http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html&t=Polymer.co-edo%20meetup%20%EF%BC%8311%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/02/27/polymer-co-edo-meetup-11.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/19/">« Prev</a>
@@ -842,6 +755,7 @@ web-component-testerはデフォルトで、このディレクトリ名を利用
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
@@ -851,7 +765,6 @@ web-component-testerはデフォルトで、このディレクトリ名を利用
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
-                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
               </ul>
             </div>
           </div>
@@ -962,7 +875,7 @@ web-component-testerはデフォルトで、このディレクトリ名を利用
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (11)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>

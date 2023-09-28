@@ -277,7 +277,127 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
+            <h2 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h2>
+  <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 11:35:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
+      <a href="/tags/actions.html" rel="tag">Actions</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>GitHub の Actions で npm などの依存関係パッケージをキャッシュするのは、公式ドキュメント <a href="https://docs.github.com/ja/actions/using-workflows/caching-dependencies-to-speed-up-workflows">依存関係をキャッシュしてワークフローのスピードを上げる</a> にも書いてあるように、
+CIを高速化するのに重要です。</p>
+
+<p>公式 Example だと以下のとおりです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Caching with npm</span>
+
+<span class="na">on</span><span class="pi">:</span> <span class="s">push</span>
+
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">build</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
+
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Cache node modules</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/cache@v3</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="na">cache-name</span><span class="pi">:</span> <span class="s">cache-node-modules</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="c1"># npm cache files are stored in `~/.npm` on Linux/macOS</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">~/.npm</span>
+          <span class="na">key</span><span class="pi">:</span> <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}</span>
+          <span class="na">restore-keys</span><span class="pi">:</span> <span class="pi">|</span>
+            <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-</span>
+            <span class="s">${{ runner.os }}-build-</span>
+            <span class="s">${{ runner.os }}-</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Dependencies</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm install</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm build</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Test</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm test</span>
+</code></pre></div>
+<p><code>actions/cache</code> を利用すれば問題なく動くのですが、Enterprise 版の場合は <code>runs-on</code> にセルフホストランナーを利用するので、キャッシュがホストランナーのディスクに依存してしまいます。
+これだとホストランナーのディスク管理とか大変になるので、少し管理で楽をしたいな、と思ったところ S3 にキャッシュできるものがあり、現在もこれを利用しています。</p>
+
+<h3>actions-s3-cache</h3>
+
+<p><a href="https://github.com/shonansurvivors/actions-s3-cache">actions-s3-cache</a> は名前のとおり依存関係のキャッシュをS3に保持してくれます。
+これならディスク容量を気にすることもないし、管理が楽になりますね。</p>
+
+<p>公式 Example だと、こんな感じです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">steps</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
+      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
+      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">us-east-1</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">your-s3-bucket-name</span> <span class="c1"># required</span>
+      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">npm-v1-${{ hashFiles('laravel/package-lock.json') }}</span> <span class="c1"># required ('.zip' is unnecessary)</span>
+      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span> <span class="c1"># required </span>
+      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span> <span class="c1"># required</span>
+      <span class="na">zip-option</span><span class="pi">:</span> <span class="s">-ryq</span> <span class="c1"># optional (default: -ryq)</span>
+      <span class="na">unzip-option</span><span class="pi">:</span> <span class="s">-n</span> <span class="c1"># optional (default: -n)</span>
+      <span class="na">working-directory</span><span class="pi">:</span> <span class="s">laravel</span> <span class="c1"># optional (default: ./)</span>
+</code></pre></div>
+<p>僕らの運用では</p>
+
+<ul>
+<li>S3バケットは複数リポジトリで共有</li>
+<li>キー名にリポジトリ名を入れる</li>
+</ul>
+
+<p>みたいな決め事を作ったので、こんな感じにしてみました。</p>
+<div class="highlight"><pre class="highlight yaml"><code>  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
+  <span class="pi">-</span> <span class="na">id</span><span class="pi">:</span> <span class="s">get-repository-name</span>
+    <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
+      <span class="s">IFS=/</span>
+      <span class="s">REPO=${{ github.repository }}</span>
+      <span class="s">set -- ${REPO}</span>
+      <span class="s">echo "::set-output name=name::$2"</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
+      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
+      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">ap-northeast-1</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">ci-actions-cache</span>
+      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">${{steps.get-repository-name.outputs.name}}-cache-${{ hashFiles('package-lock.json') }}</span>
+      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span>
+</code></pre></div>
+<p><code>get-repository-name</code> でリポジトリ名を抜き出してきて、 <code>cache-key</code> で使っています。
+<code>cache-key</code> に一致するものがあれば、S3からダウンロードしてzipを展開、一致するものがなければ <code>command</code> を実行して <code>paths</code> にあるファイルを zip アーカイブして S3 に保持といったことをやってくれるので、便利ですね。</p>
+
+<p>あとは S3 のバケットにファイルの有効期限を設定しておくようにすれば、古いキャッシュがいつまでも残ることもなく、とても便利です。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GitHub Enterprise の Actions で依存関係を S3 にキャッシュする" data-url="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html&t=GitHub%20Enterprise%20%E3%81%AE%20Actions%20%E3%81%A7%E4%BE%9D%E5%AD%98%E9%96%A2%E4%BF%82%E3%82%92%20S3%20%E3%81%AB%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
   <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 05:17:00 PM</a></p>
   <p class="tags">
       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -837,125 +957,6 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/05/02/pong-swoosh-updates.html">pong-swoosh のアップデートまとめ</a></h2>
-  <p class="postdate"><a href="/2022/05/02.html" title="Permanent link">Monday, May 02, 2022 04:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
-      <a href="/tags/pong-swoosh.html" rel="tag">pong-swoosh</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>昨年リリースした <a href="https://its-succ.github.io/pong-swoosh/">pong-swoosh</a> ですが、いつくかのアップデートを重ねてより使いやすくなっている、と感想もいただいております。
-そこで、これまでのアップデートをまとめて紹介します。</p>
-
-<h2>βバージョン</h2>
-
-<p>実はブログで公表する以前に、身内で試していたβバージョンがあり、そのときはTOPページでチャンネルを開設すると、</p>
-
-<ul>
-<li>コントローラページ</li>
-<li>スピーカーページ</li>
-</ul>
-
-<p>の2つのURLを共有してもらうように、表示されていました。</p>
-
-<p>すると、2つ共有するのが面倒であるといった意見があり、エントランスページというのを作り、そこに2つのURLとQRコードを載せることにしました。
-これが処理リリースバージョン（以前のブログ <a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a> で紹介したものです。</p>
-
-<h2>初期バージョン</h2>
-
-<p>しばらくはデザインの変更はなく、Socket.io 周辺で接続が切れたり、Herokuのインスタンスが再起動したときの再接続などを解消するのがメインでした。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/50">チャンネルは削除イベントが送信されたときに削除する</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/52">接続できない場合にスナックバーが表示されるように修正</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/58">リロードやHeroku再起動時も動作が継続できるようにした</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/64">サーバーとの接続が回復したら、自動的に接続するように対応した</a></li>
-</ul>
-
-<p>これらの対処で基本的な安定接続が保たれ、ユーザー体験を改善することにフォーカスしていきました。</p>
-
-<h2>UIの改善</h2>
-
-<p>ここで、いくつかの改善が実施されました。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/62">デフォルト効果音の変更と音量の調整</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/65">スピーカー画面に参加人数を表示した</a></li>
-</ul>
-
-<p>音量がバラバラな感じだったので、調整しました。
-参加人数に関しては、表示して欲しいという要望があったので、スピーカー画面に表示するよう追加されました。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/66">チャンネル作成中はローディング画面に切り替えて、操作できないようにしておく</a></li>
-</ul>
-
-<p>Herokuのインスタンスがしばらくアクセスされていない、初期起動の状態だとチャンネル作成に時間がかかり
-何度も作成ボタンを押してしまうトラブルがあったので、すぐにローディング画面へ切り替えるように。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/68">参加者画面を追加して、エントランスの代わりにした</a></li>
-</ul>
-
-<p>初期のコンセプトでもあった</p>
-
-<blockquote>
-<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
-かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。
-そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
-スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
-もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
-</blockquote>
-
-<p>この考え方、エントランスページからスピーカーはPC、コントローラはスマホ、というのが思いの外PCのみでも操作で良い人が多いということがわかりました。
-なので、エントランスページはなくして、共有されたURLがいきなり参加者側のアプリケーション画面という流れにしました。
-なので、共有したURLから画面遷移する必要がありません。
-参加者画面にはスマホでコントローラを表示できるQRコードを表示するようにしたので、もしスマホから操作という場合も従来のステップ数からは
-変更なく利用できるようになっています。</p>
-
-<h2>速度の改善</h2>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/85">効果音はクライアント側で読み込むように変更</a></li>
-</ul>
-
-<p>これまではSocket.ioのメッセージの中にバイナリで効果音を送信するようにしていたのですが、同じオリジンに効果音を設置するようにし、
-ブラウザから効果音をロードする変更を実施しました。
-これによって、効果音ボタンを押したときにブロードキャストされるメッセージは効果音IDぐらいになってので、送信コストが下がりより大人数でも時差なく
-効果音が鳴るようになりました（これまでは30人ぐらいのイベントだと少しタイムラグがあった）。</p>
-
-<h2>テストコードの追加</h2>
-
-<p>OSSでの活動でもあるので、多くの人から改善リクエストを受け付けられるように、サーバーサイドからテストコードを追加しています。
-まだ途中ですが、フロントエンドがSveltteということもあり、そのテストツールでもある <a href="https://github.com/lukeed/uvu">uvu</a> を利用しています。</p>
-
-<h2>実は pong-swoosh はプライベートβから１周年</h2>
-
-<p>pong-swoosh の初期実装をプライベートβで利用し始めたのは、ちょうど1年前のGW明けでした。
-そのときに、まだオンラインカンファレンスやミーティングがどのぐらい続くのかわからない中、まだ必要としてくれる人がいれば、という思いではじめてきて
-1年が経過しようとしています。</p>
-
-<p>まだオンラインの需要はあるようですので、引き続き pong-swoosh の改善をしていきたいと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="pong-swoosh のアップデートまとめ" data-url="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html&t=pong-swoosh%20%E3%81%AE%E3%82%A2%E3%83%83%E3%83%97%E3%83%87%E3%83%BC%E3%83%88%E3%81%BE%E3%81%A8%E3%82%81" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/4/">« Prev</a>
@@ -983,6 +984,7 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
@@ -992,7 +994,6 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
                   <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
                   <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
-                  <li><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a> <span>2023/02/02</span></li>
               </ul>
             </div>
           </div>
@@ -1103,7 +1104,7 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2023.html">2023</a> (11)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
                   <li><a href="/2020.html">2020</a> (6)</li>
