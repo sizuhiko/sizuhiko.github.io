@@ -277,7 +277,261 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/07/02/polymer-co-edo-meetup-15.html">Polymer.co-edo meetup ＃15 を開催しました</a></h2>
+            <h2 class="title"><a href="/2018/07/29/polymer-co-edo-meetup-16.html">Polymer.co-edo meetup ＃16 を開催しました</a></h2>
+  <p class="postdate"><a href="/2018/07/29.html" title="Permanent link">Sunday, July 29, 2018 11:31:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年7回目となる <a href="https://polymercoedo.doorkeeper.jp/events/77462">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>PWA Starter Kit でも使われていた lit-element を使って、カスタムエレメントを作る体験</p>
+</blockquote>
+
+<p>ということで、codelabsにある、Polymer1系のエレメント作成では定番の <a href="https://codelabs.developers.google.com/codelabs/polymer-first-elements/index.html">Build your first Polymer element</a> です。
+当日は、<a href="https://github.com/googlecodelabs/polymer-first-elements/tree/master/icon-toggle-finished">上記チュートリアルの完成系のコード</a> を見ながら <a href="https://github.com/Polymer/lit-element">lit-element</a> で作ってみました。</p>
+
+<p>このブログでは、当日やったことの履歴として、今後やってみたい人のために、手順を書いておきます。</p>
+
+<h3>Polymer CLI をインストールする</h3>
+
+<p>まず <a href="https://github.com/Polymer/lit-element">lit-element</a> の README に書かれているように Polymer CLI をインストールします。
+READMEではグローバルにインストールしていますが、今回はローカルに入れてみましょう。</p>
+
+<p><code>icon-toggle</code> というディレクトリを作ってから、CLIをインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">mkdir </span>icon-toggle
+<span class="nv">$ </span><span class="nb">cd </span>icon-toggle
+<span class="nv">$ </span>npm i polymer-cli@next
+</code></pre></div>
+<p>念のため、インストールできたか確認してみます。
+<code>help</code> コマンドが表示できていれば大丈夫です。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>./node_modules/.bin/polymer <span class="nb">help</span>
+
+
+
+   /<span class="se">\˜</span>˜/   /<span class="se">\˜</span>˜/<span class="se">\</span>
+  /__<span class="se">\/</span>   /__<span class="se">\/</span>__<span class="se">\ </span>   Polymer-CLI
+ /<span class="se">\ </span> /   /<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\</span>
+/__<span class="se">\/</span>   /__<span class="se">\/</span>  <span class="se">\/</span>__<span class="se">\ </span> The multi-tool <span class="k">for </span>Polymer projects
+<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+ <span class="se">\/</span>__<span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>   Usage: <span class="sb">`</span>polymer &lt;<span class="nb">command</span><span class="o">&gt;</span> <span class="o">[</span>options ...]<span class="sb">`</span>
+  <span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+   <span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>
+
+</code></pre></div>
+<h3>icon-toggle エレメントのスケルトンを作る</h3>
+
+<p>codelabs にあるコードは、すでにディレクトリ構造やファイルが準備されている状態から始まりますが、今回は CLI から作成します。</p>
+
+<p>以下のコマンドを実行してみましょう。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>./node_modules/.bin/polymer init
+</code></pre></div>
+<p>何を作成するのか質問されるので、 <code>polymer-3-element</code> を選択します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>? Which starter template would you like to use? 
+❯ polymer-3-element - A simple Polymer 3.0 element template 
+</code></pre></div>
+<p>エレメント名はそのまま <code>Enter</code> で進むと、 <code>.gitignoreがないよ</code> というエラーになってしまいます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>info: [init]    Running template polymer-3-element...
+? Element name icon-toggle
+? Brief description of the element 
+error: [cli.main]   Uncaught exception: AssertionError [ERR_ASSERTION]: Trying to copy from a source that does not exist: xxx/icon-toggle/node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+e
+</code></pre></div>
+<p>これは、<a href="https://github.com/Polymer/polymer-cli/issues/999">Polymer3のエレメントテンプレートがミスっている</a>ということで、ファイルを作ってからリトライします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">touch</span> ./node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+<span class="nv">$ </span>./node_modules/.bin/polymer init
+</code></pre></div>
+<p>質問には、上記と同じように回答してください。そうすると、以下のように表示されて完了します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Setup Complete!
+Check out your new project README for information about what to do next.
+</code></pre></div>
+<h3>必要なパッケージをインストールする</h3>
+
+<p>まずインストールされている PolymerElement を削除します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm uninstall @polymer/polymer
+</code></pre></div>
+<p>つづいて、LitElement をインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @polymer/lit-element
+</code></pre></div>
+<p>icon-toggle では <code>iron-icon</code> と <code>iron-icons</code> を利用する（codelabsでは最初からbower.jsonに入っている）ので、これらのCustomElementsもインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @polymer/iron-icon
+<span class="nv">$ </span>npm i @polymer/iron-icons
+</code></pre></div>
+<p>最後にもう一度 Polymer CLI をインストールしておきます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i <span class="nt">-D</span> polymer-cli@next
+</code></pre></div>
+<h3>LitElement で書き換えてみる</h3>
+
+<p>ソースコードを GitHub に置きました。
+<a href="https://github.com/sizuhiko/lit-element-icon-toggle">sizuhiko/lit-element-icon-toggle</a></p>
+
+<p>Polymer CLIで作った Polymer3.0 element を LitElement に書き換える箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>import</code> を <code>LitElement</code> に変更</li>
+<li>親クラスを <code>LitElement</code> に変更</li>
+<li><code>static get template()</code> を <code>_render({必要な引数})</code> に変更</li>
+</ul>
+
+<p>codelabs は Polymer1 で書かれているので、Polymer3 形式に変更するときに気をつける箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>listeners</code> は使わずに <code>addEventListener</code> でクリックイベントを受け取る</li>
+</ul>
+
+<p>あと、デモのコードのアップした内容を見て確認してください。
+LitElementとは関係ないですが、Polyfillのインポートが以下のように変わっています。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<h3>LitElement と PolymerElement の違い</h3>
+
+<p>PolymerElementはHtmlElementに以下のような機能が追加されて構成されています。
+<a href="https://www.polymer-project.org/3.0/docs/api/">公式ドキュメントのAPI doc</a>の <code>polymer-element.js</code> を参照してください。</p>
+
+<blockquote>
+<p>Base class that provides the core API for Polymer&rsquo;s meta-programming features including template stamping, data-binding, attribute deserialization, and property change observation.</p>
+</blockquote>
+
+<p>また、このドキュメントに書いてある様々な機能を利用できます（たとえば tap イベントを処理するための <code>gesture-event-listeners.js</code> とか）。</p>
+
+<p>対して、LitElementではPolymerElementのつもりでいると、以下のようなポイントで躓きます。</p>
+
+<ul>
+<li>プロパティで <code>reflectToAttribute</code> が使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/10">Adding reflectToAttribute to the demo doesn&rsquo;t work #10</a> に解決するサンプルコードが書いてあります。lit-element-icon-toggleではそのまま利用しています。</li>
+</ul></li>
+<li>プロパティで2ウェイデータバインディングが使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/14">2 way data binding not working #14</a> や <a href="https://github.com/Polymer/lit-element/issues/81">Implement property change notification events (notify) #81</a> が参考になります。</li>
+</ul></li>
+<li>プロパティで <code>observer</code> が使えない</li>
+</ul>
+
+<p>ということで、codelabs のPolymer1版ではあった、データバインディングの箇所は実装されていません。
+現時点は上記 issue を参考に、値に変更があったときにイベント <code>pressed-changed</code> イベントを投げるところまでは実装しています。
+受け取り側の <code>demo/index.html</code> で以下のようなJavaScriptを書くと変更イベントを受け取れます。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">icon-toggle[toggleicon="favorite"]</span><span class="dl">'</span><span class="p">).</span> <span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">pressed-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">e</span><span class="p">));</span>
+</code></pre></div>
+<p>プロパティの値が変化したときには、データバインディングでなく redux などを使おう、というのは PWA-Starter-Kit のコードからも伝わってくるので、まぁそうなのかなーと思います。
+ただ、アプリでなく、エレメントを作って公開したい場合は、 redux なのか？という気もするので、change イベントなどを投げるのが良いのだろうな、とは思っています。</p>
+
+<h3>次回は</h3>
+
+<p>8/20(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>そろそろ、edoエレメントの開発をしないとなー、なんて思っています&hellip;</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo meetup ＃16 を開催しました" data-url="http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html&t=Polymer.co-edo%20meetup%20%EF%BC%8316%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a></h2>
+  <p class="postdate"><a href="/2018/07/28.html" title="Permanent link">Saturday, July 28, 2018 01:27:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+      <a href="/tags/wot.html" rel="tag">WoT</a>
+      <a href="/tags/mftokyo2018.html" rel="tag">MFTokyo2018</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="http://makezine.jp/event/mft2018/">Maker Faire Tokyo 2018</a>に<a href="http://makezine.jp/event/mft2018/">CHIRIMEコミュニティ</a>で参加するためのデモをセットアップしたときのメモ。</p>
+
+<h2>購入したもの</h2>
+
+<ul>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4KC6">Raspberry Pi 3 model B+</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-55ZD">Adafruit PiTFT Plus 480x320 3.5インチTFT</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-56B6">Adafruit GPIOリボンケーブル - 26ピン</a></li>
+<li><a href="https://www.amazon.co.jp/dp/B078JKJP8D">TOSHIBA microSDHC 16GB</a></li>
+</ul>
+
+<h2>インストール</h2>
+
+<h3>イメージファイルのダウンロード</h3>
+
+<p><a href="http://download.chirimen.org/release/raspberry_pi_3/">CHIRIMEN公式サイトのダウンロードページ</a>から、<a href="http://download.chirimen.org/release/raspberry_pi_3/CHIRIMEN_Raspberry_pi_3_20180716.zip">CHIRIMEN<em>Raspberry</em>pi<em>3</em>20180716.zip</a>をダウンロードします。
+Raspberry Pi 3 model B+ で利用できる CHIRIMEN のイメージファイルは現時点では評価版です。</p>
+
+<h3>イメージファイルの書き込み</h3>
+
+<p><a href="https://www.1ft-seabass.jp/memo/2018/07/23/raspbian-install-201807-memo/">最近のRaspberry Piイメージ（Raspbian）をインストールするメモ</a>が参考になります。
+<a href="https://etcher.io/">Etcher</a>を使って、ダウンロードしたイメージファイルをmicroSDカードに書き込みます。</p>
+
+<h3>SSHの有効化</h3>
+
+<p>Raspbianはセキュリティを考慮してデフォルトではSSHが無効になっているので、
+SDカードをマウントして、以下のコマンドを実行しておきます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">touch</span> /Volumes/boot/ssh
+</code></pre></div>
+<h2>起動</h2>
+
+<p>microSDカードをRaspberry Pi 本体に挿して、起動します。
+Raspberry Piにsshで入るため、有線LANをMacと接続しました。
+<a href="https://qiita.com/fumishitan/items/88bb832cb08fe8016f66">MacとRaspberry piをインターネット共有でつないでみる</a>が参考になります。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>ssh pi@192.168.2.2
+</code></pre></div>
+<p>初期パスワードは <code>rasp</code> になっています。</p>
+
+<p>3.5TFTを有効にするため、<a href="https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi/easy-install-2">公式サイトのEASY INSTALL</a>を参考に、ドライバーをインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd</span> ~
+wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
+<span class="nb">chmod</span> +x adafruit-pitft.sh
+<span class="nb">sudo</span> ./adafruit-pitft.sh
+</code></pre></div>
+<p>で、このままでは X を利用できないので <a href="https://qiita.com/hishi/items/bdd630666277e4f8162a#x-windows%E3%81%AE%E6%8F%8F%E7%94%BB">Raspberry Pi Zero(W)でPiTFTを使う - X Windowsの描画</a>を参考に、設定の変更とタッチスクリーンの調整を行います。</p>
+
+<h2>ソフトウェアキーボードのインストール</h2>
+
+<p><a href="https://darmus.net/raspberry-pi-matchbox-keyboard-install/">Raspberry Piでソフトウェアキーボードをインストール&amp;起動する方法</a>を参考に、Matchbox Keyboardをインストールします。</p>
+
+<h2>デモプログラムの作成</h2>
+
+<p>Web Components(Polymer) meets REAL WORLD ということで、2年連続 HTML のパーツを組み合わせることで WoT を体験できるようなデモを実施予定です。
+昨年は WebGpio タグを作ったので、今年は WebI2c タグを予定しています。
+近日コードは公開予定！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CHIRIMEN Raspi setup" data-url="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html&t=CHIRIMEN%20Raspi%20setup" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/07/02/polymer-co-edo-meetup-15.html">Polymer.co-edo meetup ＃15 を開催しました</a></h2>
   <p class="postdate"><a href="/2018/07/02.html" title="Permanent link">Monday, July 02, 2018 03:22:00 PM</a></p>
   <p class="tags">
       <a href="/tags/polymer.html" rel="tag">Polymer</a>
@@ -514,81 +768,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html">Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました</a></h2>
-  <p class="postdate"><a href="/2018/06/09.html" title="Permanent link">Saturday, June 09, 2018 01:00:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/co-edo.html" rel="tag">co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Polymerそのものと、Polumer.co-edoでの活動（取り組み）について、LTをしました。</p>
-
-<p>co-edoに集う人の中から参加者が増えると良いなーと思っています。</p>
-
-<p>今月は6/25に PWA starter kit のハンズオンを予定しています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました" data-url="http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html&t=Co-Edo%E3%81%A7%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%8B%E3%82%A2%E3%83%BBWeb%E3%83%87%E3%82%B6%E3%82%A4%E3%83%8A%E3%83%BC%E9%A3%B2%E3%81%BF%E4%BC%9A%20%E3%80%8E%E6%A2%85%E9%9B%A8%E3%82%82%E5%88%9D%E5%A4%8F%E3%82%82%E3%81%B0%E3%81%A3%E3%81%A1%E3%81%93%E3%81%84%EF%BC%81%E6%81%92%E4%BE%8B%E3%81%AE%E3%82%B1%E3%83%B3%E3%82%BF%E3%83%83%E3%82%AD%E3%83%BC%F0%9F%8D%97%E3%81%A8%E3%83%93%E3%83%BC%E3%83%AB%F0%9F%8D%BA%E3%81%A7%E7%96%B2%E3%82%8C%E3%82%92%E5%90%B9%E3%81%8D%E9%A3%9B%E3%81%B0%E3%81%9D%E3%81%86%E3%81%AE%E4%BC%9A%E3%80%8F%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6LT%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/05/30/vivaldi-kaeremasen.html">Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました</a></h2>
-  <p class="postdate"><a href="/2018/05/30.html" title="Permanent link">Wednesday, May 30, 2018 12:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/vivaldi.html" rel="tag">Vivaldi</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://vivaldi2018tokyo.peatix.com/">5/29に開催された Vivaldiジャパンツアー2018 #Vivaldi帰れま千 に参加しました</a></p>
-
-<p><img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/381967/cover-O8QmxcnsXjNd9jFXEZqEXum1KIL5qaQc.png" alt="" /></p>
-
-<p>古くからのOperaユーザーがほとんどでした。
-中には母親から与えられたPCにOperaが入っていたという若手もいて、年齢を感じましたがw</p>
-
-<p>Peatixのオフィスは恵比寿の、月に2度以上は目の前を通る場所でした（そこに入っているの知らなかった）。</p>
-
-<p>みんないろんなTIPSを持っていて、すごいなーと思う反面、私はヘビータブ使い（500タブとか当たり前）なので、タブの話（要望）を。
-標準でタブスタックできて、検索もできるんだけど、ウィンドウ横断でタブ検索できるようにしてほしい！というLTでした。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">昨夜、東京でのミートアップも大盛り上がりでした。登壇いただいた方、ご参加いただいた方、みなさまありがとうございました！！<a href="https://twitter.com/hashtag/Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83?src=hash&amp;ref_src=twsrc%5Etfw">#Vivaldi帰れま千</a> <a href="https://t.co/OL4qSbIzHo">pic.twitter.com/OL4qSbIzHo</a></p>&mdash; Vivaldiブラウザー (@vivaldi_jp) <a href="https://twitter.com/vivaldi_jp/status/1001713776117370886?ref_src=twsrc%5Etfw">2018年5月30日</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>1年に一回ぐらいなのかな、ユーザーの集いがあるブラウザって良いですね。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました" data-url="http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html&t=Vivaldi%E3%82%B8%E3%83%A3%E3%83%91%E3%83%B3%E3%83%84%E3%82%A2%E3%83%BC2018%20%EF%BC%83Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83%20Vivaldi%E3%83%A6%E3%83%BC%E3%82%B6%E3%83%BC%E3%83%97%E3%83%AC%E3%82%BC%E3%83%B3%E3%83%BB%E4%BA%A4%E6%B5%81%E4%BC%9A%20in%20Tokyo%20%E3%80%9C%E6%9D%B1%E4%BA%AC%E3%81%AE%E4%B8%AD%E5%BF%83%E3%81%A7%E6%84%9B%E3%82%92%E5%8F%AB%E3%81%B6%E3%80%9C%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6LT%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/18/">« Prev</a>
@@ -616,6 +795,8 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
@@ -624,8 +805,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
-                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
-                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
               </ul>
             </div>
           </div>
@@ -633,6 +812,12 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
@@ -660,16 +845,13 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                     <li class="size0">
                       <a href="/tags/dependabot.html" rel="tag">dependabot</a>
                     </li>
-                    <li class="size5">
-                      <a href="/tags/php.html" rel="tag">PHP</a>
-                    </li>
                     <li class="size0">
                       <a href="/tags/gcp.html" rel="tag">GCP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/asucon.html" rel="tag">asucon</a>
                     </li>
-                    <li class="size4">
+                    <li class="size3">
                       <a href="/tags/polymer.html" rel="tag">Polymer</a>
                     </li>
                     <li class="size3">
@@ -736,6 +918,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024.html">2024</a> (2)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

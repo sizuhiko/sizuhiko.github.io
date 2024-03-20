@@ -277,7 +277,118 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2018/11/18/jsfes-2018-autumn.html">秋のJavaScript祭りに参加して、Web ComponentsについてLTをしました</a></h2>
+            <h2 class="title"><a href="/2018/12/09/kddi-digital-gate-hacks.html">KDDI DIGITAL GATE HACKSのお手伝いをしてきました</a></h2>
+  <p class="postdate"><a href="/2018/12/09.html" title="Permanent link">Sunday, December 09, 2018 06:11:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>KDDI学生向けハッカソン<a href="https://www.kdghacks.com/">KDDI DIGITAL GATE HACKS 2018</a>でチューターとしてお手伝いをしてきました。
+どんなハッカソンなのかは<a href="https://techplay.jp/event/697271">TECH PLAYのイベントサイト</a>の方がわかりやすいかも。</p>
+
+<p><a href="https://soracom.jp/products/module/wio_lte_m1_nb1/">SORACOMのWio LTE M1/NB1</a>を使って、家での生活をワクワクさせるIoTサービスを創るイベントです。</p>
+
+<p>たくさんの大学生/大学院生が参加されて、みなさん優秀だったのでチューターとしては特にやることも少なくて、とにかく楽しいという感想が残るイベントでした。</p>
+
+<p>詳細はイベント主催であるKDDIさんからブログが公開されるのではないかと思うので、準備秘話というか「Wio LTE M1/NB1」(以後WioLTE青)のつらさを書いておきます。</p>
+
+<p>WioLTEとはSeeedが開発しSORACOMで販売しているボードです。
+これまでに</p>
+
+<ul>
+<li><a href="https://soracom.jp/products/module/wio_lte">Wio LTE JP Version</a> 以降WioLTE赤</li>
+<li><a href="https://soracom.jp/products/module/wio_3g_soracom_edition">Wio 3G SORACOM Edition</a></li>
+</ul>
+
+<p>が発売されています。WioLTE青はKDDIのSIMが利用できるのが特徴です。</p>
+
+<p>ということで、チューターはサンプルプログラムを作ったりといった準備をしていました。
+私は個人的にWioLTE赤を購入して使っていたので、その感覚でWioLTE青を使い始めたのですが、似ているのですが、だいぶ違うものなので、これから触る人は少し注意が必要です。</p>
+
+<h3>WioLTE青の良いところ</h3>
+
+<ul>
+<li>KDDIのSIMが使える</li>
+<li>DFUモードが不要なので、Arduino IDEからのプログラムの書き込みが簡単</li>
+</ul>
+
+<h3>WioLTE青の困ったところ</h3>
+
+<ul>
+<li>サンプルが少ない。でも今回たくさん作ったので<a href="https://github.com/kdg-hacks/kdg-hacks-examples">kdg-hacks-examples</a>が役に立つと良いな、と思っています。</li>
+<li>I2C通信にWireが使えない。WireI2Cを使うので既存のArduino向けライブラリを簡単に使えない。</li>
+<li>WioLTE赤と違って使っている人が少ないのでノウハウが少ない</li>
+<li>WioLTE赤は5Vセンサーでも電源だけ5Vを給電すれば5Vセンサー値も読み取れたが、どうもそれはできないっぽい</li>
+<li>interrupts/noInterruptsメソッドがArduino-Coreに実装されていないので、タイミング重要なNeoPixelといったテープLEDが使えなかった（ライブラリ使うとコンパイルとおらない）</li>
+<li><a href="https://github.com/SeeedJP/stm32f4ArduinoCore">STM32F405/407のArduinoCore</a>の実装がプアなので、Arduinoだと思うとハマる</li>
+</ul>
+
+<p>ということでGroveのセンサーだいたい使える、と思っていると5V必要だったりするセンサーが絶望的に動きません。</p>
+
+<h3>でも良いボード</h3>
+
+<p>IoTでWiFiとかかなりつらいし、LTE使えるだけでも魅力てきなので、例えば苦手な部分はArduinoで実装してI2Cスレーブとして、WioLTEから操作するのはアリかな、というか、そういう使い方が良いと思っています。悩まなくて良いし、開発スピードも増します。</p>
+
+<h3>まとめ</h3>
+
+<p>学生向けハッカソンへの参加はとても新鮮で楽しかったです。
+また機会があればイベントに協力していきたいなと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="KDDI DIGITAL GATE HACKSのお手伝いをしてきました" data-url="http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html&t=KDDI%20DIGITAL%20GATE%20HACKS%E3%81%AE%E3%81%8A%E6%89%8B%E4%BC%9D%E3%81%84%E3%82%92%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/12/09/assistant-developer-conference-vol-1.html">Assistant Developer Conference vol.1で仕事でやっていることの発表をしました</a></h2>
+  <p class="postdate"><a href="/2018/12/09.html" title="Permanent link">Sunday, December 09, 2018 06:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/actions-on-google.html" rel="tag">Actions on Google</a>
+      <a href="/tags/googlehome.html" rel="tag">GoogleHome</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>Assistant Developer Community JapanのSlack(assistant-dev-ja.slack.com)に入って情報収集したり、
+普段仕事で得たTipsなどを共有したりしているのですが、
+そこで運用の話で盛り上がったところ、セッションのお誘いをいただいたので、開発チームのメンバーと一緒に発表してきました。</p>
+
+<p><a href="https://aogdevsja.connpass.com/event/107408/">Assistant Developer Conference vol.1</a>の2番目で「家電操作の発話ログ収集と今後の展望」というタイトルです。</p>
+
+<p>発表資料はまだOKが出てないので公開できないのですが、いわゆるスマートホームアクションの話をしてきました。
+資料公開できたら追加でリンクします。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Assistant Developer Conference vol.1で仕事でやっていることの発表をしました" data-url="http://blog.open.tokyo.jp/2018/12/09/assistant-developer-conference-vol-1.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/12/09/assistant-developer-conference-vol-1.html&t=Assistant%20Developer%20Conference%20vol.1%E3%81%A7%E4%BB%95%E4%BA%8B%E3%81%A7%E3%82%84%E3%81%A3%E3%81%A6%E3%81%84%E3%82%8B%E3%81%93%E3%81%A8%E3%81%AE%E7%99%BA%E8%A1%A8%E3%82%92%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/12/09/assistant-developer-conference-vol-1.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2018/11/18/jsfes-2018-autumn.html">秋のJavaScript祭りに参加して、Web ComponentsについてLTをしました</a></h2>
   <p class="postdate"><a href="/2018/11/18.html" title="Permanent link">Sunday, November 18, 2018 05:46:00 PM</a></p>
   <p class="tags">
       <a href="/tags/polymer.html" rel="tag">Polymer</a>
@@ -505,246 +616,6 @@ Downloading archive: https://s3.amazonaws.com/travis-php-archives/binaries/ubunt
     </div>
 
   </div>
-  <h2 class="title"><a href="/2018/09/24/google-cloud-builder-php72.html">Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする</a></h2>
-  <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 06:52:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/googlecloudbuilder.html" rel="tag">GoogleCloudBuilder</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は、<a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a>の中で紹介している<a href="https://github.com/sizuhiko/gccb-php-se-sample">Google Cloud Builderを利用してGAEのPHP SEへ自動デプロイするサンプルコード</a>を最新に更新した解説記事です。</p>
-
-<h3>何が変わったのか？</h3>
-
-<p>PHPカンファレンス関西2018時点では以下のようになっていました。</p>
-
-<ul>
-<li>GAEのPHPは5.5</li>
-<li>Google Cloud Container Builder を利用</li>
-</ul>
-
-<p>今日では以下のようになっています。</p>
-
-<ul>
-<li>GAEのPHPで7.2が利用可能に</li>
-<li>Cloud Container Builder は Cloud Build という名前に変更</li>
-</ul>
-
-<h4>gcloud コマンド利用上での変更</h4>
-
-<p>Dockerのバージョンがあがったことで <code>gcloud</code> コマンドから <code>docker</code> コマンドを実行するときに認証設定が必要になりました。
-READMEにも反映していますが、以下のコマンドを実行しておく必要があります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ gcloud auth configure-docker
-</code></pre></div>
-<p><code>gcloud</code> コマンドをアップデートしてみましたが、「PUSH TO DEPLOY のトリガーをセットする」については、まだできませんでした。
-<a href="https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds/create">projects.builds/create API</a>は実装されているようなので、CLIから実行できるようになるのを心待ちにしています。</p>
-
-<h4>composer イメージの更新</h4>
-
-<p>PHP7.2を利用できるようになったので、 <code>composer/composer:php5</code> のDockerイメージを <code>composer/composer:alpine</code> に変更しました。
-<code>composer/composer</code> でも良かったのですが、 <code>alpine</code> ベースの方が軽量だし、いいですよね。</p>
-
-<h4>app.yaml の更新</h4>
-
-<p>基本的にここがメインなのですが、以下のような変更点があります。</p>
-
-<ul>
-<li>runtime を <code>php72</code> に変更</li>
-<li><code>handlers</code> の <code>application_readable</code> は常に <code>true</code> に</li>
-<li><code>skip_files</code> でデプロイしないファイルの指定は <code>.gcloudignore</code> ファイルへ移行する</li>
-<li><code>/</code> アクセスされたときの <code>script</code> 指定は <code>auto</code> に（ただし <code>index.php</code> か <code>public/index.php</code> の場合のみで、他はパスを指定）</li>
-</ul>
-
-<p>こういった変更は、<a href="https://cloud.google.com/appengine/docs/standard/php7/php-differences">Compatibility issues between PHP 5.5 and PHP 7.2</a>にまとめられています。
-※ <code>skip_files</code> については書いていないので、実際にマイグレーションして確認は必要です（これは5.5から7.2の変更というよりは <code>gcloud</code> コマンドのバージョンアップに伴うものだから書いていないのかもしれないです）。</p>
-
-<h3>デプロイしてみよう</h3>
-
-<p>あとは、用意したコマンドを順番に実行してデプロイ環境を整備してから、 <code>git push</code> するだけで、PHP7.2のアプリケーションがデプロイできます。
-githubのリポジトリが <code>Cloud Source Repositories</code> にミラーされるところなどは変わっていませんでした。</p>
-
-<h3>さいごに</h3>
-
-<p>この内容は <a href="https://phpcondo.connpass.com/event/93953/">プレPHPカンファレンス北海道</a> で発表する予定だったのですが、地震の影響でイベントが中止となったため、このブログにまとめました。</p>
-
-<p>どこかで機会があれば、GAEとPHP7.2について発表してみたいなと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Google Cloud Builder を使って PHP7.2 のアプリケーションを GAE に継続的デプロイする" data-url="http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html&t=Google%20Cloud%20Builder%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%20PHP7.2%20%E3%81%AE%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20GAE%20%E3%81%AB%E7%B6%99%E7%B6%9A%E7%9A%84%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/09/24/google-cloud-builder-php72.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2018/09/24/web-i2c-element-update.html">web-i2cエレメントをより使いやすくしました。</a></h2>
-  <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 03:41:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>先日の<a href="/2018/08/13/maker-faire-tokyo-2018.html">Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました</a>で <code>web-i2c-element はどうなの？</code> 
-に記述した改良ポイントを使った<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>をアップしました。</p>
-
-<h3>変更したポイント：</h3>
-
-<p>変更の概要は以下のとおりです。</p>
-
-<ul>
-<li><code>no-web-i2c</code> スロットを指定すると、非対応メッセージを表示できるようになった</li>
-<li><code>WebI2cSensorElement</code> を使って、センサー毎の共通実装をなくし、より簡単にセンサーのカスタムエレメントが実装できるようになった</li>
-<li>Polymer使ってなくても、タグだけを使ってセンサーの値が取得できるようなサンプルに変更した</li>
-</ul>
-
-<p>では、それぞれの変更を詳しく見ていきましょう。</p>
-
-<h3>非対応メッセージの表示</h3>
-
-<p><a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;web-i2c&gt;</span>
-  <span class="nt">&lt;grove-touch</span> <span class="na">slave-address=</span><span class="s">"0x5a"</span><span class="nt">&gt;&lt;/grove-touch&gt;</span>
-  <span class="nt">&lt;grove-gesture</span> <span class="na">slave-address=</span><span class="s">"0x73"</span><span class="nt">&gt;&lt;/grove-gesture&gt;</span>
-  <span class="nt">&lt;div</span> <span class="na">slot=</span><span class="s">"no-web-i2c"</span><span class="nt">&gt;</span>
-    このデバイスはCHIRIMENではありませんが、ピアノ演奏はお楽しみいただけます。
-  <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;/web-i2c&gt;</span>
-</code></pre></div>
-<p><code>web-i2c</code> タグの内側に <code>no-web-i2c</code> というslot名のタグを記述することで、
-もしCHIRIMEN以外のデバイス（例えばPCなど）から、このページを表示するとメッセージを表示することができるようになります。
-試しに、PCから<a href="http://blog.open.tokyo.jp/chirimen-piano/">chirimen-pianoのデモページ</a>にアクセスしてみてください。</p>
-
-<h3>WebI2cSensorElementを利用したカスタムエレメントの記述</h3>
-
-<p>最初のバージョンでは、 <code>PolymerElement</code> を使っていたため共通的な実装が多くなっていたのですが、
-いくつかのセンサー実装をしてみて共通化できそうな箇所もわかってきたので、I2C用の親クラスを作ることにしました。</p>
-
-<p><code>WebI2cSensorElement</code> を使ったセンサーのクラスとして、GROVEタッチとGROVEジェスチャーのカスタムエレメントを作りました。</p>
-
-<p>例として<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/src/chirimen-piano-app/grove-touch.js">grove-touch.js</a>ファイルを見てましょう。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">GroveTouch</span> <span class="kd">extends</span> <span class="nx">WebI2cSensorElement</span> <span class="p">{</span>
-  <span class="k">async</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_autoRead</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2b</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2c</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2d</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2e</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2f</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x30</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x31</span><span class="p">,</span><span class="mh">0xff</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x32</span><span class="p">,</span><span class="mh">0x02</span><span class="p">);</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="mi">12</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span><span class="nx">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
-      <span class="c1">// console.log(i);</span>
-      <span class="kd">var</span> <span class="nx">address</span> <span class="o">=</span> <span class="mh">0x41</span><span class="o">+</span><span class="nx">i</span><span class="p">;</span>
-      <span class="c1">// console.log(address);</span>
-      <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="p">,</span><span class="mh">0x0f</span><span class="p">);</span>
-      <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x0a</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5d</span><span class="p">,</span><span class="mh">0x04</span><span class="p">);</span>
-    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5e</span><span class="p">,</span><span class="mh">0x0c</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="k">async</span> <span class="nx">read</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">read16</span><span class="p">(</span><span class="mh">0x00</span><span class="p">);</span>
-    <span class="c1">// console.log(value);</span>
-    <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">++</span><span class="p">){</span>
-      <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(((</span><span class="nx">value</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="nx">cnt</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)?</span><span class="kc">true</span><span class="p">:</span><span class="kc">false</span><span class="p">);</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">)))</span> <span class="p">{</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">_setValue</span><span class="p">(</span><span class="nx">array</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nb">window</span><span class="p">.</span><span class="nx">customElements</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">,</span> <span class="nx">GroveTouch</span><span class="p">);</span>
-</code></pre></div>
-<p>まず <code>WebI2cSensorElement</code> を継承したクラスを定義します。
-このクラスには2つのオーバライド可能なメソッドがあります。</p>
-
-<ul>
-<li>init</li>
-<li>read</li>
-</ul>
-
-<p>どちらも <code>async</code> メソッドにすることで I2Cスレーブデバイスからの応答を待ち合わせる(<code>await</code>)ことができるようになっています。</p>
-
-<p><code>WebI2cSensorElement</code> は、 <code>init</code> 呼び出し時にメンバー変数として <code>_i2cSlave</code> が利用可能になっています。
-これはWeb I2Cのスレーブオブジェクトで、どんなメソッドが使えるかは<a href="https://rawgit.com/browserobo/WebI2C/master/index.html">Web I2C API Specification</a>の <code>4.6 Reading the value</code> や <code>4.8 Writing a value</code> を参照ください。
-サンプルコードの <code>slaveDevice</code> が <code>_i2cSlave</code> と同じものになります。</p>
-
-<h4>init を実装する</h4>
-
-<p>init ではI2Cデバイスの初期化コードを記述します。
-とくに戻り値は必要ありません。</p>
-
-<p>もしセンサーが読み取り可能なら、 <code>this._autoRead = true;</code> のように設定してください。
-これを設定すると、インターバル間隔(デフォルトは100ミリ秒)ごとに <code>read</code> メソッドを呼び出してくれます。</p>
-
-<h4>read を実装する</h4>
-
-<p>init で <code>_autoRead</code> を <code>true</code> に設定した場合、インターバル間隔ごとに呼び出されます。
-センサーの値を読み取って、値が変わった場合は <code>this._setValue(value)</code> を呼び出してください。
-エレメントの <code>value</code> プロパティに値が保持されると同時に、 <code>value-changed</code> イベントが発行されます。</p>
-
-<h3>普通のHTMLからセンサーを取り扱う</h3>
-
-<p>ふたたび<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script&gt;</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">value-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">chirimen-piano-app</span><span class="dl">'</span><span class="p">).</span><span class="nx">touchChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">});</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-gesture</span><span class="dl">'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">value-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">chirimen-piano-app</span><span class="dl">'</span><span class="p">).</span><span class="nx">gestureChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">});</span>
-<span class="nt">&lt;/script&gt;</span>
-</code></pre></div>
-<p>センサー値の変更を受け取るには、センサーエレメントに対して <code>value-changed</code> イベントのリスナーを設定します。
-値はイベントオブジェクトの <code>detail.value</code> に入っていて、センサーによってセットされる値（型も含め）が違います。</p>
-
-<p>たとえば <code>grouve-touch</code> エレメントは、タッチセンサーの数分のBoolean配列がセットされ、 <code>grove-gesture</code> エレメントは、発生したジェスチャー名がセットされます。</p>
-
-<h3>さいごに</h3>
-
-<p>このようにHTMLからセンサーの値をコントロールできたり、センサーのエレメントを簡単に実装できるようになりました。
-今後は、それぞれのエレメントやベースクラスを <code>npm install</code> で取得できるようにしたいと思っています。</p>
-
-<p>また、以前作った <code>WebGpioElement</code> も <code>Polymer3</code> で書き換えていきたいなと思っています。</p>
-
-<p>WebComponents と CHIRIMEN の融合は、私がそれぞれのコミュニティに参加して得られたもののアウトプットです。
-もしこれらの活動に興味がありましたら、<a href="https://polymer-jp.org/">Polymer Japan</a> <a href="https://chirimen.org/">CHIRIMEN Open Hardware</a> <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> などの活動に参加ください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="web-i2cエレメントをより使いやすくしました。" data-url="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html&t=web-i2c%E3%82%A8%E3%83%AC%E3%83%A1%E3%83%B3%E3%83%88%E3%82%92%E3%82%88%E3%82%8A%E4%BD%BF%E3%81%84%E3%82%84%E3%81%99%E3%81%8F%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/16/">« Prev</a>
@@ -772,6 +643,8 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
@@ -780,8 +653,6 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
-                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
-                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
               </ul>
             </div>
           </div>
@@ -789,6 +660,12 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
@@ -816,16 +693,13 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
                     <li class="size0">
                       <a href="/tags/dependabot.html" rel="tag">dependabot</a>
                     </li>
-                    <li class="size5">
-                      <a href="/tags/php.html" rel="tag">PHP</a>
-                    </li>
                     <li class="size0">
                       <a href="/tags/gcp.html" rel="tag">GCP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/asucon.html" rel="tag">asucon</a>
                     </li>
-                    <li class="size4">
+                    <li class="size3">
                       <a href="/tags/polymer.html" rel="tag">Polymer</a>
                     </li>
                     <li class="size3">
@@ -892,6 +766,7 @@ githubのリポジトリが <code>Cloud Source Repositories</code> にミラー�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024.html">2024</a> (2)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

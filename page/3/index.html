@@ -277,7 +277,232 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a></h2>
+            <h2 class="title"><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a></h2>
+  <p class="postdate"><a href="/2023/04/04.html" title="Permanent link">Tuesday, April 04, 2023 04:20:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>先日の <a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> という記事でも書いたとおり、 <code>@aws-sdk/client-xxxxx</code> を追加するときは</p>
+
+<blockquote>
+<p>新しく <code>@aws-sdk/client-xxxx</code> を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する</p>
+</blockquote>
+
+<p>のがオススメなのは変わりがないのですが、これだけだとうまく対応できないことがあったので、別記事として書いておきます。</p>
+
+<h3>ある日の変更前依存パッケージ</h3>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">devDependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-dynamodb</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.264.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-s3</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.264.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-s3-control</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.264.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-secrets-manager</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.264.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/lib-dynamodb</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.264.0</span><span class="dl">"</span><span class="p">,</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>DynamoDB, S3, Secret Manager を利用するようになっていました。</p>
+
+<h3>パッケージを追加したらエラーになる</h3>
+
+<p>で、そこに <code>@aws-sdk/lib-storage</code> というパッケージを追加しようとしたところ、また先日と同様に <code>TS2345</code> でコンパイルエラーになります。
+ちゃんとバージョンをすべて最新にしてみたのですが、ダメでした。</p>
+
+<h3>ふたたび issue を探る</h3>
+
+<p>そうすると、issue ではなく discussions に変更されてしまったものを発見しました。</p>
+
+<p><a href="https://github.com/aws/aws-sdk-js-v3/discussions/4261">Peer dependencies not pinned for lib-dynamodb</a></p>
+
+<h3>なぜこんなことになるのか</h3>
+
+<p>やはりパッケージ管理が崩壊しているとしか思えないのですが、何でこうなっているのかというのを解説していきます。</p>
+
+<p>以下は、今回追加しようとした <code>@aws-sdk/lib-storage</code> の <code>package.json</code> の一部です。
+追加時点の <code>lib-storage</code> のバージョンが <code>3.272.0</code> だったので、上記の変更前依存パッケージでインストール済みだったものも <code>3.272.0</code> に更新済みです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">dependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/middleware-endpoint</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/smithy-client</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">buffer</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">5.6.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">events</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.3.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">stream-browserify</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.0.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">tslib</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^2.3.1</span><span class="dl">"</span>
+  <span class="p">},</span>
+  <span class="dl">"</span><span class="s2">peerDependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/abort-controller</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.0.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-s3</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.0.0</span><span class="dl">"</span>
+  <span class="p">},</span>
+</code></pre></div>
+<p><code>peerDependencies</code> の依存がありますね。</p>
+
+<p>で、すでにインストール済みだった <code>@aws-sdk/client-dymanodb</code> の <code>package.json</code> の一部も見てみましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">dependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@aws-crypto/sha256-browser</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.0.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="c1">// 省略</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/smithy-client</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/types</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="c1">// 省略</span>
+    <span class="dl">"</span><span class="s2">uuid</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^8.3.2</span><span class="dl">"</span>
+  <span class="p">},</span>
+</code></pre></div>
+<p>依存が多いのでちょっと省略しましたが、注目したいところだけ書きました。
+こちらには <code>peerDependencies</code> の依存はありません。</p>
+
+<p><code>@aws-sdk/client-s3</code> は上記のとおりインストール済みだったので、 <code>@aws-sdk/abort-controller</code> を見てみましょう。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>  "dependencies": {
+    "@aws-sdk/types": "3.289.0",
+    "tslib": "^2.3.1"
+  },
+</code></pre></div>
+<p>おや？ <code>@aws-sdk/types</code> のバージョンが違うじゃん&hellip;</p>
+
+<blockquote>
+<p>&ldquo;@aws-sdk/abort-controller&rdquo;: &ldquo;^3.0.0&rdquo;,</p>
+</blockquote>
+
+<p>なぜ、ここは <code>^3.0.0</code> なのだ？？
+というのが、最初のディスカッションでもふれられている訳ですが、本当にパッケージ管理が (ry</p>
+
+<h3>対応案</h3>
+
+<p>使っている aws-sdk のパッケージで <code>peerDependencies</code> になっているのを調べて、すべてバージョン指定でインストールします。</p>
+
+<p>ということで変更後の依存は以下のとおりにします。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="dl">"</span><span class="s2">@aws-sdk/abort-controller</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-dynamodb</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-s3</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-s3-control</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/client-secrets-manager</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/lib-dynamodb</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/lib-storage</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/smithy-client</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">@aws-sdk/types</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">3.272.0</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<p>abort-controller, smithy-client, types が利用しているパッケージの中で <code>peerDependencies</code> にあったので、すべてバージョンを揃えてコンパイルエラーは解消されました。</p>
+
+<h3>aws-sdk v3 を安心して使うためには</h3>
+
+<ul>
+<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
+<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
+</ul>
+
+<p>この2つとても大事です。</p>
+
+<p>こんなの discussions に変更した上で放置していて良いのか？&hellip;</p>
+
+<p>とても悲しい状況ですが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v3 でコンパイルエラーになる - その２" data-url="http://blog.open.tokyo.jp/2023/04/04/aws-sdk-v3-compile-error-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/04/aws-sdk-v3-compile-error-2.html&t=aws-sdk%20v3%20%E3%81%A7%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%AB%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%82%8B%20-%20%E3%81%9D%E3%81%AE%EF%BC%92" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/04/aws-sdk-v3-compile-error-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a></h2>
+  <p class="postdate"><a href="/2023/04/03.html" title="Permanent link">Monday, April 03, 2023 03:47:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>dependabot で @aws-sdk/client のバージョンアップがコンパイルエラーになる</h3>
+
+<p>少し久しぶりの記事になってしまいましたが、この間も Node.js v18 / aws-sdk v3 への移行を行なっています。
+一部のリポジトリではコードの移行は終わって、 dependabot でライブラリの最新追従を行なっているのですが、以下のようなコンパイルエラーが出るようになりました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>error TS2345: Argument of type 'typeof LambdaClient' is not assignable to parameter of type 'InstanceOrClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
+  Type 'typeof LambdaClient' is not assignable to type 'ClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
+</code></pre></div>
+<p>aws-sdk v3 では複数の aws サービスを使っていると複数のパッケージに依存するようになるのですが、複数のバージョンアップが dependabot によって PR されるうち、一部のアプデだけ上記のようなエラーになります。</p>
+
+<h3>issue を探してみる</h3>
+
+<p>aws-sdk の issue を調べていくと、それっぽいものがありました。</p>
+
+<p><a href="https://github.com/aws/aws-sdk-js-v3/issues/3390">Typescript compilation problems since 3.52.0 in lib-dynamodb</a></p>
+
+<p>この issue 自体はクローズされていないのですが、コメントのスレッドの中に有用な情報がありました。</p>
+
+<ul>
+<li><code>@aws-sdk/types</code> が依存に入っていて、異なるバージョンの client-xxx があるとエラーになる（なんで package-lock.json を消してから npm i しなおすとうまくいくよ -&gt; そんなんやるか！）</li>
+<li><code>@aws-sdk/client-xxxx</code> の各クライアントはすべて最新バージョンに追従してください</li>
+</ul>
+
+<p>のようなものです（要約してあります）。</p>
+
+<p>aws-sdk@v3 はサービスごとにパッケージを分割することで v2 と比べて良い、というのがウリなはずなんですが、これではパッケージ管理崩壊しているのでは？と思わなくもないですが、まぁ各クライアントのバージョンを合わせれば良いだけなので、従うことにしました。
+ちなみにこの時点では複数の <code>@aws-sdk/client-xxx</code> を全て最新版に追従することで解消されました。</p>
+
+<h3>この問題が発生する状況</h3>
+
+<p>この問題が発生する状況は以下のとおりです。</p>
+
+<ul>
+<li>すでに1つ以上の <code>@aws-sdk/client-xxxx</code> を入れていて、後日機能追加によって別のクライアントをインストールするとき</li>
+<li>dependabot でパッケージごとにバージョンアップの PR が発動する</li>
+</ul>
+
+<h3>おすすめの対応</h3>
+
+<p>なので、現時点でのオススメの対応は以下のとおりです。</p>
+
+<ul>
+<li>新しく <code>@aws-sdk/client-xxxx</code> を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する</li>
+<li>dependabot による更新を <code>@aws-sdk/*</code> については無効にする</li>
+</ul>
+
+<p>Github Actions の dependabot でアプデを無効にするには、 dependabot.yml を以下のように記述すれば良いです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">version</span><span class="pi">:</span> <span class="m">2</span>
+<span class="na">updates</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">package-ecosystem</span><span class="pi">:</span> <span class="s1">'</span><span class="s">npm'</span>
+    <span class="na">directory</span><span class="pi">:</span> <span class="s1">'</span><span class="s">/'</span>
+    <span class="na">ignore</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">dependency-name</span><span class="pi">:</span> <span class="s1">'</span><span class="s">@aws-sdk/*'</span>
+        <span class="c1"># aws-sdk に対するすべての更新を無視</span>
+</code></pre></div>
+<p>私たちは AWS Lambda の Node.js v18 ランタイムを使っているので、aws-sdk はランタイムにグローバルインストールされているから、あえて最新版に追従しなくても問題ないというのが主な理由です。
+新しいクライアント追加のときに最新に追従すれば十分という判断です。</p>
+
+<h3>さいごに</h3>
+
+<p>aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
+同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v3 で TS2345 が出てコンパイルエラーになる" data-url="http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html&t=aws-sdk%20v3%20%E3%81%A7%20TS2345%20%E3%81%8C%E5%87%BA%E3%81%A6%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%AB%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a></h2>
   <p class="postdate"><a href="/2023/02/02.html" title="Permanent link">Thursday, February 02, 2023 05:05:00 PM</a></p>
   <p class="tags">
       <a href="/tags/aws.html" rel="tag">AWS</a>
@@ -653,221 +878,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a></h2>
-  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 04:04:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/faker.html" rel="tag">Faker</a>
-      <a href="/tags/jsonschema.html" rel="tag">JsonSchema</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>AWS Lambda ハンドラをテストしたいとき、多くはリクエストのバリデーションの結果で 400 エラーを返すのか、ロジックが正常終了したとき 200 を戻すのか、みたいなことを書きたいことがあると思います。</p>
-
-<p>TypeScript で Lambda ハンドラを記述する場合は、以下のようになると思います。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">APIGatewayProxyHandler</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-lambda</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">hello</span><span class="p">:</span> <span class="nx">APIGatewayProxyHandler</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="c1">// バリデーションやロジックの呼び出し</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>このとき <code>event</code> は <code>APIGatewayProxyEvent</code> 型になるのですが、項目がたくさんあります。
-自分で定義した interface などの場合、 <a href="https://github.com/willryan/factory.ts">factory.ts</a> だったり、<a href="https://github.com/ratson/factory-bot">factory-bot</a> みたいなライブラリを使って書けば良いのですが、 Lambda ハンドラのイベントはとても項目が多いので、 factory 定義を書くのも大変です。</p>
-
-<h2>faker-ts の利用</h2>
-
-<p>そこで以前は <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> というライブラリを使っていて <code>@types/aws-lambda</code> から適当な値を生成していました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">tsMock</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">faker-ts</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">const</span> <span class="nx">mocker</span> <span class="o">=</span> <span class="nx">tsMock</span><span class="p">([</span><span class="dl">'</span><span class="s1">/node_modules/@types/aws-lambda/index.d.ts</span><span class="dl">'</span><span class="p">]);</span>
-<span class="kd">const</span> <span class="nx">event</span> <span class="o">=</span> <span class="nx">mocker</span><span class="p">.</span><span class="nx">generateMock</span><span class="p">(</span><span class="dl">'</span><span class="s1">APIGatewayProxyEvent</span><span class="dl">'</span><span class="p">);</span>
-</code></pre></div>
-<p>しばらくこの方法で問題はなかったのですが、 Node.js v16 と jest の組み合わせになり、メモリ不足エラーが出るようになってしまったので、見直しが必要になりました。</p>
-
-<h3>faker-ts の仕組み</h3>
-
-<p>faker-ts は以下の2つのステップから構成されていました。</p>
-
-<ul>
-<li><a href="https://www.npmjs.com/package/typescript-json-schema">typescript-json-schema</a> で TypeScript コードからJSONスキーマの生成</li>
-<li><a href="https://www.npmjs.com/package/json-schema-faker">json-schema-faker</a> でJSONスキーマからJSONオブジェクトの生成</li>
-</ul>
-
-<p>これを別々に実行して試していくプランとしました。</p>
-
-<h2>typescript-json-schema の利用</h2>
-
-<p>まずはJSONスキーマの生成から。
-このNPMパッケージには CLI ツールも付いているので、npm script でスキーマファイルを生成できるようにしました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="dl">"</span><span class="s2">scripts</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-  <span class="dl">"</span><span class="s2">tjs</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">typescript-json-schema --required</span><span class="dl">"</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>のように package.json に記述したら、コマンドを実行して JSONスキーマファイルを生成します。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm run tjs <span class="nt">--</span> <span class="nt">-o</span> <span class="nb">test</span>/schema/APIGatewayProxyEvent.json node_modules/@types/aws-lambda/index.d.ts APIGatewayProxyEvent
-</code></pre></div>
-<p>このようにして、必要な型のJSONスキーマを <code>test/schema</code> の下に生成していきます。</p>
-
-<h2>json-schema-faker の利用</h2>
-
-<p>テストコードでは、以下のようにすることでJSONオブジェクトを生成します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">JSONSchemaFaker</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">json-schema-faker</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">faker</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@faker-js/faker/locale/ja</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">useExamplesValue</span><span class="dl">'</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">useDefaultValue</span><span class="dl">'</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">faker</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">faker</span><span class="p">);</span>
-
-<span class="kd">const</span> <span class="nx">event</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">APIGatewayProxyEvent</span><span class="o">&gt;</span><span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">generate</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">test/schema/APIGatewayProxyEvent.json</span><span class="dl">'</span><span class="p">));</span>
-<span class="nx">event</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="cm">/** テストで使う入力値 */</span>
-</code></pre></div>
-<h2>さいごに</h2>
-
-<p>これで TypeScript Interface から型定義に従った Fake オブジェクトが作れるようになりました。
-<code>faker-ts</code> はあまりメンテされていなかったので、コードを fork してライブラリを最新追従したりして使っていたのですが、その手間も不要となりました。</p>
-
-<p>2つに処理を分割してわかったのは、 <code>typescript-json-schema</code> が結構時間がかかっていたので、これを CLI にすることでメモリの利用状況も少なくなりました。
-そのため、毎回JSONスキーマを生成しなくなった分、テストも速くなり良いことが多かったです。
-この方法だと自分で作った TypeScript の型などでも一度 JSONスキーマを生成しておけば、複数の factory ライブラリを使わなくても良くなるので、良いかもしれません。（ただ現時点では factory-bot とかの方が使い勝手が良いとは思います。たとえば buildList みたいなことができないので）</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する" data-url="http://blog.open.tokyo.jp/2022/12/18/fake-aws-events-for-testing-on-node-js.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/18/fake-aws-events-for-testing-on-node-js.html&t=Node.js%20%E3%81%A7%20Lambda%20%E3%83%8F%E3%83%B3%E3%83%89%E3%83%A9%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E6%9B%B8%E3%81%8F%E3%81%A8%E3%81%8D%E3%81%AB%20AWS%20%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%82%92%E7%94%9F%E6%88%90%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/18/fake-aws-events-for-testing-on-node-js.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a></h2>
-  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 02:53:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/sqs.html" rel="tag">SQS</a>
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回の<a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a>と同じように外部サービスを使った部分の自動テストについてです。
-今回は AWS SQS を使ったコードの自動テストを書く場合です。</p>
-
-<p>BigQuery と違い、 AWS SQS のエミュレータは検索するとすぐに見つかりました。
-たとえば <a href="https://hub.docker.com/r/roribio16/alpine-sqs/">roribio16/alpine-sqs</a> というもの。
-こちらは日本語の使ってみた記事もいくつか出ています。</p>
-
-<ul>
-<li><a href="https://k5-n.com/elasticmq/">ローカルDocker環境でSQSのモックElasticMQを利用する</a></li>
-<li><a href="https://zenn.dev/tady/articles/cccbc4d11bf19a">AWS SQSのローカル開発環境をDockerで構築する</a></li>
-</ul>
-
-<h2>roribio16/alpine-sqs</h2>
-
-<p>さっそく上記の記事や、公式ドキュメントを参考に動かしてみます。</p>
-
-<p>Dockerコンテナをあげて aws cli から実行してみると、簡単に利用することができたので、 Node.js + Jest のテストコードを書いて試してみます。
-すると ECONNRESET エラーとなって動きません。おやぁ？</p>
-
-<p>GitHub のリポジトリを見てみると、関連する <a href="https://github.com/roribio/alpine-sqs/issues/49">issue</a> が出てました。
-どうも Apple Silicon (いわゆるM1とかM2とか)からだとエラーになるようです。
-解決するための <a href="https://github.com/roribio/alpine-sqs/pull/50">Pull Request</a> も出てるんですが、マージされる気配がないようです。
-現在、開発用の端末は M1 MacBook Pro を使っているので、困ってしまいました。</p>
-
-<p><a href="https://github.com/roribio/alpine-sqs/blob/master/Dockerfile">alpine-sqs の Dockerfile</a> を見ると <code>elasticmq-server</code> を使っているようなので、それを調べてみます。</p>
-
-<h2>elasticmq-server</h2>
-
-<p><a href="https://github.com/softwaremill/elasticmq">ElasticMQ</a> の GitHub を見てみると、普通に </p>
-
-<blockquote>
-<p>Amazon SQS-compatible interface</p>
-</blockquote>
-
-<p>って書いてありました。
-これだけで良いのでは？という感じです。
-（alpine-sqs の利点は何だったんだろう？）</p>
-
-<p>で、それっぽいキーワードで検索すると、記事もありました。</p>
-
-<ul>
-<li><a href="https://kazuhira-r.hatenablog.com/entry/2021/09/18/164425">Amazon SQS互換のElasticMQを使って、Temoporary Queue＋RPCを試してみる</a></li>
-<li><a href="https://techgrowup.net/2021/08/17/amazon-sqs/">Amazon SQSをDockerを使ってローカルで実行</a></li>
-<li><a href="https://note.com/shift_tech/n/n5954af51eaaf">LocalでSQS(ElasticMQ)を動かしてみた</a></li>
-<li><a href="http://takaaki.info/2014/05/05/elasticmq-sqs/">ElasticMQでAmazon SQSのローカルテスト環境を作る</a></li>
-</ul>
-
-<p>調べ方の問題ですかね？キーワードの指定の方法によっては、こっちの方がたくさん出てきました。</p>
-
-<p>さてこちらも Docker コンテナがあるので、それを使って起動します。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="nt">-rm</span> <span class="nt">-p</span> 9324:9324 <span class="nt">-p</span> 9325:9325 softwaremill/elasticmq-native
-</code></pre></div>
-<p>起動時にキューを作っておくには config ファイルを記述してファイルをマウントします。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="nt">-rm</span> <span class="nt">-p</span> 9324:9324 <span class="nt">-p</span> 9325:9325 <span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/custom.conf:/opt/elasticmq.conf softwaremill/elasticmq-native
-</code></pre></div>
-<p>config の書き方は、 GitHub に例が書いてあるので、そちらを参考にしてください。</p>
-
-<h2>Node.js からの接続</h2>
-
-<p>まず aws-sdk のクレデンシャルに適当な値を設定しておきます。
-あとは SQS クラスのインスタンスを生成するだけです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">AWS</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">SQS</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">credentials</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">secretAccessKey</span><span class="p">:</span> <span class="dl">'</span><span class="s1">secretAccessKey</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">accessKeyId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">accessKeyId</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">sessionToken</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sessionToken</span><span class="dl">'</span><span class="p">,</span>
-<span class="p">};</span>
-
-<span class="kd">let</span> <span class="nx">sqs</span><span class="p">:</span> <span class="nx">SQS</span><span class="p">;</span>
-
-<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="nx">sqs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SQS</span><span class="p">({</span>
-    <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">endpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://localhost:9324</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">})</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>キューのURLはデフォルト設定だと <code>http://localhost:9324/000000000000/キュー名</code> のようになります。
-このあたりは aws-cli などでキュー一覧を取得してもわかるので、そこから情報を取得しても大丈夫でしょう。</p>
-
-<h2>さいごに</h2>
-
-<p>はい。
-これで AWS SQS を使ったコードの UnitTest も書けるようになりますね。
-どんどん UnitTest を充実させていきましょう。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js で AWS SQS を使ったコードの自動テストを記述する" data-url="http://blog.open.tokyo.jp/2022/12/18/sqs-test-on-node-js.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/18/sqs-test-on-node-js.html&t=Node.js%20%E3%81%A7%20AWS%20SQS%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%B3%E3%83%BC%E3%83%89%E3%81%AE%E8%87%AA%E5%8B%95%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E8%A8%98%E8%BF%B0%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/18/sqs-test-on-node-js.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/2/">« Prev</a>
@@ -893,6 +903,8 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
@@ -901,8 +913,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
                   <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
                   <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
                   <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
-                  <li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a> <span>2023/04/04</span></li>
-                  <li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a> <span>2023/04/03</span></li>
               </ul>
             </div>
           </div>
@@ -910,6 +920,12 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
                     </li>
@@ -937,16 +953,13 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
                     <li class="size0">
                       <a href="/tags/dependabot.html" rel="tag">dependabot</a>
                     </li>
-                    <li class="size5">
-                      <a href="/tags/php.html" rel="tag">PHP</a>
-                    </li>
                     <li class="size0">
                       <a href="/tags/gcp.html" rel="tag">GCP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/asucon.html" rel="tag">asucon</a>
                     </li>
-                    <li class="size4">
+                    <li class="size3">
                       <a href="/tags/polymer.html" rel="tag">Polymer</a>
                     </li>
                     <li class="size3">
@@ -1013,6 +1026,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024.html">2024</a> (2)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
