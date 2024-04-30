@@ -277,7 +277,426 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2019/12/28/gdg-devfest-2019.html">GDG Devfest 2019 に WPSG として参加してきました</a></h2>
+            <h2 class="title"><a href="/2020/02/16/serverless-ghe-dependabot.html">Serverless Frameworkでプライベートパッケージを利用するときの注意点</a></h2>
+  <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 12:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/serverless-framework.html" rel="tag">Serverless Framework</a>
+      <a href="/tags/ghe.html" rel="tag">GHE</a>
+      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は<a href="/2020/02/16/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a>の続編です。
+少し前提となる条件があるので、読んでいただけるとスムーズに進みます。</p>
+
+<h3>ある日事件は起こった</h3>
+
+<p>毎朝出社すると、dependabotから出てくるPRをチェックしてマージしています。
+プロジェクトでGHEにプライベートなnpmパッケージを作っていて、前日その更新をしたのでアプリ側にPRが来ていました。
+修正内容は自分たちが実施したものなので、何も疑うことはなくマージ。テストも通過していました。</p>
+
+<p>developブランチにマージすると、開発環境へデプロイするようになっているので、そのままデプロイされました。
+特に問題はないように見えます。</p>
+
+<h4>あのー、サーバーからエラーが戻ってくるんですけど&hellip;</h4>
+
+<p>目の前にはネイティブアプリチームがいます。</p>
+
+<p>「あのー、サーバーのAPIからエラーが戻ってくるんですけど、何かしました？」</p>
+
+<p>あ、さっきデプロイしたけど、プライベートパッケージ更新しただけだぞ&hellip;</p>
+
+<h4>エラー通知が飛んでくる</h4>
+
+<p>ほどなく監視からエラーが。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"errorType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Runtime.ImportModuleError"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"errorMessage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stack"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"Runtime.ImportModuleError: Error: Cannot find module 'psl'"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at _loadUserApp (/var/runtime/UserFunction.js:100:13)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.module.exports.load (/var/runtime/UserFunction.js:140:17)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.&lt;anonymous&gt; (/var/runtime/index.js:45:30)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Module._compile (internal/modules/cjs/loader.js:778:30)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Object.Module._extensions..js (internal/modules/cjs/loader.js:789:10)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Module.load (internal/modules/cjs/loader.js:653:32)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at tryModuleLoad (internal/modules/cjs/loader.js:593:12)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Function.Module._load (internal/modules/cjs/loader.js:585:3)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at Function.Module.runMain (internal/modules/cjs/loader.js:831:12)"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"    at startup (internal/bootstrap/node.js:283:19)"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p><a href="https://www.npmjs.com/package/psl">psl</a> というnpmパッケージを使っているのですが、それが見つからないよ、と。</p>
+
+<p>この箇所はユニットテストも通過しているし、なんでだろう？と思い、S3にアップロードされているzipを展開すると確かに node_modules に psl は入っていません&hellip;</p>
+
+<h3>Serverless Framework におけるパッケージング</h3>
+
+<p><code>sls deploy</code> や <code>sls package</code> を使ってzipを作成するとき、node_modules には <code>dependencies</code> だけが入り、 <code>devDependencies</code> は取り除かれます。
+Lambdaなどはzipファイルのサイズに制限があるので、これはとても便利な機能です。</p>
+
+<p>psl の利用箇所を調べるため、 <code>package-lock.json</code> を探してみます。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"xxxx-node-fetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fe
+tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"git+https://xxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxxx.com/xxxx/xxxx-node-fetch
+.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.7.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winston"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.2.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"winston-cloudwatch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.3.0"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p>これはプライベートパッケージでGHEのリポジトリを参照しています。
+これ以外の利用箇所を探してみました。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"request"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.88.0"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/request/-/request-2.88.0.tgz"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-NAqBSrijGLZdM0WZNsInLJpkJokL72XYjUpnB0iwsRgxh7dB6COrHnTBNwN0E+lHDAJzu7kLAkDeY08z2/A0hg=="</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"aws-sign2"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.7.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"aws4"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.8.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"caseless"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.12.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"combined-stream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.6"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"extend"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~3.0.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"forever-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.6.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"form-data"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.3.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"har-validator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.1.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"http-signature"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.2.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"is-typedarray"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~1.0.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"isstream"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.1.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"json-stringify-safe"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~5.0.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"mime-types"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.1.19"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"oauth-sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~0.9.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"performance-now"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"qs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~6.5.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"safe-buffer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^5.1.2"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~2.4.3"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tunnel-agent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^0.6.0"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"uuid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.3.2"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nl">"dependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.4.1"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha1-wNWmOycYgArY4esPpSachN1BhF4="</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"tough-cookie"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.4.3"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"resolved"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"integrity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ=
+="</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"dev"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"requires"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"psl"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.1.24"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"punycode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.4.1"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>そうすると、 <code>request</code> パッケージが参照する <code>tough-cookie</code> が利用しているのがわかります。 <code>&quot;dev&quot;: true,</code> になっているので、devDependenciesに指定されているということですね。</p>
+
+<p>ただ、このようなケースはまぁまぁある（依存しているパッケージによっては dependencies だったり devDependencies であったりする）ので、Serverless Framework で良しなにしてくれるはずです。
+ 実際、昨日までは問題なかったのに？？</p>
+
+<p>### DependabotのPRを見る</p>
+
+<p><code>package-lock.json</code> の変更だけで以下のようなdiffになっていました。</p>
+<div class="highlight"><pre class="highlight diff"><code><span class="gd">-     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#112cf335236d974538ba02993d5ef7bbbbc3ec4c",
+-     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop",
+</span><span class="gi">+     "version": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
++     "from": "git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#a2ad500e4345206e59d06e9112fab8e1ec7517d1",
+</span></code></pre></div>
+<p><code>package.json</code> には <code>&quot;xxxx-node-fetch&quot;: &quot;git+https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:x-oauth-basic@github.xxxx.com/xxxx/xxxx-node-fetch.git#develop&quot;,</code> のように指定されていて、developから最新を取得するようになっています。</p>
+
+<p>PRでは <code>version</code> 以外にも <code>from</code> が <code>#develop</code> のようなブランチ指定から、コミットハッシュ指定に変わっているのがわかります。</p>
+
+<h3>dependencies ではブランチ指定をやめる</h3>
+
+<p>lockファイルの <code>from</code> 指定が変わり、package.json の dependencies と釣り合いが取れなくなることで、dependencies に必要のないライブラリと Serverless Framework が認識するようで zip ファイルに含まれなくなっていました。</p>
+
+<p>この状態でも <code>npm i</code> や <code>npm ci</code> ではパッケージはインストールできるので UnitTest は通過します。</p>
+
+<p>このような事象から、私たちは一旦 <code>package.json</code> に記述するときにブランチ指定をやめて、コミットハッシュ指定に変更することとしました（つまり from を合わせるということです）。
+この修正で無事 zip に psl が入って問題を解決することができました。</p>
+
+<h3>さいごに</h3>
+
+<p>本来であればOSSにできそうなものは普通にnpmにあげるとかした方が良いのですが、調整が困難なのと非常に短期間でプロジェクトが進んでいたのでOSSにはできませんでした。
+また、OSSにできないプライベートなパッケージなどを作る場合は、ローカルレジストリ作った方が良いな、とも思いました（ブランチ指定とかコミットハッシュでなく、ちゃんとバージョン管理できるし）。</p>
+
+<p>プライベートなnpmレジストリを作るには、<a href="https://qiita.com/propella/items/6f1bb5db5225fba6cd85">独自の npm registry を使う</a> が参考になりそうです。</p>
+
+<p>また AWS を使っているのであれば、<a href="https://aws.amazon.com/jp/about-aws/whats-new/2019/09/new-quick-starts-deploy-jfrog-artifactory-on-aws/">新しいクイックスタートを使用して JFrog Artifactory を AWS にデプロイ</a> という公式記事があるので、参考になりそうです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Serverless Frameworkでプライベートパッケージを利用するときの注意点" data-url="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html&t=Serverless%20Framework%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%99%E3%83%BC%E3%83%88%E3%83%91%E3%83%83%E3%82%B1%E3%83%BC%E3%82%B8%E3%82%92%E5%88%A9%E7%94%A8%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AE%E6%B3%A8%E6%84%8F%E7%82%B9" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/16/serverless-ghe-dependabot.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a></h2>
+  <p class="postdate"><a href="/2020/02/15.html" title="Permanent link">Saturday, February 15, 2020 11:17:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>昨今のWebアプリケーション開発では、多数のOSSライブラリに依存しています。
+私たちが開発するアプリケーションの脆弱性対応はもちろんのこと、これらのライブラリもセキュリティアップデートやバグフィックスなどが行われていきます。</p>
+
+<p>では、ライブラリのバージョンを最新に追従するにはどうしたら良いでしょうか？</p>
+
+<ul>
+<li>ライブラリのソースリポジトリをチェックする。GitHubのことが多いので、Watchしておけば通知が届きます。</li>
+<li>依存関係をチェックしてくれるBotを入れて、Slackなどに通知する。たとえば <a href="https://github.com/frankthelen/npmcheck2slack">npmcheck2slack</a>のようなもの</li>
+<li>依存関係をチェックしてPRを出してくれるツールを導入する。</li>
+</ul>
+
+<p>3つ目のPRを出すツールに関しては、対応する言語ごとに様々なものがありますが、今回は<a href="https://dependabot.com/blog/hello-github/">GitHubに買収された</a>ことでも有名になった<a href="https://dependabot.com/">Dependabot</a>を導入してみたので解説します。</p>
+
+<p>でもDependabotって、普通にGitHubから使えるでしょ？</p>
+
+<p>そうなんです。ただ今回はGitHubでも<a href="https://github.co.jp/enterprise.html">GitHub Enterprise</a>を利用している場合には(まだ？)Dependabotを利用することができないので、CIで実行できるようにしてみたよ！という記事です。</p>
+
+<h3>想定されるプロジェクト環境</h3>
+
+<ul>
+<li>ソースコードリポジトリはGHE</li>
+<li>CIサーバーに<a href="https://drone.io">Drone.io</a>をオンプレ利用</li>
+</ul>
+
+<p>ですが、GHEやDroneでなくても、この記事を理解してもらえれば利用可能になると思います。</p>
+
+<p>つまりリポジトリやらCIやらをオンプレしているプライベートな開発環境で、依存関係更新ツールを使ってみようろいうことです。</p>
+
+<h3>Dependabotをオンプレで動かす</h3>
+
+<p>Dependabotには<a href="https://github.com/dependabot/dependabot-script">Dependabot Update Script</a>というものがあり、オンプレ環境で動かせるようになっています。</p>
+
+<p>READMEに書いてあるとおり設定すれば良いのですが、私たちのプロジェクトでは以下のようにしました。</p>
+
+<ol>
+<li><code>dependabot-drone</code> というリポジトリをGHEに作成。これをDroneのdaily cronで実行してPRを日次で作成させる</li>
+<li>Dependabot Update Scriptは <code>dependabot-drone</code> に git submodule で追加する</li>
+<li>Dependabot Update Scriptの更新もチェックしたいので、 <code>dependabot-drone</code> 自身の更新もチェックする</li>
+</ol>
+
+<p>これをDrone.ioで実行するには、以下のような <code>.drone.yml</code> ファイルを記述します。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">clone</span><span class="pi">:</span>
+  <span class="na">git</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">plugins/git</span>
+    <span class="na">recursive</span><span class="pi">:</span> <span class="no">true</span> <span class="c1"># 2のとおり submodule を使う場合指定</span>
+
+<span class="na">pipeline</span><span class="pi">:</span>
+  <span class="c1"># READMEに書いてあるインストール手順を定義</span>
+  <span class="na">install</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">pull</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle install -j 3 --path vendor</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+  <span class="c1"># 3の自身をアップデートする定義</span>
+  <span class="na">dependabot-drone</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxxxx/dependabot-drone</span>
+      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=submodules</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+</code></pre></div>
+<p>Dependabotのコア機能は <code>dependabot/dependabot-core</code> というDockerイメージで提供されているので、このイメージを使って <code>dependabot-script</code> を実行するということです。
+このときに環境変数を指定します。</p>
+
+<ul>
+<li>GITHUB<em>ACCESS</em>TOKEN パッケージマネージャ(npmやcomposer, bundlerなど)が参照するリポジトリにGitHub APIを使ってアクセスするため、アクセストークンを設定しないとAPI上限に引っかかってしまいます。このため必ず設定しましょう。</li>
+<li>GITHUB<em>ENTERPRISE</em>HOSTNAME GHEのホスト名を指定します</li>
+<li>GITHUB<em>ENTERPRISE</em>ACCESS_TOKEN GHEにアクセスするためのアクセストークンを設定します</li>
+<li>PROJECT_PATH GHEのプロジェクトパスを指定します</li>
+<li>PACKAGE_MANAGER ここではsubmodulesを指定しています。他の候補はREADMEに書いてあるとおり<a href="https://github.com/dependabot/dependabot-script/blob/master/generic-update-script.rb#L27">ソースコードを参照</a>します</li>
+</ul>
+
+<h3>アプリケーションリポジトリをチェックしていく</h3>
+
+<p>あとは、先ほど作った <code>.drone.yml</code> ファイルにアプリケーションリポジトリを追加してくだけです。</p>
+
+<p>たとえば <code>frontend-app</code> というリポジトリをチェックしたい場合は、このようになります。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="c1"># 省略...</span>
+
+<span class="na">pipeline</span><span class="pi">:</span>
+  <span class="c1"># 省略...</span>
+  <span class="na">dependabot-drone</span><span class="pi">:</span>
+    <span class="c1"># 省略...</span>
+  <span class="na">frontend-app</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxx/frontend-app</span>
+      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=npm_and_yarn</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">status</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">success</span><span class="pi">,</span> <span class="nv">failure</span><span class="pi">]</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+</code></pre></div>
+<p><code>PROJECT_PATH</code> と <code>PACKAGE_MANAGER</code> 、パイプラインの名前が違うだけで他の定義はすべて一緒です。
+<code>status: [success, failure]</code> を入れているのは、複数リポジトリある場合に、途中で失敗しても継続したいための設定です。</p>
+
+<h3>PRがやってくる日々</h3>
+
+<p>daily cron に従って Dependabot からPRが送られてきます。</p>
+
+<p><img src="/images/blog/dependabot-drone.png" alt="" /></p>
+
+<p>これでWatchしてPRしなくて良いし、とても便利ですよね。
+PRのコメントに Changelog や Commit など変更のリンクがあるので、内容をチェックすることもできます。</p>
+
+<p>プライベートでも依存関係の更新をちゃんとやれるよ！ということでした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="DependabotをGHEのプロジェクトに適用する" data-url="http://blog.open.tokyo.jp/2020/02/15/dependabot-with-ghe.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/15/dependabot-with-ghe.html&t=Dependabot%E3%82%92GHE%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E3%81%AB%E9%81%A9%E7%94%A8%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/15/dependabot-with-ghe.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2020/01/03/2020-first.html">2020年の目標と昨年のふりかえり</a></h2>
+  <p class="postdate"><a href="/2020/01/03.html" title="Permanent link">Friday, January 03, 2020 04:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/blog.html" rel="tag">Blog</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>ふりかえり</h3>
+
+<p>昨年は、よりBlog発信、登壇に力を入れていました。
+成果としては、Blog記事が41投稿ということで、(2018年は31投稿なので) +10記事増やせました。</p>
+
+<p>これは登壇や中の人としてイベントに参加したことが大きかったのですが、それらをふりかえってみます。</p>
+
+<h4>イベント登壇と運営</h4>
+
+<p>2019年は、2018年以上にずっとイベントに追われていました。
+<a href="http://blog.open.tokyo.jp/2018/12/31/final-2018.html">2018年のふりかえりはこちら</a>を参照ください。</p>
+
+<ul>
+<li>主催: ESM社内勉強会(IoT Study) 22回 （基本的に第一/第三水曜日）</li>
+<li>主催: <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> meetup 7回 ( ＃21 から ＃28 まで、月一 )</li>
+<li>参加: <a href="https://nextwebconf.connpass.com/event/103056/">01/13（土） 次世代Webカンファレンス</a></li>
+<li>発表: <a href="https://phpcon-sendai.net/2019/">01/26（土） PHPカンファレンス仙台2019</a></li>
+<li>運営: <a href="https://webiotmakers.connpass.com/event/110708/">02/09 - 02/10 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハンズオン講習】</a></li>
+<li>参加: <a href="https://cakephp.connpass.com/event/119458/">02/13（水） CakePHPの国際イベント、CakeFestの動画を見よう！第13回CakePHP MeetUp</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/87344">02/27（水） 第135回 PHP勉強会＠東京</a></li>
+<li>運営: <a href="https://webiotmakers.connpass.com/event/110708/">03/02 - 03/03 Web×IoT メイカーズチャレンジ 2018-19 in 東京【ハッカソン】</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/88400">03/27（水） 第136回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://phperkaigi.jp/2019/">03/31（日） PHPer Kaigi 2019</a></li>
+<li>発表: <a href="http://blog.open.tokyo.jp/2019/04/07/esm-lt-2019-04.html">04/05（金） ESM LT #4</a></li>
+<li>運営: <a href="https://fod.connpass.com/event/121358/">04/24（水） 開発リーダのための「明日の開発カンファレンス 2019」</a></li>
+<li>発表: <a href="https://gdg-tokyo.connpass.com/event/128867/">05/19（月） I/O Extended 2019 Tokyo@GDG</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/91688">05/29（水） 第138回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/90894">06/01（土） 初夏のJavaScript祭 in メンバーズキャリア</a></li>
+<li>参加: <a href="http://blog.open.tokyo.jp/2019/06/16/karakuri.html">06/07 - 06/08 開発合宿</a></li>
+<li>出展: <a href="http://blog.open.tokyo.jp/2019/06/16/interop-2019-w3c-chirimen.html">06/12 - 6/14 Interop 2019</a></li>
+<li>発表: <a href="https://phpcon.fukuoka.jp/2019/">06-29（土） PHPカンファレンス福岡2019</a></li>
+<li>参加: <a href="https://events.withgoogle.com/chrome-tech-talk-night-14/">07/26（金） Chrome Tech Talk Night #14</a></li>
+<li>出展: <a href="https://cloud.withgoogle.com/next/tokyo">07/31 - 08/01 Google Cloud Next Tokyo&#39;19</a></li>
+<li>出展: <a href="https://makezine.jp/event/mft2019/">08/03 - 08/04 Maker Faire Tokyo 2019</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/96166">08/28（水） 第141回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://phpcon.hokkaido.jp/">09/21（土） PHPカンファレンス北海道 2019</a></li>
+<li>発表: <a href="https://phpcon.okinawa.jp/">10/12（土） PHPカンファレンス沖縄 2019</a></li>
+<li>参加: <a href="https://phpstudy.doorkeeper.jp/events/98730">10/30（水） 第143回 PHP勉強会＠東京</a></li>
+<li>発表: <a href="https://cakefest.org/">11/09 11/10 CakeFest 2019 Tokyo</a></li>
+<li>参加: <a href="https://gmo-research.connpass.com/event/132190/">11/11（月） GMOリサーチ テックカンファレンス 2019</a></li>
+<li>参加: <a href="https://chirimen-oh.connpass.com/event/155170/">11/16（土） CHIRIMENおさわり＆もくもく会 〜Raspberry Pi 4 ＆ Jetson対応記念〜</a></li>
+<li>発表: <a href="https://javascript-fes.doorkeeper.jp/events/99978">11/30（土） 冬のJavaScript祭 in メンバーズキャリア</a></li>
+<li>発表: <a href="http://phpcon.php.gr.jp/2019/">12/01（日） PHP Conference 2019</a></li>
+<li>運営: <a href="https://asucon2019talknight.peatix.com/">12/06（金） 明日の開発カンファレンス アスカントークナイト</a></li>
+<li>発表: <a href="https://gdg-tokyo.connpass.com/event/137666/">12/14（日） GDG DevFest Tokyo 2019</a></li>
+</ul>
+
+<p>運営/主催/発表/出展などは、その準備だったりミーティングがあったりして、これよりも私のGoogleカレンダーは濃密にイベントスケジュールで埋まっています。
+トータルの数としては昨年とほぼ一緒なのですが、参加よりも運営/主催/発表/出展が多かったのも、多忙に感じた原因にはあったかと思います。</p>
+
+<p>なんといっても、全国PHPカンファレンスに発表枠で参加できたことは思い出です。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2019</a> <a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> デカ象ヤバい <a href="https://t.co/iKP5Jedh6O">pic.twitter.com/iKP5Jedh6O</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<h3>はじめのおわり</h3>
+
+<p>今年は</p>
+
+<ul>
+<li>WPSG</li>
+<li>CHIRIMEN</li>
+<li>OSS (Fabricateのアプデ頑張る)</li>
+</ul>
+
+<p>あたりが主戦場になると思います。
+もちろんカンファレンスなどにも、なるべく参加していきたいとは思っています（今年のようにフル参加は難しいかもしれませんが）。</p>
+
+<p>昨年同様に何をするにも健康第一なので、運動してお酒はほどほどに？みなさまと楽しい1年にできればと思います。
+どこかでお会いしましたら、よろしくお願いします！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="2020年の目標と昨年のふりかえり" data-url="http://blog.open.tokyo.jp/2020/01/03/2020-first.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/01/03/2020-first.html&t=2020%E5%B9%B4%E3%81%AE%E7%9B%AE%E6%A8%99%E3%81%A8%E6%98%A8%E5%B9%B4%E3%81%AE%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/01/03/2020-first.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/12/28/gdg-devfest-2019.html">GDG Devfest 2019 に WPSG として参加してきました</a></h2>
   <p class="postdate"><a href="/2019/12/28.html" title="Permanent link">Saturday, December 28, 2019 03:41:00 PM</a></p>
   <p class="tags">
       <a href="/tags/gdg-tokyo.html" rel="tag">GDG tokyo</a>
@@ -385,218 +804,6 @@
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/12/08/phpcon2019.html">PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました</a></h2>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:33:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>12/1に開催された<a href="https://phpcon.php.gr.jp/2019/">PHPカンファレンス</a>に参加＆登壇してきました。</p>
-
-<p><img src="/images/blog/phpcon2019-visual-02.png" alt="" /></p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> 到着 (@ 大田区産業プラザPiO in 大田区, 東京都) <a href="https://t.co/ycLLHX1Pwk">https://t.co/ycLLHX1Pwk</a> <a href="https://t.co/ttXiGBi9BK">pic.twitter.com/ttXiGBi9BK</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200936870328320002?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
-
-<p>早速ですが、当日のスライドです。</p>
-
-<script async class="speakerdeck-embed" data-id="53981d585eb44ebc928e5ccf1450c926" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>実はこの発表そのものは、<a href="/2019/09/22/phpcondo-2019.html">PHPカンファレンス北海道 2019で「PHPを学ぶということ」について発表してきました</a>で登壇したときとまったく同じ内容です。
-スライド内容の話などは、こちらの記事を辿ってください。</p>
-
-<p>変更箇所としては、今回PHPUnit生みの親である<a href="https://twitter.com/s_bergmann">Sebastian Bergmann</a>のゲストセッションがあったので、
-これは海外から来ていて日本在住のプログラマーとか、結構来るのでは？と思い英語を併記しました。
-さらに発表の最初で「英語で字幕読んでね」みたいな挨拶も入れたのですが、反応薄かったので皆さん日本語でokだったようですw</p>
-
-<p>北海道では30分だったセッションが、今回は25分です。
-この5分をどうしても巻かないといけなくて、全体的に説明が雑になったりして、やっぱり30分以下は無理だな&hellip;と思いました。
-すみません。
-でも伝えたい重要なところは、ちゃんと時間をかけて話ました。</p>
-
-<h2>2019年最後のPHPカンファレンス</h2>
-
-<p>ということで、例のスタンプラリーも全制覇はできませんでした(LaraConは気づいたらチケット売り切れてた)が、7つ。
-よく参加しました。特典として、大きい像がスタンプ1つあたり1,000円引きだったので、1万円の像を3,000円でお買い上げしてきました。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpcon2019?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon2019</a> <a href="https://twitter.com/hashtag/phpcon?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon</a> デカ象ヤバい <a href="https://t.co/iKP5Jedh6O">pic.twitter.com/iKP5Jedh6O</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1200943237931786241?ref_src=twsrc%5Etfw">December 1, 2019</a></blockquote>
-
-<p>小さい像はスピーカー特典でした。</p>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h2>さいごに</h2>
-
-<p>20回目の節目となるPHPカンファレンスで登壇できたのは、とても良かったです。
-心残りなのはSebastianのセッションが自分の1つ前だったので、彼の登壇後話せなかったのと、
-懇親会にはいるだろ？と思ったら、早めに退席されてしまっていて、まったく話せなかったことです。
-まぁでもまだどこかで会えるよね？という期待を抱いて生きていきます。
-彼のセッション聞いて、OSS開発のモチベも上がったので、来年はOSS開発いろいろ頑張るぞー</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPカンファレンス2019で、「PHPを学ぶということ」について発表してきました" data-url="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html&t=PHP%E3%82%AB%E3%83%B3%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B92019%E3%81%A7%E3%80%81%E3%80%8CPHP%E3%82%92%E5%AD%A6%E3%81%B6%E3%81%A8%E3%81%84%E3%81%86%E3%81%93%E3%81%A8%E3%80%8D%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/phpcon2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/12/08/jsfes2019-winter.html">冬のJavaScript祭りに参加して、E2Eテストについて登壇しました</a></h2>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:01:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/e2e%E3%83%86%E3%82%B9%E3%83%88.html" rel="tag">E2Eテスト</a>
-      <a href="/tags/puppeteer.html" rel="tag">puppeteer</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://javascript-fes.doorkeeper.jp/events/99978">11/30に開催されたJavaScript祭りに参加しました</a></p>
-
-<p><img src="https://dzpp79ucibp5a.cloudfront.net/events_banners/99978_normal_1572511571_jsfes_2019_winter.png" alt="" /></p>
-
-<p>早速ですが、私のスライドは以下のとおりです。</p>
-
-<script async class="speakerdeck-embed" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<h2>なぜこのテーマを選んだか？</h2>
-
-<p>最近E2Eテストの課題について、いろいろなところで話題になっていたのと、
-CakeFestでJoseがテストに関連する講演をしていたのですが、
-実はE2Eテストの理解って意外とされていないのでは？と思い、このテーマを選びました。</p>
-
-<p>内容自体は、各種引用から成り立っていて、現時点では最適な解決策は<a href="https://pptr.dev/">Puppeteer</a>を使うことなのでは？という話の流れです。</p>
-
-<h2>講演の概要</h2>
-
-<script async class="speakerdeck-embed" data-slide="4" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>まずはTesting Pyramidの話ですが、これはGoogleが提唱した割合の話としてよく出没する3段の簡易な画像です。
-Joseの発表でも、この簡易版の画像を引用していました。</p>
-
-<p><a href="https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html">Just Say No to More End-to-End Tests</a>というGoogleのTesting Blogの記事なのですが、
-これはテストの比率を説明する資料としてはわかりやすいものです。しかし具体性に欠けています。
-そこで出典の記事を確認する必要があります。</p>
-
-<p>記事の中で</p>
-
-<blockquote>
-<p>Here is a simplified version of the testing pyramid from the opening keynote of the 2014 Google Test Automation Conference:</p>
-</blockquote>
-
-<p>と書かれているように、<a href="https://docs.google.com/presentation/d/15gNk21rjer3xo-b1ZqyQVGebOp_aPvHU3YH7YnOMxtE/edit#slide=id.g437663ce1_53_98">Google Test Automationカンファレンスのオープニングキーノート</a>を確認してみましょう。</p>
-
-<p>そうすると、Testing Pyramidの話をしています。
-よく見ると、これ自体が引用であることがわかります。さらに出典を辿ってみます。</p>
-
-<p><a href="https://watirmelon.blog/tag/testing-pyramid/">WatirMelon - A Software Testing Blog by Alister Scott</a>というブログがあります。
-先ほどのキーノートのスライドの説明で、このブログの著者Alisterが観客の中にいることが示唆されています。</p>
-
-<p><img src="https://watirmelon.files.wordpress.com/2014/05/automated-testing-pyramid.png" alt="" /></p>
-
-<p>最初のTesting Pyramidの例では、ざっくりとしていた各層は、実はもう少しブレイクダウンされています。</p>
-
-<p>これらは全て2014年の内容ですが、今でもこの理解がされていないのでは？という気がします。
-E2Eはマニュアル（手動）テストも含んでいるのです。
-自動化にばかりフォーカスされている気がしますね。</p>
-
-<p>で、Testing Pyramidについて、新しい記事がないかな？というときに、ありましたよ。
-我らが martinFowler.com の<a href="https://martinfowler.com/articles/practical-test-pyramid.html">The Practical Test Pyramid</a>です。
-こちらは2018年の技術背景を元に書かれています。
-とても良い内容なので、これを読むことでテストに対する理解がぐっと深まります。</p>
-
-<p>で、現時点で使うツールは<a href="https://pptr.dev/">Puppeteer</a>で良いのでは？という、私の提案で終わります。
-Puppeteerがなぜ良いかというのはスライドに書いてある内容で理解していただけると思います。</p>
-
-<p>また、もしUIテスト(単体や結合)で使いたい場合の機能についても、簡単にふれています。</p>
-
-<h2>さいごに</h2>
-
-<p>同日に<a href="https://jsconf.jp/2019/">JSConf JP</a>が開催されていて、JavaScriptのイベント同士で被るのかー、と思っていたら結構参加者も多く、
-他にもとても楽しいセッションが多く、盛り上がりました。</p>
-
-<p>次回もぜひ参加したいと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="冬のJavaScript祭りに参加して、E2Eテストについて登壇しました" data-url="http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html&t=%E5%86%AC%E3%81%AEJavaScript%E7%A5%AD%E3%82%8A%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%E3%80%81E2E%E3%83%86%E3%82%B9%E3%83%88%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BB%E5%A3%87%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/12/08/polymer-co-edo-meetup-28.html">Polymer.co-edo ＃28 を開催しました</a></h2>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 07:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2019年7回目となる <a href="https://polymercoedo.doorkeeper.jp/events/100067">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p>9/23に開催された、Web Components SF Meetupの動画が公開されたので、みんなで観る会を開催しました。</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLa8P8m_l68MqDmuIK72zfHoqbCGnEn0Yh" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-<p>動画は字幕をonにして日本語を選択すれば、かなりうまく翻訳されているので、英語に不安がある方も問題なく閲覧可能だと思います。</p>
-
-<p>動画は</p>
-
-<ul>
-<li>Web Components に関する最新動向</li>
-<li>SalesForceの事例</li>
-<li>CSSに関する話</li>
-<li>Q&amp;A</li>
-</ul>
-
-<p>の4部構成になっていて、とくに最後のQ&amp;Aが私たちがPolymerやPolymerチームに関して思っていることを遠慮なく突っ込んでくれていて、とても楽しめました。
-ぜひQ&amp;Aもご覧になってください。</p>
-
-<h3>次回</h3>
-
-<p>年末で<a href="https://gdg-tokyo.connpass.com/event/137666/">GDG DevFest Tokyo</a>の準備とかもあって、予定されていた18日の開催は難しそうです。
-また日程調整して、お知らせします。</p>
-
-<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo ＃28 を開催しました" data-url="http://blog.open.tokyo.jp/2019/12/08/polymer-co-edo-meetup-28.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/12/08/polymer-co-edo-meetup-28.html&t=Polymer.co-edo%20%EF%BC%8328%20%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/12/08/polymer-co-edo-meetup-28.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/7/">« Prev</a>
@@ -624,16 +831,16 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -644,8 +851,14 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -653,7 +866,7 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -662,7 +875,7 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -711,9 +924,6 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -725,10 +935,10 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -747,7 +957,7 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

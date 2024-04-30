@@ -277,7 +277,460 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/06/bump-middleman-4-4-2-from-3-x.html">Middleman を 3系から 4系にアップグレードした</a></h2>
+            <h2 class="title"><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a></h2>
+  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 11:15:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/bigquery.html" rel="tag">BigQuery</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>BigQuery へクエリするコードを書くとき、どうしていますか？
+ORM を使って RDB を使うコードを書いている場合などは、 SQLite などを使って UnitTest を書いていることもあるでしょう。
+BigQuery についても、何かそういったことができないかな？と思い、調べていました。</p>
+
+<h2>BigQuery Emulator</h2>
+
+<p>そんなとき、ちょうど <a href="https://github.com/goccy/bigquery-emulator">BigQuery Emulator</a> の存在を知り、試してみることにしました。</p>
+
+<p>作者の goccy さんのスライドです。</p>
+
+<iframe class="speakerdeck-iframe" frameborder="0" src="https://speakerdeck.com/player/ef6e21eded3440edafa7a8d59ec6ffef" title="BigQueryエミュレータの作り方" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" style="border: 0px; background: padding-box padding-box rgba(0, 0, 0, 0.1); margin: 0px; padding: 0px; border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.2) 0px 5px 40px; width: 560px; height: 315px;" data-ratio="1.7777777777777777"></iframe>
+
+<p>GitHub の README によると Docker コンテナでも動かせるようですので、私たちはそれを利用することにしました。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker pull ghcr.io/goccy/bigquery-emulator:latest
+</code></pre></div>
+<p>コードのサンプルとしては Python と Golang での書き方は提供されていたので、 Node.js でも何とかなるんじゃない？&hellip;
+と思いやり始めたのです。</p>
+
+<h2>Node.js &ndash; BigQuery Emulator</h2>
+
+<p>Node.js で BigQuery を利用するには、<a href="https://cloud.google.com/nodejs/docs/reference/bigquery/latest">公式のクライアント</a>をインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @google-cloud/bigquery
+</code></pre></div>
+<p>接続の方法は Python のクライアントを見る限り、</p>
+
+<ul>
+<li>エンドポイント</li>
+<li>プロジェクトID</li>
+<li>匿名接続（AnonymousCredentials）</li>
+</ul>
+
+<p>を指定すれば良さそうです。</p>
+<div class="highlight"><pre class="highlight python"><code><span class="n">client_options</span> <span class="o">=</span> <span class="n">ClientOptions</span><span class="p">(</span><span class="n">api_endpoint</span><span class="o">=</span><span class="s">"http://0.0.0.0:9050"</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="p">.</span><span class="n">Client</span><span class="p">(</span>
+  <span class="s">"test"</span><span class="p">,</span>
+  <span class="n">client_options</span><span class="o">=</span><span class="n">client_options</span><span class="p">,</span>
+  <span class="n">credentials</span><span class="o">=</span><span class="n">AnonymousCredentials</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Node.js だとこんな感じでしょうか？</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">new</span> <span class="nx">BigQuery</span><span class="p">({</span>
+  <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">credentials</span><span class="p">:</span> <span class="cm">/* 何を指定すれば良いんだ？ */</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>ここで、 <code>credentials</code> の指定に <code>AnonymousCredentials</code> みたいなものが無いことに気がつきます。
+JavaScript 以外のクライアント、上記の Python や Go には、匿名接続のオプションがあるようです。</p>
+
+<p>現時点の credentials に指定できるのは、<a href="https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest/google-auth-library/googleauthoptions">公式ドキュメント</a>によると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>credentials?: CredentialBody | ExternalAccountClientOptions;
+</code></pre></div>
+<p>だけです。
+<code>ExternalAccountClientOptions</code> は外部のアカウント連携を使った認証をする場合のオプションになっています。</p>
+
+<h2>@google-cloud/bigquery のコードを調べる</h2>
+
+<p>クライアントの言語違いで接続が変わるわけではないので、 BigQuery のサーバー側は匿名接続できるようになっているが、クライアント側の実装がサポートしていない、ということは想定できるでしょう。
+こういうときは、クライアントのソースコードを調べるしかありません。
+正面突破は無理でも、何かハックできる方法があるかもしれません。</p>
+
+<h3>BigQuery クラス</h3>
+
+<p>GitHubのリポジトリ<a href="https://github.com/googleapis/nodejs-bigquery">Google BigQuery: Node.js Client</a>です。
+まず、 <a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L305">BigQuery クラスのコンストラクタ</a>を調べます。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L324-L331">このあたり</a>で、オプションを作り直して親クラスのコンストラクタを呼び出すみたいです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">apiEndpoint</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">apiEndpoint</span><span class="o">!</span><span class="p">,</span>
+      <span class="nx">baseUrl</span><span class="p">,</span>
+      <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
+      <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">../../package.json</span><span class="dl">'</span><span class="p">),</span>
+      <span class="na">autoRetry</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">autoRetry</span><span class="p">,</span>
+      <span class="na">maxRetries</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">maxRetries</span><span class="p">,</span>
+    <span class="p">};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">super</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</code></pre></div>
+<p><code>credentials</code> は <code>options</code> の中に入ったままなので、 BigQuery 特有のオプションを <code>config</code> に置き換えて親クラスである <code>@google-cloud/common/Service</code> を呼び出す感じでしょうか。</p>
+
+<h3>Service クラス</h3>
+
+<p><code>Service</code> クラスは <code>@google-cloud/common</code> という共有パッケージにあるので、<a href="https://github.com/googleapis/nodejs-common">そこのリポジトリ</a>を調べます。
+<a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts">Serviceクラスのコード</a>です。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L115-L123">このあたり</a>で、リクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出すみたいです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">reqCfg</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">({},</span> <span class="nx">config</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">projectIdRequired</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectIdRequired</span><span class="p">,</span>
+      <span class="na">projectId</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectId</span><span class="p">,</span>
+      <span class="na">authClient</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">authClient</span><span class="p">,</span>
+      <span class="na">credentials</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">credentials</span><span class="p">,</span>
+      <span class="na">keyFile</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">keyFilename</span><span class="p">,</span>
+      <span class="na">email</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
+      <span class="na">token</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span>
+    <span class="p">});</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
+      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">authClient</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">;</span>
+</code></pre></div>
+<p>なるほど、なるほど。</p>
+
+<h3>makeAuthenticatedRequestFactory</h3>
+
+<p>続いて、 <a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L596">makeAuthenticatedRequestFactory</a> を見てみましょう。</p>
+
+<p>コードには関数定義がいろいろあって、最終的には <code>makeAuthenticatedRequest</code> という関数をファクトリメソッドは戻すようです。
+ふむふむ。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">mar</span> <span class="o">=</span> <span class="nx">makeAuthenticatedRequest</span> <span class="k">as</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
+    <span class="nx">mar</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">authClient</span><span class="p">);</span>
+    <span class="nx">mar</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">mar</span><span class="p">;</span>
+</code></pre></div>
+<p>つまり <code>BigQuery</code> クラスのインスタンスを生成すると、認証クライアントまでは生成するけど、接続などにはいかないことがわかります。
+続いて<a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html">ファクトリメソッドの引数</a>を調べてみましょう。</p>
+
+<p>興味深いオプションが2つありますね。</p>
+
+<ul>
+<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#customEndpoint">customEndpoint</a></li>
+<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#useAuthWithCustomEndpoint">useAuthWithCustomEndpoint</a></li>
+</ul>
+
+<p>認証エンドポイントをカスタマイズできるようです。
+では、ファクトリでは、このオプションをどうやって使っているのか見てみましょう。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L766-L777">ここ</a>にありました。</p>
+<div class="highlight"><pre class="highlight javascript"><code>          <span class="kd">const</span> <span class="nx">authorizeRequest</span> <span class="o">=</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span>
+              <span class="nx">reqConfig</span><span class="p">.</span><span class="nx">customEndpoint</span> <span class="o">&amp;&amp;</span>
+              <span class="o">!</span><span class="nx">reqConfig</span><span class="p">.</span><span class="nx">useAuthWithCustomEndpoint</span>
+            <span class="p">)</span> <span class="p">{</span>
+              <span class="c1">// Using a custom API override. Do not use `google-auth-library` for</span>
+              <span class="c1">// authentication. (ex: connecting to a local Datastore server)</span>
+              <span class="k">return</span> <span class="nx">reqOpts</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+              <span class="k">return</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">authorizeRequest</span><span class="p">(</span><span class="nx">reqOpts</span><span class="p">);</span>
+            <span class="p">}</span>
+          <span class="p">};</span>
+</code></pre></div>
+<p>コメントを読んでください。 </p>
+
+<blockquote>
+<p>ex: connecting to a local Datastore server</p>
+</blockquote>
+
+<p>「例えば、ローカルのサーバーとかに接続するときな」って、今回の用途じゃないですか！</p>
+
+<h2>どうやったら指定できるのか？</h2>
+
+<p>さて、ここまでの調査を振り返りましょう。</p>
+
+<ul>
+<li>BigQuery クラスで Service クラスのコンストラクタを呼び出す</li>
+<li>Service クラスでリクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出す</li>
+</ul>
+
+<p>BigQuery クラスからのオプションでは <code>customEndpoint</code> を指定する方法がない！という結論。</p>
+
+<p>ちょっと待てよ？</p>
+
+<p>サービスクラスで生成したファクトリどこに入れてたっけ？</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
+      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
+</code></pre></div>
+<p><code>this</code> (=== BigQuery クラスのインスタンス) ですね。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L83">サービスクラスの定義</a>を見てみましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">makeAuthenticatedRequest</span><span class="p">:</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
+</code></pre></div>
+<p>private じゃないってことは、オーバーライドできるじゃないですか。</p>
+
+<h2>ハックする</h2>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">BigQuery</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/bigquery</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">util</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/common</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">let</span> <span class="nx">bigQuery</span><span class="p">:</span> <span class="nx">BigQuery</span><span class="p">;</span>
+
+<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">baseUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
+    <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">@google-cloud/bigquery/package.json</span><span class="dl">'</span><span class="p">),</span>
+    <span class="na">customEndpoint</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="p">};</span>
+  <span class="nx">bigQuery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BigQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+  <span class="nx">bigQuery</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span> <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>options の基本項目は、 BigQuery クラスのコンストラクタで指定されていた項目をそのまま流用しています。
+それに <code>customEndpoint</code> を指定して <code>makeAuthenticatedRequestFactory</code> を呼び出しインスタンス変数の値を上書きします。</p>
+
+<h2>うまくいきましたよね！</h2>
+
+<p>これで Node.js の UnitTest から BigQuery Emulator を使ってクエリのテストコードを書くことができるようになりました。
+BigQuery Emulator があって良かった！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js で BigQuery を使ったコードの自動テストを記述する" data-url="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html&t=Node.js%20%E3%81%A7%20BigQuery%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%B3%E3%83%BC%E3%83%89%E3%81%AE%E8%87%AA%E5%8B%95%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E8%A8%98%E8%BF%B0%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a></h2>
+  <p class="postdate"><a href="/2022/07/12.html" title="Permanent link">Tuesday, July 12, 2022 06:23:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/swc.html" rel="tag">swc</a>
+      <a href="/tags/swc-node.html" rel="tag">swc-node</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>少し前のブログで <a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a> という記事を書いたのですが、最後のまとめで以下のように紹介していました。</p>
+
+<blockquote>
+<p>ちなみに 1.5系からは tsconfig を読み込むように変更されているのですが、現時点私たちのプロジェクトではビルドが失敗するので、まだ 1.4 系を利用しています。 問題はすでに issue TypeScript path mapping is not working. になっており、 パスエイリアスを使っているときに、うまくファイルが import できないところなのですが、これが解決されれば transformer の設定も不要になるので、 とても便利になるはずです。</p>
+</blockquote>
+
+<p>そこから他の issue を調べたりしているうちに解決策がわかったので、今回の記事で追記していきます。</p>
+
+<p><code>@swc-node/jest</code> の最新版（現時点では <code>1.5.2</code> ）を使います。</p>
+
+<h2>パスエイリアスの指定方法</h2>
+
+<p>1.5系からは tsconfig を読み込むので、 <code>jest.config.js</code> の <code>transform</code> は以下のように記述すれば良いことになっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</code></pre></div>
+<p>パスエイリアスは <code>moduleNameMapper</code> に記述されているとおり、テストコードからは <code>@/domain/entities/user-entity</code> みたいに <code>@</code> をルートにしてパスエイリアスを使えるようにしています。</p>
+
+<p>で、このままだとパスエイリアスがすべて解決されません、というのが前回までの内容でした。</p>
+
+<p>今回は調べるなかで、以下のように指定することでパスエイリアスがうまく利用できるようになったので、紹介します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
+<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span>
+      <span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">,</span>
+      <span class="c1">// ここから</span>
+      <span class="p">{</span>
+        <span class="na">paths</span><span class="p">:</span> <span class="p">{</span>
+          <span class="dl">'</span><span class="s1">@/*</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="s2">`</span><span class="p">${</span><span class="nx">__dirname</span><span class="p">}</span><span class="s2">/*`</span><span class="p">],</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+      <span class="c1">// ここまで</span>
+    <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+</code></pre></div>
+<p><code>transform</code> で <code>paths</code> の指定をするとパスエイリアスが使えるようになります。
+tsconfig にも <code>paths</code> の指定が以下のようになっています</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">paths</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">@/*</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span><span class="dl">"</span><span class="s2">./*</span><span class="dl">"</span><span class="p">]</span>
+  <span class="p">},</span>
+</code></pre></div>
+<p>で、tsconfig に記述しているとおりコードが書き変わると、そのまま相対パスになってしまい、 インポートパスが見つからないということになっていました。
+TypeScript は tsconfig でパスエイリアスを指定するとき <code>./*</code> のように書くとプロジェクトルートからの解釈をしてくれるのですが、 <code>swc</code> ではそのように解釈はしてくれません。
+そのため <code>jest.config.js</code> の <code>transform</code> で絶対パスに上書きするように記述します。 <code>jest.config.js</code> はJavaScriptコードなので、 <code>__dirname</code> を使って絶対パスに変更することができるようになります。</p>
+
+<p>これで安心して <code>@swc-node/jest</code> も最新版に追従できるようになりました。
+もし同じような問題になっている人の手助けになる記事になっていれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="@swc-node/jest を使ってテストを高速化する（v1.5対応版）" data-url="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html&t=@swc-node/jest%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E9%AB%98%E9%80%9F%E5%8C%96%E3%81%99%E3%82%8B%EF%BC%88v1.5%E5%AF%BE%E5%BF%9C%E7%89%88%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h2>
+  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 05:03:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://github.com/WICG/import-maps">import maps</a> については 2019年ごろに度々当ブログにて紹介してきました。
+で、それからもずっと issue なんかを追いかけてはきたのですが、昨年 Rails 7 に import maps が入るっていう驚きがあったのと、
+社内で発表する機会もあったので、少しスライドにまとめて発表しました。</p>
+
+<script async class="speakerdeck-embed" data-id="eb44656534a14719bfcb2847d29cf690" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>で、これを発表したのが 2021/11/29 （いい肉の日だった）のですが、それからすぐ 2021/12/15 Rails 7 がリリースされました。</p>
+
+<h3>Rails 7 における import maps</h3>
+
+<p><a href="https://rubyonrails.org/2021/12/15/Rails-7-fulfilling-a-vision">Rails 7.0: Fulfilling a vision</a></p>
+
+<p>で、import maps に関連する部分として <a href="https://github.com/rails/importmap-rails">Importmap for Rails</a> というライブラリができました。
+<a href="https://github.com/rails/rails/blob/main/Gemfile#L24">Rails本体の Gemfile に入っている</a>ので Rails 7+ をインストールすると、自動的に入ります。
+Railsのアプリケーションジェネレータを使うとき、 <code>javascript</code> オプション( <code>-j</code> )のデフォルトも <code>importmap</code> のようです。
+<a href="https://github.com/rails/rails/blob/2a98e28a31d3b9a720c4a9571c23b40433a035df/railties/lib/rails/generators/rails/app/app_generator.rb#L260">/railties/lib/rails/generators/rails/app/app_generator.rb#L26</a></p>
+
+<p>ドキュメントにも書いてあるとおり、現時点は Chrome/Edge 89+ だけが import maps をサポートしているので、<a href="https://github.com/guybedford/es-module-shims">es-module-shims</a>を使っているようです。</p>
+
+<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap<em>tags</em>helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
+ドキュメントによると、設定は <code>config/importmap.rb</code> にするようです。</p>
+
+<p>公式ドキュメントによると、以下のように記述するようです。</p>
+<div class="highlight"><pre class="highlight ruby"><code><span class="c1"># config/importmap.rb</span>
+<span class="n">pin</span> <span class="s2">"react"</span><span class="p">,</span> <span class="ss">to: </span><span class="s2">"https://ga.jspm.io/npm:react@17.0.2/index.js"</span>
+</code></pre></div>
+<p>もしくはコマンド実行すると、最新のバージョンで <code>config/importmap.rb</code> に追記してくれるようです。
+<a href="https://github.com/rails/importmap-rails#using-npm-packages-via-javascript-cdns">Using npm packages via JavaScript CDNs</a></p>
+<div class="highlight"><pre class="highlight shell"><code>./bin/importmap pin react react-dom
+</code></pre></div>
+<p>なるほど、といいたいところですが、ここで一つ疑問がおきます。
+これって <code>npm outdated</code> や <code>npm audit</code> てきなことや、 dependabot での脆弱性チェックってどうなっちゃうのかしら？と。</p>
+
+<h3>パッケージの最新追従はどうなるのか？</h3>
+
+<p>さきほどの <code>importmap</code> コマンドですが、 <code>unpin</code> という削除するオプションはあるようですが、アップデート系は書いてないので無いのかな？
+あとは import maps の json を出力する <code>json</code> オプションがあるだけみたいだ（執筆時点のソースコードを確認した）。</p>
+
+<p>脆弱性があったパッケージのアップデートとか気にしないのかな？気にするよね？
+少し <code>package-lock.json</code> から <code>config/importmap.rb</code> に変換するライブラリとかないかな？と調べてみたりもしたのですが、
+見つかりませんでした。</p>
+
+<p>まぁそれより、ちゃんと issue 見るか、と思っていたらちゃんとありました。
+<a href="https://github.com/rails/importmap-rails/issues/19">/bin/importmap outdated</a></p>
+
+<p>で、上記に対するPRもありました。
+<a href="https://github.com/rails/importmap-rails/pull/109">Add outdated and audit commands</a></p>
+
+<p>こんな感じで出力されるようです。</p>
+
+<h4>Audit</h4>
+
+<pre>
++-------------+----------+---------------------+--------------------------------------------------------+
+| Package     | Severity | Vulnerable versions | Vulnerability                                          |
++-------------+----------+---------------------+--------------------------------------------------------+
+| glob-parent | high     | <5.1.2              | Regular expression denial of service                   |
+| is-svg      | high     | >=2.1.0 <4.3.0      | ReDOS in IS-SVG                                        |
+| is-svg      | high     | >=2.1.0 <4.2.2      | Regular Expression Denial of Service (ReDoS)           |
+| lodash      | critical | <4.17.12            | Prototype Pollution in lodash                          |
+| lodash      | high     | <4.17.21            | Command Injection in lodash                            |
+| lodash      | high     | <4.17.19            | Prototype Pollution in lodash                          |
+| lodash      | high     | <4.17.11            | Prototype Pollution in lodash                          |
+| lodash      | low      | <4.17.5             | Prototype Pollution in lodash                          |
+| lodash      | moderate | <4.17.21            | Regular Expression Denial of Service (ReDoS) in lodash |
+| lodash      | moderate | <4.17.11            | Prototype pollution in lodash                          |
+| nth-check   | moderate | <2.0.1              | Inefficient Regular Expression Complexity in nth-check |
++-------------+----------+---------------------+--------------------------------------------------------+
+  11 vulnerabilities found: 6 high, 3 moderate, 1 low, 1 critical
+</pre>
+
+<h4>Outdated</h4>
+
+<pre><code>
++-----------------+---------------+---------------+
+| Package         | Current       | Latest        |
++-----------------+---------------+---------------+
+| @jspm/core      | 2.0.0-beta.18 | 2.0.0-beta.19 |
+| @jspm/core      | 2.0.0-beta.2  | 2.0.0-beta.19 |
+| aaaasssstimulus | 2.0.0         | Not found     |
+| glob-parent     | 3.1.0         | 6.0.2         |
+| is-glob         | 3.1.0         | 4.0.3         |
+| is-svg          | 3.0.0         | 4.3.2         |
+| lodash          | 4.17.1        | 4.17.21       |
+| nth-check       | 1.0.0         | 2.0.1         |
+| react           | 16.0.0        | 17.0.2        |
+| stimulus        | 2.0.0         | 3.0.1         |
++-----------------+---------------+---------------+
+  10 outdated packages found
+</code></pre>
+
+<p>CI で dependabot みたいなのがどう検知するかといった課題はあるかもですが、いったんコマンド結果が出力できるので、それをシェルでゴニョゴニョすれば
+アップデートの検知や脆弱性の発見はできるようになりそうですね。</p>
+
+<h3>合わせて読みたい</h3>
+
+<p>さいごに Zenn にも良い記事があったので、紹介しておきます。
+<a href="https://zenn.dev/takeyuweb/articles/996adfac0d58fb">Rails 7.0 で標準になった importmap-rails とは何なのか？</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..." data-url="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html&t=Rails%207%E3%81%AE%E6%8E%A1%E7%94%A8%E6%8F%90%E6%A1%88%E3%81%A7%E6%B3%A8%E7%9B%AE%E3%82%92%E9%9B%86%E3%82%81%E5%A7%8B%E3%82%81%E3%81%9F%20Import%20maps%20%E3%81%AE%E9%81%8E%E5%8E%BB%E3%80%81%E7%8F%BE%E5%9C%A8%E3%80%81%E3%81%9D%E3%81%97%E3%81%A6%E6%9C%AA%E6%9D%A5%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6..." class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/06/bump-middleman-4-4-2-from-3-x.html">Middleman を 3系から 4系にアップグレードした</a></h2>
   <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 10:59:00 AM</a></p>
   <p class="tags">
       <a href="/tags/middleman.html" rel="tag">Middleman</a>
@@ -561,473 +1014,6 @@ Jest でいうところの <code>Jest.mock(&#39;ライブラリ名&#39;, {/** �
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h2>
-  <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 11:35:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
-      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
-      <a href="/tags/actions.html" rel="tag">Actions</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>GitHub の Actions で npm などの依存関係パッケージをキャッシュするのは、公式ドキュメント <a href="https://docs.github.com/ja/actions/using-workflows/caching-dependencies-to-speed-up-workflows">依存関係をキャッシュしてワークフローのスピードを上げる</a> にも書いてあるように、
-CIを高速化するのに重要です。</p>
-
-<p>公式 Example だと以下のとおりです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Caching with npm</span>
-
-<span class="na">on</span><span class="pi">:</span> <span class="s">push</span>
-
-<span class="na">jobs</span><span class="pi">:</span>
-  <span class="na">build</span><span class="pi">:</span>
-    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
-
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Cache node modules</span>
-        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/cache@v3</span>
-        <span class="na">env</span><span class="pi">:</span>
-          <span class="na">cache-name</span><span class="pi">:</span> <span class="s">cache-node-modules</span>
-        <span class="na">with</span><span class="pi">:</span>
-          <span class="c1"># npm cache files are stored in `~/.npm` on Linux/macOS</span>
-          <span class="na">path</span><span class="pi">:</span> <span class="s">~/.npm</span>
-          <span class="na">key</span><span class="pi">:</span> <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}</span>
-          <span class="na">restore-keys</span><span class="pi">:</span> <span class="pi">|</span>
-            <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-</span>
-            <span class="s">${{ runner.os }}-build-</span>
-            <span class="s">${{ runner.os }}-</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Dependencies</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm install</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm build</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Test</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm test</span>
-</code></pre></div>
-<p><code>actions/cache</code> を利用すれば問題なく動くのですが、Enterprise 版の場合は <code>runs-on</code> にセルフホストランナーを利用するので、キャッシュがホストランナーのディスクに依存してしまいます。
-これだとホストランナーのディスク管理とか大変になるので、少し管理で楽をしたいな、と思ったところ S3 にキャッシュできるものがあり、現在もこれを利用しています。</p>
-
-<h3>actions-s3-cache</h3>
-
-<p><a href="https://github.com/shonansurvivors/actions-s3-cache">actions-s3-cache</a> は名前のとおり依存関係のキャッシュをS3に保持してくれます。
-これならディスク容量を気にすることもないし、管理が楽になりますね。</p>
-
-<p>公式 Example だと、こんな感じです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">steps</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
-      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
-      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">us-east-1</span>
-    <span class="na">with</span><span class="pi">:</span>
-      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">your-s3-bucket-name</span> <span class="c1"># required</span>
-      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">npm-v1-${{ hashFiles('laravel/package-lock.json') }}</span> <span class="c1"># required ('.zip' is unnecessary)</span>
-      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span> <span class="c1"># required </span>
-      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span> <span class="c1"># required</span>
-      <span class="na">zip-option</span><span class="pi">:</span> <span class="s">-ryq</span> <span class="c1"># optional (default: -ryq)</span>
-      <span class="na">unzip-option</span><span class="pi">:</span> <span class="s">-n</span> <span class="c1"># optional (default: -n)</span>
-      <span class="na">working-directory</span><span class="pi">:</span> <span class="s">laravel</span> <span class="c1"># optional (default: ./)</span>
-</code></pre></div>
-<p>僕らの運用では</p>
-
-<ul>
-<li>S3バケットは複数リポジトリで共有</li>
-<li>キー名にリポジトリ名を入れる</li>
-</ul>
-
-<p>みたいな決め事を作ったので、こんな感じにしてみました。</p>
-<div class="highlight"><pre class="highlight yaml"><code>  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
-  <span class="pi">-</span> <span class="na">id</span><span class="pi">:</span> <span class="s">get-repository-name</span>
-    <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
-      <span class="s">IFS=/</span>
-      <span class="s">REPO=${{ github.repository }}</span>
-      <span class="s">set -- ${REPO}</span>
-      <span class="s">echo "::set-output name=name::$2"</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
-      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
-      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">ap-northeast-1</span>
-    <span class="na">with</span><span class="pi">:</span>
-      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">ci-actions-cache</span>
-      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">${{steps.get-repository-name.outputs.name}}-cache-${{ hashFiles('package-lock.json') }}</span>
-      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span>
-      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span>
-</code></pre></div>
-<p><code>get-repository-name</code> でリポジトリ名を抜き出してきて、 <code>cache-key</code> で使っています。
-<code>cache-key</code> に一致するものがあれば、S3からダウンロードしてzipを展開、一致するものがなければ <code>command</code> を実行して <code>paths</code> にあるファイルを zip アーカイブして S3 に保持といったことをやってくれるので、便利ですね。</p>
-
-<p>あとは S3 のバケットにファイルの有効期限を設定しておくようにすれば、古いキャッシュがいつまでも残ることもなく、とても便利です。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GitHub Enterprise の Actions で依存関係を S3 にキャッシュする" data-url="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html&t=GitHub%20Enterprise%20%E3%81%AE%20Actions%20%E3%81%A7%E4%BE%9D%E5%AD%98%E9%96%A2%E4%BF%82%E3%82%92%20S3%20%E3%81%AB%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
-  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 05:17:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>TypeORM では、主キーやインデックスはエンティティにデコレータを記述します。
-たとえば以下のような感じです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>@PrimaryGenerationColumn</code> にはインデックス名を指定できないので、この状況で <code>migration:generate</code> を実行すると、
-TypeORM 独自のルールを使ったインデックス名で SQL が生成されます。</p>
-
-<p>一方でインデックスの場合は、たとえば <code>email</code> にユニーク制約を入れるとすると以下のように、インデックス名を指定できます。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
-  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
-  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>また関連に関してもそうで、 User - hasMany -&gt; Post のような関連があったとき、外部キー制約の名前も TypeORM ルールになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
-  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
-  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">OneToMany</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">PostEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">post</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
-  <span class="nx">posts</span><span class="p">?:</span> <span class="nx">PostEntity</span><span class="p">[];</span>
-<span class="p">}</span>
-
-<span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">PostEntity</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
-  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
-  <span class="p">@</span><span class="nd">ManyToOne</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">UserEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">posts</span><span class="p">)</span>
-  <span class="nx">user</span><span class="o">!</span><span class="p">:</span> <span class="nx">UserEntity</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>そこで、 <code>@Index</code> 以外で生成されるインデックスの名前をカスタマイズしたい！という場合は <code>NamingStrategy</code> を使います。
-この <code>NamingStrategy</code> ですが、ドキュメントには詳しい解説がないので、この記事を書くことにしました。</p>
-
-<h3>NamingStrategy の作り方</h3>
-
-<p>まずはインデックス名をカスタムできるように、 <code>DefaultNamingStrategy</code> を継承し、 <code>NamingStrategyInterface</code> を実装するクラスを作ります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/DefaultNamingStrategy.ts">DefaultNamingStrategyのコード</a> を参考にカスタマイズすると良いでしょう。</p>
-
-<p>たとえばプライマリーキーの場合は以下のようになっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
-    <span class="c1">// sort incoming column names to avoid issue when ["id", "name"] and ["name", "id"] arrays</span>
-    <span class="kd">const</span> <span class="nx">clonedColumnNames</span> <span class="o">=</span> <span class="p">[...</span><span class="nx">columnNames</span><span class="p">]</span>
-    <span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">sort</span><span class="p">()</span>
-    <span class="kd">const</span> <span class="nx">tableName</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">)</span>
-    <span class="kd">const</span> <span class="nx">replacedTableName</span> <span class="o">=</span> <span class="nx">tableName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="dl">"</span><span class="s2">.</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)</span>
-    <span class="kd">const</span> <span class="nx">key</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">replacedTableName</span><span class="p">}</span><span class="s2">_</span><span class="p">${</span><span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)}</span><span class="s2">`</span>
-    <span class="k">return</span> <span class="dl">"</span><span class="s2">PK_</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">RandomGenerator</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
-  <span class="p">}</span>
-</code></pre></div>
-<p>プライマリーキーに設定されているカラム名をソートしてから <code>_</code> で結合して sha1 に変換したものを利用しています。</p>
-
-<p>たとえばプロジェクトのルールで、プライマリーキーは <code>PK_テーブル名</code> で良い場合は、以下のようなコードでオーバーライドして変更します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
-  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">table</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">);</span>
-    <span class="k">return</span> <span class="s2">`PK_</span><span class="p">${</span><span class="nx">pascalCase</span><span class="p">(</span><span class="nx">table</span><span class="p">)}</span><span class="s2">`</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><code>pascalCase</code> は <a href="https://www.npmjs.com/package/change-case">change-case</a> のようなライブラリ利用を想定しています。</p>
-
-<h3>NamingStrategy で変更できる名前</h3>
-
-<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/NamingStrategyInterface.ts">NamingStrategyInterfaceのコード</a>を見るとわかります。
-よく使いそうなものは、以下のあたりでしょうか。</p>
-
-<ul>
-<li>primaryKeyName 主キー名。デフォルトでは <code>PK_{sha1した値}</code></li>
-<li>foreignKeyName 外部キー名。デフォルトでは <code>FK_{sha1した値}</code></li>
-<li>indexName 複合キー名。デフォルトでは <code>IDX_{sha1した値}</code></li>
-</ul>
-
-<p>もちろんこれ以外にもたくさんカスタマイズできる名前はあるので、マイグレーションファイルに生成された名称がプロジェクトルールに沿わない場合に
-遭遇したら、インターフェースやデフォルトの実装を見てみると良いでしょう。</p>
-
-<h3>カスタム NamingStrategy の指定方法</h3>
-
-<p>マイグレーションコマンドから利用する DataSource のオプションに指定します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">],</span>
-  <span class="nx">namingStrategy</span><span class="p">:</span> <span class="k">new</span> <span class="nx">CustomNamingStrategy</span><span class="p">()</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>namingStrategy</code> を指定して、 <code>npm run migration:generate</code> するとプロジェクトルールに沿った名前でマイグレーションファイルを生成できます。</p>
-
-<p><code>package.json</code> のスクリプト例</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<h3>さいごに</h3>
-
-<p>公式ドキュメントの情報が不足しているところなので、この記事が少しでも役立てば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM でプライマリーキーや外部キーの名前を変更する" data-url="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html&t=TypeORM%20%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%9E%E3%83%AA%E3%83%BC%E3%82%AD%E3%83%BC%E3%82%84%E5%A4%96%E9%83%A8%E3%82%AD%E3%83%BC%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E5%A4%89%E6%9B%B4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h2>
-  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 11:34:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>TypeORM 0.2 系をずっと使ってきて、 2022/03/23 の Dependabot 更新で、 0.3 系へのアップデートを確認しました。
-CIのテストが失敗していたので、何か大きな変更があるのか Release notes を確認してみました。</p>
-
-<p>すると、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#030-2022-03-17">0.3.0</a> と <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#031-2022-03-21">0.3.1</a> の2度に BREAKING CHANGES があることがわかりました。
-ただし後者 <code>0.3.1</code> の BREAKING CHANGES については、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#032-2022-03-22">0.3.2</a> で元に戻されているので <code>0.3.0</code> の変更点を見ていきましょう。</p>
-
-<h3>0.3 系での変更点</h3>
-
-<ul>
-<li>ormconfig のような接続オブションファイル利用は非推奨になった</li>
-<li>非推奨の migrations:* コマンドが削除された</li>
-<li>CLI コマンドの前面見直し</li>
-<li>未実行のマイグレーションとスキーマ同期の両方がある場合、マイグレーションがスキーマ同期の前に実行されるようになった</li>
-<li>aurora-data-api が aurora-mysql に変更</li>
-<li>aurora-data-api-pg が aurora-postgres に変更</li>
-<li>EntityManager.connection が EntityManager.dataSource に変更</li>
-<li>Repository のコンストラクタが新しくなった。カスタムクラスリポジトリは使えなくなった</li>
-<li>@TransactionRepository、@TransactionManager、@Transaction デコレータが削除された</li>
-<li>ジャンクションテーブル名だけが短縮されるようになった（@Entityデコレータでカスタム名を指定するのが理想的</li>
-<li>パラメータなしの findOne() は廃止</li>
-<li>findOne(id) は削除</li>
-<li>findOne, findOneOrFail, find, count, findAndCount メソッドは FindOptions パラメータのみに変更。その代わり FindOptions を使わずに where 条件を直接与えるために、新しいメソッドが追加された: findOneBy, findOneByOrFail, findBy, countBy, findAndCountBy</li>
-<li>findByIdsは非推奨となり、代わりにIn演算子と組み合わせてfindByメソッドを使用することが推奨となる</li>
-<li>findOne と QueryBuilder.getOne() は、データベースで何も見つからなかった場合、undefined ではなく null を返すようになった</li>
-<li>find* メソッドで使用される where の値として null はサポートされず、IsNull() 演算子を明示的に使用するようになった</li>
-<li>すべてのCLIコマンドはormconfigをサポートしなくなった</li>
-<li>DataSourceOptions 内のエンティティ、マイグレーション、サブスクライバのオプションにディレクトリ文字列を指定するのは非推奨になった</li>
-<li>すべてのコンテナ関連の機能 (UseContainerOptions, ContainedType, ContainerInterface, defaultContainer, useContainer, getFromContainer) は非推奨となった</li>
-<li>トランザクション内で使用される EntityManager の getCustomRepository は、非推奨となった。代わりに withRepository メソッドを使用する</li>
-<li>Connection.isConnected は非推奨になった。代わりに .isInitialized を使用する</li>
-<li>FindOptions (find* メソッドで使用) の select や relations でプロパティ名の配列指定は非推奨となった。代わりにオブジェクトリテラル表記を使用する</li>
-<li>FindOptions の join (find* メソッドで使用されます) は非推奨になった。結合を含むクエリを作成するには、QueryBuilder を使用する</li>
-<li>Connection、ConnectionOptions は非推奨になった。DataSource と DataSourceOptions を使用する</li>
-<li>createConnection(), createConnections() は非推奨になった。Connection は DataSource になった</li>
-<li>getConnection() は非推奨になった。グローバルな接続を持つには、データソースをエクスポートして必要な場所でそれを使用する</li>
-<li>getManager(), getMongoManager(), getSqljsManager(), getRepository(), getTreeRepository(), getMongoRepository(), createQueryBuilder() はすべて非推奨になった。これらは DataSource から取得する</li>
-<li>getConnectionManager() と ConnectionManager は非推奨になった。Connection は DataSource になり、各データソースは変数としてエクスポートできる</li>
-<li>getConnectionOptions() は非推奨になった</li>
-<li>AbstractRepository は非推奨になった</li>
-<li>Connection.name と BaseConnectionOptions.name は非推奨になった</li>
-</ul>
-
-<p>めっちゃ、いっぱいありますね。</p>
-
-<h3>修正箇所の確認</h3>
-
-<p>修正箇所に関して、型が変わったものに関しては、 <code>tsc</code> でコンパイルすればエラーになるので、対応箇所は明確です。
-findオプションが変わったり、メソッド自体が無くなったりしたものが中心です。</p>
-
-<p>コンパイルエラーが修正できたら、あとは単体テストでの失敗箇所の確認ですね。</p>
-
-<h3>非推奨になった部分にも目を向ける</h3>
-
-<p>最新のドキュメントは非推奨になった記述がすべてなくなり（そりゃそうですが）、新しい記述方法に変わっているのと、いつ <code>0.4.0</code> になっても良いように、
-どのように修正したら対応できるかを考えておく必要があります。</p>
-
-<p>また、最近新しいAPIサーバーを作ることになったので、その実装は <code>0.3</code> 系で始めるようにしました（あえて古いバージョンを使う必要はないですしね）。
-で、そこで問題になるのが、周辺ライブラリの対応状況です。
-TypeORM に対応したテストデータ作成のライブラリはいくつかあるのですが、そういったものが <code>0.3</code> 系に追従してくるまで待つか、そもそも依存ライブラリを使わずに <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> のような TypeScript のモックデータを作れるライブラリと TypeORM の create/save を組み合わせて使うかの選択になります。
-今回の新しいAPIサーバーでは、後者のやり方で進めることにしました。いずれライブラリの対応が進んだとして切り替えるか、そのままにするかは検討の余地がありますが、それほど手間は変わっていない印象です。</p>
-
-<p>ここからは、昨日の記事でもふれたのですが、私が関わっているプロジェクトでは DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っていますので、その範囲でどのように記述しているかを紹介していきます。</p>
-
-<h3>Connection から DataSource への変更に対応する</h3>
-
-<p>TypeORM 0.2 系では以下の書き方が一般的でした。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">if</span> <span class="p">(</span><span class="nx">getConnectionManager</span><span class="p">().</span><span class="nx">has</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">conn</span> <span class="o">=</span> <span class="nx">getConnectionManager</span><span class="p">().</span><span class="kd">get</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">);</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">conn</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">await</span> <span class="nx">conn</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="k">await</span> <span class="nx">createConnection</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span> <span class="p">});</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>これが 0.3 系では以下のようになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">let</span> <span class="nx">ds</span><span class="p">:</span> <span class="nx">DataSource</span><span class="p">;</span>
-<span class="k">if</span> <span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">isRegistered</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
-  <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="nx">ds</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span><span class="p">});</span>
-  <span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">useValue</span><span class="p">:</span> <span class="nx">ds</span> <span class="p">});</span>
-<span class="p">}</span>
-<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ds</span><span class="p">.</span><span class="nx">isInitialized</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">await</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>データソースのオブジェクトは tsyringe の DI コンテナに登録して利用できるようにしておきます。
-さらに DB（リポジトリ）を、ユースケースクラスで DI できるようにします。</p>
-
-<p>TypeORM 0.2 系では以下のようにしていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">getCustomRepository</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">))</span>
-<span class="p">})</span>
-</code></pre></div>
-<p>TypeORM がグローバルにアクセスできる <code>getCustomRepository</code> を用意してくれていたので、カスタムリポジトリクラスを指定するだけで良かったのですが、
-ここでは <code>getCustomRepository</code> が非推奨になったのと、クラスベースのカスタムリポジトリが非推奨になった、という2つの非推奨の影響を受け、書き方がだいぶ変わりました。</p>
-
-<p>0.3 系では以下のようにしてみました。データソースを DI コンテナから取得して新しいカスタムリポジトリの書き方 <code>extend</code> を使っています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">})</span>
-</code></pre></div>
-<h3>クラスベースのカスタムリポジトリからオブジェクトベースへの変更に対応する</h3>
-
-<p>で、 0.2 系でのカスタムリポジトリは以下のようにクラスベースになっていたのです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>これを 0.3系では、クラスベースでなくオブジェクトベースに変更します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">UserDatabase</span><span class="p">:</span> <span class="nx">UserRepository</span> <span class="o">&amp;</span> <span class="nx">ThisType</span><span class="o">&lt;</span><span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="nx">UserRepository</span><span class="o">&gt;</span> <span class="o">=</span>
-<span class="p">{</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="na">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">null</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">},</span>
-<span class="p">}</span> 
-</code></pre></div>
-<p>クラスベースからオブジェクトベースになって、とても困ったことがあります。
-上記の変更では簡略化しましたが、実は find 系メソッドにはデコレータをつけていて、ロギングできるような仕組みを入れていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">Logging</span><span class="p">()</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>こんな感じです。
-これがオブジェクトベースになると、デコレータが使えなくなります。
-いい感じの解決策はあまりなかったので、AOPのライブラリ <a href="https://www.npmjs.com/package/ts-aspect">ts-aspect</a> を使うことにしました。
-AOPのライブラリはnpmレジストリにたくさんあるので、どれか自分の好みにあうものを利用すれば良いと思います。</p>
-
-<p>で、0.3 系ではデコレータを使わず、AOPで以下のように対応しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
-    <span class="nx">addAspect</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="dl">'</span><span class="s1">findByEmail</span><span class="dl">'</span><span class="p">,</span> <span class="nx">Advice</span><span class="p">.</span><span class="nx">Around</span><span class="p">,</span> <span class="k">new</span> <span class="nx">LoggingAspect</span><span class="p">());</span>
-    <span class="k">return</span> <span class="nx">repository</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">})</span>
-</code></pre></div>
-<p>カスタムリポジトリをインスタンス化するときに、いったん変数 <code>repository</code> にしてから <code>ts-aspect</code> を使って、メソッド単位で仕込んでいきます。</p>
-
-<h3>マイグレーションやCLIの変更に対応する</h3>
-
-<p>CLIオプションが変更になっているので、マイグレーションの書き方も変更が必要です。
-0.2 系では <code>package.json</code> の <code>scripts</code> にこんな感じで書いていたと思います。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -f db/ormconfig.ts -n Migration</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<p>ormconfig.ts の中身は以下のような感じでした。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="na">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
-  <span class="na">cli</span><span class="p">:</span> <span class="p">{</span>
-    <span class="na">entitiesDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">domain/entities</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">migrationsDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/migrations</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">subscribersDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/subscribers</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</code></pre></div>
-<p>0.3 系では、まずスクリプトが以下のように変更になります。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<p><code>-f</code> オプションがデータソース <code>-d</code> 指定となり、マイグレーションファイルの出力先を最後に指定するようになりました。
-<code>datasource.ts</code> は以下のようになります。データソースに変わった関係で、 <code>cli</code> オプションはなくなっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>migration:run や migration:show は、データソースに指定した <code>migrations</code> のパスからファイルを探索してくれるので、 <code>-f</code> が <code>-d</code> に変わったぐらいの影響範囲で大丈夫です。</p>
-
-<h3>さいごに</h3>
-
-<p>typeorm は 0.2 -&gt; 0.3 -&gt; 0.4 と 0.x 系なので 0.1 ごとに破壊的変更が実施されてきます。
-バージョン 2.0 -&gt; 3.0 -&gt; 4.0 にすれば良いのに&hellip; とか思いますが。</p>
-
-<p>次の 0.4 系に備えて、修正の方針を見つけていきたいですね。
-もしこの記事が参考になれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM を 0.3 系にアップグレードする" data-url="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html&t=TypeORM%20%E3%82%92%200.3%20%E7%B3%BB%E3%81%AB%E3%82%A2%E3%83%83%E3%83%97%E3%82%B0%E3%83%AC%E3%83%BC%E3%83%89%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/4/">« Prev</a>
@@ -1055,16 +1041,16 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -1075,8 +1061,14 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -1084,7 +1076,7 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -1093,7 +1085,7 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -1142,9 +1134,6 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -1156,10 +1145,10 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1178,7 +1167,7 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

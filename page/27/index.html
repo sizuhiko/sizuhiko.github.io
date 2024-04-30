@@ -277,7 +277,807 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a></h2>
+            <h2 class="title"><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a></h2>
+  <p class="postdate"><a href="/2015/04/19.html" title="Permanent link">Sunday, April 19, 2015 03:19:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakebox.html" rel="tag">Cakebox</a>
+      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>CakePHP3の開発環境を構築するのは、以前にも書いたとおり <a href="https://github.com/FriendsOfCake/vagrant-chef">FriendsOfCake/vagrant-chef</a> を便利に使っていたのですが、先日 Twitter の TL に流れてきた <a href="https://github.com/alt3/cakebox">Cakebox</a> というのが気になっていたので、使ってみました。</p>
+
+<p>結論としては「<code>CakePHPで何かつくってみたいなら、使わない理由がない</code>」ということです。</p>
+
+<h3>Cakeboxとは</h3>
+
+<p>CakeboxはAlt&lt;3 Because projects need loveというオランダのプロジェクトのリポジトリにあり、アムステルダムの<a href="https://github.com/bravo-kernel">bravo-kernel</a>氏が中心になって作っているようです。またCakePHPのコアデベロッパでもある<a href="https://github.com/ceeram">ceeram</a>氏もcontributeしているので、アムステルダムでは著名なプロジェクトなのかもしれません。</p>
+
+<p><a href="http://cakebox.readthedocs.org/en/latest/features/">Cakeboxの詳しいドキュメント</a>に書いてあるとおり、chefでubuntuベースのboxファイルを生成し、cakeboxではそれを使ってvagrantとvirtualboxで起動する流れです。</p>
+
+<p>後で説明しますが、便利なコンソールアプリがあり、それ自体がCakePHP3でできているので、CakePHP3のアプリケーションサンプルとしても役立つのではないかと思います。</p>
+
+<p>boxファイルに入っているソフトウェアは上記ドキュメントに詳しく書いてあるので、そちらを参照してください。</p>
+
+<h3>なんと簡単、環境構築</h3>
+
+<h4>Cakeboxのインストール</h4>
+
+<p>最初にCakeboxをダウンロード（クローン）します。以下はCakeboxのREADMEに書いてあるままの内容です。
+注意点として、以下の前提条件が必要となります。</p>
+
+<ul>
+<li>VirtualBox 4.0 以上</li>
+<li>Vagrant 1.6.0 以上</li>
+</ul>
+
+<p>どちらかが満たされていないと、まったく起動しないので注意してください（私は踏みましたw）。</p>
+<div class="highlight"><pre class="highlight shell"><code>git clone https://github.com/alt3/cakebox.git
+<span class="nb">cd </span>cakebox
+<span class="nb">cp </span>Cakebox.yaml.default Cakebox.yaml
+vagrant up
+</code></pre></div>
+<p>設定ファイル（yaml）には、詳細な設定を指定できるようですが、いったん何も設定しなくても問題はありませんでした。
+以下のようなログが出力されます。
+最初はCakeboxのboxファイルをCDNからダウンロードするので時間がかかります。
+予め時間があり、回線に余裕があるときにvagrant upだけは済ませておくと良いですね。</p>
+<div class="highlight"><pre class="highlight shell"><code>Bringing machine <span class="s1">'default'</span> up with <span class="s1">'virtualbox'</span> provider...
+<span class="o">==&gt;</span> default: Importing base box <span class="s1">'cakebox'</span>...
+<span class="c"># ... 省略</span>
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Please wait... installing Cakebox Commands and Dashboard
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: <span class="k">*</span> Self-updating Composer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating Composer cache permissions
+<span class="o">==&gt;</span> default: <span class="k">*</span> Creating project
+<span class="o">==&gt;</span> default: <span class="k">*</span> Composer installing
+<span class="o">==&gt;</span> default: Installation completed successfully!
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: CakePHP v3.0.0 Console
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Self-updating cakebox
+<span class="o">==&gt;</span> default: Self-updating Composer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating cache permissions
+<span class="o">==&gt;</span> default: Updating Cakebox Commands and Dashboard
+<span class="o">==&gt;</span> default: <span class="k">*</span> Detecting branch
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating git repository
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating composer packages
+<span class="o">==&gt;</span> default: Updating CakePHP Code Sniffer
+<span class="o">==&gt;</span> default: <span class="k">*</span> Composer updating
+<span class="o">==&gt;</span> default: Updating HHVM configuration
+<span class="o">==&gt;</span> default: <span class="k">*</span> Creating system start/stop links
+<span class="o">==&gt;</span> default: <span class="k">*</span> Correcting HHVM session.save_path
+<span class="o">==&gt;</span> default: <span class="k">*</span> Restarting service
+<span class="o">==&gt;</span> default: Updating Elasticsearch configuration
+<span class="o">==&gt;</span> default: <span class="k">*</span> Decreasing required memory
+<span class="o">==&gt;</span> default: <span class="k">*</span> Updating initialization script
+<span class="o">==&gt;</span> default: <span class="k">*</span> Stopping service
+<span class="o">==&gt;</span> default: Self-update completed successfully
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: CakePHP v3.0.0 Console
+<span class="o">==&gt;</span> default: <span class="nt">---------------------------------------------------------------</span>
+<span class="o">==&gt;</span> default: Setting Cakebox Dashboard protocol to http
+<span class="o">==&gt;</span> default: Command completed successfully
+<span class="o">==&gt;</span> default: Running provisioner: shell...
+    default: Running: inline script
+<span class="c"># ... 省略</span>
+
+<span class="o">==&gt;</span> default: Machine <span class="s1">'default'</span> has a post <span class="sb">`</span>vagrant up<span class="sb">`</span> message. This is a message
+<span class="o">==&gt;</span> default: from the creator of the Vagrantfile, and not from Vagrant itself:
+<span class="o">==&gt;</span> default: 
+<span class="o">==&gt;</span> default: Your box is ready and waiting.
+<span class="o">==&gt;</span> default: 
+<span class="o">==&gt;</span> default: <span class="o">=&gt;</span> Login to your Dashboard by browsing to http://10.33.10.10
+<span class="o">==&gt;</span> default: <span class="o">=&gt;</span> Login to your virtual machine by running: vagrant ssh
+</code></pre></div>
+<p>boxファイルのインストールが終わると、ダッシュボードアプリをインストールし、そのアプリのCLIを使ってアプリ自身と、各種モジュールを設定するようです。</p>
+
+<p>ここまで終わったら、指示どおり <code>http://10.33.10.10</code> にアクセスしてみましょう。</p>
+
+<p><img src="/images/blog/cakebox_init.png" alt="" /></p>
+
+<p>かっこいいダッシュボード画面が表示されました。こういうのがあるとテンション上がりますよね！</p>
+
+<h4>アプリケーションの構築</h4>
+
+<p>Cakeboxを使って開発環境が構築できたら、CakePHP3アプリケーションを構築してみましょう。<code>vagrant ssh</code>でCakeboxにログインします。</p>
+<div class="highlight"><pre class="highlight shell"><code>localhost:cakebox <span class="nv">$ </span>vagrant ssh
+Welcome to Ubuntu 14.04.1 LTS <span class="o">(</span>GNU/Linux 3.13.0-24-generic x86_64<span class="o">)</span>
+</code></pre></div>
+<p>CakeboxのREADMEに書いてあるとおり、<code>cakebox</code>コマンドを使ってアプリケーションを生成します。とりあえずCakePHP3のブログチュートリアルを作ってみたいと思います。</p>
+<div class="highlight"><pre class="highlight shell"><code>vagrant@cakebox:~<span class="nv">$ </span>cakebox application add blog-tutorial.app
+<span class="nt">---------------------------------------------------------------</span>
+CakePHP v3.0.0 Console
+<span class="nt">---------------------------------------------------------------</span>
+Creating application http://blog-tutorial.app
+
+Configuring installer
+Creating installation directory
+Composer installing CakePHP 3.x application sources
+Creating virtual host
+<span class="k">*</span> Successfully created PHP-FPM virtual host
+Creating databases
+<span class="k">*</span> Successfully created main database
+<span class="k">*</span> Successfully created <span class="nb">test </span>database
+Configuring permissions
+Updating configuration files
+Application created using:
+  database <span class="o">=&gt;</span> blog-tutorial_app
+  framework <span class="o">=&gt;</span> cakephp
+  framework_human <span class="o">=&gt;</span> CakePHP 3.x
+  framework_short <span class="o">=&gt;</span> cakephp3
+  installation_method <span class="o">=&gt;</span> composer
+  majorversion <span class="o">=&gt;</span> 3
+  path <span class="o">=&gt;</span> /home/vagrant/Apps/blog-tutorial.app
+  <span class="nb">source</span> <span class="o">=&gt;</span> cakephp/app
+  url <span class="o">=&gt;</span> blog-tutorial.app
+  webroot <span class="o">=&gt;</span> /home/vagrant/Apps/blog-tutorial.app/webroot
+
+Remember to update your hosts file with: 10.33.10.10 http://blog-tutorial.app
+
+Installation completed successfully
+</code></pre></div>
+<p>はい、終わり。<code>hostsファイルに追加してね</code> というメッセージが出ているので、hostsファイルに追加します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ vim /etc/hosts
+
+# この行を追加します
+10.33.10.10 blog-tutorial.app
+</code></pre></div>
+<p>さっそく <code>http://blog-tutorial.app</code> にアクセスしてみましょう。</p>
+
+<p><img src="/images/blog/cakebox_createapp.png" alt="" /></p>
+
+<p>うわー、すげー。
+ディレクトリの権限とか、DBの設定とか全部できちゃっているよ。
+CakePHP3で <code>composer create-project</code> やったことあればわかると思うのですが、ここまで設定するのもちょっと面倒です。</p>
+
+<p>Cakeboxのダッシュボード画面も見てみましょう。</p>
+
+<p><img src="/images/blog/cakebox_createdapp_dashbord.png" alt="" /></p>
+
+<p>アプリケーションが1つ、データベースが2つ、バーチャルホストが2つ（最初は1なので1つ増えてます）になっています。
+つまり <code>cakebox application add</code> 実行すると</p>
+
+<ul>
+<li>CakePHP3の <code>composer create-project</code> でスケルトン作って</li>
+<li>nginxのsite-availablesにバーチャルホスト追加して</li>
+<li>DB（mysql）にdefaultとtestの2つのDBを作って</li>
+<li>CakePHP3のconfigをモロモロ設定、パーミッションも設定</li>
+</ul>
+
+<p>してくれるというわけです。なんと便利、そして簡単なんでしょう。
+<a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/blog.html">blogチュートリアルの1ページ目</a>のうち、<code>Creating the Blog Database</code> のテーブル生成以外のステップは（nginxの設定まで）コマンド一つで終わりです。</p>
+
+<h3>ブログチュートリアルのテーブル作成</h3>
+
+<p>せっかくなので、マイグレーションプラグインを使って、テーブルを生成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant@cakebox:~$ cd Apps/blog-tutorial.app/
+vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations create CreateArticles
+Welcome to CakePHP v3.0.1 Console
+---------------------------------------------------------------
+App : src
+Path: /home/vagrant/Apps/blog-tutorial.app/src/
+---------------------------------------------------------------
+using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
+using migration base class Phinx\Migration\AbstractMigration
+using default template
+created ./config/Migrations/20150419074519_create_articles.php
+</code></pre></div>
+<p>upとdownを以下のように記述します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">up</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nv">$table</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">table</span><span class="p">(</span><span class="s1">'articles'</span><span class="p">);</span>
+        <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'title'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">50</span><span class="p">])</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'body'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'modified'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+              <span class="o">-&gt;</span><span class="nf">create</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">down</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">dropTable</span><span class="p">(</span><span class="s1">'articles'</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="cp">?&gt;</span>
+</code></pre></div>
+<p>マイグレーションを実行してテーブルを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant@cakebox:~/Apps/blog-tutorial.app$ ./bin/cake migrations migrate
+
+Welcome to CakePHP v3.0.1 Console
+---------------------------------------------------------------
+App : src
+Path: /home/vagrant/Apps/blog-tutorial.app/src/
+---------------------------------------------------------------
+using migration path /home/vagrant/Apps/blog-tutorial.app/config/Migrations
+using environment default
+using adapter mysql
+using database blog-tutorial_app
+
+ == 20150419074519 CreateArticles: migrating
+ == 20150419074519 CreateArticles: migrated 0.1178s
+
+All Done. Took 0.1780s
+</code></pre></div>
+<p>これでチュートリアルの1ページ目は終了です。</p>
+
+<h3>ブログチュートリアルを進めよう</h3>
+
+<p>チュートリアルって環境構築ではまるケースが多い（特に今まで使ったことないフレームワークとか特に）のですが、このように簡単に始められるのは大きいですね。
+あとは<a href="http://book.cakephp.org/3.0/en/tutorials-and-examples/blog/part-two.html">パート２</a>の内容を、進めていけば大丈夫です。
+ここではチュートリアルそのものを解説するわけではないので、ワープします。
+指定されたファイルに、そのままコピペしていけば大丈夫です。</p>
+
+<p>コピペしたあとにテストという投稿を追加してみた結果が以下のとおりです。</p>
+
+<p><img src="/images/blog/cakebox_tutorial_part2.png" alt="" /></p>
+
+<h3>さいごに</h3>
+
+<p>Cakeboxを使ってブログチュートリアルを進めてみましたが、もし今までCakePHPを使ったことがなくても、CakePHP2は使っていたけど、3はまだ、という人にも環境構築のステップが簡略されているのは、とても大きいと思います。</p>
+
+<p>実はCakebox <code>Multi-Framework PHP Development Environment</code> と書いてあるとおり、CakePHP3だけのためにあるわけではないようです。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="c"># Fresh preconfigured PHP framework applications</span>
+<span class="nv">$ </span>cakebox application add mycake3.app
+<span class="nv">$ </span>cakebox application add mycake2.app <span class="nt">--majorversion</span> 2
+<span class="nv">$ </span>cakebox application add mylaravel.app <span class="nt">--framework</span> laravel
+</code></pre></div>
+<p>なんとCakePHP2もいけるし、今話題の laravel5 の環境も作れるみたいですよ！
+これは現時点でのサポート状況ということで、今後増えていくことも想定されます。
+これはもう Cakebox を試してみるしかないですね。</p>
+
+<p>そんなCakePHP3ですが、<a href="https://coedo-cakephp.doorkeeper.jp/events/23199">CakePHP3 もくもく会（勉強会） #14</a> が 2015-04-28（火）19:00 - 21:30　に Co-Edoで開催されます。
+PHP勉強会と日程かぶっていますが、もしCakePHP3に興味があればこちらにも参加してみてください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Cakebox を使ってCakePHP3アプリケーションを作ってみよう" data-url="http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html&t=Cakebox%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6CakePHP3%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E3%81%BF%E3%82%88%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/04/19/cakebox-is-awesome.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/03/14/bamboo-chatwork-add-on.html">BambooのChatWork通知プラグインを作成しました</a></h2>
+  <p class="postdate"><a href="/2015/03/14.html" title="Permanent link">Saturday, March 14, 2015 05:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/java.html" rel="tag">Java</a>
+      <a href="/tags/ci.html" rel="tag">CI</a>
+      <a href="/tags/bamboo.html" rel="tag">Bamboo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>現在作業支援している現場では Atlassian JIRA,Bitbucket,Bambooと、コミュニケーションツールとしてChatWorkを使っています。
+CIツールであるBambooは通知機能としてEmail,HipChat,IMに対応しているのですが、汎用的な通知機能は持っていないので、ChatWorkプラグインを自作してみました。</p>
+
+<p><a href="https://github.com/sizuhiko/bamboo-chatwork-notification">Bamboo ChatWork Plugin</a></p>
+
+<p>ここではBambooのプラグインを作る手順と、そのときにハマったポイントなどを解説します。</p>
+
+<h3>はじめに</h3>
+
+<p>BambooのプラグインをAtlassian SDKをインストールします。
+<a href="https://developer.atlassian.com/docs/getting-started/set-up-the-atlassian-plugin-sdk-and-build-a-project">Set up the Atlassian Plugin SDK and Build a Project</a>からプラットフォームにあったSDKをインストールします。</p>
+
+<p>SDKをインストールしたら<a href="https://developer.atlassian.com/docs/getting-started/set-up-the-atlassian-plugin-sdk-and-build-a-project/explore-the-installed-sdk-and-the-atlas-commands">Step 3: Try an atlas command</a>のとおり以下のコマンドを実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">mkdir </span>作業ディレクトリ名
+<span class="nb">cd </span>作業ディレクトリ名
+atlas-run-standalone <span class="nt">--product</span> bamboo
+</code></pre></div>
+<p><code>atlas-run-standalone</code>を実行すると、大量の<code>maven install</code>が動きます。
+かなり時間がかかるので、ネットワークが速い環境と、時間にゆとりがあるときに実行した方が良いです。</p>
+
+<h3>プラグインのスケルトンを生成する</h3>
+
+<p>以下のコマンドを実行してください。
+<code>sh
+atlas-create-bamboo-plugin
+</code>
+以下の表の入力を求められるので、適切に入力します。
+<table>
+<tr><th>Define value for groupId</th><td>作成するプラグインのパッケージパスを指定</td></tr>
+<tr><th>Define value for artifactId</th><td>作成するプラグインの名前を指定</td></tr>
+<tr><th>Define value for version</th><td>作成するプラグインのバージョンを指定</td></tr>
+<tr><th>Define value for package</th><td>groupIdとartifactIdを結合した値を指定</td></tr>
+</table>
+入力した内容はpom.xmlに反映されるだけなので、後でpom.xmlを編集すれば大丈夫です。</p>
+
+<p>プラグイン名のディレクトリに<code>pom.xml</code> と <code>src/main</code> フォルダに以下のファイルが自動生成されます。</p>
+
+<ul>
+<li>{Define value for package}のパス/MyPluginComponent.java</li>
+<li>{Define value for package}のパス/MyPluginComponentImpl.java</li>
+<li>/resources/atlassian-plugin.xml</li>
+</ul>
+
+<p>正直、自動生成されたコードは役に立たないので、削除してしまって良いでしょう。
+<code>atlassian-plugin.xml</code>はデフォルト値になっているので、適切に編集します（これは後で大丈夫です）。</p>
+
+<p>以下のコマンドを入力して、プラグイン環境を実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd </span>プラグインの名前
+atlas-run
+</code></pre></div>
+<p><code>atlas-run</code>を実行すると、大量の<code>maven install</code>が動きます。
+かなり時間がかかるので、ネットワークが速い環境と、時間にゆとりがあるときに実行した方が良いです（２度目）。</p>
+
+<h3>プラグインを実装する</h3>
+
+<p>Bambooの通知プラグインとして、最初からインストールされているものはHipChat通知プラグインです。
+とりあえずプラグインを作るための情報があまりに少ないので（Wikiを見て進めても肝心な箇所ほどJavaDocを見ろになってしまう。だがJavaDocを見てもわかるはずがない）、通知プラグインを作りたいと思った人はHitChatプラグインまたは、私の作ったChatWorkプラグインをコピー＆ペーストするのがお勧めです。</p>
+
+<p>私もまず<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin">HipChatプラグインのソースコード</a>を参考にしました。</p>
+
+<p>HipChatプラグインやChatWorkプラグインのコードを見るとわかりますが、実装するファイルはわずかです。
+<code>src/main</code>ディレクトリに以下のファイルを配備します。</p>
+
+<ul>
+<li>AbstractNotificationRecipientを継承した通知プラグインの設定画面コントローラ</li>
+<li>NotificationTransportを実装した通知プラグインの通知コントローラ</li>
+<li>resources/atlassian-plugin.xml（プラグインの設定ファイル）</li>
+<li>Freemaker形式のテンプレートファイル（設定入力画面、設定表示画面、通知メッセージなど）</li>
+</ul>
+
+<p>実装する量は多くなく、コツさえ掴めば通知プラグインを作るのは難しくありません。コツさえ掴めば&hellip;ですが。</p>
+
+<h4>通知プラグインの設定画面コントローラを作成する</h4>
+
+<p>ChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java">ChatworkNotificationRecipient.java</a>というクラスを作成しました。
+作成したというよりはHipChatプラグインの<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin/src/212f5e97f1f97a93535cec3cf074adc9ed5525be/src/main/java/com/atlassian/bamboo/hipchat/HipchatNotificationRecipient.java?at=master">HipchatNotificationRecipient.java</a>を丸々コピーして微修正した程度です。</p>
+
+<p>実際に差分を見るとわかりますが、クラス名など変更した程度です。</p>
+
+<p>このコントローラに対応する画面は<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/resources/atlassian-plugin.xml#L24-L28">atlassian-plugin.xml</a>で指定します。</p>
+<div class="highlight"><pre class="highlight xml"><code><span class="nt">&lt;notificationRecipient</span> <span class="na">key=</span><span class="s">"recipient.chatwork"</span> <span class="na">name=</span><span class="s">"Chatwork Recipient"</span> <span class="na">class=</span><span class="s">"jp.tokyo.open.bamboo.plugin.chatwork.ChatworkNotificationRecipient"</span> <span class="na">weight=</span><span class="s">"10"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;description&gt;</span>ChatWork<span class="nt">&lt;/description&gt;</span>
+    <span class="nt">&lt;resource</span> <span class="na">type=</span><span class="s">"freemarker"</span> <span class="na">name=</span><span class="s">"edit"</span> <span class="na">location=</span><span class="s">"templates/plugins/notifications/chatwork/editNotification.ftl"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;resource</span> <span class="na">type=</span><span class="s">"freemarker"</span> <span class="na">name=</span><span class="s">"view"</span> <span class="na">location=</span><span class="s">"templates/plugins/notifications/chatwork/viewNotification.ftl"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/notificationRecipient&gt;</span>
+</code></pre></div>
+<p><code>resource</code>の<code>name</code>が<code>edit</code>である場合、設定編集画面のファイルパスを指定します。
+<code>view</code>の場合は、導入済み通知プラグインが設定一覧に表示される画面部品のファイルパスを指定します。</p>
+
+<p>実際の画面を見てみましょう</p>
+<div class="highlight"><pre class="highlight plaintext"><code>[@ww.textfield labelKey="chatwork.api.token" name="chatWorkApiToken" value="${chatWorkApiToken!}" required='true'/]
+[@ww.textfield labelKey="chatwork.room" name="chatWorkRoom" value="${chatWorkRoom!}" required='true'/]
+[@ww.checkbox labelKey="chatwork.notify" name="chatWorkNotifyUsers" value="${chatWorkNotifyUsers!?string}"/]
+</code></pre></div>
+<p>これはFreemakerというテンプレートエンジンを使っているのですが、なんとなく想像できるレベルです。
+HTMLと似ています。labelKeyはリソースファイルに定義した内容をバインドするので国際化対応できます。</p>
+
+<h5>ここで<code>コツ１</code></h5>
+
+<p>Freemakerのテンプレート上の<code>name</code>属性と、コントローラクラスの<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java#L32-L34">設定入力画面の項目名</a>
+がマッピングされています。</p>
+
+<p>この画面はBambooで通知設定を入力するときに以下のようなHTMLに変換されます。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkApiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+<span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkRoom"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+<span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"chatWorkNotifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+</code></pre></div>
+<p>想像どおりですか？
+注意しなければならないのは「設定画面にはすべてのプラグインのHTMLが並ぶ」ということです。
+えっ？何を言っているかわからない？ではどのようになっているかというと以下のようなHTMLになるのです。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hipchat-plugin"</span> <span class="na">style=</span><span class="s">"display:none"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"chatwork-plugin"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkApiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"chatWorkRoom"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"chatWorkNotifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>このようなフォームが生成されていて、選択した通知の部分だけが見えるようになるのです。
+カンの良い人は気付いたかもしれません。
+私は最初HipChatプラグインをコピペして、項目名を変更していなかったので、以下のようなHTMLが生成されていて、うまくフォームから値を取得できませんでした。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"hipchat-plugin"</span> <span class="na">style=</span><span class="s">"display:none"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"chatwork-plugin"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"apiToken"</span> <span class="na">value=</span><span class="s">"xxxxx"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"text"</span> <span class="na">name=</span><span class="s">"room"</span> <span class="na">value=</span><span class="s">"oooooo"</span> <span class="na">required</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">"check"</span> <span class="na">name=</span><span class="s">"notifyUsers"</span> <span class="na">value=</span><span class="s">"1"</span> <span class="na">checked</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>同一フォームに同じname属性を持つHTMLが生成されて、submitされるのでコントローラのpopulateメソッドのMapに正しく値が入らなくなっていました。
+なのでなるべく重複しない名前を指定しておくことが重要です。
+ところが標準の通知プラグインであるHipChatが一等地の名前を持っているのです。Bambooとしてどのような名前規則を推奨しているのかドキュメントには記載していないので、パッケージ名を付加するなどの工夫が必要です。</p>
+
+<p>なお保存すると、保存完了メッセージが表示されるのですが、このメッセージのカスタマイズ方法はわかっていません。
+そもそもカスタマイズできるのか調査中ですが、Bambooのコードはオープンソースではないので&hellip;(ry</p>
+
+<h4>通知プラグインの通知コントローラを作成してChatWorkに通知する</h4>
+
+<p>ChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationTransport.java">ChatworkNotificationTransport.java</a>というクラスを作成しました。
+作成したというよりはHipChatプラグインの<a href="https://bitbucket.org/atlassian/bamboo-hipchat-plugin/src/212f5e97f1f97a93535cec3cf074adc9ed5525be/src/main/java/com/atlassian/bamboo/hipchat/HipchatNotificationTransport.java?at=master">HipchatNotificationTransport.java</a>を丸々コピーして修正しました。</p>
+
+<p>まず通知には通知メッセージが必要ですよね。
+通知メッセージをFreemakerのテンプレートで記述したいのですが、ここで圧倒的なドキュメント不足に遭遇します。
+ほぼ自力での解決はムリなので、Bambooの標準テンプレートをコピペして作業した方が良いでしょう。</p>
+
+<p>HipChatプラグインのソースコードを見ると、特に通知クラスを作ったり、通知のテンプレートを指定することはしていないようです。
+Bambooの通知機能はHipChatに連携することに依存していて、HipChatはBamboo標準のテンプレートを使っています。
+<a href="https://developer.atlassian.com/display/BAMBOODEV/Notification+Plugin+Modules">通知プラグインを作るためのドキュメント</a>を確認します。
+<a href="https://developer.atlassian.com/display/BAMBOODEV/Building+a+Notification+Plugin">Building a Notification Plugin</a>を読むと、カスタムリスナーを登録する手順が書いてありますが、独自の通知タイプを作らない限りこのとおりやらなくても大丈夫です。
+実際、私もカスタムリスナーを作成してドキュメント通りやってみたのですが、うまく動作しませんでした。atlassian-plugin.xmlにリスナー定義を追加してやってみたりしたのですが&hellip;.</p>
+
+<h5>ここで<code>コツ２</code></h5>
+
+<p>そこでChatWorkプラグインでは、<a href="https://github.com/sizuhiko/bamboo-chatwork-notification/blob/master/src/main/java/jp/tokyo/open/bamboo/plugin/chatwork/ChatworkNotificationRecipient.java#L136">ChatworkNotificationRecipientからChatworkNotificationTransportのインスタンスを作成するとき</a>に、<code>TemplateRenderer</code>というFreemakerのテンプレートを操作できるインスタンスを渡すようにしました。ChatworkNotificationTransportで独自に取得することはできないようです。
+ChatworkNotificationRecipientではDIによって値がセットされるようになっているようです（ドキュメントなし）。</p>
+
+<p><code>ChatworkNotificationTransport::sendNotification()</code>メソッドが送信指示として呼び出されるので、TemplateRendererを使って独自テンプレートを呼び出して文字列に変換します。
+文字列変換したメッセージをChatWork APIを使って指定したルームに送信するだけです。</p>
+
+<p>以下の部分がChatWork用に実装したコードです。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>    static String getChatworkApiURL(String room) {
+        return CHATWORK_API_URL.replaceAll("\\{room_id\\}", room);
+    }
+
+
+    private String getChatworkContent() {
+        String templateLocation = "templates/plugins/notifications/chatwork/BuildCompleted.ftl";
+        return templateRenderer.render(templateLocation, populateContext());
+    }
+
+    private Map&lt;String, Object&gt; populateContext()
+    {
+        Map&lt;String, Object&gt; context = Maps.newHashMap();
+        context.put("build", plan);
+        context.put("buildSummary", resultsSummary);
+        return context;
+    }
+</code></pre></div>
+<p><code>getChatworkContent()</code>を使ってFreemakerテンプレートからメッセージを取得します。
+実際のテンプレートファイルは以下のよな内容です。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>[#-- @ftlvariable name="build" type="com.atlassian.bamboo.build.Buildable" --]
+[#-- @ftlvariable name="buildSummary" type="com.atlassian.bamboo.resultsummary.BuildResultsSummary" --]
+[#include "/notification-templates/notificationCommons.ftl"]
+[#include "/notification-templates/notificationCommonsText.ftl" ]
+[#assign authors = buildSummary.uniqueAuthors/]
+
+[#if buildSummary.successful][#lt]
+[info][title][@buildNotificationTitleText build buildSummary/] was SUCCESSFUL[/title]
+[@showRestartCount buildSummary/]
+[#if buildSummary.testResultsSummary.totalTestCaseCount &gt;0] [@showTestSummary buildSummary.testResultsSummary/][/#if].
+[#if authors?has_content] [@showAuthorSummary authors/][/#if][#lt]
+${baseUrl}/browse/${buildSummary.planResultKey}/
+[/info]
+[#else][#lt]
+[info][title][@buildNotificationTitleText build buildSummary/] has FAILED[/title]
+[@showRestartCount buildSummary/]
+[#if buildSummary.testResultsSummary.totalTestCaseCount &gt;0] [@showTestSummary buildSummary.testResultsSummary/][/#if].
+[#if authors?has_content] [@showAuthorSummary authors/][/#if][#lt]
+${baseUrl}/browse/${buildSummary.planResultKey}/
+[/info]
+[/#if][#lt]
+</code></pre></div>
+<p>先ほども書きましたが、これをJavaDocの情報を元に生成するのはほぼムリ、というか完全にムリです。
+最初の手順でインストールしたSDKの中に実際のBambooがインストールされるので、Bambooのwarファイルが展開された<code>WEB-INF/classes/notification-templates</code>のBuildCompleted.ftlファイルの内容をコピペして、ChatWorkメッセージ記法に合わせて修正しています。</p>
+
+<p>後はSDKで実行したBambooにプラグインをインストールして、デバッグしながら確認するのが近道です。</p>
+
+<h4>プラグインをビルドする</h4>
+
+<p>プラグインは管理画面からjarファイルとしてアップロードします。
+そのためコンソールから以下のコマンドを実行します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd </span>プラグインの名前
+atlas-mvn clean package
+</code></pre></div>
+<p>atlas-mvnはmvnのラッパーのようなのですが、mvnを直接実行するのでなく、こちらのコマンドを使った方が良いみたいです。
+あとは通常のmavenのビルドと一緒ですが、初回はまた大量のmvn installが動くのでネットワークと時間には余裕を持って挑みましょう。</p>
+
+<p>ビルドが終わるとtargetディレクトリにjarファイルが生成されます。</p>
+
+<h3>さいごに</h3>
+
+<p>ChatWork通知プラグインとHipChat通知プラグインの差分はほんとうにわずかで、それほど難しいものではありません。
+Bambooの通知プラグインモジュールで得た経験は以下のようなところです。</p>
+
+<ul>
+<li>ドキュメント読めばなんとなくわかるけど、「詳しくはJavaDocへ」でつまづく（心が折れる）</li>
+<li>入力画面など生成されたものはブラウザのデバッガを使って、名前空間がバッティングしていないか確認が必要</li>
+<li>EclipseのJDなどを使って、Bamboo自体のソースコードをリバースして調べながら実装しないとムリ</li>
+</ul>
+
+<p>プロジェクト都合じゃないとなかなかBambooとか使ったりする機会がないのですが、もしBamboo使うことになって通知プラグインを作りたいと思った方は参考にしていただければと思います。</p>
+
+<p>長くなったので、このあたりで終わりにしますが、他にもいろいろわかったことはあるので、また気が向いたら書こうかなと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="BambooのChatWork通知プラグインを作成しました" data-url="http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html&t=Bamboo%E3%81%AEChatWork%E9%80%9A%E7%9F%A5%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/03/14/bamboo-chatwork-add-on.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/03/14/fabricate-v2.html">Fabricateのversion2を作成しました</a></h2>
+  <p class="postdate"><a href="/2015/03/14.html" title="Permanent link">Saturday, March 14, 2015 03:44:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/fablicator.html" rel="tag">fablicator</a>
+      <a href="/tags/fixture.html" rel="tag">fixture</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>これまでCakePHP2用のデータジェネレータプラグインとして開発を続けてきた<a href="https://github.com/sizuhiko/Fabricate">Fabricate</a>を<code>V2</code>として各種ORMへ対応するようなコアモジュールへと変更しました。
+またFabiricateリポジトリのmasterブランチへは統合されていませんが、CakePHP3のリリース時期を合わせて、V2ブランチを本流にする予定です。
+これまでのCakePHP2用ライブラリはcakephp2ブランチでメンテナンスを続ける予定です。</p>
+
+<p>データジェネレータって何？誰得？という方は、以下の投稿を一読していただけると理解が深まります。</p>
+
+<ul>
+<li><a href="http://twileshare.com/bgrg">テストデータの作り方 - 第73回 PHP勉強会</a></li>
+</ul>
+
+<p>FabricateはRubyのFabricationとFactory_Girlに影響された「fixtureはDRYではないので、Fixture replacement を使おう」という流れに乗ったPHPクローンです。</p>
+
+<h3>Version2を作成するきっかけ</h3>
+
+<p>このキッカケはいくつかあります。
+1つには昨年の CakeFest2014 で Fabricate の LT をした後で、 CodeIgniter の開発者だったことでも知られる<a href="https://github.com/philsturgeon">Phil Sturgeon</a> から、「これいいね、他のフレームワークでも使えるようにしてよ」と言われたことでした。
+他のフレームワークでも使えるようにしたいという思いは、少しあったのですがまだ確約できなかったので「maybe」と返しただけでした。（このときPhilはかなり酔っていたので、私に話した事を覚えているのかどうかも怪しいですがw）</p>
+
+<p>さらにもう1つおおきなキッカケがCakePHP3でのPSR対応によって、namespaceなど外部ライブラリを使いやすくなり、さらに外部ライブラリからフレームワーク本体のコードへのアクセスしやすくなったということがあります。
+CakePHP2ではフレームワークへアクセスするにはアプリケーションまたはプラグインでないと困難で、特にORMに依存したライブラリをフレームワークをまたいで作成するのは困難でした。これがPSRの対応でやりやすくなったということ、CakePHP3への対応に合わせてV2を作って、他のフレームワークにも対応できるようにしようと思ったのです。</p>
+
+<h3>Fabricate V2の主な変更点</h3>
+
+<p>Fabricateの利用方法はほとんど変わっていませんが、各ORM用にアダプターと呼ばれるORMの差分を吸収するクラスを準備する必要があります。
+Fabricateの本体には<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/FabricateArrayAdaptor.php">Fabricate\Adaptor\FabricateArrayAdaptor</a>という連想配列構造を返すサンプル用のアダプターを用意しています。これを参考にアダプターを実装すれば<a href="http://www.doctrine-project.org/">Doctrine</a>や<a href="https://github.com/propelorm/Propel">Propel</a>、<a href="http://www.yiiframework.com/">Yii</a>や<a href="http://www.codeigniter.com/">CodeIgniter</a>でも利用可能になります。</p>
+
+<h3>アダプターの実装方法</h3>
+
+<p>とはいえ実際にORMに接続するアダプターもないと、ということでCakePHP3用のアダプター<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">CakePHP Fabricate Adaptor</a>も作成しました。</p>
+
+<p>ここではCakePHP3のアダプター実装を例に、アダプターで何を実装しなくてはいけないのかを解説したいと思います。</p>
+
+<h4>作成するクラス</h4>
+
+<p>アダプタークラスは<a href="https://github.com/sizuhiko/Fabricate/blob/v2/src/Adaptor/AbstractFabricateAdaptor.php">Fabricate\Adaptor\AbstractFabricateAdaptor</a>クラスを継承します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="kn">use</span> <span class="nc">Fabricate\Adaptor\AbstractFabricateAdaptor</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">CakeFabricateAdaptor</span> <span class="kd">extends</span> <span class="nc">AbstractFabricateAdaptor</span>
+<span class="p">{</span>
+    <span class="mf">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4>実装するメソッド</h4>
+
+<p>アダプターとして実装する必要があるメソッドは以下の3つです。</p>
+
+<ul>
+<li>getModel</li>
+<li>create</li>
+<li>build</li>
+</ul>
+
+<p>それぞれのメソッドの実装を確認しましょう。</p>
+
+<h5>getModel</h5>
+
+<p>getModelメソッドは各ORMの差分を吸収するためのモデルインスタンスを返却するデータジェネレータの定義部分です。
+データジェネレータとしては最も重要な機能です。   </p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="kn">use</span> <span class="nc">Fabricate\Model\FabricateModel</span><span class="p">;</span>
+
+<span class="k">public</span> <span class="k">function</span> <span class="n">getModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$model</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">FabricateModel</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">schema</span><span class="p">();</span>
+    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$schema</span><span class="o">-&gt;</span><span class="nf">columns</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">filterKey</span><span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$name</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nv">$attrs</span> <span class="o">=</span> <span class="nv">$schema</span><span class="o">-&gt;</span><span class="nf">column</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
+        <span class="nv">$options</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'length'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$options</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'length'</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">array_key_exists</span><span class="p">(</span><span class="s1">'null'</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nv">$options</span><span class="p">[</span><span class="s1">'null'</span><span class="p">]</span> <span class="o">=</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'null'</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="nv">$model</span><span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="nv">$name</span><span class="p">,</span> <span class="nv">$attrs</span><span class="p">[</span><span class="s1">'type'</span><span class="p">],</span> <span class="nv">$options</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">foreach</span> <span class="p">(</span><span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">keys</span><span class="p">()</span> <span class="k">as</span> <span class="nv">$key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$association</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">associations</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="nv">$key</span><span class="p">);</span>
+        <span class="nv">$target</span> <span class="o">=</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="nf">target</span><span class="p">();</span>
+        <span class="nv">$className</span> <span class="o">=</span> <span class="nb">get_class</span><span class="p">(</span><span class="nv">$target</span><span class="p">);</span>
+        <span class="nv">$alias</span> <span class="o">=</span> <span class="nv">$target</span><span class="o">-&gt;</span><span class="nf">alias</span><span class="p">();</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="nv">$association</span><span class="o">-&gt;</span><span class="nf">type</span><span class="p">())</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="nc">Association</span><span class="o">::</span><span class="no">ONE_TO_ONE</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="nf">hasOne</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="nf">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nc">Association</span><span class="o">::</span><span class="no">ONE_TO_MANY</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="nf">hasMany</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="nf">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="nc">Association</span><span class="o">::</span><span class="no">MANY_TO_ONE</span><span class="o">:</span>
+                <span class="nv">$model</span><span class="o">-&gt;</span><span class="nf">belongsTo</span><span class="p">(</span><span class="nv">$alias</span><span class="p">,</span> <span class="nv">$association</span><span class="o">-&gt;</span><span class="nf">foreignKey</span><span class="p">(),</span> <span class="nv">$className</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nv">$model</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>getModelはFabricateModelクラスのインスタンスを生成する責務があります。
+FabricateModelはPHPのマイグレーションツールである<a href="https://phinx.org/">Phinx</a>に影響を受けていて、スキーマの定義方法が似ています。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="c1">// Phinx</span>
+<span class="nv">$users</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">table</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
+
+<span class="c1">// FabricateModel</span>
+<span class="nv">$users</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">FabricateModel</span><span class="p">(</span><span class="s1">'users'</span><span class="p">);</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'password'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'password_salt'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'email'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">100</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'first_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'last_name'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'limit'</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">))</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'created'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">)</span>
+      <span class="o">-&gt;</span><span class="nf">addColumn</span><span class="p">(</span><span class="s1">'updated'</span><span class="p">,</span> <span class="s1">'datetime'</span><span class="p">,</span> <span class="k">array</span><span class="p">(</span><span class="s1">'null'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">))</span>
+</code></pre></div>
+<p>利用できるカラム型はPhinxと同様で、オプションについて現時点ではlimit(長さ)のみ対応しています。</p>
+
+<p>CakePHP3では</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+
+<span class="nv">$table</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+<span class="nv">$schema</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">schema</span><span class="p">();</span>
+</code></pre></div>
+<p>という記述でスキーマ情報が連想配列で取得できるので、それを繰り返して<code>addColumn</code>を呼び出しています。</p>
+
+<p>スキーマ定義を作成したら、次にモデルの関連を定義します。
+モデルの関連定義は、以下のようにassociationを使って関連構造を一度に作成する場合に必要となります。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="nc">Fabricate</span><span class="o">::</span><span class="nf">create</span><span class="p">(</span><span class="s1">'Users'</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="nv">$world</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'taro'</span><span class="p">,</span>
+        <span class="s1">'posts'</span> <span class="o">=&gt;</span> <span class="nv">$world</span><span class="o">-&gt;</span><span class="nf">association</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">];</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>この例のように関連を設定するには、以下のようにFabricateModel::hasMany()やbelongsTo()を使います。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="nv">$users</span><span class="o">-&gt;</span><span class="nf">hasMany</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Posts'</span><span class="p">);</span>
+<span class="nv">$posts</span><span class="o">-&gt;</span><span class="nf">belongsTo</span><span class="p">(</span><span class="s1">'users'</span><span class="p">,</span> <span class="s1">'post_id'</span><span class="p">,</span> <span class="s1">'Users'</span><span class="p">);</span>
+</code></pre></div>
+<p>パラメータの指定方法は、hasManyもhasOneもbelongsToも同じで、(別名、外部キーカラム名、モデル名）を指定します。</p>
+
+<h5>create</h5>
+
+<p>createメソッドは、Fabricateによって生成された連想配列構造のデータを、ORMを使ってDBに保存する機能を実装します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="n">create</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$attributes</span><span class="p">,</span> <span class="nv">$recordCount</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$entities</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">newEntities</span><span class="p">(</span><span class="nv">$attributes</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">[</span><span class="k">self</span><span class="o">::</span><span class="no">OPTION_VALIDATE</span><span class="p">]]);</span>
+    <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">connection</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">transactional</span><span class="p">(</span><span class="k">function</span> <span class="p">()</span> <span class="k">use</span> <span class="p">(</span><span class="nv">$table</span><span class="p">,</span> <span class="nv">$entities</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$entities</span> <span class="k">as</span> <span class="nv">$entity</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$ret</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">save</span><span class="p">(</span><span class="nv">$entity</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nv">$ret</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nv">$entities</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
+<code>$attributes</code>には生成された連想配列が渡ります。例えば以下のとおりです。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">array</span> <span class="p">(</span>
+  <span class="mi">0</span> <span class="o">=&gt;</span> 
+  <span class="k">array</span> <span class="p">(</span>
+    <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
+    <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
+    <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+    <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+  <span class="p">),</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> 
+  <span class="k">array</span> <span class="p">(</span>
+  <span class="mf">....</span>
+</code></pre></div>
+<p><code>$recordCount</code>は生成する件数ですが、この値は<code>count($attributes)</code>の値と一致します。
+CakePHP3では以下の流れでDBへ保存しています。</p>
+
+<ul>
+<li>TableRegistry::get()でテーブルインスタンスを取得</li>
+<li>Table::newEntities()で連想配列からエンティティを生成</li>
+<li>Table::save()でエンティティをDBに保存</li>
+</ul>
+
+<h5>build</h5>
+
+<p>buildメソッドは、Fabricateによって生成された連想配列構造のデータから生成したエンティティを返却する機能を実装します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">public</span> <span class="k">function</span> <span class="n">build</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">,</span> <span class="nv">$data</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$table</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$modelName</span><span class="p">);</span>
+    <span class="nv">$entity</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">newEntity</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="p">[</span><span class="s1">'validate'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">[</span><span class="k">self</span><span class="o">::</span><span class="no">OPTION_VALIDATE</span><span class="p">]]);</span>
+    <span class="k">return</span> <span class="nv">$entity</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>$modelName</code>には<code>Fabricate::create(&#39;Users&#39;,</code>と記述した場合の、<code>Users</code>が渡ります。
+<code>$data</code>には生成された連想配列が1インスタンス分だけ渡ります。例えば以下のとおりです。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="k">array</span> <span class="p">(</span>
+  <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet'</span><span class="p">,</span>
+  <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="s1">'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.'</span><span class="p">,</span>
+  <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+  <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="s1">'2013-10-09 12:40:28'</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3>さいごに</h3>
+
+<p>現在CakePHP3用のアダプターしかないので「xxxx ORMについてアダプター実装したよ！」という連絡を待っています。
+<a href="https://github.com/sizuhiko/Fabricate/blob/v2/composer.json">Fabricateのcomposer.json</a>のsuggestに追加してPull Requestをもらえるととても助かります。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"suggest"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"sizuhiko/cake_fabricate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"for integration with CakePHP3"</span><span class="w">
+        </span><span class="err">//</span><span class="w"> </span><span class="err">ここに追加したPRをお待ちしています</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>皆様のPull Requestをお待ちしております！！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Fabricateのversion2を作成しました" data-url="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html&t=Fabricate%E3%81%AEversion2%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2015/03/14/fabricate-v2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2015/01/03/2014-retrospective.html">2014年ふりかえり</a></h2>
   <p class="postdate"><a href="/2015/01/03.html" title="Permanent link">Saturday, January 03, 2015 04:05:00 PM</a></p>
   <p class="tags">
   </p>
@@ -582,397 +1382,6 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a></h2>
-  <p class="postdate"><a href="/2014/10/13.html" title="Permanent link">Monday, October 13, 2014 08:11:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91.html" rel="tag">オブジェクト指向</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2014/10/11 に行われた<a href="http://phpcon.php.gr.jp/w/2014/">PHPカンファレンス2014</a>で発表をしてきました。</p>
-
-<p><img src="/images/blog/phpconference2014.jpg" alt="" /></p>
-
-<p><a href="http://gihyo.jp/news/report/01/phpcon2014/0001?page=2">Photo by gihyo.jp</a></p>
-
-<p>スライドは以下の内容です。</p>
-
-<script async class="speakerdeck-embed" data-id="74562820350401328a4766ded83ef86d" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>PHPカンファレンスでは公募セッションは最大30分のため、なぜ今回このようなタイトルを発表しようと思ったか、という背景については話ことができませんした。こちらのブログでは、スライドの共有と共に、その辺りの経緯について書いておきたいと思います。</p>
-
-<h3>なぜ今オブジェクト指向か？</h3>
-
-<p>オブジェクトデザインは原著から数えると、もう12年になろうとする訳です。これはセッションの中でも話したのですが、2003年当時はまだWebのフレームワークもまだ今日のようなものでなく、多くの会社は各社オレオレフレームワークを作っていた時代です。
-オブジェクト指向が必要ないような使い捨てサイトならまだしも、受託やサービスなどソースコードを維持したり、機能アップをするような場面ではオブジェクト指向が必要だと考え、今のアジャイルムーブメントかそれ以上に語られていたはずです。</p>
-
-<p>オレオレフレームワークを作ったことがある人は、オブジェクト指向やデザインパターンをよく勉強してそのあり方を議論したものです。
-そのような人たちが、現在の入門プログラマーに「オブジェクト指向がわかってない」と言っても、そもそも通じないと思ったのがきっかけでです。</p>
-
-<p>ここ4,5年の間にWebからプログラミングを始めた人（Webフレームワーク世代）は、すでに素晴らしいWebフレームワークがあり、その上でプログラミングをすることを要求されます。言語そのもの、たとえばPHPなら「イラストでよくわかるPHP はじめてのWebプログラミング入門」や「よくわかるPHPの教科書」あたりを読んでから、各フレームワークの本や公式チュートリアルを片手にアプリケーション開発を始めています。
-つまりオレオレフレームワーク世代のオッサンが通過したオブジェクト指向やデザインパターンの経験に基づいてソースコードに手厳しいコメントを付けても、受けた方も辛いだけなのです。</p>
-
-<h3>今どのような弊害が起きているのか</h3>
-
-<p>で、このようなWebフレームワーク世代はCakePHPやその他のWebフレームワーク（MVC的なもの）を使って、MVCの枠に収めようとしてFatコントローラになったりしやすいのです。
-なぜなら特定のディレクトリにフレームワークが指定した方法で書いていれば、良くわかんないけどうまく動いてしまうのです。フレームワークすげーな！という訳です。
-それ以外の書き方は知らないし、どこにも書いてないのです。
-結局、適切にクラス分割ができないため、結果として与えられた範囲の枠組みで問題はない、と考えているような状況を見かけるのです。
-classってPHPの文法です、キリッ！とか言われたことはないですが、まぁ無くはないのかな…と。</p>
-
-<p>じゃぁフレームワークの本に、その概念や考え方を書くべきだという声もあるかもしれません。私もCakePHP本の執筆に携わったことがあり、耳の痛い話です。しかしフレームワークの本では、すべてのフレームワークについての説明もページ数的に困難な中、OOPやMVCの概念のような内容を解説するのは困難なことも事実です。</p>
-
-<h3>そこで話してみようと思った</h3>
-
-<p>もちろん、オブジェクト指向ムーブメント世代のオッサンであってもオブジェクト指向をみんな理解しているかというと、そういう訳ではありません（まぁ少なくともみんな読書会なんかして勉強はしていたような気がします）。
-今時のWebフレームワーク世代だって、しっかり勉強している意識高い人はいっぱいいるし、知っています。
-ただ最近プログラミングを始めた人は、技術の移り変わりが激しいし、言語やフレームワークはどんどんバージョンアップするし、なかなか基礎的な事に対する勉強時間を作るのが難しいのではないかな、と思うのです。
-しかもオブジェクト指向の勉強って難しいし「銀の弾丸」は無いわけです。最近そういった勉強会の話もあまり聞きません。
-ではどのあたりから始めると良いだろう？という当たりを付けられるセッションをしてみたいと思ったのです。</p>
-
-<p>私が技術支援で入った中で良く感じている問題はオブジェクト指向プログラミングというより、そもそものオブジェクト指向がうまく理解されていないと思ったので以下のポイントに絞った内容にしたいと思いました。</p>
-
-<ul>
-<li>オブジェクトとは何なのか</li>
-<li>オブジェクトを導出するにはどうしたら良いのか</li>
-<li>今回のPHPカンファレンスのテーマは「知りたい，があなたを変えていく」</li>
-</ul>
-
-<p>これらの要件に合うのは、責務駆動設計の中心的原理とテクニックを解説した「オブジェクトデザイン」の紹介が最適で、30分という時間に適している（知りたい==何か持ち帰って始めることができる）と思ったのです。</p>
-
-<h3>どうだったか</h3>
-
-<p>セッションをやっている間、いつも盛り上がっていないと不安なので、小ネタを差し込むのですが、皆さん真面目に聞きに来ていただいたので、講演者から見るとダダ滑りでした（個人的な感想です）。ただ<a href="https://joind.in/talk/view/12043">joind.in</a>のコメントを読ませていただいたり、顔見知りの方に確認した範囲では何かしら体験を持ち帰っていただけたようで「知りたい」につながったのかな、と思っています。</p>
-
-<p>もし私の講演を聴いていただいてコメントまだな方は、<a href="https://joind.in/talk/view/12043">コチラに</a>一言いただけると嬉しいです。<a href="https://joind.in/talk/view/12043">joind.in</a>は匿名でのコメントもできますので、ご安心ください。</p>
-
-<p>また、今回の目玉？！セッションであった「ウェブエンジニアに必要なセキュリティスキルとは 徳丸浩 x 大垣靖男」の対談セッションでも思ったのですが、お二人の話の大きな相違点のベースである<code>現実論</code>と<code>理想論</code>のケースはセキュリティだけではなく、オブジェクト指向についても同じだな、と思いました。
-私はすべての人がオブジェクト指向を理解して進めるのが理想だと思うし、アジャイル原則の<code>私たち</code>はオブジェクト指向を理解しているプログラマーであるべき、と思っています。ただすべての人がそうでないというのも理解できるので、理解度はともかくオブジェクト指向と向き合って欲しいなと思っています。そこから何かが変わると良いな、と。</p>
-
-<h3>裏話</h3>
-
-<p>実は、セッションを応募するとき、PHPカンファレンスでは重複して申し込めると聞いていたので、オブジェクト指向超入門（上）と、オブジェクト指向超入門（下）の2セッションにして合わせて60分で申し込もうと思ったのですが、それは通らなそう(www)と思って自重しました。
-またどこかで60分セッションやれる機会があれば、やってみたいなと思うのでした。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました" data-url="http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html&t=PHP%20Conference%202014%E3%81%A7%E3%80%8C%E6%93%AC%E4%BA%BA%E5%8C%96%E3%81%8B%E3%82%89%E5%A7%8B%E3%82%81%E3%82%8BPHPer%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91%E8%B6%85%E5%85%A5%E9%96%80%E3%80%8D%E3%82%92%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a></h2>
-  <p class="postdate"><a href="/2014/09/23.html" title="Permanent link">Tuesday, September 23, 2014 02:19:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="http://coedo-cakephp.doorkeeper.jp/events/15008">9/19に茅場町Co-Edoで行われたCakeFest2014報告会</a>でも話した内容をベースに記事にしました。</p>
-
-<p>すでに同日に発表された<a href="http://www.engineyard.co.jp/blog/2014/cakephp3-future-preview/">@yandoさんの記事「マドリードで見たCakePHP3の明るい未来」</a>が秀逸なので、CakePHP3の動向については<a href="http://www.engineyard.co.jp/blog/2014/cakephp3-future-preview/">その記事</a>をご覧ください。</p>
-
-<p>では私は何を書くかというと、報告会でも話したCakeFest2014の全体感と、来年10周年を迎えるCakePHPを盛り上げる為にみんなでCakeFestに行こう！という気分になってもらえると良いな、というまとめになっています（ちょっとはCakePHP3についても書くよ）。</p>
-
-<h3>CakeFestの歴史</h3>
-
-<p><img src="/images/blog/cakefest_2014_1.png" alt="" /></p>
-
-<p>CakeFestは2008年に始まって、今回で8回目になります。
-<a href="http://lanyrd.com/search/?q=CakeFest">参考URL:lanyrd.com</a></p>
-
-<ul>
-<li>2008/02 フロリダ・オーランド</li>
-<li>2008/12 ブエノスアイレス（参考URLの年は間違っています）</li>
-<li>2009/07 ベルリン</li>
-<li>2010/09 シカゴ</li>
-<li>2011/09 マンチェスター</li>
-<li>2012/08 マンチェスター</li>
-<li>2013/08 サンフランシスコ</li>
-<li>2014/08 マドリッド</li>
-</ul>
-
-<p>初年度を除いて、およそ1年に1回世界中からコミュニティのメンバーが集まる<code>お祭り</code>です。</p>
-
-<p>2回目のブエノスアイレスを除いてアメリカとヨーロッパで開催されており、私が始めて参加した4回目のシカゴからは8月終わりor9月初めに開催されるようになりました。
-コアデベロッパーは家族や彼女と来ていたりするので、夏休みも兼ねているのではないか、という<code>緩い</code>イベントだった..だったのです。</p>
-
-<p>緩い理由は例えば<a href="http://lanyrd.com/2012/cakefest/">2012年(マンチェスター)のスケジュール</a>を見てもらえるとわかりますが、9時に始まって16時ぐらいには終了です。このときは2トラックだったこともあり、セッション数としては少なくはないのですが、泊まりのカンファレンスイベントとしては割とあっさり終了する感じです。このあとはLTやりたい人がいればやるみたいな、日本のキッチリしたイベントの仕切りやテキパキ感というよりは参加者がお茶やビールを片手に交流する時間がたっぷり取られているという感じだったのです。</p>
-
-<h3>2014年は違っていた</h3>
-
-<p>私もCFP（Call For Paper）にセッションの応募をしたのですが、落選してしまいました。
-で、<a href="http://lanyrd.com/2014/cakefest/">確定したスケジュール</a>を見て、ビックリしたのです。
-朝は9時からと例年通りですが、終わる時間が！！なんと21時ですよ。つまり12時間。これはちょっとしたPHP Matsuri状態ではないですか。</p>
-
-<p>今年はシングルトラックでしたが、あんまりBreakタイムがなかったので、各自の判断でカンファレンスルームの外で話したりしていた状況ではありました。</p>
-
-<p>なお私が知る限りのCakeFestの中では、最もイベントとしてのテキパキ感とかはあったように思います。これもコミュニティマネージャであるJames Watts氏の活躍があってこその事。CakeFestの仕切りも3回目という事でだいぶ慣れてきたのかなーとも思います。</p>
-
-<h3>CakePHPの中の人たち</h3>
-
-<p>そういえば、あまりCakePHPの中の人たちって使っていてもCakeFestに参加しないと知らないのではないかと思い、コアチームのメンバーの顔と名前が一致するように、2枚の写真で紹介します。</p>
-
-<p><img src="/images/blog/cakefest_2014_2.png" alt="" />
-<a href="https://www.flickr.com/photos/afilina/sets/72157646706228796/">photo by Anna Fillina.</a></p>
-
-<p>左からJames Watts、Jose Gonzalez(@savant)、Larry Masters(@phpnut)（敬称略）</p>
-
-<p>こちらの写真は私がスペインに到着した夜の出来事なのですが、まぁお酒もだいぶ入っているところでの余興みたいな感じだったのでしょう。私はフライトの疲れでビールを1杯飲んで部屋に戻ってしまったので見ていなかったのですが、こんな感じでホテルのバースペースで盛り上がったり、そのあと朝4時まで繁華街へ飲みに行ったりしていたみたいです。
-毎年朝方まで飲んでいる参加者がいるのもCakeFestの一部です（その影響か午前中はホテルの部屋から出て来ない人も多数ですがw）。</p>
-
-<p>で、写真の後どうなったか、というと<a href="https://www.youtube.com/watch?v=M9RsahWsO2s&amp;feature=youtu.be">コチラの動画</a>から確認できます。</p>
-
-<p>ここ数年はコアチームへのQ&amp;Aセッションがあります。こちらでもCakePHPの中の人たちを確認することができます。</p>
-
-<p><img src="/images/blog/cakefest_2014_3.png" alt="" />
-<a href="https://www.flickr.com/photos/afilina/sets/72157646706228796/">photo by Anna Fillina.</a></p>
-
-<p>左からMarc Ypes(@ceeram)、Mark Story、Mark Scherer(@dereuromark)、Larry Masters(@phpnut)、José L. Rodríguez(@jose<em>zap)、Jose Gonzalez(@savant)、Renan Gonçalves(@renan</em>saddam)、James Watts（敬称略）</p>
-
-<h3>CakePHP1.3の終了と2系の今後</h3>
-
-<p>Q&amp;Aセッションはカンファレンス1日目のお昼直後に実施されたのですが、午前中にMark Story氏からCakePHP3の話と、1.3のサポート終了の話があったので、その2つについて質問が集中していました。1.3のサポート終了に関しては、何とちょうど先週顧客にCakePHP1.3を使った案件の提案をしたばかりなのに、どうしたら良い？何とかならないの？！というビックリするようなQを聞きました。先日も1.3のアップデートがあったり、1.3自体非常に長い間使われているのだなぁと思いました。その後、質問をした人になんでこれから1.3使うの？と聞いたら、資産があるから、という事でした。
-こちらのAは、ベストな方法はマイグレーションすることだけど、3ではなくCakePHP2にするのが良いという話と、1.3の件は通常のCakePHPとしてはムリだけど、CakeDCとして考えられなくもない。まぁビジネスだね、という回答でした。
-とはいえ、たぶんCakeDCも1.3の面倒を見続けるのは現実解ではないので、マイグレーションのサポートをする事で解決をするのではないかなーと思われます。</p>
-
-<p>日本でもまだCakePHP1.xを使っているサイトなど残っていると思いますが、3へのジャンプは難しいと思うので、まず2系にしておくことが重要になるでしょう。
-2系についてはまだ3年はサポートと今回明言されています。じゃぁまた3年後には3にしないといけないの？！という話はあるかもしれませんが、1から2系へはアップグレードシェルがあるのと、3のアップグレードシェルができたとして、2系からのアップグレードのみ対応であると推測されるので、まずは2系なのかなと思います。これは上記のコアチームのQ&amp;Aでの回答からも妥当な判断と思います。</p>
-
-<h3>CakePHP3で気になっていたこと</h3>
-
-<p><a href="http://coedo-cakephp.doorkeeper.jp/events">CakePHP3のもくもく会</a>で、何度もCakePHP3を試しているのですが、昨年ビヘイビアって無くなるって言ってなかったか？と思い、ORM担当の大きいJoseこと@jose_zapに確認しました。答えとしては、いろいろ考えたけど、コールバックの関係もあって互換性を考え残すことにした。もちろんTraitにしてEventマネージャを使うアプローチは素晴らしいし、できればそちらを使ってほしいけど、コアとしてはビヘイビアも残すよ、ということでした。</p>
-
-<h3>恒例のリアルケーキ</h3>
-
-<p><img src="/images/blog/cakefest_2014_4.png" alt="" /></p>
-
-<p>今となっては恒例となったリアルケーキ。実はCakeFestで始めてケーキが登場したのは、2010年のシカゴだったと記憶しています。
-キッカケは日本で開催されたCakePHPカンファレンス東京で、当時のCakePHP開発マネージャだった@gwoo氏を招いてCakePHP型のケーキを出したのがとてもウケが良く、それが本家でも採用されたと。CakeFestには日本コミュニティのDNAが含まれています！</p>
-
-<p>この直後、コアチームとして新しく入った@dereuromarkがファーストバイトならぬカップケーキ投げの手荒い歓迎を受けたり、サプライズイベントがあったり、楽しくケーキを食べながら交流を深めて解散となりました。</p>
-
-<h3>CakeFest2014で感じたこと</h3>
-
-<p>CakeFestに参加すると、良く知った常連さんと、始めての人がいて、なるべく始めて会った人と話すようにいつも心がけています。</p>
-
-<p>各国でのCakePHPの普及状況や、コミュニティの活動などの話を聞くのですが、ドイツから参加してきていた人の話によると、CakePHP(PHP)のイベントをやりたいけど、なかなか人が集まらなくて苦労している。日本ではどうなの？という話から、日本の状況を説明すると、とても日本のコミュニティが羨ましいという感想をもらいました。これはドイツ以外の参加者からも同様の反応をもらったのですが、まぁ日本というか東京など都市部には人が密集していてやりやすい状況なのかな、とも思います。そういった環境面やコミュニティ活動を積極的にやってくれる人がいるので都市部のエンジニアは特に恵まれた状況だと思います。もっと勉強会やイベントに出て交流しましょう！</p>
-
-<p>今年は(も)シングルトラックだったのでほぼ全てのセッションを見る事ができたのですが、CakePHPと関連するセッションは、コアチームに集中していて、他のセッションはPHP全般だったり、JavaScriptだったり、HTML(CSS)だったりとCakePHPに関する話題は例年以上に少なかったような気がします。
-これはCakePHP2のライフサイクルがだいぶ長くなっていて新しい話題が少なめなのと、まだ3は早すぎるという状況もあったのではないかと思います。
-来年はコアチーム以外からも3の話題がもっと出てくるのではないかと思います。</p>
-
-<p><a href="https://joind.in/event/view/1767">CakeFest2014のjoind.in</a>にスライドのリンクがあるので、ぜひCakePHP3のセッションについては見て欲しいのと、公式のPodCastが配信されているので、そちらも聞くとCakePHP3について理解が深まると思います。</p>
-
-<p>CakePHPに関する話題以外で、ぜひスライドをチェックして欲しいのは</p>
-
-<ul>
-<li>Writing code that lasts presented by Rafael Dohms</li>
-<li>Why You Can&rsquo;t Test presented by Chris Hartjes</li>
-</ul>
-
-<p>どちらもPHP界では有名人で、同じ内容を各国のカンファレンスで講演しているので、どこかで見ているかもしれませんが、一度はチェックしてみてください。</p>
-
-<h3>LTもやったし、BDDプラグインの人として声をかけられたり、交流できた</h3>
-
-<p>また初日のLTで<a href="http://www.scribd.com/fullscreen/237573895?access_key=key-PU2ZrgYtFK3zBQXqkE2l&amp;allow_share=false&amp;escape=false&amp;show_recommendations=false&amp;view_mode=slideshow"><code>Data Generator for Testing CakePHP Application</code></a>（いつものテストデータの作り方の英語バージョンです）をやりまして、反響もたくさんもらいました。
-CakeFestのスピーカーの中には、特にCakeと関係ないけどPHPのセッションとして応募してくる人もいるので、他のフレームワークには対応しないの？とか、Fakerと連動するにはどうするの？などなど。
-CakeFestではLTは当日募集で、手を挙げればもれなく喋れるので、海外カンファレンスでのプレゼン登竜門としては最適と思います。</p>
-
-<p>それと自分の自己紹介スライドのアイコンから、BDDプラグインの人でしょ？と声をかけられたりもして、Breakタイム少なかった割によく話したなーという印象でした。</p>
-
-<p>また例年以上？に日本自体に関心がある人がいて、日本語喋れるノルウェーからの参加者（漫画大好き）だったり、日本食について聞いてくる地元スペインの人だったり、3次会でカラオケ行こうと誘われたり、フクシマの話をしたり、PHP以外の話でも交流ができました。</p>
-
-<p>「海外のカンファレンスとか行ったことないし、大変そう」という方がほとんだと思います。私もお世辞にも英語得意でない（割と適当）けど、何とか交流できています。CakeFestであれば、ここ数年@yandoさんや私が参加していますし、行きたいと宣言すれば一緒に行く人が見つかるかもしれません。</p>
-
-<p>もし会社勤めのエンジニアだと休みが取れない、経費出ない、など難しい事情があるかもしれないのですが、ぜひ上司と交渉して来れるようになると良いなと思っています。参加して得られることは文章では書けないぐらい大きいです。</p>
-
-<h3>コミュニティマネージャからのメッセージ</h3>
-
-<p>最後にコミュニティマネージャであるJames Watts氏から、キーノートに関連して日本のコミュニティへメッセージをいただきましたので、動画をシェアします。
-では来年のCakeFestで会いましょう！</p>
-
-<video id="video" class="vd" controls  poster="https://dl.dropboxusercontent.com/u/29781137/cakefest_2014/cakefest_2014.jpg" width="600">
-<source src="https://dl.dropboxusercontent.com/u/29781137/cakefest_2014/cakefest_2014.m4v">
-</video>
-
-<p>最初のトラブルは、テラスの石畳と砂利の間に足を取られて転びそうになったのです&hellip; </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2014に参加しました" data-url="http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html&t=CakeFest2014%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/09/23/cakefest-2014-report.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2014/09/13/cakephp3-debugkit-require-sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a></h2>
-  <p class="postdate"><a href="/2014/09/13.html" title="Permanent link">Saturday, September 13, 2014 03:43:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
-      <a href="/tags/debugkit.html" rel="tag">DebugKit</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="http://coedo-cakephp.doorkeeper.jp/events/14670">CakePHP 3.0.0 もくもく会（勉強会） #7</a> に参加してCakePHP3ベータ1を早速試しました。</p>
-
-<p>ベータ1はアルファ版からディレクトリの変更も多く、CakePHP本体をcomposer updateしてもダメなので、再度 composer create-project でテンプレートから生成しなおします。</p>
-
-<p>最新の<a href="https://github.com/cakephp/app">cakephp/app</a>テンプレートにはDebugKitプラグインが依存関係に入っています。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"require"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nl">"php"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&gt;=5.4.19"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"cakephp/cakephp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"mobiledetect/mobiledetectlib"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.*"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"cakephp/debug_kit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="w">
-    </span><span class="p">}</span><span class="err">,</span><span class="w">
-</span></code></pre></div>
-<p>require-devではないのですね、と思ったり。。</p>
-
-<p>以下のコマンドでCakePHP3アプリケーションのプロジェクトスケルトンを作ります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer create-project -s dev cakephp/app dev-cake3 app
-</code></pre></div>
-<p>ブラウザでアクセスすると、以下のような画面が表示されます。</p>
-
-<p><img src="/images/blog/cakephp3_debugkit_sqlite.png" alt="" /></p>
-
-<p>なんかDebugKitがSQLiteを参照しているみたいなんですよ。</p>
-
-<p>そこで、DebugKitの設定を見てみます</p>
-
-<p>app/plugins/DebugKit/config/bootstrap.php</p>
-<div class="highlight"><pre class="highlight php"><code><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">config</span><span class="p">(</span><span class="s1">'debug_kit'</span><span class="p">))</span> <span class="p">{</span>
-    <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">config</span><span class="p">(</span><span class="s1">'debug_kit'</span><span class="p">,</span> <span class="p">[</span>
-        <span class="s1">'className'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Connection'</span><span class="p">,</span>
-        <span class="s1">'driver'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Driver\Sqlite'</span><span class="p">,</span>
-        <span class="s1">'database'</span> <span class="o">=&gt;</span> <span class="no">TMP</span> <span class="mf">.</span> <span class="s1">'debug_kit.sqlite'</span><span class="p">,</span>
-        <span class="s1">'encoding'</span> <span class="o">=&gt;</span> <span class="s1">'utf8'</span><span class="p">,</span>
-        <span class="s1">'cacheMetadata'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="s1">'quoteIdentifiers'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="p">]);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>そうですか、そうですか…</p>
-
-<p><a href="https://github.com/cakephp/debug_kit/tree/3.0">githubのCakePHP3用ブランチ</a>もチェックしてみました。</p>
-
-<blockquote>
-<p>Requirements</p>
-
-<p>The 3.0 branch has the following requirements:</p>
-
-<p>CakePHP 3.0.0 or greater.
-PHP 5.4.19 or greater.
-SQLite or another database driver that CakePHP can talk to. By default DebugKit will use SQLite, if you need to use a different database see the Database Configuration section below.</p>
-</blockquote>
-
-<p>そうですか、そうですか….</p>
-
-<p>でもなんか別のDB接続も可能みたいに書いてあるよ</p>
-
-<blockquote>
-<p>Database Configuration</p>
-
-<p>By default DebugKit will store panel data into a SQLite database in your application&rsquo;s tmp directory. If you cannot install pdo<em>sqlite, you can configure DebugKit to use a different database by defining a debug</em>kit connection in your config/app.php file.</p>
-</blockquote>
-
-<p>ふむふむ</p>
-
-<p><code>config/app.php</code> のDatasourceに以下のような<code>debug_kit</code>接続を追加してみます。</p>
-<div class="highlight"><pre class="highlight php"><code>        <span class="s1">'debug_kit'</span><span class="p">,</span> <span class="p">[</span>
-            <span class="s1">'className'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Connection'</span><span class="p">,</span>
-            <span class="s1">'driver'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Driver\Mysql'</span><span class="p">,</span>
-            <span class="s1">'persistent'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
-            <span class="s1">'host'</span> <span class="o">=&gt;</span> <span class="s1">'localhost'</span><span class="p">,</span>
-            <span class="s1">'login'</span> <span class="o">=&gt;</span> <span class="s1">'hoge'</span><span class="p">,</span>
-            <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'fuga'</span><span class="p">,</span>
-            <span class="s1">'database'</span> <span class="o">=&gt;</span> <span class="s1">'database_name'</span><span class="p">,</span>
-            <span class="s1">'prefix'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
-            <span class="s1">'encoding'</span> <span class="o">=&gt;</span> <span class="s1">'utf8'</span><span class="p">,</span>
-            <span class="s1">'timezone'</span> <span class="o">=&gt;</span> <span class="s1">'UTC'</span><span class="p">,</span>
-            <span class="s1">'cacheMetadata'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
-            <span class="s1">'quoteIdentifiers'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
-        <span class="p">],</span>
-
-</code></pre></div>
-<p>ブラウザをリロード</p>
-
-<p><img src="/images/blog/cakephp3_debugkit_mysql.png" alt="" /></p>
-
-<p>ぎゃー、DebugKitの該当箇所のコードを見てみると、そんなに変じゃないように見えますが、</p>
-<div class="highlight"><pre class="highlight php"><code>        <span class="nv">$configs</span> <span class="o">=</span> <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">configured</span><span class="p">();</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$configs</span> <span class="k">as</span> <span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$connection</span> <span class="o">=</span> <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
-</code></pre></div>
-<p>このときの<code>$config</code>をwatchしてみると</p>
-<div class="highlight"><pre class="highlight php"><code><span class="k">array</span> <span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-  <span class="mi">0</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'default'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
-  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'test'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-  <span class="mi">2</span> <span class="o">=&gt;</span> <span class="n">int</span> <span class="mi">0</span>
-  <span class="mi">3</span> <span class="o">=&gt;</span> <span class="n">int</span> <span class="mi">1</span>
-  <span class="mi">4</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'debug_kit'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
-</code></pre></div>
-<p>上記のようになっています。2と3誰よ….</p>
-
-<p>ということで、まだベータ１だからねー。はははーという事で、現時点はSQLiteのextension入れて試しましょう。</p>
-
-<p>例えば、friendsofcakeのvagrant-chef使っているなら、cookbooks/php/recipes/install.rbに追加します。</p>
-<div class="highlight"><pre class="highlight ruby"><code>  <span class="s2">"php5-mysql"</span><span class="p">,</span>
-  <span class="s2">"php5-sqlite"</span><span class="p">,</span>
-
-</code></pre></div>
-<p>mysqlの下あたりに追加します。vagrant destroy/upを実行して環境を作り直したら、もう一度ブラウザをリロードします。</p>
-
-<p><img src="/images/blog/cakephp3_beta1_success.png" alt="" /></p>
-
-<p>おなじみの青いバーの画面が表示されました。画面の右下に出ているCakePHPアイコンがDebugKitです。
-アイコンをクリックすると以下のようにデバッグ情報を参照可能になります。</p>
-
-<p><img src="/images/blog/cakephp3_beta1_debugkit.png" alt="" /></p>
-
-<p>DebugKitも使えるし、どんどんCakePHP3のアプリケーション開発がやりやすくなっていると思います。
-CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を試してみませんか？</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3(Beta1)のDebugKitではSQLiteが必要になります" data-url="http://blog.open.tokyo.jp/2014/09/13/cakephp3-debugkit-require-sqlite.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/09/13/cakephp3-debugkit-require-sqlite.html&t=CakePHP3(Beta1)%E3%81%AEDebugKit%E3%81%A7%E3%81%AFSQLite%E3%81%8C%E5%BF%85%E8%A6%81%E3%81%AB%E3%81%AA%E3%82%8A%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/09/13/cakephp3-debugkit-require-sqlite.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/26/">« Prev</a>
@@ -1000,16 +1409,16 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -1020,8 +1429,14 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -1029,7 +1444,7 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -1038,7 +1453,7 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -1087,9 +1502,6 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -1101,10 +1513,10 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1123,7 +1535,7 @@ CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

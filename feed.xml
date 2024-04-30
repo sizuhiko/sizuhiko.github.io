@@ -5,16 +5,332 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-03-20T14:58:00+09:00</updated>
+  <updated>2024-04-30T13:52:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</title>
+    <link rel="alternate" href="http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html"/>
+    <id>http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html</id>
+    <published>2024-04-30T13:52:00+09:00</published>
+    <updated>2024-04-30T15:37:24+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は &lt;a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3&lt;/a&gt; の続編となります。&lt;/p&gt;
+
+&lt;h3&gt;PHP 8.2 で実行できるように修正していく&lt;/h3&gt;
+
+&lt;p&gt;ひとまずロジック部分については 8.2 環境で PHPUnit でテストできるようになり、CI も動作するようになったので、アプリケーションを起動して動くのかを試していきたいと思います。&lt;/p&gt;
+
+&lt;h4&gt;Memcache の残りを移行する&lt;/h4&gt;
+
+&lt;p&gt;Memcache は Redis に移行したのですが、単体テスト外の部分にも少し残っていたので、&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/febd6d51eea461b5aa44504102fcb10d1d746c29"&gt;こちらのコミット&lt;/a&gt; で対応しました。&lt;/p&gt;
+
+&lt;p&gt;移行方法は &lt;a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2&lt;/a&gt; でも実施した内容なのですが、DI 部分と設定ファイルのデフォルト値、READMEの説明を修正しました。&lt;/p&gt;
+
+&lt;h4&gt;GAE のアプリケーションバージョンを新しく設定する&lt;/h4&gt;
+
+&lt;p&gt;GAE では通常のトラフィックを古いバージョンへ向けて、新しいバージョンもデプロイして別のURLから実行できるようにする機能があります。
+dev_appserver.py での実行が困難になっているので、新しいバージョンを GAE にデプロイして動作するのかを検証していくことにしました。&lt;/p&gt;
+
+&lt;p&gt;今回はバージョン2として&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e8416cf0bf26c06bce2125e357b16d429bdec4e"&gt;修正&lt;/a&gt;しました。&lt;/p&gt;
+
+&lt;p&gt;GAE で動かすにあたり php.ini も変更が必要だったので、拡張に redis を追加して&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/5b827d53174e8f3c87ea00afcda4e1a6ee21636d"&gt;修正&lt;/a&gt;しました&lt;/p&gt;
+
+&lt;h4&gt;デプロイして動かしてみる&lt;/h4&gt;
+
+&lt;p&gt;全然動きませんな  (^^;;&lt;/p&gt;
+
+&lt;p&gt;まず問題を切り分けるために、まだビジネスロジックに分岐できていなかったデバイス値の取得処理を Google Cloud Storage から取得する処理をテスト可能なサービスとしてリファクタリングしました。&lt;/p&gt;
+
+&lt;p&gt;あとセッションの保存場所を設定する必要があったので、いったん &lt;code&gt;php.ini&lt;/code&gt; に &lt;code&gt;session.save_path=Google\AppEngine\Api\Memcache\Memcache&lt;/code&gt; を追加しました。&lt;/p&gt;
+
+&lt;p&gt;依存のライブラリもいくつか PHP 8.2 環境だと動かないものがあったのでアップデート。&lt;/p&gt;
+
+&lt;p&gt;いったんそれらの修正コミットが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/ba9be14f65cc75fdc6604fde328192a3ec125b57"&gt;こちら&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;で、いろいろやっていくうちに、そもそも slim3 だと PHP 8系で動かないな&amp;hellip;という基本的なところに気づきました（さいしょから考えておけよという話）。&lt;/p&gt;
+
+&lt;h3&gt;Slim3 から Slim4 に移行していく&lt;/h3&gt;
+
+&lt;p&gt;幸いなことにこちらに関してはインターネットに移行記事がたくさんあり、とても参考になりました。&lt;/p&gt;
+
+&lt;p&gt;今回の移行に関するコミットが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f0aed649629a24bad6f4dbbf4b0f724415569a33"&gt;こちら&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;h4&gt;依存関係の更新&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;slim 3.1 を 4.12 に&lt;/li&gt;
+&lt;li&gt;monolog のアプデ&lt;/li&gt;
+&lt;li&gt;BASIC認証のライブラリ &lt;code&gt;tuupola/slim-basic-auth&lt;/code&gt; のアプデ&lt;/li&gt;
+&lt;li&gt;セッションミドルウェア &lt;code&gt;akrabat/rka-slim-session-middleware&lt;/code&gt; のアプデ&lt;/li&gt;
+&lt;li&gt;PSR7実行が外部依存になったので &lt;code&gt;slim/psr7&lt;/code&gt; の追加&lt;/li&gt;
+&lt;li&gt;DI が外部依存になったので &lt;code&gt;php-di/php-di&lt;/code&gt; の追加&lt;/li&gt;
+&lt;li&gt;Google Cloud Storage がランタイム外になったので &lt;code&gt;google/cloud-storage&lt;/code&gt; の追加&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;php-di への移行&lt;/h4&gt;
+
+&lt;p&gt;もともとは Slim3 のアプリケーションコンテナを使っていたので、こんな感じでやっていたのを&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Instantiate the app&lt;/span&gt;
+&lt;span class="nv"&gt;$settings&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/settings.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nv"&gt;$app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Slim\App&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$settings&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;以下のように変更しました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;DI\Container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="nv"&gt;$settings&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/settings.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nv"&gt;$container&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;Container&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'settings'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$settings&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'settings'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;続いてDIコンテナの初期化処理化を&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/dependencies.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;のように指定していたのを&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Slim\Factory\AppFactory&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="nv"&gt;$dependencies&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/dependencies.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nv"&gt;$container&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$dependencies&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="nc"&gt;AppFactory&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nf"&gt;setContainer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="nv"&gt;$app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;AppFactory&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nf"&gt;create&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;このように変更しました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;コンテナを初期化&lt;/li&gt;
+&lt;li&gt;環境設定の注入やコンテナの初期化を実行&lt;/li&gt;
+&lt;li&gt;AppFactory でアプリケーション初期化&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;のような実装に変わります。&lt;/p&gt;
+
+&lt;h4&gt;Slim4 っぽい書き方に変更&lt;/h4&gt;
+
+&lt;p&gt;もともとは&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Register middleware&lt;/span&gt;
+&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/middleware.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Register routes&lt;/span&gt;
+&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/routes.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;こんな感じでミドルウェアとルーティングの設定を書いていたのですが、&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Register middleware&lt;/span&gt;
+&lt;span class="nv"&gt;$middleware&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/middleware.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nv"&gt;$middleware&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Register routes&lt;/span&gt;
+&lt;span class="nv"&gt;$routes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/routes.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="nv"&gt;$routes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Slim4アプリを引数で指定して設定するように変更しました。
+&lt;code&gt;$app&lt;/code&gt; をグローバル参照から引数参照するコールバック関数に変わったぐらいです。&lt;/p&gt;
+
+&lt;h4&gt;Basic認証の修正&lt;/h4&gt;
+
+&lt;p&gt;登録済みのデバイスからデータを受信するAPIでは、Basic認証ミドルウェアを設定していて、 &lt;code&gt;callback&lt;/code&gt; という処理が呼び出されることになっていました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;//&lt;/span&gt;
+&lt;span class="c1"&gt;// For Registered Devices&lt;/span&gt;
+&lt;span class="c1"&gt;//&lt;/span&gt;
+&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/api/devices/{id}/values'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'\ToiletEvolution\Controllers\DeviceValuesController:add'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Slim\Middleware\HttpBasicAuthentication&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
+        &lt;span class="s2"&gt;"authenticator"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getContainer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'DeviceStore'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
+        &lt;span class="s2"&gt;"callback"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+          &lt;span class="nv"&gt;$route&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getAttribute&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'route'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+          &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$route&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getArgument&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+          &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'user'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+        &lt;span class="p"&gt;},&lt;/span&gt;
+        &lt;span class="s2"&gt;"secure"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;
+      &lt;span class="p"&gt;]));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Slim4でのBasic認証では &lt;code&gt;before&lt;/code&gt; が呼び出される様に変わっています。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;  &lt;span class="c1"&gt;//&lt;/span&gt;
+  &lt;span class="c1"&gt;// For Registered Devices&lt;/span&gt;
+  &lt;span class="c1"&gt;//&lt;/span&gt;
+  &lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/api/devices/{id}/values'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'\ToiletEvolution\Controllers\DeviceValuesController:add'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Tuupola\Middleware\HttpBasicAuthentication&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
+          &lt;span class="s2"&gt;"authenticator"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getContainer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'DeviceStore'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
+          &lt;span class="s2"&gt;"before"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'user'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+          &lt;span class="p"&gt;},&lt;/span&gt;
+          &lt;span class="s2"&gt;"secure"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;
+        &lt;span class="p"&gt;]));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;コントローラーの修正&lt;/h4&gt;
+
+&lt;p&gt;APIでJSONを返却するときの処理が標準ではなくなったので、JSON文字列を出力する &lt;code&gt;JsonRenderer&lt;/code&gt; のようなクラスを作ります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;namespace&lt;/span&gt; &lt;span class="nn"&gt;ToiletEvolution\Renderer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Psr\Http\Message\ResponseInterface&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;JsonRenderer&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="cd"&gt;/**
+     * Write JSON to the response body.
+     *
+     * This method prepares the response object to return an HTTP JSON
+     * response to the client.
+     *
+     * @param ResponseInterface $response The response
+     * @param mixed $data The data
+     *
+     * @return ResponseInterface The response
+     */&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="kt"&gt;mixed&lt;/span&gt; &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Content-Type'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'application/json'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+        &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getBody&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+            &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="nb"&gt;json_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+                &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                &lt;span class="no"&gt;JSON_UNESCAPED_SLASHES&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="no"&gt;JSON_PARTIAL_OUTPUT_ON_ERROR&lt;/span&gt;
+            &lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="p"&gt;);&lt;/span&gt;
+
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;で、それをコントローラのコンストラクタで初期化して、APIメソッドで呼び出します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;DevicesController&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="kt"&gt;ContainerInterface&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="kt"&gt;JsonRenderer&lt;/span&gt; &lt;span class="nv"&gt;$renderer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__construct&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ContainerInterface&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;JsonRenderer&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ServerRequestInterface&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$deviceModel&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Device&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;array_map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;toArrayWithoutSecret&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="nv"&gt;$deviceModel&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;all&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;json&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="mi"&gt;204&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Slim3 では以下のようなコードで &lt;code&gt;$response-&amp;gt;withJson&lt;/code&gt; でよかったところが変更になっています。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$deviceModel&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Device&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;array_map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;toArrayWithoutSecret&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="nv"&gt;$deviceModel&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;all&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withJson&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="mi"&gt;204&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;ミドルウェアの修正&lt;/h4&gt;
+
+&lt;p&gt;PSR の書き方が変わっているので、それに応じて修正しています。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RequireLoginMiddleware&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__invoke&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$next&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'current_user'&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;
+        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;302&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Location'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;redirectIfNotLogin&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;else&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;    
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;こんな感じだったのが、以下のように変更になっています。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RequireLoginMiddleware&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__invoke&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;Request&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;RequestHandler&lt;/span&gt; &lt;span class="nv"&gt;$handler&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;Response&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'current_user'&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;
+        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;302&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Location'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;redirectIfNotLogin&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="k"&gt;else&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$handler&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;handle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;引数が変更になっていて、 &lt;code&gt;$response&lt;/code&gt; がなくなって、次のミドルウェアへ処理を引き継ぐのが &lt;code&gt;$next&lt;/code&gt; から &lt;code&gt;$handler&lt;/code&gt;  に変わっています。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;$response&lt;/code&gt; はミドルウェアごとに作成して設定していきます。
+次のミドルウェアに引き継ぐときは、 &lt;code&gt;$handler-&amp;gt;handle&lt;/code&gt; で呼び出してレスポンスを取得します。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;Slim3 から Slim4 への移行手順がインターネットに多くあって助かりました。
+また Slim 関連の OSS パッケージも 3 から 4 への移行をドキュメントにしてくれていたので、比較的スムーズに移行できたと思います。&lt;/p&gt;
+
+&lt;p&gt;ここではその一部を紹介する感じになりましたが、同じような対応をする人に役立つ内容になっていれば嬉しいです。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</title>
+    <link rel="alternate" href="http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html"/>
+    <id>http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html</id>
+    <published>2024-04-30T13:20:00+09:00</published>
+    <updated>2024-04-30T13:46:33+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は &lt;a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2&lt;/a&gt; の続編となります。&lt;/p&gt;
+
+&lt;p&gt;前回は PHPUnit を最新化して通過するところまで実施したので、今回は GitHub Actions で CI できるようにしていきます。&lt;/p&gt;
+
+&lt;h3&gt;GitHub Actions と Google Cloud を連携する&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/google-github-actions/auth"&gt;Authenticate to Google Cloud from GitHub Actions&lt;/a&gt; というリポジトリがあって、Actions から gcloud 関係の CLI ツールを動かす前に認証を通過させる方法が書いてあります。&lt;/p&gt;
+
+&lt;p&gt;Actionsが通過するようになったPRが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/18"&gt;こちら&lt;/a&gt; 。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://cloud.google.com/blog/ja/products/identity-security/enabling-keyless-authentication-from-github-actions"&gt;GitHub Actions からのキーなしの認証の有効化&lt;/a&gt; という公式ドキュメントに加え、先ほども紹介したリポジトリのREADMEを併せて読むと簡単に環境構築できるようになります。&lt;/p&gt;
+
+&lt;p&gt;環境構築ができたら Actions の yaml ファイルを定義していくだけです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ソースコードをチェックアウト&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;google-github-actions/auth&lt;/code&gt; で認証&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;google-github-actions/setup-gcloud&lt;/code&gt; で gcloud コマンドをセットアップ&lt;/li&gt;
+&lt;li&gt;PHP8.2環境のセットアップ&lt;/li&gt;
+&lt;li&gt;composer アクションで依存関係を解決&lt;/li&gt;
+&lt;li&gt;gcloud コマンド実行&lt;/li&gt;
+&lt;li&gt;PHPUnit 実行&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;のような手順にしました。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;google-github-actions/auth&lt;/code&gt; の認証方法が変更になっているので最新に追従しないといけないので、おいおい対応していきます。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</title>
     <link rel="alternate" href="http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html"/>
     <id>http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html</id>
     <published>2024-03-20T14:58:00+09:00</published>
-    <updated>2024-03-20T16:13:12+09:00</updated>
+    <updated>2024-04-30T13:19:59+09:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -106,7 +422,7 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
     <link rel="alternate" href="http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html"/>
     <id>http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html</id>
     <published>2024-03-20T12:34:00+09:00</published>
-    <updated>2024-03-20T14:34:07+09:00</updated>
+    <updated>2024-04-30T13:19:59+09:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -198,6 +514,99 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
 
 &lt;p&gt;このあと数回にわたって、どうやって移行してきたかをコミットログと共にふりかえっていきたいと思います。
 少しでも PHP のバージョンアップや GAE gen2 へ移行する人の助けになればな、と思っています。&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</title>
+    <link rel="alternate" href="http://blog.url.com/2024/02/18/php-conference-kansai-2024.html"/>
+    <id>http://blog.url.com/2024/02/18/php-conference-kansai-2024.html</id>
+    <published>2024-02-18T12:40:00+09:00</published>
+    <updated>2024-04-30T13:19:59+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;大阪自体はそれほど久しぶりではないけど、東京以外のカンファレンスにリアル参加するのは久しぶりだった。
+ブログを振り返ると、&lt;a href="/2019/10/13/phpcon-okinawa-2019.html"&gt;PHPカンファレンス沖縄2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました&lt;/a&gt;がコロナ前最後に参加した地域PHP conであったようだ。
+大阪へは藤井風のパナスタライブ以来なので、1年半ぶりぐらい。&lt;/p&gt;
+
+&lt;h3&gt;このところのホテル事情&lt;/h3&gt;
+
+&lt;p&gt;昨年秋のシルバーウィークに九州まで車でスカイラインを巡る旅をしてきて、ホテルの混雑状況とか把握していたつもりでしたが、今回はやばかった。
+ちょうど3連休開催ということで、ホテルの値段がやばい。大阪ではいつも宿泊する本町のホテルが早々に売り切れててどうしよう？となりましたが、
+運よくリニューアルしたばかりの東横inn淀屋橋駅南が空いてて、普段の東横価格だったので安心できました。&lt;/p&gt;
+
+&lt;h3&gt;前夜祭への参加&lt;/h3&gt;
+
+&lt;p&gt;さらに前日入りをすることにしていたのですが、午前中に東京で用事があったので &lt;a href="https://connpass.com/event/309163/"&gt;【非公式！前夜祭】 PHPカンファレンス関西2024&lt;/a&gt; へも新幹線に乗るタイミングで間に合いそうだったので参加表明するという慌ただしさ。&lt;/p&gt;
+
+&lt;p&gt;前夜祭で他の人の発表を聞いていて、自分も何か話したいなーという欲が出てきたので、その場でスライドをさくさくと作ってWebアクセシビリティの話をしました。
+いろいろなところで4月から義務化？！とか言われてますが、実際のところどうなのよ？みたいなところを。
+最新関係する仕事もしていてかなり調べたので、気になっている人もいるのでは？と思ったのです。&lt;/p&gt;
+
+&lt;p&gt;かつてはカンファレンスを開催していた大阪産業創造館という場所も懐かしかった。&lt;/p&gt;
+
+&lt;p&gt;前夜祭を楽しんだ後は、最近大阪に来たら必ずいく Bar で飲んでちゃんと終電ではホテルに戻りました。&lt;/p&gt;
+
+&lt;h3&gt;カンファレンス当日&lt;/h3&gt;
+
+&lt;p&gt;今回はあまり普段登壇で見かけない人の発表を聞く、久しぶりに会うコミュニティメンバーと会話する、という2つの目的で参加していました。
+どちらも当初の見込みは達成できて、たくさんの刺激をもらいました。
+午後は主にアンカンファレンスの会場にいて、枠も空いていたので前夜祭で話した内容をまたやってみたりと、聞くだけでなく積極的にイベントにも参加しました。
+ちゃんとスポンサークイズにも応募したよ！（半分ぐらいは聴けてなかったので勘で回答しちゃいましたがw）&lt;/p&gt;
+
+&lt;p&gt;懇親会 -&amp;gt; 2次会 -&amp;gt; ホテルそばで1人3次会 をやって終了。
+翌日の月曜日も3連休ということで休みでしたが、東京で推しのライブがあるのでお昼には新幹線に乗り込みました。
+いつものネギ焼きは新幹線のフードコードで&lt;/p&gt;
+
+&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;いつもの(本店ではないが &lt;a href="https://t.co/YfGW0D6zAf"&gt;pic.twitter.com/YfGW0D6zAf&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1756862605984239984?ref_src=twsrc%5Etfw"&gt;February 12, 2024&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;あ、その前にもちろん聖地巡礼（阪急梅田のタイガースショップ）もして、グッズも買いました。&lt;/p&gt;
+
+&lt;h3&gt;久しぶりの地域カンファレンスに参加してのまとめ&lt;/h3&gt;
+
+&lt;p&gt;昨年のPHPカンファレンス福岡に始まり、地域カンファレンスの開催も戻ってきて、今回の大阪に久しぶりに参加しました。
+大阪のPHPcon自体は &lt;a href="/2018/08/03/phpcon-kansai-2018.html"&gt;PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました&lt;/a&gt; のとき以来で、今回はこのときの登壇者Tシャツを来て参加しました。&lt;/p&gt;
+
+&lt;p&gt;つまり関西では 6年ぶりということですね。
+オフライン開催のPHP系カンファレンスに関しても昨年の福岡などより前となると、おそらく &lt;a href="/2020/02/21/phperkaigi-2020.html"&gt;PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました&lt;/a&gt; このときの PHPerKaigi がコロナ前最後であったという記憶があります。&lt;/p&gt;
+
+&lt;p&gt;それでも4年。
+つまり6年以上前からコミュニティに参加していた関西圏の人以外はほぼ初参加となるわけです。&lt;/p&gt;
+
+&lt;p&gt;今年は月刊PHPカンファレンスなんて言葉が出るぐらいですが、それも昨年の福岡に始まった地域カンファレンスの楽しさから触発されたもので、しばらく行われてこなかった反動だったり、この4から6年の間に新たにこの業界で働き始めた人たちの新しい交流の場なんだなというのを実感しました。&lt;/p&gt;
+
+&lt;p&gt;今回のPHPCon関西ではいくつもの素晴らしい取り組みがありました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://note.com/phpcon_kansai/"&gt;公式 note&lt;/a&gt; で発信&lt;/li&gt;
+&lt;li&gt;PHPerシール&lt;/li&gt;
+&lt;li&gt;お誘いチケット&lt;/li&gt;
+&lt;li&gt;おすすめトーク診断&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;まず公式 note は X だけで発信していると流れてしまいそうな情報に簡単にアクセスできるのもあり、良いなーと思いました。
+困ったら note 見る、みたいな動線がある。もちろん公式HPに載せるのもありなんで、そこは運用の手間がどちらが少ないかという判断もあるでしょう。&lt;/p&gt;
+
+&lt;p&gt;続いて PHPerシール。こちらは2020のPHPerKaigiで行われていたトレーディングカードにインスパイアされたものだと思いますが、積極的に交流できるようにするアイテムとしてとても良いと思いました。スピーカーにはレアカードがあったりしたのも良かったと思います。&lt;/p&gt;
+
+&lt;p&gt;お誘いチケットは有料イベントで参加を迷っている人を誘いやすい仕組みとして良いなと思いました。
+PHPerシールとか当日の交流の仕組みがあっても、まず参加してくれないと届きませんね。&lt;/p&gt;
+
+&lt;p&gt;おすすめトーク診断も、誘ってもらったり紹介してもらったので参加するけど、カンファレンスの歩き方ってわからんな？という人も向けて楽しみながら参加できる仕掛けだったと思います。&lt;/p&gt;
+
+&lt;p&gt;つまりPHP関西自体に初参加、ましてやコロナで勉強会を含めオフラインのイベントそのものに初参加ということが6年というブランクから容易に想像できる環境での地域コミュニティの盛り上げ方に優れた戦略が練られていたことがわかります。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;お誘いチケットで誘って参加してもらい&lt;/li&gt;
+&lt;li&gt;おすすめトーク診断で当日迷わないようにして&lt;/li&gt;
+&lt;li&gt;PHPer シールで当日は交流してもらう&lt;/li&gt;
+&lt;li&gt;なんなら X のアカウント持ってなかったけど、シール経由で作ってもらって今後の交流やPHP関西からの発信を受け取ってもらえるようにする&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;委員長の閉会の挨拶でもこれらを話されていましたが、関西でのPHPコミュニティを盛り上げたいという熱い想いを聞いて、また来年開催されたら参加したいな、発表もしてみたいなと思いました。&lt;/p&gt;
+
+&lt;p&gt;久しぶりということで運営の経験値とかもリセットされた中での開催だったと思うけど、そういうのを感じさせない良いカンファレンスでした。
+参加のみなさま、久しぶりに再会したみなさま。そして何より運営のみなさまありがとうございました。&lt;/p&gt;
 </content>
   </entry>
   <entry>
@@ -407,329 +816,6 @@ git remote remove service-payment-apidoc
 それぞれのプロジェクトやリポジトリの運用を見極めて選択していきたいですね。&lt;/p&gt;
 
 &lt;p&gt;マルチプルレポからモノレポへ移行するときに、本記事が参考になれば幸いです。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>tsyringe を TypeScript 5 で使う方法</title>
-    <link rel="alternate" href="http://blog.url.com/2023/05/02/tsyringe-with-typescript-5.html"/>
-    <id>http://blog.url.com/2023/05/02/tsyringe-with-typescript-5.html</id>
-    <published>2023-05-02T15:00:00+09:00</published>
-    <updated>2023-05-02T15:17:42+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://github.com/microsoft/tsyringe"&gt;tsyringe&lt;/a&gt; は、Microsoft のオーガナイゼーションにある、JavaScript/TypeScript用のDIコンテナです。&lt;/p&gt;
-
-&lt;p&gt;Microsoft は TypeScript の親だし、DIコンテナあるんだったら使うよなーというぐらいの理由で使っていましたが、ここ数年はアップデートのリリースがありません。
-この記事を書いている時点での最新版は、2020/11/9 に出た &lt;a href="https://github.com/microsoft/tsyringe/releases/tag/v4.4.0"&gt;v4.4.0&lt;/a&gt; です。&lt;/p&gt;
-
-&lt;h3&gt;TypeScript 5 でコンパイルエラーになる&lt;/h3&gt;
-
-&lt;p&gt;tsyringe を TypeScript 5 で利用しようとすると、コンパイルエラーになります。
-で、さすがに利用者が多いライブラリだけあって、すぐ issue &lt;a href="https://github.com/microsoft/tsyringe/issues/221"&gt;TypeScript 5.0 Support of tighter parameter decorator checking&lt;/a&gt; が出ました。
-しばらくしたら PR &lt;a href="https://github.com/microsoft/tsyringe/pull/226"&gt;fix: allow propertyKey to be undefined&lt;/a&gt; も出ました。PRが 2023/3/26 に出て、マージされたのは 2023/4/17 です。&lt;/p&gt;
-
-&lt;p&gt;それから2週間ぐらい経過しましたが、リリースされる気配はありません&amp;hellip;.&lt;/p&gt;
-
-&lt;h3&gt;でも TypeScript 5 を使いたいんや&lt;/h3&gt;
-
-&lt;p&gt;まぁそう思いますよね。
-僕らのプロジェクトでもそう思ったんで、パッチを作りました。&lt;/p&gt;
-
-&lt;p&gt;プロジェクトルート(package.json とか置いているディレクトリ)に &lt;code&gt;tsyringe.d.ts&lt;/code&gt; を置いて、型定義をオーバーライドする感じです。
-例えば以下のような感じです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tsyringe/dist/typings/index&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="nx"&gt;declare&lt;/span&gt; &lt;span class="nx"&gt;namespace&lt;/span&gt; &lt;span class="nx"&gt;t&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;inject&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-    &lt;span class="nx"&gt;token&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;InjectionToken&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
-  &lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;target&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;propertyKey&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;string&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="nx"&gt;symbol&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;parameterIndex&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;number&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="nx"&gt;any&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;injectable&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;injectable&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="nx"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;DependencyContainer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;typeof&lt;/span&gt; &lt;span class="nx"&gt;tsyringe&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;t&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;まずコンパイルエラーになるのは &lt;code&gt;inject&lt;/code&gt; 関数なので、それをオーバーライドします。
-次に、プロジェクトで import している関数や型があれば、それぞれ &lt;code&gt;const&lt;/code&gt; や &lt;code&gt;type&lt;/code&gt; で宣言して require した内容からそのまま export するようにしました。&lt;/p&gt;
-
-&lt;p&gt;これはマージされている PR が型定義ぐらいしか修正しておらず、実装に関しては何も修正されていなかったので、問題なしと判断して型定義だけをオーバーライドしたパッチを作ることにしました。&lt;/p&gt;
-
-&lt;h3&gt;で、どうなの？&lt;/h3&gt;
-
-&lt;p&gt;現時点動作に問題はなく、普通に TypeScript 5 で tsyringe が使えています。
-PRがマージされて、すぐリリースされるんじゃないか？と思ったので、この内容を記事にする必要もないかな？と思っていたのですが、
-リリースされる気配を感じないので、僕らのやっている方法が少しでも役に立てばと思い、記事にしました。
-はやく TypeScript 5 対応が正式リリースされて欲しいですね。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>LocalStack を使って aws-sdk の Integration Test を実行する</title>
-    <link rel="alternate" href="http://blog.url.com/2023/04/19/integration-test-using-localstack.html"/>
-    <id>http://blog.url.com/2023/04/19/integration-test-using-localstack.html</id>
-    <published>2023-04-19T16:12:00+09:00</published>
-    <updated>2023-04-19T16:38:55+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）&lt;/a&gt; の中でも書いたように、aws-sdk v3 を使ったコードを UnitTest するには &lt;a href="https://github.com/m-radzikowski/aws-sdk-client-mock"&gt;AWS SDK v3 Client mock&lt;/a&gt; を利用してモックした方が簡単です。&lt;/p&gt;
-
-&lt;p&gt;一方で少し IntegrationTest をしたいと思うこともあるでしょう。そうしたときは LocalStack の利用が便利です。
-手元も環境なら Docker の Extension で動きます。
-CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動すれば大丈夫です。&lt;/p&gt;
-
-&lt;h3&gt;インテグレーションテストでのエンドポイント&lt;/h3&gt;
-
-&lt;p&gt;こんな感じでテストコードで endpoint を切り替えられるようにしておくとローカルとCI環境のどちらでもテストを実行しやすくなります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;options&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;credentials&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;accessKeyId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;dummy&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;secretAccessKey&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;summy&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
-  &lt;span class="na"&gt;endpoint&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`http://&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;TEST_AWS_HOSTNAME&lt;/span&gt; &lt;span class="o"&gt;??&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;localhost&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;:4566`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;region&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ap-northeast-1&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stepFunctions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;SFNClient&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;options&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;手元では localhost で良いし、CI環境（たとえば GitHub Actions ） なら、以下のようにしておくと良いです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;    &lt;span class="na"&gt;container&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;node:18&lt;/span&gt;
-    &lt;span class="na"&gt;services&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;localstack&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-        &lt;span class="na"&gt;image&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;localstack/localstack&lt;/span&gt;
-    &lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;TEST_AWS_HOSTNAME&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;localstack&lt;/span&gt;
-    &lt;span class="na"&gt;steps&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm t&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;LocalStack v2.0 以降での変更点&lt;/h3&gt;
-
-&lt;p&gt;最近バージョンが 2.0 になった LocalStack ですが Lambda 関連で大きな変更がありました。
-基本的に Lambda を利用しなければ問題はありませんが、特に問題なければ localstack サービスを以下のように設定しておくと安心です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;    &lt;span class="na"&gt;container&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;node:18&lt;/span&gt;
-    &lt;span class="na"&gt;services&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;localstack&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-        &lt;span class="na"&gt;image&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;localstack/localstack&lt;/span&gt;
-        &lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-          &lt;span class="na"&gt;LAMBDA_SYNCHRONOUS_CREATE&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
-        &lt;span class="na"&gt;volumes&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-          &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;/var/run/docker.sock:/var/run/docker.sock&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Actions のホストコントローラの docker.sock をマウントすることで LocalStack の中で Lambda が起動できるようになります。&lt;/p&gt;
-
-&lt;p&gt;詳しくは&lt;a href="https://github.com/localstack/localstack/releases/tag/v2.0.0"&gt;公式の v2.0.0 リリースノート&lt;/a&gt; の &lt;code&gt;Lambda&lt;/code&gt; 部分に書いてありますので、読んでみてください。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;単体テストで LocalStack 使うのはやりすぎだと思いますが、部分的にインテグレーションテストしたい、といった場合には有用な方法かな、と思いますので、用途に応じて使い分けられると良いですね。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>AWS SDK v3 のモジュールと利用方法</title>
-    <link rel="alternate" href="http://blog.url.com/2023/04/18/generation-code-aws-sdk-v3.html"/>
-    <id>http://blog.url.com/2023/04/18/generation-code-aws-sdk-v3.html</id>
-    <published>2023-04-18T12:21:00+09:00</published>
-    <updated>2023-04-18T15:01:28+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;このところ何度か aws-sdk v3 について記事を書いてきましたが、こちらは現時点でのベストプラクティスというか、追記を含むまとめ記事になります。&lt;/p&gt;
-
-&lt;h3&gt;ランタイムに含まれないモジュールがある？&lt;/h3&gt;
-
-&lt;p&gt;aws-sdk を使って Lambda から Lambda を実行するときのコードは、公式のExampleコードを見ると以下のようになっています。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js"&gt;https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js&lt;/a&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/**
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: Apache-2.0
- */&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LogType&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;createClientForDefaultRegion&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;../../libs/utils/util-aws-sdk.js&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="cm"&gt;/** snippet-start:[javascript.v3.lambda.actions.Invoke] */&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;invoke&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;funcName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;createClientForDefaultRegion&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;command&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-    &lt;span class="na"&gt;FunctionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;funcName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="na"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stringify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="na"&gt;LogType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;LogType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Tail&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="p"&gt;});&lt;/span&gt;
-
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LogResult&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;command&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Buffer&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toString&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;logs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Buffer&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;LogResult&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;base64&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;toString&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;logs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;result&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
-&lt;span class="p"&gt;};&lt;/span&gt;
-&lt;span class="cm"&gt;/** snippet-end:[javascript.v3.lambda.actions.Invoke] */&lt;/span&gt;
-
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;invoke&lt;/span&gt; &lt;span class="p"&gt;};&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;ここで注目して欲しいのは&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Payload: JSON.stringify(payload),
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
-
-&lt;p&gt;の部分なのですが、これは TypeScript で記述すると型違反でエラーになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="cm"&gt;/**
-     * &amp;lt;p&amp;gt;The JSON that you want to provide to your Lambda function as input.&amp;lt;/p&amp;gt;
-     *          &amp;lt;p&amp;gt;You can enter the JSON directly. For example, &amp;lt;code&amp;gt;--payload '\{ "key": "value" \}'&amp;lt;/code&amp;gt;. You can also
-     *       specify a file path. For example, &amp;lt;code&amp;gt;--payload file://payload.json&amp;lt;/code&amp;gt;.&amp;lt;/p&amp;gt;
-     */&lt;/span&gt;
-    &lt;span class="nx"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;?:&lt;/span&gt; &lt;span class="nb"&gt;Uint8Array&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;公式 Example のコードの意味とは&amp;hellip; というところですが、&lt;/p&gt;
-
-&lt;p&gt;で、そういう issue やら SlackOverflow があって&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/aws/aws-sdk-js-v3/issues/4623"&gt;https://github.com/aws/aws-sdk-js-v3/issues/4623&lt;/a&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;toUint8Array&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/util-utf8&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;({});&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;InvokeCommand&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-      &lt;span class="na"&gt;FunctionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;LAMBDA_ARN&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;InvocationType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestResponse&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;Payload&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;toUint8Array&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;payload&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="p"&gt;}),&lt;/span&gt;
-  &lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;こんな感じで &lt;code&gt;Uint8Array&lt;/code&gt; に変換する必要があります。
-そこで &lt;code&gt;@aws-sdk/util-utf8&lt;/code&gt; を使ったのですが、これが Node.js v18 の Lambda インスタンスだと見つからないとエラーになります。&lt;/p&gt;
-
-&lt;h3&gt;執筆時点での Lambda インスタンスの sdk バージョンは 3.188.0&lt;/h3&gt;
-
-&lt;p&gt;以下のページから現在のランタイムに入っている sdk バージョンがわかります。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html"&gt;https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;執筆時点では 3.188.0 なので、 GitHub リポジトリでそのタグのコードを見てみると、確かにそんなパッケージはありません。
-それどころか、 &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; と &lt;code&gt;@aws-sdk/util-utf8-browser&lt;/code&gt; という2つのパッケージに分かれていました。
-どうも、3.300.0 あたりでパッケージを統合したようです。&lt;/p&gt;
-
-&lt;p&gt;NPMのレジストリをみると、&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://www.npmjs.com/package/@aws-sdk/util-utf8-node"&gt;https://www.npmjs.com/package/@aws-sdk/util-utf8-node&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Deprecated package&lt;/p&gt;
-
-&lt;p&gt;This internal package is deprecated in favor of @aws-sdk/util-utf8.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;のように書いてあります。&lt;/p&gt;
-
-&lt;p&gt;ちなみに、最新の GitHub リポジトリからは、 &lt;code&gt;util-utf8-node&lt;/code&gt; が完全に削除されています。&lt;/p&gt;
-
-&lt;h3&gt;状況を整理し、これから発生することを整理&lt;/h3&gt;
-
-&lt;p&gt;つまり、 3.188.0 で &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; を使っていて、Lambda の zip に sdk を含めていない人は、ランタイムのアップデートで突然 Lambda が動かなくなる可能性があるということです。&lt;/p&gt;
-
-&lt;p&gt;これはセマンティックバージョニングとしては破壊的変更なのでメジャーバージョンアップ相当ですが、そもそも aws-sdk がセマンティックバージョニングされているかどうかはわかりません（たぶんされていない）。&lt;/p&gt;
-
-&lt;p&gt;僕は長い間、公式ドキュメント「.zip ファイルアーカイブで Node.js Lambda 関数をデプロイする」に書いてある&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;関数が標準ライブラリまたは AWS SDK ライブラリにのみ依存する場合は、これらのライブラリを .zip ファイルに含める必要はありません&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html"&gt;https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;というポリシーを信じていました。
-著名な Serverless Framework でもデフォルトの挙動では zip ファイルを作成するときに aws-sdk を除外するようになってます。&lt;/p&gt;
-
-&lt;h3&gt;道を間違える前に AWS さんに確認してみた&lt;/h3&gt;
-
-&lt;p&gt;僕の懸念は&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;aws-sdk は zip に含めるべきか？&lt;/li&gt;
-&lt;li&gt;後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;というあたりです。&lt;/p&gt;
-
-&lt;h4&gt;aws-sdk は zip に含めるべきか？&lt;/h4&gt;
-
-&lt;p&gt;こちらは「はい」が正解ということです。
-&lt;a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/best-practices.html"&gt;AWS Lambda 関数を使用するためのベストプラクティス&lt;/a&gt; に &lt;code&gt;関数のデプロイパッケージ内で依存関係を制御します&lt;/code&gt; という部分があり、zip に含めた方が良いとなっています。&lt;/p&gt;
-
-&lt;p&gt;しかし aws-sdk のサイズはモジュール化されているとはいえ、Lambdaの上限サイズを考えるとかなりの割合を占めてしまうので、できればランタイムを使いたいとことです。&lt;/p&gt;
-
-&lt;h4&gt;後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？&lt;/h4&gt;
-
-&lt;p&gt;こちらの回答をふりかえる前に、aws-sdk v3 のモジュール構造について補足しておきます。
-GitHub のリポジトリにある README &lt;a href="https://github.com/aws/aws-sdk-js-v3#generated-code"&gt;Generated Code&lt;/a&gt;] によると以下のとおりです。ざっくり要約しました。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;v3 コードベースは、AWSサービスが公開しているモデルから生成されています。
-smithy-typescript で &lt;code&gt;/clients&lt;/code&gt; サブディレクトリ内のコードを生成し、これらのパッケージは @aws-sdk/client-XXXX のような名前になります。&lt;/p&gt;
-
-&lt;p&gt;クライアントは、 &lt;code&gt;/packages&lt;/code&gt; にあるユーティリティコードに依存します。これらのコードは手動で記述されていて、通常あまり役に立ちません。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;/lib&lt;/code&gt; には高レベルのライブラリがあります。 client をラップして操作しやすくするライブラリです。よくある例は &lt;code&gt;@aws-sdk/lib-dynamodb&lt;/code&gt; で Amazon DynamoDB のアイテムの操作を簡素化するものや、 &lt;code&gt;@aws-sdk/lib-storage&lt;/code&gt; で S3 の multipartUpload での並列アップロードを簡素化するものです。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;続けて、以下のようにも書いてあります。&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;/packages 手動でコード更新が行われる場所で、 NPM に @aws-sdk/XXXX で公開されています。特別なプレフィックスはありません。&lt;/li&gt;
-&lt;li&gt;/clients  このディレクトリのコードは自動生成され、 /packages に依存します。AWS のサービスと 1 対 1 です。通常、手動編集はここでは行わないでください。@aws-sdk/client-XXXX で NPM に公開されます。&lt;/li&gt;
-&lt;li&gt;/lib このディレクトリは、 /clients に依存します。既存の AWS サービスと操作をラップして、Javascript での作業を容易にします。@aws-sdk/lib-XXXX で NPM に公開されています。&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;上記以外にも private というのもあったりしますが、これは名前からも明らかに非公開のモジュールだとわかります。
-NPM 公開されていて、僕らが利用することができるものが client / packages / lib にあるといった感じでしょうか。&lt;/p&gt;
-
-&lt;p&gt;上記3つのディレクトリについての AWS アップデートポリシーは以下のようなものになるそうです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;client ユーザーが利用する想定のモジュールであり、破壊的変更は行われない&lt;/li&gt;
-&lt;li&gt;lib ユーザーが利用する想定のモジュールであり、破壊的変更は行われない&lt;/li&gt;
-&lt;li&gt;package client からの利用を想定している内部モジュールなので破壊的変更の可能性がある（ただしドキュメントに明示されていない）&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;package に入っているもので、README に利用方法が解説されているもの、たとえば S3 の署名付きURLを発行するためのライブラリ &lt;a href="https://github.com/aws/aws-sdk-js-v3/tree/main/packages/s3-request-presigner"&gt;@aws-sdk/s3-request-presigner&lt;/a&gt; はユーザーからの利用が想定されていて、破壊的変更は行われないようです。
-しかし、README にAPIの解説がないものについては内部利用を想定しているため、破壊的変更もありえると。&lt;/p&gt;
-
-&lt;p&gt;後者は private ディレクトリに入れた方が良いのでは？と思わなくはないですが、何か理由があるんでしょうかね。&lt;/p&gt;
-
-&lt;p&gt;今回のようにドキュメントに記述がない &lt;code&gt;@aws-sdk/util-utf8-node&lt;/code&gt; を使いたい場合は zip に必ず含むようにしましょう。
-それ以外は zip の容量が厳しければ v2 のときと同じようにランタイムに依存する方が良いと思います。aws-sdk の更新頻度がかなり多いので、どれがセキュリティパッチかわからないし、できればランタイムでの更新に期待したいという思いもあります。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;これまでの aws-sdk v3 / Node.js v18 への移行記事を一覧にしてみます。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html"&gt;AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2023/04/03/aws-sdk-v3-ts2345.html"&gt;aws-sdk v3 で TS2345 が出てコンパイルエラーになる&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2023/04/04/aws-sdk-v3-compile-error-2.html"&gt;aws-sdk v3 でコンパイルエラーになる - その２&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html"&gt;Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html"&gt;aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;本記事&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;私の思う現時点でのベストプラクティス&lt;/h4&gt;
-
-&lt;ul&gt;
-&lt;li&gt;CIのイメージは公式の Lambda Docker イメージが便利&lt;/li&gt;
-&lt;li&gt;aws-sdk v3 のユニットテストには aws-sdk-client-mock が良い&lt;/li&gt;
-&lt;li&gt;aws-sdk の各モジュールのバージョンは揃えて、なるべく最新を使おう&lt;/li&gt;
-&lt;li&gt;aws-sdk 関数/クラス以外、たとえば enum の値などは基本的に利用しない&lt;/li&gt;
-&lt;li&gt;peerDependencies に書いてあるモジュールもバージョンを揃えてインストールしよう&lt;/li&gt;
-&lt;li&gt;packages にあるドキュメントなしのモジュールを使う場合は、zip に含める
-
-&lt;ul&gt;
-&lt;li&gt;zip の容量に余裕があれば aws-sdk はすべて含めた方が良い&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;現時点はかなりクセがあるというか、ノウハウが必要であるというのが現実だと思います。
-とくに AWS Lambda + aws-sdk v3 + TypeScript の場合にはですね。&lt;/p&gt;
-
-&lt;p&gt;ぶっちゃけ TypeScript でなければコンパイルエラーや型違反についての問題もないし、しいていえば zip に含めるかどうか？ぐらいです。
-とはいえ、みんなもう Node.js ランタイム選ぶなら TypeScript 使うだろうと思うので、これまでの記事のノウハウが役に立てば幸いです。&lt;/p&gt;
 </content>
   </entry>
 </feed>

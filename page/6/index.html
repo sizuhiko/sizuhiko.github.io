@@ -277,7 +277,474 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h2>
+            <h2 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h2>
+  <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 11:35:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
+      <a href="/tags/actions.html" rel="tag">Actions</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>GitHub の Actions で npm などの依存関係パッケージをキャッシュするのは、公式ドキュメント <a href="https://docs.github.com/ja/actions/using-workflows/caching-dependencies-to-speed-up-workflows">依存関係をキャッシュしてワークフローのスピードを上げる</a> にも書いてあるように、
+CIを高速化するのに重要です。</p>
+
+<p>公式 Example だと以下のとおりです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Caching with npm</span>
+
+<span class="na">on</span><span class="pi">:</span> <span class="s">push</span>
+
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">build</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
+
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Cache node modules</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/cache@v3</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="na">cache-name</span><span class="pi">:</span> <span class="s">cache-node-modules</span>
+        <span class="na">with</span><span class="pi">:</span>
+          <span class="c1"># npm cache files are stored in `~/.npm` on Linux/macOS</span>
+          <span class="na">path</span><span class="pi">:</span> <span class="s">~/.npm</span>
+          <span class="na">key</span><span class="pi">:</span> <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}</span>
+          <span class="na">restore-keys</span><span class="pi">:</span> <span class="pi">|</span>
+            <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-</span>
+            <span class="s">${{ runner.os }}-build-</span>
+            <span class="s">${{ runner.os }}-</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Dependencies</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm install</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm build</span>
+
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Test</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="s">npm test</span>
+</code></pre></div>
+<p><code>actions/cache</code> を利用すれば問題なく動くのですが、Enterprise 版の場合は <code>runs-on</code> にセルフホストランナーを利用するので、キャッシュがホストランナーのディスクに依存してしまいます。
+これだとホストランナーのディスク管理とか大変になるので、少し管理で楽をしたいな、と思ったところ S3 にキャッシュできるものがあり、現在もこれを利用しています。</p>
+
+<h3>actions-s3-cache</h3>
+
+<p><a href="https://github.com/shonansurvivors/actions-s3-cache">actions-s3-cache</a> は名前のとおり依存関係のキャッシュをS3に保持してくれます。
+これならディスク容量を気にすることもないし、管理が楽になりますね。</p>
+
+<p>公式 Example だと、こんな感じです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">steps</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
+      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
+      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">us-east-1</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">your-s3-bucket-name</span> <span class="c1"># required</span>
+      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">npm-v1-${{ hashFiles('laravel/package-lock.json') }}</span> <span class="c1"># required ('.zip' is unnecessary)</span>
+      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span> <span class="c1"># required </span>
+      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span> <span class="c1"># required</span>
+      <span class="na">zip-option</span><span class="pi">:</span> <span class="s">-ryq</span> <span class="c1"># optional (default: -ryq)</span>
+      <span class="na">unzip-option</span><span class="pi">:</span> <span class="s">-n</span> <span class="c1"># optional (default: -n)</span>
+      <span class="na">working-directory</span><span class="pi">:</span> <span class="s">laravel</span> <span class="c1"># optional (default: ./)</span>
+</code></pre></div>
+<p>僕らの運用では</p>
+
+<ul>
+<li>S3バケットは複数リポジトリで共有</li>
+<li>キー名にリポジトリ名を入れる</li>
+</ul>
+
+<p>みたいな決め事を作ったので、こんな感じにしてみました。</p>
+<div class="highlight"><pre class="highlight yaml"><code>  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
+  <span class="pi">-</span> <span class="na">id</span><span class="pi">:</span> <span class="s">get-repository-name</span>
+    <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
+      <span class="s">IFS=/</span>
+      <span class="s">REPO=${{ github.repository }}</span>
+      <span class="s">set -- ${REPO}</span>
+      <span class="s">echo "::set-output name=name::$2"</span>
+  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
+      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
+      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">ap-northeast-1</span>
+    <span class="na">with</span><span class="pi">:</span>
+      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">ci-actions-cache</span>
+      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">${{steps.get-repository-name.outputs.name}}-cache-${{ hashFiles('package-lock.json') }}</span>
+      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span>
+      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span>
+</code></pre></div>
+<p><code>get-repository-name</code> でリポジトリ名を抜き出してきて、 <code>cache-key</code> で使っています。
+<code>cache-key</code> に一致するものがあれば、S3からダウンロードしてzipを展開、一致するものがなければ <code>command</code> を実行して <code>paths</code> にあるファイルを zip アーカイブして S3 に保持といったことをやってくれるので、便利ですね。</p>
+
+<p>あとは S3 のバケットにファイルの有効期限を設定しておくようにすれば、古いキャッシュがいつまでも残ることもなく、とても便利です。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GitHub Enterprise の Actions で依存関係を S3 にキャッシュする" data-url="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html&t=GitHub%20Enterprise%20%E3%81%AE%20Actions%20%E3%81%A7%E4%BE%9D%E5%AD%98%E9%96%A2%E4%BF%82%E3%82%92%20S3%20%E3%81%AB%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/04/typeorm-naming-strategy.html">TypeORM でプライマリーキーや外部キーの名前を変更する</a></h2>
+  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 05:17:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>TypeORM では、主キーやインデックスはエンティティにデコレータを記述します。
+たとえば以下のような感じです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>@PrimaryGenerationColumn</code> にはインデックス名を指定できないので、この状況で <code>migration:generate</code> を実行すると、
+TypeORM 独自のルールを使ったインデックス名で SQL が生成されます。</p>
+
+<p>一方でインデックスの場合は、たとえば <code>email</code> にユニーク制約を入れるとすると以下のように、インデックス名を指定できます。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
+  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
+  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>また関連に関してもそうで、 User - hasMany -&gt; Post のような関連があったとき、外部キー制約の名前も TypeORM ルールになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">Index</span><span class="p">(</span><span class="dl">'</span><span class="s1">UQ_User_email</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">unique</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
+  <span class="p">@</span><span class="nd">Column</span><span class="p">()</span>
+  <span class="nx">email</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">OneToMany</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">PostEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">post</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span>
+  <span class="nx">posts</span><span class="p">?:</span> <span class="nx">PostEntity</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="p">@</span><span class="nd">Entity</span><span class="p">(</span><span class="dl">'</span><span class="s1">テーブル名</span><span class="dl">'</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">PostEntity</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">PrimaryGenerationColumn</span><span class="p">()</span>
+  <span class="nx">id</span><span class="o">!</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">@</span><span class="nd">ManyToOne</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">UserEntity</span><span class="p">,</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">posts</span><span class="p">)</span>
+  <span class="nx">user</span><span class="o">!</span><span class="p">:</span> <span class="nx">UserEntity</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>そこで、 <code>@Index</code> 以外で生成されるインデックスの名前をカスタマイズしたい！という場合は <code>NamingStrategy</code> を使います。
+この <code>NamingStrategy</code> ですが、ドキュメントには詳しい解説がないので、この記事を書くことにしました。</p>
+
+<h3>NamingStrategy の作り方</h3>
+
+<p>まずはインデックス名をカスタムできるように、 <code>DefaultNamingStrategy</code> を継承し、 <code>NamingStrategyInterface</code> を実装するクラスを作ります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/DefaultNamingStrategy.ts">DefaultNamingStrategyのコード</a> を参考にカスタマイズすると良いでしょう。</p>
+
+<p>たとえばプライマリーキーの場合は以下のようになっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
+    <span class="c1">// sort incoming column names to avoid issue when ["id", "name"] and ["name", "id"] arrays</span>
+    <span class="kd">const</span> <span class="nx">clonedColumnNames</span> <span class="o">=</span> <span class="p">[...</span><span class="nx">columnNames</span><span class="p">]</span>
+    <span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">sort</span><span class="p">()</span>
+    <span class="kd">const</span> <span class="nx">tableName</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="nx">replacedTableName</span> <span class="o">=</span> <span class="nx">tableName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="dl">"</span><span class="s2">.</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="nx">key</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">replacedTableName</span><span class="p">}</span><span class="s2">_</span><span class="p">${</span><span class="nx">clonedColumnNames</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="dl">"</span><span class="s2">_</span><span class="dl">"</span><span class="p">)}</span><span class="s2">`</span>
+    <span class="k">return</span> <span class="dl">"</span><span class="s2">PK_</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">RandomGenerator</span><span class="p">.</span><span class="nx">sha1</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">substr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>プライマリーキーに設定されているカラム名をソートしてから <code>_</code> で結合して sha1 に変換したものを利用しています。</p>
+
+<p>たとえばプロジェクトのルールで、プライマリーキーは <code>PK_テーブル名</code> で良い場合は、以下のようなコードでオーバーライドして変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">CustomNamingStrategy</span> <span class="kd">extends</span> <span class="nx">DefaultNamingStrategy</span> <span class="kr">implements</span> <span class="nx">NamingStrategyInterface</span> <span class="p">{</span>
+  <span class="nx">primaryKeyName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">:</span> <span class="nx">Table</span> <span class="o">|</span> <span class="nx">string</span><span class="p">,</span> <span class="nx">columnNames</span><span class="p">:</span> <span class="nx">string</span><span class="p">[]):</span> <span class="nx">string</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">table</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getTableName</span><span class="p">(</span><span class="nx">tableOrName</span><span class="p">);</span>
+    <span class="k">return</span> <span class="s2">`PK_</span><span class="p">${</span><span class="nx">pascalCase</span><span class="p">(</span><span class="nx">table</span><span class="p">)}</span><span class="s2">`</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>pascalCase</code> は <a href="https://www.npmjs.com/package/change-case">change-case</a> のようなライブラリ利用を想定しています。</p>
+
+<h3>NamingStrategy で変更できる名前</h3>
+
+<p><a href="https://github.com/typeorm/typeorm/blob/master/src/naming-strategy/NamingStrategyInterface.ts">NamingStrategyInterfaceのコード</a>を見るとわかります。
+よく使いそうなものは、以下のあたりでしょうか。</p>
+
+<ul>
+<li>primaryKeyName 主キー名。デフォルトでは <code>PK_{sha1した値}</code></li>
+<li>foreignKeyName 外部キー名。デフォルトでは <code>FK_{sha1した値}</code></li>
+<li>indexName 複合キー名。デフォルトでは <code>IDX_{sha1した値}</code></li>
+</ul>
+
+<p>もちろんこれ以外にもたくさんカスタマイズできる名前はあるので、マイグレーションファイルに生成された名称がプロジェクトルールに沿わない場合に
+遭遇したら、インターフェースやデフォルトの実装を見てみると良いでしょう。</p>
+
+<h3>カスタム NamingStrategy の指定方法</h3>
+
+<p>マイグレーションコマンドから利用する DataSource のオプションに指定します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">],</span>
+  <span class="nx">namingStrategy</span><span class="p">:</span> <span class="k">new</span> <span class="nx">CustomNamingStrategy</span><span class="p">()</span>
+<span class="p">});</span>
+</code></pre></div>
+<p><code>namingStrategy</code> を指定して、 <code>npm run migration:generate</code> するとプロジェクトルールに沿った名前でマイグレーションファイルを生成できます。</p>
+
+<p><code>package.json</code> のスクリプト例</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<h3>さいごに</h3>
+
+<p>公式ドキュメントの情報が不足しているところなので、この記事が少しでも役立てば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM でプライマリーキーや外部キーの名前を変更する" data-url="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html&t=TypeORM%20%E3%81%A7%E3%83%97%E3%83%A9%E3%82%A4%E3%83%9E%E3%83%AA%E3%83%BC%E3%82%AD%E3%83%BC%E3%82%84%E5%A4%96%E9%83%A8%E3%82%AD%E3%83%BC%E3%81%AE%E5%90%8D%E5%89%8D%E3%82%92%E5%A4%89%E6%9B%B4%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/typeorm-naming-strategy.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h2>
+  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 11:34:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>TypeORM 0.2 系をずっと使ってきて、 2022/03/23 の Dependabot 更新で、 0.3 系へのアップデートを確認しました。
+CIのテストが失敗していたので、何か大きな変更があるのか Release notes を確認してみました。</p>
+
+<p>すると、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#030-2022-03-17">0.3.0</a> と <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#031-2022-03-21">0.3.1</a> の2度に BREAKING CHANGES があることがわかりました。
+ただし後者 <code>0.3.1</code> の BREAKING CHANGES については、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#032-2022-03-22">0.3.2</a> で元に戻されているので <code>0.3.0</code> の変更点を見ていきましょう。</p>
+
+<h3>0.3 系での変更点</h3>
+
+<ul>
+<li>ormconfig のような接続オブションファイル利用は非推奨になった</li>
+<li>非推奨の migrations:* コマンドが削除された</li>
+<li>CLI コマンドの前面見直し</li>
+<li>未実行のマイグレーションとスキーマ同期の両方がある場合、マイグレーションがスキーマ同期の前に実行されるようになった</li>
+<li>aurora-data-api が aurora-mysql に変更</li>
+<li>aurora-data-api-pg が aurora-postgres に変更</li>
+<li>EntityManager.connection が EntityManager.dataSource に変更</li>
+<li>Repository のコンストラクタが新しくなった。カスタムクラスリポジトリは使えなくなった</li>
+<li>@TransactionRepository、@TransactionManager、@Transaction デコレータが削除された</li>
+<li>ジャンクションテーブル名だけが短縮されるようになった（@Entityデコレータでカスタム名を指定するのが理想的</li>
+<li>パラメータなしの findOne() は廃止</li>
+<li>findOne(id) は削除</li>
+<li>findOne, findOneOrFail, find, count, findAndCount メソッドは FindOptions パラメータのみに変更。その代わり FindOptions を使わずに where 条件を直接与えるために、新しいメソッドが追加された: findOneBy, findOneByOrFail, findBy, countBy, findAndCountBy</li>
+<li>findByIdsは非推奨となり、代わりにIn演算子と組み合わせてfindByメソッドを使用することが推奨となる</li>
+<li>findOne と QueryBuilder.getOne() は、データベースで何も見つからなかった場合、undefined ではなく null を返すようになった</li>
+<li>find* メソッドで使用される where の値として null はサポートされず、IsNull() 演算子を明示的に使用するようになった</li>
+<li>すべてのCLIコマンドはormconfigをサポートしなくなった</li>
+<li>DataSourceOptions 内のエンティティ、マイグレーション、サブスクライバのオプションにディレクトリ文字列を指定するのは非推奨になった</li>
+<li>すべてのコンテナ関連の機能 (UseContainerOptions, ContainedType, ContainerInterface, defaultContainer, useContainer, getFromContainer) は非推奨となった</li>
+<li>トランザクション内で使用される EntityManager の getCustomRepository は、非推奨となった。代わりに withRepository メソッドを使用する</li>
+<li>Connection.isConnected は非推奨になった。代わりに .isInitialized を使用する</li>
+<li>FindOptions (find* メソッドで使用) の select や relations でプロパティ名の配列指定は非推奨となった。代わりにオブジェクトリテラル表記を使用する</li>
+<li>FindOptions の join (find* メソッドで使用されます) は非推奨になった。結合を含むクエリを作成するには、QueryBuilder を使用する</li>
+<li>Connection、ConnectionOptions は非推奨になった。DataSource と DataSourceOptions を使用する</li>
+<li>createConnection(), createConnections() は非推奨になった。Connection は DataSource になった</li>
+<li>getConnection() は非推奨になった。グローバルな接続を持つには、データソースをエクスポートして必要な場所でそれを使用する</li>
+<li>getManager(), getMongoManager(), getSqljsManager(), getRepository(), getTreeRepository(), getMongoRepository(), createQueryBuilder() はすべて非推奨になった。これらは DataSource から取得する</li>
+<li>getConnectionManager() と ConnectionManager は非推奨になった。Connection は DataSource になり、各データソースは変数としてエクスポートできる</li>
+<li>getConnectionOptions() は非推奨になった</li>
+<li>AbstractRepository は非推奨になった</li>
+<li>Connection.name と BaseConnectionOptions.name は非推奨になった</li>
+</ul>
+
+<p>めっちゃ、いっぱいありますね。</p>
+
+<h3>修正箇所の確認</h3>
+
+<p>修正箇所に関して、型が変わったものに関しては、 <code>tsc</code> でコンパイルすればエラーになるので、対応箇所は明確です。
+findオプションが変わったり、メソッド自体が無くなったりしたものが中心です。</p>
+
+<p>コンパイルエラーが修正できたら、あとは単体テストでの失敗箇所の確認ですね。</p>
+
+<h3>非推奨になった部分にも目を向ける</h3>
+
+<p>最新のドキュメントは非推奨になった記述がすべてなくなり（そりゃそうですが）、新しい記述方法に変わっているのと、いつ <code>0.4.0</code> になっても良いように、
+どのように修正したら対応できるかを考えておく必要があります。</p>
+
+<p>また、最近新しいAPIサーバーを作ることになったので、その実装は <code>0.3</code> 系で始めるようにしました（あえて古いバージョンを使う必要はないですしね）。
+で、そこで問題になるのが、周辺ライブラリの対応状況です。
+TypeORM に対応したテストデータ作成のライブラリはいくつかあるのですが、そういったものが <code>0.3</code> 系に追従してくるまで待つか、そもそも依存ライブラリを使わずに <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> のような TypeScript のモックデータを作れるライブラリと TypeORM の create/save を組み合わせて使うかの選択になります。
+今回の新しいAPIサーバーでは、後者のやり方で進めることにしました。いずれライブラリの対応が進んだとして切り替えるか、そのままにするかは検討の余地がありますが、それほど手間は変わっていない印象です。</p>
+
+<p>ここからは、昨日の記事でもふれたのですが、私が関わっているプロジェクトでは DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っていますので、その範囲でどのように記述しているかを紹介していきます。</p>
+
+<h3>Connection から DataSource への変更に対応する</h3>
+
+<p>TypeORM 0.2 系では以下の書き方が一般的でした。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">if</span> <span class="p">(</span><span class="nx">getConnectionManager</span><span class="p">().</span><span class="nx">has</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">conn</span> <span class="o">=</span> <span class="nx">getConnectionManager</span><span class="p">().</span><span class="kd">get</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">conn</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="nx">conn</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="k">await</span> <span class="nx">createConnection</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>これが 0.3 系では以下のようになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">let</span> <span class="nx">ds</span><span class="p">:</span> <span class="nx">DataSource</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">isRegistered</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
+  <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">ds</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span><span class="p">});</span>
+  <span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">useValue</span><span class="p">:</span> <span class="nx">ds</span> <span class="p">});</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ds</span><span class="p">.</span><span class="nx">isInitialized</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">await</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>データソースのオブジェクトは tsyringe の DI コンテナに登録して利用できるようにしておきます。
+さらに DB（リポジトリ）を、ユースケースクラスで DI できるようにします。</p>
+
+<p>TypeORM 0.2 系では以下のようにしていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">getCustomRepository</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">))</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>TypeORM がグローバルにアクセスできる <code>getCustomRepository</code> を用意してくれていたので、カスタムリポジトリクラスを指定するだけで良かったのですが、
+ここでは <code>getCustomRepository</code> が非推奨になったのと、クラスベースのカスタムリポジトリが非推奨になった、という2つの非推奨の影響を受け、書き方がだいぶ変わりました。</p>
+
+<p>0.3 系では以下のようにしてみました。データソースを DI コンテナから取得して新しいカスタムリポジトリの書き方 <code>extend</code> を使っています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<h3>クラスベースのカスタムリポジトリからオブジェクトベースへの変更に対応する</h3>
+
+<p>で、 0.2 系でのカスタムリポジトリは以下のようにクラスベースになっていたのです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>これを 0.3系では、クラスベースでなくオブジェクトベースに変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">UserDatabase</span><span class="p">:</span> <span class="nx">UserRepository</span> <span class="o">&amp;</span> <span class="nx">ThisType</span><span class="o">&lt;</span><span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="nx">UserRepository</span><span class="o">&gt;</span> <span class="o">=</span>
+<span class="p">{</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="na">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">null</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">},</span>
+<span class="p">}</span> 
+</code></pre></div>
+<p>クラスベースからオブジェクトベースになって、とても困ったことがあります。
+上記の変更では簡略化しましたが、実は find 系メソッドにはデコレータをつけていて、ロギングできるような仕組みを入れていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">Logging</span><span class="p">()</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>こんな感じです。
+これがオブジェクトベースになると、デコレータが使えなくなります。
+いい感じの解決策はあまりなかったので、AOPのライブラリ <a href="https://www.npmjs.com/package/ts-aspect">ts-aspect</a> を使うことにしました。
+AOPのライブラリはnpmレジストリにたくさんあるので、どれか自分の好みにあうものを利用すれば良いと思います。</p>
+
+<p>で、0.3 系ではデコレータを使わず、AOPで以下のように対応しました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
+    <span class="nx">addAspect</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="dl">'</span><span class="s1">findByEmail</span><span class="dl">'</span><span class="p">,</span> <span class="nx">Advice</span><span class="p">.</span><span class="nx">Around</span><span class="p">,</span> <span class="k">new</span> <span class="nx">LoggingAspect</span><span class="p">());</span>
+    <span class="k">return</span> <span class="nx">repository</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>カスタムリポジトリをインスタンス化するときに、いったん変数 <code>repository</code> にしてから <code>ts-aspect</code> を使って、メソッド単位で仕込んでいきます。</p>
+
+<h3>マイグレーションやCLIの変更に対応する</h3>
+
+<p>CLIオプションが変更になっているので、マイグレーションの書き方も変更が必要です。
+0.2 系では <code>package.json</code> の <code>scripts</code> にこんな感じで書いていたと思います。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -f db/ormconfig.ts -n Migration</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<p>ormconfig.ts の中身は以下のような感じでした。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="na">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
+  <span class="na">cli</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">entitiesDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">domain/entities</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">migrationsDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/migrations</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">subscribersDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/subscribers</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>0.3 系では、まずスクリプトが以下のように変更になります。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<p><code>-f</code> オプションがデータソース <code>-d</code> 指定となり、マイグレーションファイルの出力先を最後に指定するようになりました。
+<code>datasource.ts</code> は以下のようになります。データソースに変わった関係で、 <code>cli</code> オプションはなくなっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>migration:run や migration:show は、データソースに指定した <code>migrations</code> のパスからファイルを探索してくれるので、 <code>-f</code> が <code>-d</code> に変わったぐらいの影響範囲で大丈夫です。</p>
+
+<h3>さいごに</h3>
+
+<p>typeorm は 0.2 -&gt; 0.3 -&gt; 0.4 と 0.x 系なので 0.1 ごとに破壊的変更が実施されてきます。
+バージョン 2.0 -&gt; 3.0 -&gt; 4.0 にすれば良いのに&hellip; とか思いますが。</p>
+
+<p>次の 0.4 系に備えて、修正の方針を見つけていきたいですね。
+もしこの記事が参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM を 0.3 系にアップグレードする" data-url="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html&t=TypeORM%20%E3%82%92%200.3%20%E7%B3%BB%E3%81%AB%E3%82%A2%E3%83%83%E3%83%97%E3%82%B0%E3%83%AC%E3%83%BC%E3%83%89%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h2>
   <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 02:40:00 PM</a></p>
   <p class="tags">
       <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
@@ -490,394 +957,6 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/05/02/pong-swoosh-updates.html">pong-swoosh のアップデートまとめ</a></h2>
-  <p class="postdate"><a href="/2022/05/02.html" title="Permanent link">Monday, May 02, 2022 04:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
-      <a href="/tags/pong-swoosh.html" rel="tag">pong-swoosh</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>昨年リリースした <a href="https://its-succ.github.io/pong-swoosh/">pong-swoosh</a> ですが、いつくかのアップデートを重ねてより使いやすくなっている、と感想もいただいております。
-そこで、これまでのアップデートをまとめて紹介します。</p>
-
-<h2>βバージョン</h2>
-
-<p>実はブログで公表する以前に、身内で試していたβバージョンがあり、そのときはTOPページでチャンネルを開設すると、</p>
-
-<ul>
-<li>コントローラページ</li>
-<li>スピーカーページ</li>
-</ul>
-
-<p>の2つのURLを共有してもらうように、表示されていました。</p>
-
-<p>すると、2つ共有するのが面倒であるといった意見があり、エントランスページというのを作り、そこに2つのURLとQRコードを載せることにしました。
-これが処理リリースバージョン（以前のブログ <a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a> で紹介したものです。</p>
-
-<h2>初期バージョン</h2>
-
-<p>しばらくはデザインの変更はなく、Socket.io 周辺で接続が切れたり、Herokuのインスタンスが再起動したときの再接続などを解消するのがメインでした。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/50">チャンネルは削除イベントが送信されたときに削除する</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/52">接続できない場合にスナックバーが表示されるように修正</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/58">リロードやHeroku再起動時も動作が継続できるようにした</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/64">サーバーとの接続が回復したら、自動的に接続するように対応した</a></li>
-</ul>
-
-<p>これらの対処で基本的な安定接続が保たれ、ユーザー体験を改善することにフォーカスしていきました。</p>
-
-<h2>UIの改善</h2>
-
-<p>ここで、いくつかの改善が実施されました。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/62">デフォルト効果音の変更と音量の調整</a></li>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/65">スピーカー画面に参加人数を表示した</a></li>
-</ul>
-
-<p>音量がバラバラな感じだったので、調整しました。
-参加人数に関しては、表示して欲しいという要望があったので、スピーカー画面に表示するよう追加されました。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/66">チャンネル作成中はローディング画面に切り替えて、操作できないようにしておく</a></li>
-</ul>
-
-<p>Herokuのインスタンスがしばらくアクセスされていない、初期起動の状態だとチャンネル作成に時間がかかり
-何度も作成ボタンを押してしまうトラブルがあったので、すぐにローディング画面へ切り替えるように。</p>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/68">参加者画面を追加して、エントランスの代わりにした</a></li>
-</ul>
-
-<p>初期のコンセプトでもあった</p>
-
-<blockquote>
-<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
-かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。
-そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
-スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
-もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
-</blockquote>
-
-<p>この考え方、エントランスページからスピーカーはPC、コントローラはスマホ、というのが思いの外PCのみでも操作で良い人が多いということがわかりました。
-なので、エントランスページはなくして、共有されたURLがいきなり参加者側のアプリケーション画面という流れにしました。
-なので、共有したURLから画面遷移する必要がありません。
-参加者画面にはスマホでコントローラを表示できるQRコードを表示するようにしたので、もしスマホから操作という場合も従来のステップ数からは
-変更なく利用できるようになっています。</p>
-
-<h2>速度の改善</h2>
-
-<ul>
-<li><a href="https://github.com/its-succ/pong-swoosh/pull/85">効果音はクライアント側で読み込むように変更</a></li>
-</ul>
-
-<p>これまではSocket.ioのメッセージの中にバイナリで効果音を送信するようにしていたのですが、同じオリジンに効果音を設置するようにし、
-ブラウザから効果音をロードする変更を実施しました。
-これによって、効果音ボタンを押したときにブロードキャストされるメッセージは効果音IDぐらいになってので、送信コストが下がりより大人数でも時差なく
-効果音が鳴るようになりました（これまでは30人ぐらいのイベントだと少しタイムラグがあった）。</p>
-
-<h2>テストコードの追加</h2>
-
-<p>OSSでの活動でもあるので、多くの人から改善リクエストを受け付けられるように、サーバーサイドからテストコードを追加しています。
-まだ途中ですが、フロントエンドがSveltteということもあり、そのテストツールでもある <a href="https://github.com/lukeed/uvu">uvu</a> を利用しています。</p>
-
-<h2>実は pong-swoosh はプライベートβから１周年</h2>
-
-<p>pong-swoosh の初期実装をプライベートβで利用し始めたのは、ちょうど1年前のGW明けでした。
-そのときに、まだオンラインカンファレンスやミーティングがどのぐらい続くのかわからない中、まだ必要としてくれる人がいれば、という思いではじめてきて
-1年が経過しようとしています。</p>
-
-<p>まだオンラインの需要はあるようですので、引き続き pong-swoosh の改善をしていきたいと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="pong-swoosh のアップデートまとめ" data-url="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html&t=pong-swoosh%20%E3%81%AE%E3%82%A2%E3%83%83%E3%83%97%E3%83%87%E3%83%BC%E3%83%88%E3%81%BE%E3%81%A8%E3%82%81" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/02/pong-swoosh-updates.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a></h2>
-  <p class="postdate"><a href="/2021/07/11.html" title="Permanent link">Sunday, July 11, 2021 05:40:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
-      <a href="/tags/svelte.html" rel="tag">Svelte</a>
-      <a href="/tags/socket-io.html" rel="tag">Socket.io</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回のBlog更新が1年半近く前の、最後のオフラインイベントだったでしょうか&hellip;.
-それから、書くまでもありませんが、イベントや仕事がすべてオンラインで行われるようになりました。</p>
-
-<p>私たちインターネットに関連する仕事をしているものは、特に在宅でも同じように仕事を進めています（僕の場合は家の環境が劣悪というのはありますが）。</p>
-
-<p>変わったのは勉強会やカンファレンス、コミュニティ活動がオンラインになったり、そもそも開催されなくなったりといったことがあります。</p>
-
-<p>僕も昨年中はずっとモチベーションもダダ下がりで、ただ仕事をして何となくYoutubeで動画見るみたいな繰り返しを送っていました。
-オンラインの勉強会やカンファレンスにも参加する気になれなかった、というのが本当のところです。</p>
-
-<p>お前は懇親会とか飲み会メインだろ？とか言われると、まぁ否定もできないのですが、リアルな共感が得られない（廊下カンファレンスができない）とか、ちゃんとした理由もあったりします。
-僕は必ず前方の席で参加するし、リアクションも他の人と比べるとある方かなーと思っています。
-オンラインは、どうしても講義形式になりがちだし、参加している人同士がこういうことに関心があるんだとか、面白いと思ったり感動したりするんだな、ということは得られないな、と思っています。
-もちろんチャットやTwitterなど、文字と盛り上がりが共有できたり、ログとして残ったりするんですが、どうしてもWeb会議システムで登壇者の顔、スライドを観ながらチャットも、となると注意力が分散したり、スクリーン数の限界とかにも達するなーと思っています。</p>
-
-<p>目は2つしかない。</p>
-
-<h3>社内勉強会きっかけ</h3>
-
-<p>さて少し話題は変わりますが、僕は所属している会社でIoT勉強会というのを主催していて、これまでトイレ利用状況可視化サービス<a href="https://toiletevolution.space/#/about">Toilet Evolution</a>、常駐先などから社員証で出退勤できるデバイスとサービス<a href="https://github.com/its-succ/dakoku-web">dakoku</a>といったものを開発してきました。
-IoT勉強会はデバイスなんかを作ることもあったので、会社で購入した工具なんかを共有で使ったりしていたわけですが、同様にオンラインとなると難しくなります。
-そこで、何とかオンライン時代のサービスをIoTという文脈で作り出せないかな、と思い続けてきて今回の効果音共有サービスを開発するに至りました。
-IoTはモノのインターネットですが、オンラインイベントに参加する盛り上がりや人の感情をモノと見立てて、インターネットで共有するのがオンラインイベントでは有益なのでは？と思っています。</p>
-
-<h2>pong-swoosh</h2>
-
-<p>在宅になって、ずっとFMラジオを聴きながら仕事をしていたりするのですが、DJの人が拍手なんかをサウンドマシーンで出すシーンがありますよね。
-あれを <code>ポン出し</code> なんて言ったりします。
-今回作ったサービスは、ポン（効果音）を投げる（チャットの文字送信みたいなイメージ）というところから、pong swoosh という名前にしました。
-（日本酒が好きだからポンシュ、なんてことじゃないです。）</p>
-
-<h2>どんなサービスか</h2>
-
-<p>pong-swooshは、Web会議システムを利用しながら効果音を送受信して、盛り上がりを共有するシステムです。
-使い方は簡単なので、まずは使ってみましょう。</p>
-
-<h3>まずはチャンネルを作成する</h3>
-
-<p>チャンネルとは効果音を共有する部屋の単位です。pong-swooshは効果音チャットシステムのようなものなので、チャットでよく使うチャンネルという単語を利用しています。</p>
-
-<p><a href="https://its-succ.github.io/pong-swoosh/">トップページ</a>にアクセスして、チャンネル名を入力して作成します。</p>
-
-<p><img src="/images/blog/pong-swoosh-top.png" alt="" /></p>
-
-<p>そうすると、チャンネルのURLが表示されるので、これを参加者に共有します。
-1URLだけなので、イベントサイトだったり、Web会議のチャットだったりで共有できますね。</p>
-
-<p><img src="/images/blog/pong-swoosh-created.png" alt="" /></p>
-
-<p>コピーアイコンで簡単にクリップボードにもコピーできます。</p>
-
-<h3>参加者がアクセスする</h3>
-
-<p>共有されたURLにアクセスすると、エントランスページが表示されます。</p>
-
-<p><img src="/images/blog/pong-swoosh-entrance.png" alt="" /></p>
-
-<p>pong-swooshには</p>
-
-<ul>
-<li>コントローラー画面（効果音を送信する画面</li>
-<li>スピーカー画面（効果音を再生する画面</li>
-</ul>
-
-<p>というものがあります。
-なぜ画面を分けたか？というのには理由があります。</p>
-
-<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
-かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。</p>
-
-<p>そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
-スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
-もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
-
-<h3>コントローラー画面</h3>
-
-<p>このスクショは、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
-
-<p><img src="https://user-images.githubusercontent.com/132000/125040797-01ed9200-e0d3-11eb-813d-9def687f7c9a.png" width="300px" border="1"></p>
-
-<p>コントローラー画面には効果音を参加者に共有(送信)するボタンと、実際にどんな音が鳴るのか送信せずに確認する <code>視聴</code> リンクがあります。</p>
-
-<h3>スピーカー画面</h3>
-
-<p>このスクショも、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
-
-<p><img src="https://user-images.githubusercontent.com/132000/125053337-f48ad480-e0df-11eb-9c2e-77dbfb522b47.png" alt="" /></p>
-
-<p>ボリュームのスライダーがあるので、各自の環境に応じて音量を調整できます。
-音量は参加者の人数と同じ効果音を同時(1秒以内)にリアクションした人の数で変化します。
-計算式は以下のとおりです。</p>
-
-<blockquote>
-<p>Math.sin(Math.PI * 90 * (同時にリアクションした人の数 / チャンネル参加者数) /180) * 2;</p>
-</blockquote>
-
-<p>最初は直線的に音量が上がるようになっていたのですが、途中から円弧に沿って上がるように変更しています。
-同時にリアクションした人の数を集計するのに、RedisのINCR/DECRコマンドを使っています。
-チャンネル名と効果音IDをキーにINCRで人数を加算して、1秒後にDECRするといったことで音量が変化します。</p>
-
-<h3>技術的な話</h3>
-
-<p>前にも書きましたが、pong-swooshは効果音チャットシステムのようなものです。
-サーバーとの送受信には<a href="https://socket.io/">socket.io</a>が使われていて、効果音が送信されてくるとチャンネル参加者にブロードキャストされます。
-簡単なチャットプログラムを作ったことがあれば容易に想像できるシステムです。
-バックエンドはNode.jsで書かれていて、現在はHeroku（無料プラン）にデプロイされています。
-フロントエンドはSvelteを使っていて、GitHub Pagesにデプロイされています。
-バックエンドは手動デプロイですが、フロントエンドはGitHub Actionsでmainにマージされると自動的にデプロイされるようになっています。</p>
-
-<p>勉強会メンバーで開発していますが、ソースコードは公開されています。
-https://github.com/its-succ/pong-swoosh</p>
-
-<h3>さいごに</h3>
-
-<p>pong-swooshは、現在自分が担当しているプロジェクトのスクラムイベントと、会社の部門メンバーが月一で集まるミーティングで利用して改善を重ねてきました。
-スプリントレビューのデモや、ふりかえり、プレゼンテーションなどの場で効果音を使ってリアクションを共有しています。</p>
-
-<p>それまでは画面越しに拍手をしてみたり（音は出さず映像で）だったのですが、pong-swooshを使うことで賑やかになったといったフィードバックをもらったりしています。</p>
-
-<p>もちろんこういった共有の方法が合う場面、合わない場面などあるかもしれないのですが、もし興味があれば使ってみてください。
-そんなに重い処理もないので、Herokuの無料枠で使ってもらっていても問題ないかな？と思っています。</p>
-
-<p>もし使ってみてフィードバックがあれば、GitHubのissueなどに報告してもらえると嬉しいです。
-もちろんPRという形で参加いただくのもWelcomeです。</p>
-
-<p>いつかオフラインで昔のように勉強会やカンファレンスができるときが来ると良いのですが、
-もうしばらくオンラインが続きそうな感じでもあります。
-そんなとき pong-swoosh が少しでもお役に立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した" data-url="http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html&t=%E3%82%AA%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%81%AE%E7%9B%9B%E3%82%8A%E4%B8%8A%E3%81%8C%E3%82%8A%E3%82%92%E5%8A%B9%E6%9E%9C%E9%9F%B3%E3%81%A7%E5%85%B1%E6%9C%89%E3%81%99%E3%82%8B%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%20pong-swoosh%20%E3%82%92%E4%BD%9C%E6%88%90%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2020/02/21/phperkaigi-2020.html">PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました</a></h2>
-  <p class="postdate"><a href="/2020/02/21.html" title="Permanent link">Friday, February 21, 2020 10:49:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phperkaigi.html" rel="tag">PHPerKaigi</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><img src="https://phperkaigi.jp/2020/common/images/logo.svg" alt="" /></p>
-
-<p>昨年に続いて<a href="https://phperkaigi.jp/2020/">PHPerKaigi</a>に参加できました。
-今年は 2/9(日), 2/10((月), 2/11(祝) の3日間の開催で、私はメインセッションが行われる10,11の2日間参加しました。</p>
-
-<p>2日間の過ごし方は、概ね以下のような感じでした。</p>
-
-<ul>
-<li>2/10
-
-<ul>
-<li>午前中は登壇とAsk The Speaker</li>
-<li>午後一はPHPの現場公開収録に参加</li>
-<li>CI/CDのIRTに参加</li>
-<li>ルームCで歓談</li>
-<li>PHPer茶会に参加</li>
-</ul></li>
-<li>2/11
-
-<ul>
-<li>ルームCで歓談</li>
-<li>ランチセッションに参加</li>
-<li><a href="https://twitter.com/hnw">@hnw</a>さんのZend VMにおける例外の実装に参加</li>
-<li>コードゴルフやったりアジャイルIRTやったりルームCで歓談</li>
-<li>懇親会に参加</li>
-</ul></li>
-</ul>
-
-<p>ほとんどルームCで誰かと話していた感じですね。
-でもPHPerKaigiのコンセプトには合っているはず。</p>
-
-<h3>「E2Eテストに向き合う」</h3>
-
-<p><a href="https://fortee.jp/phperkaigi-2020/proposal/b8abdbb7-733e-47c3-b5b0-502278d3aa10">E2Eテストに向き合う</a>というタイトルで登壇しました。</p>
-
-<script async class="speakerdeck-embed" data-id="535ec30dae704309b3bbc36bb85395e0" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p><a href="https://pptr.dev/">Puppeteer</a>について、昨年も何回か登壇する機会があったのですが、
-視点を変えてE2Eテストから見たときの考え方/ツールとしての可能性/有用性を話したかったのと、
-テスティングピラミッドの背景みたいなところから自動テストについて理解が深まると良いなという思いでした。</p>
-
-<p>最後のスライドでも紹介した<a href="https://github.com/microsoft/playwright">Playwright</a>のREADMEに書かれている
-<a href="https://github.com/microsoft/playwright#q-what-about-the-webdriver">Q: What about the WebDriver?</a>の
-下りは、私が特に感銘を受けているところです。</p>
-
-<p>Webブラウザを使ったE2EテストやUIテストの自動化はWebDriverなしには、
-ここまでにはなっていなかっただろうし、そういう意味で「普遍的な標準」であると私も思います。</p>
-
-<p>一方でPWAなど新しい技術、新しいWebの登場により、自動テストが困難になっていることも事実です。</p>
-
-<p>私たちWebに関わるプログラマは、こういった局面においてより多くの事実と事例を積み上げて標準にフィードバックするという姿勢が必要だと思っています。
-なぜなら「みんなのインターネット」だから。</p>
-
-<p>これはテスト自動化に関わらず、Webの標準についても同じだと思っています。
-HTMLやCSS、はたまたブラウザに新しく追加される機能、どれも最初は少しユースケースが見えないものだったり、
-遅くて使い物にならないものかもしれません。
-でもその有用性や可能性、必要性がある人が結果を積み重ねることで、少しずつデファクトスタンダートに
-近づいていく、これが現在のWebに関する標準の進み方だと思っています。</p>
-
-<p><a href="https://github.com/extensibleweb/manifesto">The Extensible Web Manifesto</a>の宣言から7年。
-フィードバックループにおける標準化の流れは現実になってきていると思っています。
-いつかWebDriverにも同様のユースケースが取り入れられることを願って、今はそれぞれのWebアプリケーションに適したツールや環境を使い、アプリケーションの品質や、リリースサイクルの効率化ができると良いなと思います。</p>
-
-<h3>さいごに</h3>
-
-<p>PHPerKaigiは今年も楽しめました。
-交流スペースで多くの人と、様々な話題について議論できました。</p>
-
-<p>今年たくさんのノベルティがあって、その中にトレーディングカードがありました。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phperkaigi?src=hash&amp;ref_src=twsrc%5Etfw">#phperkaigi</a> 到着 (@ ココネリホール (区民交流ホール) in 練馬区, 東京都) <a href="https://t.co/0shvD2w1qe">https://t.co/0shvD2w1qe</a> <a href="https://t.co/i9HRPqJ9tp">pic.twitter.com/i9HRPqJ9tp</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1226672647670566913?ref_src=twsrc%5Etfw">February 10, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>名札の右に立てて置いているものです。</p>
-
-<p>私はTwitterもアカウント名だし、Publicにいろいろなことやっているからあまり気にならなかったのですが、
-Twitterアカウントが実名だったり、写真も実写だったりする人もいますよね。</p>
-
-<p>で、実際イベント期間中に PHPerKaigi の残念なところ(どういう風に利用されてしまうかわからず怖い)として 
-Twitter に書き込みをされている方がいました
-（私はたまたまイベントのハッシュタグ付きで呟かれてたのをTL上で見たのですが）。</p>
-
-<p>個人的にはトレーディングカード確かに面白いし、名刺代わり？になって便利だなーと思ったけど、
-事前にあまり告知されていなかったこともあり、個人情報の利用という観点からはちょっと微妙かもなーと思いました。
-申し込み時に拒否できたり、個人情報(写真や名前)が含まれないデフォルトカード？てきなものが選択できても良かったのかも。（とにかくみんな持っている/交換するみたいな雰囲気だったので、持ってないよりは良さそう、カード作成後に申し込みした人はそれに近い扱いだった模様）。</p>
-
-<p>あと、トレカたくさん余っているので、これの使い道もどうしたら良いか考えたいw</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました" data-url="http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html&t=PHPerKaigi%202020%E3%81%A7%E3%80%8CE2E%E3%83%86%E3%82%B9%E3%83%88%E3%81%AB%E5%90%91%E3%81%8D%E5%90%88%E3%81%86%E3%80%8D%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/5/">« Prev</a>
@@ -905,16 +984,16 @@ Twitter に書き込みをされている方がいました
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -925,8 +1004,14 @@ Twitter に書き込みをされている方がいました
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -934,7 +1019,7 @@ Twitter に書き込みをされている方がいました
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -943,7 +1028,7 @@ Twitter に書き込みをされている方がいました
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -992,9 +1077,6 @@ Twitter に書き込みをされている方がいました
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -1006,10 +1088,10 @@ Twitter に書き込みをされている方がいました
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1028,7 +1110,7 @@ Twitter に書き込みをされている方がいました
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

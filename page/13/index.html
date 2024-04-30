@@ -277,7 +277,348 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a></h2>
+            <h2 class="title"><a href="/2019/05/05/try-import-maps.html">TRY import maps</a></h2>
+  <p class="postdate"><a href="/2019/05/05.html" title="Permanent link">Sunday, May 05, 2019 11:40:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>GW中、最後の記事は <a href="https://github.com/WICG/import-maps">import maps</a> です。
+先日<a href="/2019/04/07/esm-lt-2019-04.html">esm LTでブラウザの最新動向について話しました</a>でもふれたのですが、<a href="https://github.com/WICG/import-maps">import maps</a>はChrome73から利用可能になっています。</p>
+
+<p>今回は実際に <a href="https://github.com/Polymer-Japan/litelement-first-element">Polymer-Japan/litelement-first-element</a> のコードを使って<a href="https://github.com/WICG/import-maps">import maps</a>を試してみたいと思います。</p>
+
+<h3>Polymer-Japan/litelement-first-element</h3>
+
+<p>これはLitElementを使ってはじめてWebComponentsを作るためのCodeLabs用のサンプルコードです。
+通常は、<code>git clone</code>するかダウンロードした後で <code>npm install</code> を実行し、 <code>npm start</code> すると <code>polymer-cli</code> でWebサーバーを起動します。
+<code>polymer serve</code> コマンドでは、<a href="https://github.com/WICG/import-maps">import maps</a>なしでも、自動的にリクエストのパス変換が処理されます。</p>
+
+<p>そこで、PHPやPythonなど別の言語のビルトインサーバー機能を使い、リクエストのパス変換が動かない状況で試してみます。
+今回はPHPを使って、以下のコマンドを実行することにしました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ php -S localhost:8080 -t .
+</code></pre></div>
+<h3>まずは Origin Trial に申し込む</h3>
+
+<p>さて<a href="https://github.com/WICG/import-maps">import maps</a>は、まだお試し機能なので、有効にするには<a href="https://developers.chrome.com/origintrials/">Chrome Origin Trial</a>に申し込む必要があります。</p>
+
+<p>Origin Trialとは？という人は、<a href="https://blog.jxck.io/entries/2016-09-29/vender-prefix-to-origin-trials.html">Web 標準化のフィードバックサイクルを円滑にする Origin Trials について</a>を参照ください。とてもわかりやすく解説されています。</p>
+
+<p><a href="https://developers.chrome.com/origintrials/">Chrome Origin Trial</a>にアクセスしたら、お手持ちのGoogleアカウントでログインし、<a href="https://developers.chrome.com/origintrials/#/view_trial/3175037737296199681">Trial for KV storage built-in module + import maps</a>に登録してトークンを取得します。</p>
+
+<p>このとき、<code>Web Origin</code> はローカルホストで試すため <code>http://localhost:8080</code> のようにポート番号まで指定して登録します。
+すると、トークンが発行されます。</p>
+
+<h3>実行してみる</h3>
+
+<p>まずは何も指定せずPHPのビルトインサーバーを起動します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ php -S localhost:8080 -t .
+</code></pre></div>
+<p>次にサンプルコードの完成版(http://localhost:8080/icon-toggle-finished/demo/)にアクセスします。
+すると、Developer Console にURLが見つからないというエラーが出てきます。</p>
+
+<p>地味な作業になりますが、これを1つづつ<a href="https://github.com/WICG/import-maps">import maps</a>のJSON定義に追加していきます（今は適切なツールがないため）。</p>
+
+<h3>こうなる</h3>
+
+<p>以下のようになるまでJSONに追加していくと、すべてのパスが解決されて動作するようになりました。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">"en"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">name=</span><span class="s">"viewport"</span> <span class="na">content=</span><span class="s">"width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;meta</span>
+      <span class="na">http-equiv=</span><span class="s">"origin-trial"</span>
+      <span class="na">data-feature=</span><span class="s">"KV storage built-in module + import maps"</span>
+      <span class="na">data-expires=</span><span class="s">"2019-6-16"</span>
+      <span class="na">content=</span><span class="s">"発行されたトークンをコピペする"</span><span class="nt">&gt;</span>
+
+    <span class="nt">&lt;title&gt;</span>icon-toggle demo<span class="nt">&lt;/title&gt;</span>
+
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"importmap"</span><span class="nt">&gt;</span>
+      <span class="p">{</span>
+        <span class="dl">"</span><span class="s2">imports</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-demo-helpers/demo-pages-shared-styles</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-demo-helpers/demo-snippet</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-demo-helpers/demo-snippet.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/polymer/polymer-legacy.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/polymer/polymer-legacy.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-flex-layout/iron-flex-layout.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-flex-layout/iron-flex-layout.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/font-roboto/roboto.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/font-roboto/roboto.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/polymer/lib/utils/html-tag.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/polymer/lib/utils/html-tag.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@webcomponents/shadycss/entrypoints/apply-shim.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@webcomponents/shadycss/entrypoints/apply-shim.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@webcomponents/shadycss/entrypoints/custom-style-interface.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/marked-element/marked-element.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/marked-element/marked-element.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/prism-element/prism-highlighter.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/prism-element/prism-highlighter.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/prism-element/prism-theme-default.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/prism-element/prism-theme-default.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/polymer/lib/legacy/polymer-fn.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/polymer/lib/legacy/polymer-fn.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/polymer/lib/legacy/polymer.dom.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/polymer/lib/legacy/polymer.dom.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">marked/lib/marked.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/marked/lib/marked.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">prismjs/prism.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/prismjs/prism.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/polymer/lib/elements/dom-module.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/polymer/lib/elements/dom-module.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">lit-element</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/lit-element/lit-element.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">lit-html</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/lit-html/lit-html.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">lit-html/lib/shady-render</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/lit-html/lib/shady-render.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">lit-html/lit-html</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/lit-html/lit-html.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-icons/iron-icons.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-icons/iron-icons.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-icon/iron-icon.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-icon/iron-icon.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-iconset-svg/iron-iconset-svg.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js</span><span class="dl">"</span>
+          <span class="p">],</span>
+          <span class="dl">"</span><span class="s2">@polymer/iron-meta/iron-meta.js</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="dl">"</span><span class="s2">/node_modules/@polymer/iron-meta/iron-meta.js</span><span class="dl">"</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="nt">&lt;/script&gt;</span>
+
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>すごい<a href="https://github.com/WICG/import-maps">import maps</a>ちゃんと動いてる！</p>
+
+<p>ということで、まだChrome(73以上)でないと試せませんが、これで WebComponents を動かすのに Webpack しなくて良い未来を体験することができます。
+JSON定義を自動生成するスクリプトが出ないか期待したいですね（がんばって自作するのもあり）。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TRY import maps" data-url="http://blog.open.tokyo.jp/2019/05/05/try-import-maps.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/05/try-import-maps.html&t=TRY%20import%20maps" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/05/try-import-maps.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/03/brackets-coming-lsp.html">BracketsにLSPがやってきた</a></h2>
+  <p class="postdate"><a href="/2019/05/03.html" title="Permanent link">Friday, May 03, 2019 10:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/brackets.html" rel="tag">Brackets</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/lsp.html" rel="tag">LSP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>やぁやぁやぁ、LSPがやってきたよ！</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">Brackets 1.14 has landed!<br><br>With v 1.14, Brackets now supports LSP. If you&rsquo;re writing PHP code, take advantage of code hinting, jump to def, parameter hints, and more. More info here: <a href="https://t.co/0qvLhYbG8l">https://t.co/0qvLhYbG8l</a><br><br>Download now!<a href="https://twitter.com/hashtag/PHP?src=hash&amp;ref_src=twsrc%5Etfw">#PHP</a> <a href="https://twitter.com/hashtag/Web?src=hash&amp;ref_src=twsrc%5Etfw">#Web</a> <a href="https://twitter.com/hashtag/LSP?src=hash&amp;ref_src=twsrc%5Etfw">#LSP</a></p>&mdash; Brackets (@brackets) <a href="https://twitter.com/brackets/status/1123897524618657792?ref_src=twsrc%5Etfw">2 May 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p><a href="http://blog.brackets.io/2019/05/02/brackets-1-14-has-landed/">Brackets 1.14 has landed!</a>というブログ記事にも書かれているように、今回のリリースの目玉はLSP(Language Server Protocol)のサポートです。</p>
+
+<p>ついにBracketsにもLSP対応が入りましたね。これまでAtomとはVS Codeに遅れをとっていましたが、これで色々なプログラミング言語でも利用しやすくなるはずです。
+詳しくは<a href="https://github.com/adobe/brackets/wiki/Release-Notes:-1.14">リリースノート</a>にも書かれています。</p>
+
+<p>対応したissueを見ると、 <code>Move vscode-languageserver-protocol to Thirdparty</code> と書いて有るので、vscodeの実装を参考にしたようです。</p>
+
+<p><a href="https://github.com/adobe/brackets/wiki/Language-Server-Protocol-Support-in-Brackets">Language Server Protocol Support in Brackets</a>のページにアーキテクチャの解説や、LSP拡張を実装する場合の方法について解説があるので現時点 PHP, Python, TypeScript だけのサポートのようなので、それ以外の言語にも対応させようと思ったときに役立ちそうです。</p>
+
+<p>私の手元のBracketsもさっそくアップデートしました。</p>
+
+<h3>さっそく使ってみよう</h3>
+
+<p>アップデートをインストールしたら、環境設定を開きます。
+すると、2ペイン表示になるので、左側(defaultPreferences.json)から <code>php</code> で検索します。
+以下のようなデフォルト設定になっているはずなので、コピーして右のペイン(brackets.json)に貼り付けます。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="c1">// PHP ツールのデフォルト設定</span>
+    <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1">// デフォルト: true</span>
+        <span class="dl">"</span><span class="s2">enablePhpTooling</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: php</span>
+        <span class="dl">"</span><span class="s2">executablePath</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: 4095M</span>
+        <span class="dl">"</span><span class="s2">memoryLimit</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">4095M</span><span class="dl">"</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: false</span>
+        <span class="dl">"</span><span class="s2">validateOnType</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">false</span><span class="dl">"</span>
+    <span class="p">},</span>
+</code></pre></div>
+<p>右ペインにコピーしたらコメント行は削除してくださいね。忘れるとJSONのパースエラーになります。</p>
+
+<p>ここで重要なのは <code>executablePath</code> の設定です。
+もしシステム(OS)に入っているPHPが7以上であれば問題ないのですが、デフォルトが7以上でない場合は、ここを書き換える必要があります。</p>
+
+<p>たとえば私はphpbrewで複数バージョン切り替えているので、たまにPHP5.5とかに変更しますので、以下のように固定パスを指定するように変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="dl">"</span><span class="s2">enablePhpTooling</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">executablePath</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/Users/sizuhiko/.phpbrew/php/php-7.3.1/bin/php</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">memoryLimit</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">4095M</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">validateOnType</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">false</span><span class="dl">"</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>これからは、Bracketsを使ったPHPアプリケーション開発も快適になりますね！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="BracketsにLSPがやってきた" data-url="http://blog.open.tokyo.jp/2019/05/03/brackets-coming-lsp.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/03/brackets-coming-lsp.html&t=Brackets%E3%81%ABLSP%E3%81%8C%E3%82%84%E3%81%A3%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/03/brackets-coming-lsp.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a></h2>
+  <p class="postdate"><a href="/2019/05/02.html" title="Permanent link">Thursday, May 02, 2019 09:12:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年4回目となる <a href="https://polymercoedo.doorkeeper.jp/events/91049">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p><a href="https://github.com/Edo-Elements/edo-blogcard/">edo-blogcard</a>に最初のコードをアップしました。
+<a href="https://github.com/Edo-Elements/edo-blogcard/tree/develop">developブランチ</a>にpushしています。</p>
+
+<p>まだ何も動きはないのですが、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a> を使ってビルドするところまで実装しています。</p>
+
+<h3>ES Module import との戦い</h3>
+
+<p>Web Components はHTMLファイルからだと以下のように読み込みます。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/xx-element/xx-element.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>独自のカスタムエレメントから別のエレメントを利用する場合は、以下のように記述します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@polymer/iron-ajax/iron-ajax.js</span><span class="dl">'</span><span class="p">;</span>
+</code></pre></div>
+<p>ここでブラウザは <code>@polymer/iron-ajax/iron-ajax.js</code> のようなパスを解決できないため、webpackでコンパイルすることが必要になります。
+この話は、以前の記事<a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a>でも書いているとおり、<a href="https://github.com/WICG/import-maps">import maps</a>待ちな状況です。</p>
+
+<h3>2つのビルド結果</h3>
+
+<p>そこで、2つのビルド結果を保持するようにしました。</p>
+
+<h4>/dist/edo-blogcard.js</h4>
+
+<p>これは</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@edo-elements/edo-blogcard/dist/edo-blogcard.js</span><span class="dl">'</span><span class="p">;</span>
+</code></pre></div>
+<p>のように利用するためのビルド結果で、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>形式で記述された <code>.lit</code> ファイルを <code>.js</code> にコンパイルしたものです。</p>
+
+<h4>/dist/edo-blogcard.bundle.js</h4>
+
+<p>これは</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@edo-elements/edo-blogcard/dist/edo-blogcard.bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>のように利用するためのビルド結果で、HTMLからブログパーツとして利用したい（webpackなどを実行しないWebページで使いたい）場合のためにコンパイルしたものです。
+<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使ってHTMLから利用可能な状態になっています。</p>
+
+<h3>工夫したところ</h3>
+
+<p>後者の <code>bundle.js</code> については、普通に<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使うやり方なので、特にはありません。
+<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>はwebpackのloaderとして実装されているので、configに設定を追加するだけです。</p>
+
+<p>一方前者はwebpackのloaderようにできている<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>を、webpack使わずにどうやって呼び出すか？というところを工夫しました。</p>
+
+<p>それが <a href="https://github.com/Edo-Elements/edo-blogcard/blob/develop/build.js">build.js</a> です。
+そして <a href="https://github.com/webpack/loader-runner#readme">loader-runner</a> という webpack のモジュールを使っています。
+このモジュールは <code>Runs (webpack) loaders</code> という説明のとおり、loaderを実行することに特化しています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">fs</span><span class="dl">"</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">path</span><span class="dl">"</span><span class="p">);</span>
+<span class="kd">const</span> <span class="p">{</span> <span class="nx">runLoaders</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">loader-runner</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="nx">runLoaders</span><span class="p">(</span>
+  <span class="p">{</span>
+    <span class="na">resource</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">"</span><span class="s2">edo-blogcard.lit</span><span class="dl">"</span><span class="p">),</span>
+    <span class="na">loaders</span><span class="p">:</span> <span class="p">[</span><span class="nx">require</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">"</span><span class="s2">lit-loader</span><span class="dl">"</span><span class="p">)]</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="dl">"</span><span class="s2">dist/edo-blogcard.js</span><span class="dl">"</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>これだけで <code>.lit</code> ファイルを <code>.js</code> ファイルに(webpackなしで)コンパイルできます。</p>
+
+<h3>次回</h3>
+
+<p>通常どおりの、もくもく会として開催予定しています。
+皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Polymer.co-edo day 2019 春を開催しました" data-url="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html&t=Polymer.co-edo%20day%202019%20%E6%98%A5%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a></h2>
   <p class="postdate"><a href="/2019/05/01.html" title="Permanent link">Wednesday, May 01, 2019 08:15:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -467,279 +808,6 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
     </div>
 
   </div>
-  <h2 class="title"><a href="/2019/04/29/asucon-2019.html">アスカン2019を開催しました</a></h2>
-  <p class="postdate"><a href="/2019/04/29.html" title="Permanent link">Monday, April 29, 2019 02:43:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/asucon.html" rel="tag">asucon</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="http://asucon.alleyoop.jp/">明日の開発カンファレンス2019</a>の中の人として運営参加しました。</p>
-
-<p>私はプログラム枠1つを決めたり、事前準備をお手伝いしたり、当日雑用したりと、まぁ大したことはしてません（汗</p>
-
-<p>私の渾身のオススメ枠、ということで今回は弊社岡島から「総売り上げ：35,400円 ~ 受託エンジニアが自社サービスのPOをやって学んだこと。」という発表をしてもらいました。
-直前のセッションが、ヴェルク株式会社 田向 祐介さまの「受託開発の会社が自社サービスを立ち上げて軌道に乗せるまでの取り組み」だったこともあり、受託開発会社のサービス開発成功事例からの、失敗事例ということで、プログラムの流れも良かったと思います。</p>
-
-<p>また今回のアスカンでは、はじめての2トラックということで、たくさんの事例をご紹介することができたと思います。</p>
-
-<p>当日の様子は、Togetterにまとまっています。</p>
-
-<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">明日の開発カンファレンス2019 - Togetter <a href="https://t.co/22BdcygB26">https://t.co/22BdcygB26</a> <a href="https://twitter.com/togetter_jp?ref_src=twsrc%5Etfw">@togetter_jp</a>さんから</p>&mdash; asuconjp (@asuconjp) <a href="https://twitter.com/asuconjp/status/1121314191485231104?ref_src=twsrc%5Etfw">25 April 2019</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p><a href="https://twitter.com/akiko_pusu">@akiko_pusu</a>さん、<a href="https://twitter.com/NEKOGET">@NEKOGET</a>さんが、グラレコを投稿してくれていますので、よりトーク内容含めてふりかえってもらえると思います。</p>
-
-<p>昨年は秋にも開催したアスカンですが、今年はどうなるでしょうか？</p>
-
-<p>そうそう、最後にアンケートもありますので、参加したみなさま、スピーカーやスタッフのためにも回答をお願いしたします。</p>
-
-<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="ja" dir="ltr">明日の開発カンファレンス2019にご来場いただだきありがとうございました。スタッフ一同お礼申し上げます。 次回開催でもお会い出来ることを楽しみにしております。 より良いカンファレンスにするためアンケートを下記よりよろしくお願いします。<a href="https://t.co/snoRmEq6Aj">https://t.co/snoRmEq6Aj</a> <a href="https://twitter.com/hashtag/asucon?src=hash&amp;ref_src=twsrc%5Etfw">#asucon</a> <a href="https://twitter.com/hashtag/%E3%82%A2%E3%82%B9%E3%82%AB%E3%83%B3%E3%83%8A%E3%82%A4%E3%83%88?src=hash&amp;ref_src=twsrc%5Etfw">#アスカンナイト</a></p>&mdash; asuconjp (@asuconjp) <a href="https://twitter.com/asuconjp/status/1121267750389739522?ref_src=twsrc%5Etfw">25 April 2019</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="アスカン2019を開催しました" data-url="http://blog.open.tokyo.jp/2019/04/29/asucon-2019.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/29/asucon-2019.html&t=%E3%82%A2%E3%82%B9%E3%82%AB%E3%83%B32019%E3%82%92%E9%96%8B%E5%82%AC%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/29/asucon-2019.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a></h2>
-  <p class="postdate"><a href="/2019/04/28.html" title="Permanent link">Sunday, April 28, 2019 05:13:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a>の続編です。</p>
-
-<p>前回までの対応で、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなりました。
-ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
-これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところだったのですが、これらの対応を解説していきます。</p>
-
-<h3>dom-module has style outside template というワーニングが出る</h3>
-
-<p>ブラウザのコンソールを確認していると <code>dom-module has style outside template</code> といったワーニングが表示されます。
-これは <code>&lt;dom-module&gt;</code> の中で <code>&lt;template&gt;</code> と <code>&lt;style&gt;</code> が並列に記述されている場合に発生します。</p>
-
-<p>なので、すべて <code>&lt;template&gt;</code> の子要素に <code>&lt;style&gt;</code> を移動しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/57ac6537723ead18bf953cbe4577a69c990bafe1">コミット</a>）。</p>
-
-<h3>動かすようにするための微調整</h3>
-
-<p>続いて1つずつの修正はそれぞれ大きくないものの、動作するまでの調整をたくさん実施しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/c1cb2e9fa4d12cc049dac8abc996cb3be0057155">コミット</a>）。</p>
-
-<h4>クリック処理が動かない</h4>
-
-<p>これは1から2の段階で廃止になった <code>listeners</code> を使っていたためで、利用箇所を <code>addEventListener</code> や、 <code>on-tap</code>, <code>on-click</code> に変更しました。</p>
-
-<h4>moment でロケールを利用しようとするとエラーになる</h4>
-
-<p>Toilet Evolution では、トイレの利用状況を表示するときに <code>10分前</code> のような表示をしているのですが、これに <code>moment.js</code> の機能(<code>toDate()</code>)を使っています。
-<code>moment</code> だけ(ロケールを使わない)なら npm でインストールして</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">moment</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">moment</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>と記述すればよかった(動いた)のですが、どうしてもロケールの解決がうまくいかない（Webpackするとエラーになる）ので、今回はあきらめてHTML側でグローバルに利用できる形にしました。</p>
-<div class="highlight"><pre class="highlight html"><code>  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/ja.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>いくつかWebpackとmomentのissueも見つけて解決策もありそうだったのですが、とりあえず困らないのでこの方法で。</p>
-
-<h4>style や slot が解決されない</h4>
-
-<p>modulizerで自動変換された <code>&lt;google-map-marker&gt;</code> エレメントは以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">$_documentContainer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="dl">'</span><span class="s1">template</span><span class="dl">'</span><span class="p">);</span>
-
-<span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">`&lt;dom-module id="google-map-marker"&gt;
-  &lt;style&gt;
-    :host {
-      display: none;
-    }
-  &lt;/style&gt;
-  &lt;template&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/template&gt;
-&lt;/dom-module&gt;`</span><span class="p">;</span>
-
-<span class="nb">document</span><span class="p">.</span><span class="nx">head</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">content</span><span class="p">);</span>
-</code></pre></div>
-<p>もとのHTMLでの記述は以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;dom-module</span> <span class="na">id=</span><span class="s">"google-map-marker"</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;template&gt;</span>
-    <span class="nt">&lt;style&gt;</span>
-      <span class="nd">:host</span> <span class="p">{</span>
-        <span class="nl">display</span><span class="p">:</span> <span class="nb">none</span><span class="p">;</span>
-      <span class="p">}</span>
-    <span class="nt">&lt;/style&gt;</span>
-
-    <span class="nt">&lt;slot&gt;&lt;/slot&gt;</span>
-  <span class="nt">&lt;/template&gt;</span>
-  <span class="nt">&lt;script&gt;</span>
-</code></pre></div>
-<p>自分が作ったカスタムエレメントでは、 <code>Polymer</code> の <code>_template</code> に <code>html</code> を使うように変換されていたのですが、bowerでインストールしたコンポーネントの多くは上記のように変換されていました。これを <code>html</code> を使うようにしてみたところ解決しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
-
-  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="s2">`
-  &lt;style&gt;
-    :host {
-      display: none;
-    }
-  &lt;/style&gt;
-  &lt;slot&gt;&lt;/slot&gt;
-`</span><span class="p">,</span>
-</code></pre></div>
-<p><code>&lt;google-map&gt;</code> エレメントも同様にうまく動作しなかったので、 <code>html</code> をつけて <code>_template</code> で返却するように対応しました。</p>
-
-<h3>さいごに</h3>
-
-<p>4回にわたって、Polymer1のプロジェクトをPolymer3に移行した解説をしてきました。
-この連載がPolymer1からアップグレードする他の方の手助けになれば幸いです。</p>
-
-<p>基本的な部分は、ほとんどmodulizerで変換できるので、これは便利だなーと思うのでした。
-Polymer3対応した依存エレメントは、どこかのタイミングでPRを出してフィードバックしたいなと思っています。</p>
-
-<p>では良いWeb Componentsライフを！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(4)" data-url="http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(4)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a></h2>
-  <p class="postdate"><a href="/2019/04/27.html" title="Permanent link">Saturday, April 27, 2019 07:16:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a>の続編です。</p>
-
-<p>今回も<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
-
-<p>前回は多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所について解説しましたが、ここからはアプリケーションで使っている機能やエレメントについて、修正が必要だった箇所について解説していきます。</p>
-
-<h3>ES Module対応になっていないエレメントを使う</h3>
-
-<p>前回の記事で「<code>bower_components を使わないようにする</code>」について解説しました。
-PolymerチームやVaadinチームなどが作っているコンポーネントについては、ほとんど <code>ES Module</code> に対応しているのですが、場合によっては対応してないモジュールを使っていることがあるかもしれません。</p>
-
-<p>Toilet Evolutionでは以下のエレメントが <code>ES Module</code> に対応していませんでした。<code>iron-signals</code> は <code>toast-er</code> の依存に関連しています。</p>
-
-<ul>
-<li><a href="https://github.com/atotic/excess-router">excess-router</a></li>
-<li><a href="https://www.webcomponents.org/element/ebidel/geo-location">geo-location</a></li>
-<li><a href="https://www.webcomponents.org/element/GeoloeG/gold-password-input">gold-password-input</a></li>
-<li><a href="https://www.webcomponents.org/element/GoogleWebComponents/google-map">google-map</a></li>
-<li><a href="https://www.webcomponents.org/element/googlearchive/paper-menu">paper-menu</a></li>
-<li><a href="https://github.com/masonlouchart/toast-er">toast-er</a>
-
-<ul>
-<li><a href="https://www.webcomponents.org/element/googlearchive/iron-signals">iron-signals</a></li>
-</ul></li>
-</ul>
-
-<p>そこで、これらのエレメントは modulizer で変換されたものを、そのまま利用することにしました。
-また変換されたエレメントについては、前回の記事同様に共通的な修正箇所が必要になります。
-つまり自分で作ったエレメントと同様に、そのエレメントが依存している（bower.jsonに含まれている）エレメントやライブラリについても、 <code>npm install</code> で取得するように変更する必要があります。</p>
-
-<p>またPolymer1用のライブラリだったりする場合は、<a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade">Polymer1から2へのアップグレードガイド</a>に書いてある <code>slot</code> の対応なども必要だったので、そのライブラリが最新版だとPolymerのどのバージョンに対応したものなのかを確認しておくことが重要です。</p>
-
-<p>そして、これらの作業が結構やっかいです（自分で作ったものでないので、ソースを理解する必要があります）。</p>
-
-<h3>以前のPolymerのビヘイビアは個別にインストールする必要がある</h3>
-
-<p>HTMLインポートで利用していた、Polymerチームが作っていたようなカスタムエレメントのビヘイビアは、個別に <code>import</code> するか、場合によっては <code>npm install</code> で導入する必要があります。
-自分で作ったエレメントでは、ビヘイビアを使っていなかったので、この段階で初めて知りました（これは意外にもドキュメントに書いていません）。</p>
-
-<p>例えば <code>&lt;gold-password-input&gt;</code> では、<code>PaperInputAddonBehavior</code> という <code>paper-input</code> に含まれていたビヘイビアを使っています。
-これは以下のように、<code>import</code> を追加してあげる必要があります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span><span class="nx">PaperInputAddonBehavior</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/paper-input/paper-input-addon-behavior.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p><code>ES Module</code>対応しているエレメントであれば、<a href="https://www.webcomponents.org">webcomponents.org</a>のビヘイビアを参照すると解説が書いてあります。
-上記の <code>PaperInputAddonBehavior</code> であれば、<a href="https://www.webcomponents.org/element/@polymer/paper-input/behaviors/PaperInputAddonBehavior">こちら</a>です。</p>
-
-<h3>Polymer.dom を変更する</h3>
-
-<p>これも自分のエレメントでは使っていなかったので気付かなかったのですが、使っているエレメントがあったので修正の必要がありました。
-まず <code>dom</code> をインポートします。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span><span class="nx">dom</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/polymer/lib/legacy/polymer.dom.js</span><span class="dl">'</span>
-</code></pre></div>
-<p>で、<code>Polymer.dom</code> を使っている箇所を <code>dom</code> に変更します。例えば以下のような感じです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">return</span> <span class="nx">dom</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parentNode</span><span class="p">;</span>
-</code></pre></div>
-<h3>bowerでカスタムエレメント以外のライブラリに依存している</h3>
-
-<p><code>&lt;gold-password-input&gt;</code> は<a href="https://github.com/dropbox/zxcvbn">zxcvbn</a>というパスワードストレングスエミュレータを使っています。
-Node.jsなどにも対応しているのですが、今回はbowerでインストールしたフォルダをそのままコピーして、リポジトリに追加しました。
-このようにカスタムエレメント以外のライブラリを使っている場合は、npmでインストールしてビルドする方法以外の検討も必要となります。
-特に<code>&lt;gold-password-input&gt;</code>では、以下のように <code>script</code> タグを動的に追加してライブラリをインポートしていたため、npmを利用するのに適していなかったという理由があります。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">ready</span><span class="p">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="k">typeof</span> <span class="nx">zxcvbn</span> <span class="o">!==</span> <span class="dl">"</span><span class="s2">undefined</span><span class="dl">"</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isZxcvbnLoaded</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-      <span class="kd">var</span> <span class="nx">oScript</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="dl">"</span><span class="s2">script</span><span class="dl">"</span><span class="p">);</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">text</span><span class="se">\</span><span class="s2">/javascript</span><span class="dl">"</span><span class="p">;</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">onerror</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nx">URIError</span><span class="p">(</span><span class="dl">"</span><span class="s2">The script </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">src</span> <span class="o">+</span> <span class="dl">"</span><span class="s2"> is not accessible.</span><span class="dl">"</span><span class="p">);</span>
-      <span class="p">};</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">insertBefore</span><span class="p">(</span><span class="nx">oScript</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">resolveUrl</span><span class="p">(</span><span class="dl">"</span><span class="s2">../zxcvbn/dist/zxcvbn.js</span><span class="dl">"</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-</code></pre></div>
-<p>このぐらいまで対応が進むと、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなります。
-ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
-これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところなのですが、
-これらの対応方法については<a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">次回</a>解説していきます。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Toilet EvolutionのフロントエンドをPolymer3対応する(3)" data-url="http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html&t=Toilet%20Evolution%E3%81%AE%E3%83%95%E3%83%AD%E3%83%B3%E3%83%88%E3%82%A8%E3%83%B3%E3%83%89%E3%82%92Polymer3%E5%AF%BE%E5%BF%9C%E3%81%99%E3%82%8B(3)" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/12/">« Prev</a>
@@ -767,16 +835,16 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -787,8 +855,14 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -796,7 +870,7 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -805,7 +879,7 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -854,9 +928,6 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -868,10 +939,10 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -890,7 +961,7 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

@@ -277,7 +277,383 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a></h2>
+            <h2 class="title"><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a></h2>
+  <p class="postdate"><a href="/2023/02/02.html" title="Permanent link">Thursday, February 02, 2023 05:05:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-client-mock.html" rel="tag">aws-sdk-client-mock</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回の記事<a href="https://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a>で</p>
+
+<blockquote>
+<p><code>aws-sdk-client-mock</code> 便利ですね。
+しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
+sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 <code>mockClient</code> の結果で得られたモックを使っているわけでもありません。
+そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。</p>
+</blockquote>
+
+<p>書いたとおり、どうやってモックしているのか、紹介していきます。</p>
+
+<h2>前回のおさらい</h2>
+
+<p>aws-sdk v3 でのテストコードは以下のようになることを紹介しました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock-jest</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">mockClient</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">SFNClientMock</span> <span class="o">=</span> <span class="nx">mockClient</span><span class="p">(</span><span class="nx">SFNClient</span><span class="p">);</span>
+<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">reset</span><span class="p">());</span>
+
+<span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">StartExecutionCommand</span><span class="p">).</span><span class="nx">resolves</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
+
+<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">SFNClientMock</span><span class="p">).</span><span class="nx">toHaveReceivedNthCommanddWith</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>モックするときは <code>mockClient(SFNClient)</code> とクラスを渡しているだけでしたね。
+生成した <code>SFNClientMock</code> はテストクラスでしか利用していません。</p>
+
+<h2>aws-sdk-client-mock の実装を見てみる</h2>
+
+<p><a href="https://github.com/m-radzikowski/aws-sdk-client-mock/blob/main/packages/aws-sdk-client-mock/src/mockClient.ts">mockClientのコード</a>を見てみましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">mockClient</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">TInput</span> <span class="kd">extends</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">TOutput</span> <span class="kd">extends</span> <span class="nx">MetadataBearer</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nx">client</span><span class="p">:</span> <span class="nx">InstanceOrClassType</span><span class="o">&lt;</span><span class="nx">Client</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+<span class="p">):</span> <span class="nx">AwsClientStub</span><span class="o">&lt;</span><span class="nx">Client</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;&gt;</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">isClientInstance</span><span class="p">(</span><span class="nx">client</span><span class="p">)</span> <span class="p">?</span> <span class="nx">client</span> <span class="p">:</span> <span class="nx">client</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
+</code></pre></div>
+<p>ふむふむ <code>mockClient</code> の引数がインスタンスかどうか調べて、クラスだったら prototype が利用されるわけですか。
+さらに見てみると</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">sendStub</span> <span class="o">=</span> <span class="nx">stub</span><span class="p">(</span><span class="nx">instance</span><span class="p">,</span> <span class="dl">'</span><span class="s1">send</span><span class="dl">'</span><span class="p">)</span> <span class="k">as</span> <span class="nx">SinonStub</span><span class="o">&lt;</span><span class="p">[</span><span class="nx">Command</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;</span><span class="p">],</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">TOutput</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>なるほど <code>send</code> メソッドをスタブしてますね。
+あー、つまりクラスを指定すると、 prototype 定義が置き換わっちゃうわけですね。</p>
+
+<h2>使い分けが必要</h2>
+
+<p>prototype が置き換わることで <code>mockClient</code> に渡したクラスの <code>send</code> はすべてのシーンでスタブに置き換わります。
+テストしたい実装側でクライアントのインスタンスをDIなどで注入していない場合は、この方法で良いですね。
+逆にシーンによっては、実際に send を実行したい場合は困ってしまいます。</p>
+
+<p>localstack などを使って部分的にインテグレーションテストをしたい場合は、なるべくインスタンスをDIできる仕組みにした方が良いでしょう。
+インスタンスを生成するメソッドを作って、それをモックして <code>mockClient</code> の戻り値を返すようにしても良いですね。</p>
+
+<p>とくにイングレーションテストとかなく、すべてのクライアント呼び出しをモックするのであれば、クラス指定が楽ですね。</p>
+
+<p>このように使い分けることで、テストコードを書いていきたいですね。
+簡単ではありますが、aws-sdk-client-mock はどのように aws-sdk をモックしているのか？ を紹介しました。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk-client-mock はどのように aws-sdk をモックしているのか？" data-url="http://blog.open.tokyo.jp/2023/02/02/how-mock-aws-sdk-client-mock.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/02/02/how-mock-aws-sdk-client-mock.html&t=aws-sdk-client-mock%20%E3%81%AF%E3%81%A9%E3%81%AE%E3%82%88%E3%81%86%E3%81%AB%20aws-sdk%20%E3%82%92%E3%83%A2%E3%83%83%E3%82%AF%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B%E3%81%AE%E3%81%8B%EF%BC%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/02/02/how-mock-aws-sdk-client-mock.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a></h2>
+  <p class="postdate"><a href="/2023/01/04.html" title="Permanent link">Wednesday, January 04, 2023 11:00:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/lambda.html" rel="tag">Lambda</a>
+      <a href="/tags/node-js.html" rel="tag">Node.js</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>先日も紹介したクラメソさんの <a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/">[アップデート] AWS Lambdaが Node.js 18をサポートしました</a> 記事でもふれられていましたが、Node.js が 18 になるのに伴い、イメージ内の aws-sdk が v3 になりました。
+Node.js 16 までは v2 系だったのですが、ここでは多くの変更が発生しています。</p>
+
+<ul>
+<li>npm install する対象が <code>aws-sdk</code> から <code>@aws-sdk/client-xxx</code> のように AWS のサービスごとのクライアントライブラリになった</li>
+<li>書き方が、各クライアントを <code>new</code> して <code>send</code> でコマンドを送信する記述に統一された</li>
+</ul>
+
+<p>大きくはこの2点でしょうか。
+私たちは aws-sdk の利用に関してリポジトリパターンの中に閉じ込めているので、基本的にそこだけ対応すれば良いのですが、API で同期実行だったものが非同期実行に変更となっているので、そこだけはインターフェースを Promise に変更する必要があります。
+これは実際のコマンド内部は同期で問題ないけど、 <code>Client.send(command)</code> が基本的に Promise を返却するようになったための副作用だと思ってください。
+（ aws-sdk v2 のときは <code>command().promise()</code> のようにすると、非同期コマンドは Promise を返却するようになっていたのですが、この <code>promise()</code> 部分がなくなり、基本的な戻りは Promise になっています）</p>
+
+<h2>具体的なコードで見る v2 と v3 の違い</h2>
+
+<p>StepFuntions を実行するコードで違いをみてみましょう。</p>
+
+<h3>v2 のコード</h3>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">StepFunctions</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">StepFunctions</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">stepFunctions</span><span class="p">.</span><span class="nx">startExecution</span><span class="p">({</span>
+  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span>
+  <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">),</span>
+<span class="p">}).</span><span class="nx">promise</span><span class="p">();</span>
+</code></pre></div>
+<h3>v3 のコード</h3>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">build</span><span class="p">,</span> <span class="nx">parse</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/util-arn-parse</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="p">{</span> <span class="nx">region</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">parse</span><span class="p">(</span><span class="nx">arn</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">({</span> <span class="nx">region</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">stepFunctions</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="k">new</span> <span class="nx">StartExecutionCommand</span><span class="p">({</span>
+  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span>
+  <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">),</span>  
+<span class="p">}));</span>
+</code></pre></div>
+<p>StepFunctions では、利用するライブラリ名が <code>aws-sdk/client-sfn</code> になりました。
+ほとんどの場合は、サービス名を使っています（たとえば S3 なら aws-sdk/client-s3 だし、 S3Client です）が、StepFunctions の場合は <code>sfn</code> に省略されているので注意が必要です。（僕はこの略名に気付くまでメチャクチャ探したことを告白しておきます）</p>
+
+<p>クライアントライブラリを探すときは <a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/">AWS SDK for JavaScript v3</a> の公式ドキュメントを参照すると良いのですが、ぱっとみてサービス名からクライアントライブラリが見つけられない場合は、それっぽい略名から探してみると良いでしょう。</p>
+
+<p>v2 と v3 を比較するとわかりますが、大きな変更でないことはわかると思います。</p>
+
+<h2>v3 移行するときに役立つドキュメント</h2>
+
+<p>次に v3 移行するときに役立つドキュメントを紹介していきます。</p>
+
+<ul>
+<li><a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/">AWS SDK for JavaScript v3</a> </li>
+<li><a href="https://aws.amazon.com/jp/blogs/news/service-error-handling-modular-aws-sdk-js/">AWS SDK for JavaScript (v3) モジュールでのエラー処理</a></li>
+<li><a href="https://github.com/aws/aws-sdk-js-v3/blob/main/UPGRADING.md">Upgrading Notes (2.x to 3.x)</a></li>
+</ul>
+
+<p>1つ目は公式のSDKドキュメントですね。クライアントライブラリを探すときも、コマンド名を確認するときにも良く参照します。</p>
+
+<p>2つ目はエラーハンドリングのやり方の違いについてです。詳しくはドキュメントを読めばわかるのですが、従来はエラーの判定方法が 
+<code>(&lt;AWSError&gt;e).code === &#39;ExecutionDoesNotExist&#39;</code> みたいにしていたのを <code>e instanceof ExecutionDoesNotExist</code> のように例外クラスのインスタンスとして判定できるようになっています。これも v3 に移行するときに注意したいポイントです。</p>
+
+<p>3つ目はSDKのv3へのアップグレードガイドで、主に破壊的変更があった部分について解説されています。単純に XxxxClient と XxxxCommand に変更したときに型エラーが出たときは、このドキュメントを読んで破壊的変更（変数名の変更や、JSON構造の変更など）がないか確認すると解決への近道になります。</p>
+
+<p>ただし、先ほどの例で書いた StepFunctions のコンストラクタのように</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">({</span> <span class="nx">region</span> <span class="p">});</span>
+</code></pre></div>
+<p>リージョンが v3 から必須パラメータになったのですが、こういった変更は動かしてみるまでわからないことが多いので、ユニットテストを書いておくことは重要です。</p>
+
+<h2>ユニットテスト</h2>
+
+<p>私たちは以下のサービスについては、モックせずにローカルで代替ライブラリを使って結合テストを行なっています。</p>
+
+<ul>
+<li>S3 : <a href="https://www.npmjs.com/package/s3rver">S3rver</a></li>
+<li>SQS: <a href="https://github.com/softwaremill/elasticmq">ElasticMQ</a></li>
+<li>RDS: <a href="https://www.npmjs.com/package/better-sqlite3">better-sqlite3</a></li>
+</ul>
+
+<h3>v2 でのユニットテスト</h3>
+
+<p>上記以外について、v2 のときは以下のようにモックしていました。ここでは Jest での書き方を紹介します。
+sfn の start というメソッドで StepFunctions を呼び出していると想定してください。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">startExecutionMock</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span> <span class="c1">// startExecution の引数チェック用</span>
+<span class="kd">const</span> <span class="nx">startExecution</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span> <span class="c1">// startExecution の戻り値モック用</span>
+<span class="nx">jest</span><span class="p">.</span><span class="nx">mock</span><span class="p">(</span><span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="na">StepFunctions</span><span class="p">:</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">().</span><span class="nx">mockImplementation</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{</span>
+        <span class="na">startExecution</span><span class="p">:</span> <span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mockImplementation</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="p">{</span> <span class="na">promise</span><span class="p">:</span> <span class="nx">startExecution</span> <span class="p">};</span>
+        <span class="p">}),</span>
+      <span class="p">};</span>
+    <span class="p">});</span>
+  <span class="p">};</span>
+<span class="p">});</span>
+
+<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mockReset</span><span class="p">();</span>
+  <span class="nx">startExecution</span><span class="p">.</span><span class="nx">mockReset</span><span class="p">();</span>
+<span class="p">});</span>
+
+<span class="nx">startExecution</span><span class="p">.</span><span class="nx">mockResolvedValue</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
+
+<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mock</span><span class="p">.</span><span class="nx">calls</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">([</span>
+  <span class="p">[{</span> <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">}]</span>
+<span class="p">]);</span>
+</code></pre></div>
+<p>v2 でのモックは面倒でしたね。</p>
+
+<h3>v3 でのユニットテスト</h3>
+
+<p>v3 で aws-sdk をモックするときは <a href="https://github.com/m-radzikowski/aws-sdk-client-mock">AWS SDK v3 Client mock</a> を利用します。</p>
+
+<blockquote>
+<p>Library recommended by the AWS SDK for JavaScript team - see the introductory post on the AWS blog.</p>
+</blockquote>
+
+<p>ということで公式にもオススメされるライブラリということで良いですね。</p>
+
+<p>上記の v3 でのテストコードは以下のようになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock-jest</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">mockClient</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">SFNClientMock</span> <span class="o">=</span> <span class="nx">mockClient</span><span class="p">(</span><span class="nx">SFNClient</span><span class="p">);</span>
+<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">reset</span><span class="p">());</span>
+
+<span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">StartExecutionCommand</span><span class="p">).</span><span class="nx">resolves</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
+
+<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">SFNClientMock</span><span class="p">).</span><span class="nx">toHaveReceivedNthCommanddWith</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>モックライブラリを使うと、v2 のときより可読性も良くわかりやすくなっています。</p>
+
+<h2>さいごに</h2>
+
+<p>ここまで aws-sdk を v2 から v3 にする方法をまとめてみました。
+<code>aws-sdk-client-mock</code> 便利ですね。
+しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
+sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 <code>mockClient</code> の結果で得られたモックを使っているわけでもありません。
+そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）" data-url="http://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html&t=AWS%20Lambda%20%E3%81%AE%20Node.js%2014%20%E3%82%92%2018%20%E3%81%AB%E7%A7%BB%E8%A1%8C%E3%81%99%E3%82%8B%EF%BC%88aws-sdk%20v3%20%E7%A7%BB%E8%A1%8C%E7%B7%A8%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a></h2>
+  <p class="postdate"><a href="/2022/12/30.html" title="Permanent link">Friday, December 30, 2022 03:39:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/lambda.html" rel="tag">Lambda</a>
+      <a href="/tags/node-js.html" rel="tag">Node.js</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>クラメソさんの <a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/">[アップデート] AWS Lambdaが Node.js 18をサポートしました</a> 記事のとおり、やっと AWS Lambda でも Node.js 18 が使えるようになりました。</p>
+
+<p>現在 Node.js 14 を使って AWS Lambda で API サーバーを構築しているのですが、 Node.js 16 の LTS が 9ヶ月終了が早まったこともあり、
+このタイミングで Node.js 18 へ移行することにしました。</p>
+
+<p>本稿では CI/CD 環境を Node.js 14 から Node.js 18 へ移行するときに実施した作業を振り返って、まとめておきます。</p>
+
+<p>現在の構成はこんな感じです。</p>
+
+<ul>
+<li>Node.js 14 / TypeScript</li>
+<li>CI/CD に GitHub Actions を利用</li>
+<li>Amazonlinux ベースの <a href="https://hub.docker.com/r/amazon/aws-cli">amazon/aws-cli</a> コンテナをベースにパッケージを追加した独自コンテナイメージで CI/CD を実施</li>
+<li>Serverless Framework でビルド/デプロイ</li>
+</ul>
+
+<h2>CI/CD イメージの Node.js を 18 にする</h2>
+
+<p>まずはビルド/デプロイをするコンテナイメージを Node.js 18 にしていきます。
+実際に Node.js 18 をインストールしようとしたのですが、エラーになってしまいます。</p>
+
+<p>具体的なエラーは <a href="https://stackoverflow.com/questions/50564999/lib64-libc-so-6-version-glibc-2-14-not-found-why-am-i-getting-this-error">/lib64/libc.so.6: version `GLIBC_2.14&rsquo; not found. Why am I getting this error?</a> と一緒で、調べていくと Amazonlinux2 ベースである CentOS7 と Node.js 18 は <a href="https://it.ama2pro.net/2022/05/31/node%E3%81%AEv18%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%89%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%EF%BC%88centos7%EF%BC%89/">nodeのv18を使ったらエラーになった（CentOS7）</a> などにもあるように単純な話ではないようです。</p>
+
+<p>おや？でも Lambda は Node.js 18 が使えるんですよね？どういうこと？と思いますよね。</p>
+
+<p>Node.js のディストリビューション issue を確認すると <a href="https://github.com/nodesource/distributions/issues/1367">distribution package Amazon Linux 2022 not supported</a> なんてのがありました。</p>
+
+<h3>で、Amazon Linux 2022 って何なん？！</h3>
+
+<p><a href="https://hub.docker.com/_/amazonlinux">amazonlinux のコンテナイメージ</a>をみると、 <code>latest</code> は <code>amazonlinux2</code> なんですが、タグをみていくと確かに <code>2022</code> があります。
+あと現時点では aws-cli のイメージは 2022 には追従していません。</p>
+
+<p>そこで、 amazonlinux2022 をベースにして Node.js 18 をインストールするのを試してみます。</p>
+
+<p>しかし、ここでプロビジョニングツールが amazonlinux 2022 に対応していないことがわかります（グルグル循環して脳が溶けてくる&hellip; 溶けてやがる、まだ早すぎたんだ&hellip;.）。違うプロビジョニングツールも調べてみたのですが、どれも 2022 には対応していませんでした。ここでプロビジョニングツールを捨てる選択となりました。</p>
+
+<p>（実際僕らは Chef を使っているんですが、Chef Workstation 自体に amazonlinux 2022 の対応は入っていました（<a href="https://github.com/chef/omnitruck/issues/569">Omnitruck artifact does not exist for version 17 on platform Amazon Linux 2022 </a>）。ただまだリリースパッケージに含まれていないので、いずれリリースされるバージョンでは対応されているでしょう。Ansibleも調べましたが、同様にまだリリースパッケージには含まれていませんでした。）</p>
+
+<p>調べていたら、<a href="https://www.geekfeed.co.jp/geekblog/amazonlinx3-amazonlinux2022-al2022">AmazonLinux3じゃなくってAmazon Linux 2022 (AL2022) だってさ。</a> という記事が見つかりました。
+そんで </p>
+
+<blockquote>
+<p>AmazonLinux2022以降はメジャーバージョンが2年ごとにリリースされる</p>
+</blockquote>
+
+<p>まじかー。まぁ今までの AmazonLinux2 が長かったですね。そのぐらいで OS イメージを最新にしていかないとですよね。
+ということで、今後も踏まえて CI/CD のフローを含め利用するコンテナイメージを検討しなおすことにしました。
+（2年ごとの変更がプロビジョニングツールを捨てる決定的な要因になったのは間違いない）</p>
+
+<h2>CI/CD フローの変更</h2>
+
+<p>現時点のフローを整理してみました</p>
+
+<ol>
+<li>チェックアウト</li>
+<li>ビルド</li>
+<li>デプロイが必要な場合
+
+<ol>
+<li>環境のスイッチロール</li>
+<li>デプロイ</li>
+</ol></li>
+</ol>
+
+<p>だいたいこんな感じです。
+これを今までは全部1つのコンテナでやっていたのですが、それぞれ分割していくことにしました。</p>
+
+<ol>
+<li>チェックアウト -&gt; alpine/git</li>
+<li>ビルド -&gt; amazon/aws-lambda-nodejs:18 ベースに zip/unzip を追加したもの</li>
+<li>デプロイが必要な場合
+
+<ol>
+<li>環境のスイッチロール -&gt; amazon/aws-cli ベースに jq を追加したもの</li>
+<li>デプロイ -&gt; node:18</li>
+</ol></li>
+</ol>
+
+<p>ビルドに関しては <code>node:18</code> でも良かったのですが、ここは以前と同じく稼働する OS イメージと合わせています。
+今後 OS イメージを追従するというより、実際の Lambda 実行コンテナイメージを使うことで、 Node.js ランタイムにあった OS バージョンを気にせず利用できるメリットがあると考えました（サイズ大きいけど）。</p>
+
+<p>それ以外は必要な部分に最低限のコンテナという感じですね。</p>
+
+<h2>さいごに</h2>
+
+<p>LTS に合わせて開発環境をアップデートしていくのは、とても大事ですね。
+記事にすると、さらっと解決したように見えますが、それぞれのツールのソースコードや issue を確認しながら進んでいたので、かなり時間を取られてしまいました。
+ただ、今後同じようにな環境でアップデートしていこうと思う人の助けになればと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）" data-url="http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html&t=AWS%20Lambda%20%E3%81%AE%20Node.js%2014%20%E3%82%92%2018%20%E3%81%AB%E7%A7%BB%E8%A1%8C%E3%81%99%E3%82%8B%EF%BC%88CI/CD%E7%92%B0%E5%A2%83%E7%A7%BB%E8%A1%8C%E7%B7%A8%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a></h2>
   <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 04:04:00 PM</a></p>
   <p class="tags">
       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -492,459 +868,6 @@
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a></h2>
-  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 11:15:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/bigquery.html" rel="tag">BigQuery</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>BigQuery へクエリするコードを書くとき、どうしていますか？
-ORM を使って RDB を使うコードを書いている場合などは、 SQLite などを使って UnitTest を書いていることもあるでしょう。
-BigQuery についても、何かそういったことができないかな？と思い、調べていました。</p>
-
-<h2>BigQuery Emulator</h2>
-
-<p>そんなとき、ちょうど <a href="https://github.com/goccy/bigquery-emulator">BigQuery Emulator</a> の存在を知り、試してみることにしました。</p>
-
-<p>作者の goccy さんのスライドです。</p>
-
-<iframe class="speakerdeck-iframe" frameborder="0" src="https://speakerdeck.com/player/ef6e21eded3440edafa7a8d59ec6ffef" title="BigQueryエミュレータの作り方" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" style="border: 0px; background: padding-box padding-box rgba(0, 0, 0, 0.1); margin: 0px; padding: 0px; border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.2) 0px 5px 40px; width: 560px; height: 315px;" data-ratio="1.7777777777777777"></iframe>
-
-<p>GitHub の README によると Docker コンテナでも動かせるようですので、私たちはそれを利用することにしました。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker pull ghcr.io/goccy/bigquery-emulator:latest
-</code></pre></div>
-<p>コードのサンプルとしては Python と Golang での書き方は提供されていたので、 Node.js でも何とかなるんじゃない？&hellip;
-と思いやり始めたのです。</p>
-
-<h2>Node.js &ndash; BigQuery Emulator</h2>
-
-<p>Node.js で BigQuery を利用するには、<a href="https://cloud.google.com/nodejs/docs/reference/bigquery/latest">公式のクライアント</a>をインストールします。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @google-cloud/bigquery
-</code></pre></div>
-<p>接続の方法は Python のクライアントを見る限り、</p>
-
-<ul>
-<li>エンドポイント</li>
-<li>プロジェクトID</li>
-<li>匿名接続（AnonymousCredentials）</li>
-</ul>
-
-<p>を指定すれば良さそうです。</p>
-<div class="highlight"><pre class="highlight python"><code><span class="n">client_options</span> <span class="o">=</span> <span class="n">ClientOptions</span><span class="p">(</span><span class="n">api_endpoint</span><span class="o">=</span><span class="s">"http://0.0.0.0:9050"</span><span class="p">)</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="p">.</span><span class="n">Client</span><span class="p">(</span>
-  <span class="s">"test"</span><span class="p">,</span>
-  <span class="n">client_options</span><span class="o">=</span><span class="n">client_options</span><span class="p">,</span>
-  <span class="n">credentials</span><span class="o">=</span><span class="n">AnonymousCredentials</span><span class="p">(),</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Node.js だとこんな感じでしょうか？</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">new</span> <span class="nx">BigQuery</span><span class="p">({</span>
-  <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">credentials</span><span class="p">:</span> <span class="cm">/* 何を指定すれば良いんだ？ */</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>ここで、 <code>credentials</code> の指定に <code>AnonymousCredentials</code> みたいなものが無いことに気がつきます。
-JavaScript 以外のクライアント、上記の Python や Go には、匿名接続のオプションがあるようです。</p>
-
-<p>現時点の credentials に指定できるのは、<a href="https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest/google-auth-library/googleauthoptions">公式ドキュメント</a>によると</p>
-<div class="highlight"><pre class="highlight plaintext"><code>credentials?: CredentialBody | ExternalAccountClientOptions;
-</code></pre></div>
-<p>だけです。
-<code>ExternalAccountClientOptions</code> は外部のアカウント連携を使った認証をする場合のオプションになっています。</p>
-
-<h2>@google-cloud/bigquery のコードを調べる</h2>
-
-<p>クライアントの言語違いで接続が変わるわけではないので、 BigQuery のサーバー側は匿名接続できるようになっているが、クライアント側の実装がサポートしていない、ということは想定できるでしょう。
-こういうときは、クライアントのソースコードを調べるしかありません。
-正面突破は無理でも、何かハックできる方法があるかもしれません。</p>
-
-<h3>BigQuery クラス</h3>
-
-<p>GitHubのリポジトリ<a href="https://github.com/googleapis/nodejs-bigquery">Google BigQuery: Node.js Client</a>です。
-まず、 <a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L305">BigQuery クラスのコンストラクタ</a>を調べます。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L324-L331">このあたり</a>で、オプションを作り直して親クラスのコンストラクタを呼び出すみたいです。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="na">apiEndpoint</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">apiEndpoint</span><span class="o">!</span><span class="p">,</span>
-      <span class="nx">baseUrl</span><span class="p">,</span>
-      <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
-      <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">../../package.json</span><span class="dl">'</span><span class="p">),</span>
-      <span class="na">autoRetry</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">autoRetry</span><span class="p">,</span>
-      <span class="na">maxRetries</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">maxRetries</span><span class="p">,</span>
-    <span class="p">};</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="k">super</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</code></pre></div>
-<p><code>credentials</code> は <code>options</code> の中に入ったままなので、 BigQuery 特有のオプションを <code>config</code> に置き換えて親クラスである <code>@google-cloud/common/Service</code> を呼び出す感じでしょうか。</p>
-
-<h3>Service クラス</h3>
-
-<p><code>Service</code> クラスは <code>@google-cloud/common</code> という共有パッケージにあるので、<a href="https://github.com/googleapis/nodejs-common">そこのリポジトリ</a>を調べます。
-<a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts">Serviceクラスのコード</a>です。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L115-L123">このあたり</a>で、リクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出すみたいです。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">reqCfg</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">({},</span> <span class="nx">config</span><span class="p">,</span> <span class="p">{</span>
-      <span class="na">projectIdRequired</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectIdRequired</span><span class="p">,</span>
-      <span class="na">projectId</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectId</span><span class="p">,</span>
-      <span class="na">authClient</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">authClient</span><span class="p">,</span>
-      <span class="na">credentials</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">credentials</span><span class="p">,</span>
-      <span class="na">keyFile</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">keyFilename</span><span class="p">,</span>
-      <span class="na">email</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
-      <span class="na">token</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span>
-    <span class="p">});</span>
-
-    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
-      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">authClient</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">;</span>
-</code></pre></div>
-<p>なるほど、なるほど。</p>
-
-<h3>makeAuthenticatedRequestFactory</h3>
-
-<p>続いて、 <a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L596">makeAuthenticatedRequestFactory</a> を見てみましょう。</p>
-
-<p>コードには関数定義がいろいろあって、最終的には <code>makeAuthenticatedRequest</code> という関数をファクトリメソッドは戻すようです。
-ふむふむ。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">mar</span> <span class="o">=</span> <span class="nx">makeAuthenticatedRequest</span> <span class="k">as</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
-    <span class="nx">mar</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">authClient</span><span class="p">);</span>
-    <span class="nx">mar</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">;</span>
-    <span class="k">return</span> <span class="nx">mar</span><span class="p">;</span>
-</code></pre></div>
-<p>つまり <code>BigQuery</code> クラスのインスタンスを生成すると、認証クライアントまでは生成するけど、接続などにはいかないことがわかります。
-続いて<a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html">ファクトリメソッドの引数</a>を調べてみましょう。</p>
-
-<p>興味深いオプションが2つありますね。</p>
-
-<ul>
-<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#customEndpoint">customEndpoint</a></li>
-<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#useAuthWithCustomEndpoint">useAuthWithCustomEndpoint</a></li>
-</ul>
-
-<p>認証エンドポイントをカスタマイズできるようです。
-では、ファクトリでは、このオプションをどうやって使っているのか見てみましょう。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L766-L777">ここ</a>にありました。</p>
-<div class="highlight"><pre class="highlight javascript"><code>          <span class="kd">const</span> <span class="nx">authorizeRequest</span> <span class="o">=</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span>
-              <span class="nx">reqConfig</span><span class="p">.</span><span class="nx">customEndpoint</span> <span class="o">&amp;&amp;</span>
-              <span class="o">!</span><span class="nx">reqConfig</span><span class="p">.</span><span class="nx">useAuthWithCustomEndpoint</span>
-            <span class="p">)</span> <span class="p">{</span>
-              <span class="c1">// Using a custom API override. Do not use `google-auth-library` for</span>
-              <span class="c1">// authentication. (ex: connecting to a local Datastore server)</span>
-              <span class="k">return</span> <span class="nx">reqOpts</span><span class="p">;</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-              <span class="k">return</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">authorizeRequest</span><span class="p">(</span><span class="nx">reqOpts</span><span class="p">);</span>
-            <span class="p">}</span>
-          <span class="p">};</span>
-</code></pre></div>
-<p>コメントを読んでください。 </p>
-
-<blockquote>
-<p>ex: connecting to a local Datastore server</p>
-</blockquote>
-
-<p>「例えば、ローカルのサーバーとかに接続するときな」って、今回の用途じゃないですか！</p>
-
-<h2>どうやったら指定できるのか？</h2>
-
-<p>さて、ここまでの調査を振り返りましょう。</p>
-
-<ul>
-<li>BigQuery クラスで Service クラスのコンストラクタを呼び出す</li>
-<li>Service クラスでリクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出す</li>
-</ul>
-
-<p>BigQuery クラスからのオプションでは <code>customEndpoint</code> を指定する方法がない！という結論。</p>
-
-<p>ちょっと待てよ？</p>
-
-<p>サービスクラスで生成したファクトリどこに入れてたっけ？</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
-      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
-</code></pre></div>
-<p><code>this</code> (=== BigQuery クラスのインスタンス) ですね。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L83">サービスクラスの定義</a>を見てみましょう。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">makeAuthenticatedRequest</span><span class="p">:</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
-</code></pre></div>
-<p>private じゃないってことは、オーバーライドできるじゃないですか。</p>
-
-<h2>ハックする</h2>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">BigQuery</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/bigquery</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">util</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/common</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">let</span> <span class="nx">bigQuery</span><span class="p">:</span> <span class="nx">BigQuery</span><span class="p">;</span>
-
-<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">baseUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
-    <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">@google-cloud/bigquery/package.json</span><span class="dl">'</span><span class="p">),</span>
-    <span class="na">customEndpoint</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-  <span class="p">};</span>
-  <span class="nx">bigQuery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BigQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-  <span class="nx">bigQuery</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span> <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>options の基本項目は、 BigQuery クラスのコンストラクタで指定されていた項目をそのまま流用しています。
-それに <code>customEndpoint</code> を指定して <code>makeAuthenticatedRequestFactory</code> を呼び出しインスタンス変数の値を上書きします。</p>
-
-<h2>うまくいきましたよね！</h2>
-
-<p>これで Node.js の UnitTest から BigQuery Emulator を使ってクエリのテストコードを書くことができるようになりました。
-BigQuery Emulator があって良かった！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js で BigQuery を使ったコードの自動テストを記述する" data-url="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html&t=Node.js%20%E3%81%A7%20BigQuery%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%B3%E3%83%BC%E3%83%89%E3%81%AE%E8%87%AA%E5%8B%95%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E8%A8%98%E8%BF%B0%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a></h2>
-  <p class="postdate"><a href="/2022/07/12.html" title="Permanent link">Tuesday, July 12, 2022 06:23:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/swc.html" rel="tag">swc</a>
-      <a href="/tags/swc-node.html" rel="tag">swc-node</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>少し前のブログで <a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a> という記事を書いたのですが、最後のまとめで以下のように紹介していました。</p>
-
-<blockquote>
-<p>ちなみに 1.5系からは tsconfig を読み込むように変更されているのですが、現時点私たちのプロジェクトではビルドが失敗するので、まだ 1.4 系を利用しています。 問題はすでに issue TypeScript path mapping is not working. になっており、 パスエイリアスを使っているときに、うまくファイルが import できないところなのですが、これが解決されれば transformer の設定も不要になるので、 とても便利になるはずです。</p>
-</blockquote>
-
-<p>そこから他の issue を調べたりしているうちに解決策がわかったので、今回の記事で追記していきます。</p>
-
-<p><code>@swc-node/jest</code> の最新版（現時点では <code>1.5.2</code> ）を使います。</p>
-
-<h2>パスエイリアスの指定方法</h2>
-
-<p>1.5系からは tsconfig を読み込むので、 <code>jest.config.js</code> の <code>transform</code> は以下のように記述すれば良いことになっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
-<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
-  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">]</span>
-  <span class="p">},</span>
-  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
-  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">},</span>
-<span class="p">};</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
-</code></pre></div>
-<p>パスエイリアスは <code>moduleNameMapper</code> に記述されているとおり、テストコードからは <code>@/domain/entities/user-entity</code> みたいに <code>@</code> をルートにしてパスエイリアスを使えるようにしています。</p>
-
-<p>で、このままだとパスエイリアスがすべて解決されません、というのが前回までの内容でした。</p>
-
-<p>今回は調べるなかで、以下のように指定することでパスエイリアスがうまく利用できるようになったので、紹介します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('@jest/types').Config.InitialOptions} */</span>
-<span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">moduleFileExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">ts</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">js</span><span class="dl">'</span><span class="p">],</span>
-  <span class="na">transform</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">'</span><span class="s1">^.+</span><span class="se">\\</span><span class="s1">.ts$</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span>
-      <span class="dl">'</span><span class="s1">@swc-node/jest</span><span class="dl">'</span><span class="p">,</span>
-      <span class="c1">// ここから</span>
-      <span class="p">{</span>
-        <span class="na">paths</span><span class="p">:</span> <span class="p">{</span>
-          <span class="dl">'</span><span class="s1">@/*</span><span class="dl">'</span><span class="p">:</span> <span class="p">[</span><span class="s2">`</span><span class="p">${</span><span class="nx">__dirname</span><span class="p">}</span><span class="s2">/*`</span><span class="p">],</span>
-        <span class="p">}</span>
-      <span class="p">}</span>
-      <span class="c1">// ここまで</span>
-    <span class="p">]</span>
-  <span class="p">},</span>
-  <span class="na">testMatch</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">**/*.test.ts</span><span class="dl">'</span><span class="p">],</span>
-  <span class="na">moduleNameMapper</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">'</span><span class="s1">@/(.*)$</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">&lt;rootDir&gt;/$1</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">},</span>
-<span class="p">};</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
-</code></pre></div>
-<p><code>transform</code> で <code>paths</code> の指定をするとパスエイリアスが使えるようになります。
-tsconfig にも <code>paths</code> の指定が以下のようになっています</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">paths</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">"</span><span class="s2">@/*</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span><span class="dl">"</span><span class="s2">./*</span><span class="dl">"</span><span class="p">]</span>
-  <span class="p">},</span>
-</code></pre></div>
-<p>で、tsconfig に記述しているとおりコードが書き変わると、そのまま相対パスになってしまい、 インポートパスが見つからないということになっていました。
-TypeScript は tsconfig でパスエイリアスを指定するとき <code>./*</code> のように書くとプロジェクトルートからの解釈をしてくれるのですが、 <code>swc</code> ではそのように解釈はしてくれません。
-そのため <code>jest.config.js</code> の <code>transform</code> で絶対パスに上書きするように記述します。 <code>jest.config.js</code> はJavaScriptコードなので、 <code>__dirname</code> を使って絶対パスに変更することができるようになります。</p>
-
-<p>これで安心して <code>@swc-node/jest</code> も最新版に追従できるようになりました。
-もし同じような問題になっている人の手助けになる記事になっていれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="@swc-node/jest を使ってテストを高速化する（v1.5対応版）" data-url="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html&t=@swc-node/jest%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E9%AB%98%E9%80%9F%E5%8C%96%E3%81%99%E3%82%8B%EF%BC%88v1.5%E5%AF%BE%E5%BF%9C%E7%89%88%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/07/12/swc-node-jest-path-alias.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h2>
-  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 05:03:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/import-maps.html" rel="tag">import maps</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://github.com/WICG/import-maps">import maps</a> については 2019年ごろに度々当ブログにて紹介してきました。
-で、それからもずっと issue なんかを追いかけてはきたのですが、昨年 Rails 7 に import maps が入るっていう驚きがあったのと、
-社内で発表する機会もあったので、少しスライドにまとめて発表しました。</p>
-
-<script async class="speakerdeck-embed" data-id="eb44656534a14719bfcb2847d29cf690" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>で、これを発表したのが 2021/11/29 （いい肉の日だった）のですが、それからすぐ 2021/12/15 Rails 7 がリリースされました。</p>
-
-<h3>Rails 7 における import maps</h3>
-
-<p><a href="https://rubyonrails.org/2021/12/15/Rails-7-fulfilling-a-vision">Rails 7.0: Fulfilling a vision</a></p>
-
-<p>で、import maps に関連する部分として <a href="https://github.com/rails/importmap-rails">Importmap for Rails</a> というライブラリができました。
-<a href="https://github.com/rails/rails/blob/main/Gemfile#L24">Rails本体の Gemfile に入っている</a>ので Rails 7+ をインストールすると、自動的に入ります。
-Railsのアプリケーションジェネレータを使うとき、 <code>javascript</code> オプション( <code>-j</code> )のデフォルトも <code>importmap</code> のようです。
-<a href="https://github.com/rails/rails/blob/2a98e28a31d3b9a720c4a9571c23b40433a035df/railties/lib/rails/generators/rails/app/app_generator.rb#L260">/railties/lib/rails/generators/rails/app/app_generator.rb#L26</a></p>
-
-<p>ドキュメントにも書いてあるとおり、現時点は Chrome/Edge 89+ だけが import maps をサポートしているので、<a href="https://github.com/guybedford/es-module-shims">es-module-shims</a>を使っているようです。</p>
-
-<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap<em>tags</em>helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
-ドキュメントによると、設定は <code>config/importmap.rb</code> にするようです。</p>
-
-<p>公式ドキュメントによると、以下のように記述するようです。</p>
-<div class="highlight"><pre class="highlight ruby"><code><span class="c1"># config/importmap.rb</span>
-<span class="n">pin</span> <span class="s2">"react"</span><span class="p">,</span> <span class="ss">to: </span><span class="s2">"https://ga.jspm.io/npm:react@17.0.2/index.js"</span>
-</code></pre></div>
-<p>もしくはコマンド実行すると、最新のバージョンで <code>config/importmap.rb</code> に追記してくれるようです。
-<a href="https://github.com/rails/importmap-rails#using-npm-packages-via-javascript-cdns">Using npm packages via JavaScript CDNs</a></p>
-<div class="highlight"><pre class="highlight shell"><code>./bin/importmap pin react react-dom
-</code></pre></div>
-<p>なるほど、といいたいところですが、ここで一つ疑問がおきます。
-これって <code>npm outdated</code> や <code>npm audit</code> てきなことや、 dependabot での脆弱性チェックってどうなっちゃうのかしら？と。</p>
-
-<h3>パッケージの最新追従はどうなるのか？</h3>
-
-<p>さきほどの <code>importmap</code> コマンドですが、 <code>unpin</code> という削除するオプションはあるようですが、アップデート系は書いてないので無いのかな？
-あとは import maps の json を出力する <code>json</code> オプションがあるだけみたいだ（執筆時点のソースコードを確認した）。</p>
-
-<p>脆弱性があったパッケージのアップデートとか気にしないのかな？気にするよね？
-少し <code>package-lock.json</code> から <code>config/importmap.rb</code> に変換するライブラリとかないかな？と調べてみたりもしたのですが、
-見つかりませんでした。</p>
-
-<p>まぁそれより、ちゃんと issue 見るか、と思っていたらちゃんとありました。
-<a href="https://github.com/rails/importmap-rails/issues/19">/bin/importmap outdated</a></p>
-
-<p>で、上記に対するPRもありました。
-<a href="https://github.com/rails/importmap-rails/pull/109">Add outdated and audit commands</a></p>
-
-<p>こんな感じで出力されるようです。</p>
-
-<h4>Audit</h4>
-
-<pre>
-+-------------+----------+---------------------+--------------------------------------------------------+
-| Package     | Severity | Vulnerable versions | Vulnerability                                          |
-+-------------+----------+---------------------+--------------------------------------------------------+
-| glob-parent | high     | <5.1.2              | Regular expression denial of service                   |
-| is-svg      | high     | >=2.1.0 <4.3.0      | ReDOS in IS-SVG                                        |
-| is-svg      | high     | >=2.1.0 <4.2.2      | Regular Expression Denial of Service (ReDoS)           |
-| lodash      | critical | <4.17.12            | Prototype Pollution in lodash                          |
-| lodash      | high     | <4.17.21            | Command Injection in lodash                            |
-| lodash      | high     | <4.17.19            | Prototype Pollution in lodash                          |
-| lodash      | high     | <4.17.11            | Prototype Pollution in lodash                          |
-| lodash      | low      | <4.17.5             | Prototype Pollution in lodash                          |
-| lodash      | moderate | <4.17.21            | Regular Expression Denial of Service (ReDoS) in lodash |
-| lodash      | moderate | <4.17.11            | Prototype pollution in lodash                          |
-| nth-check   | moderate | <2.0.1              | Inefficient Regular Expression Complexity in nth-check |
-+-------------+----------+---------------------+--------------------------------------------------------+
-  11 vulnerabilities found: 6 high, 3 moderate, 1 low, 1 critical
-</pre>
-
-<h4>Outdated</h4>
-
-<pre><code>
-+-----------------+---------------+---------------+
-| Package         | Current       | Latest        |
-+-----------------+---------------+---------------+
-| @jspm/core      | 2.0.0-beta.18 | 2.0.0-beta.19 |
-| @jspm/core      | 2.0.0-beta.2  | 2.0.0-beta.19 |
-| aaaasssstimulus | 2.0.0         | Not found     |
-| glob-parent     | 3.1.0         | 6.0.2         |
-| is-glob         | 3.1.0         | 4.0.3         |
-| is-svg          | 3.0.0         | 4.3.2         |
-| lodash          | 4.17.1        | 4.17.21       |
-| nth-check       | 1.0.0         | 2.0.1         |
-| react           | 16.0.0        | 17.0.2        |
-| stimulus        | 2.0.0         | 3.0.1         |
-+-----------------+---------------+---------------+
-  10 outdated packages found
-</code></pre>
-
-<p>CI で dependabot みたいなのがどう検知するかといった課題はあるかもですが、いったんコマンド結果が出力できるので、それをシェルでゴニョゴニョすれば
-アップデートの検知や脆弱性の発見はできるようになりそうですね。</p>
-
-<h3>合わせて読みたい</h3>
-
-<p>さいごに Zenn にも良い記事があったので、紹介しておきます。
-<a href="https://zenn.dev/takeyuweb/articles/996adfac0d58fb">Rails 7.0 で標準になった importmap-rails とは何なのか？</a></p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..." data-url="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html&t=Rails%207%E3%81%AE%E6%8E%A1%E7%94%A8%E6%8F%90%E6%A1%88%E3%81%A7%E6%B3%A8%E7%9B%AE%E3%82%92%E9%9B%86%E3%82%81%E5%A7%8B%E3%82%81%E3%81%9F%20Import%20maps%20%E3%81%AE%E9%81%8E%E5%8E%BB%E3%80%81%E7%8F%BE%E5%9C%A8%E3%80%81%E3%81%9D%E3%81%97%E3%81%A6%E6%9C%AA%E6%9D%A5%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6..." class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/3/">« Prev</a>
@@ -971,16 +894,16 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -991,8 +914,14 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -1000,7 +929,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -1009,7 +938,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -1058,9 +987,6 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -1072,10 +998,10 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1094,7 +1020,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

@@ -277,7 +277,342 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a></h2>
+            <h2 class="title"><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a></h2>
+  <p class="postdate"><a href="/2013/11/04.html" title="Permanent link">Monday, November 04, 2013 06:11:42 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/fabricate.html" rel="tag">fabricate</a>
+      <a href="/tags/fixture.html" rel="tag">fixture</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  </p>
+
+<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
+
+<h3>変更概要</h3>
+
+<ul>
+<li>closure だけでなく、array 形式での属性値変更が可能に</li>
+<li>初期連番をconfigで指定可能に</li>
+<li>sequenceメソッドで柔軟な採番が可能に</li>
+</ul>
+
+<h3>array形式での属性値変更</h3>
+
+<p>これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。<br>
+これを直接引数でarrayを指定できるようにしました。  </p>
+
+<p>従来の記述方法：  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+</code></pre></div>
+<p>新しくサポートした記述方法：  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
+});
+</code></pre></div>
+<p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
+
+<p>$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  </p>
+
+<h3>初期連番をconfigで指定</h3>
+
+<p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::config(function($config) {
+    $config-&gt;sequence_start = 100;
+});
+</code></pre></div>
+<p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
+config関数を使わない場合は、従来通り1から開始されます。  </p>
+
+<h3>sequenceメソッドで柔軟な採番</h3>
+
+<p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
+この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::attributes_for('Post', 10, function($data, $world){
+    return [
+        'id'=&gt; $world-&gt;sequence('id'),
+        'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
+    ];
+});
+</code></pre></div>
+<p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
+$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
+
+<p>sequenceメソッドは、3つの利用方法に対応しています。  </p>
+
+<ul>
+<li><p>configで設定された開始値(または1)から開始する連番にする：   </p>
+
+<p>$world-&gt;sequence(&lsquo;id&rsquo;)</p></li>
+<li><p>開始番号を指定して連番にする：  </p>
+
+<p>$world-&gt;sequence(&lsquo;id&rsquo;, 10) // この例では10から開始する</p></li>
+<li><p>独自形式のユニーク文字列を作成する：  </p>
+
+<p>$world-&gt;sequence(&lsquo;title&rsquo;, function($i){ return &ldquo;Title {$i}&rdquo;; }
+// または開始番号を指定して
+$world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$i}&rdquo;; }</p></li>
+</ul>
+
+<p>一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  </p>
+
+<p>本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。<br>
+つまり呼び出し毎に開始番号から採番されます。  </p>
+
+<p>もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。<br>
+おそらく対応としては config で定義でできるようにすると思います&hellip;（併用でなく、プロセスか生成毎かを選択するイメージ）  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました" data-url="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BFFabricate%E3%81%ABsequence%E3%81%AA%E3%81%A9%E3%81%AE%E6%A9%9F%E8%83%BD%E3%82%92%E8%BF%BD%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/10/12/cakephp-fabricate.html">CakePHPのデータジェネレータ Fabricate を作りました</a></h2>
+  <p class="postdate"><a href="/2013/10/12.html" title="Permanent link">Saturday, October 12, 2013 08:10:45 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/fablicator.html" rel="tag">fablicator</a>
+      <a href="/tags/fixture.html" rel="tag">fixture</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;Fabricate は Ruby の Fabricator に影響を受けたもので、データを簡単にすばやく生成する CakePHP2 用のプラグインです。  </p>
+
+<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
+
+<p>動作確認しているバージョンはCakePHP2.3.10, CakePHP2.4.1ですが、他のバージョンでもCakePHP2系なら動くと思います。  </p>
+
+<h3>インストール方法</h3>
+
+<p>Composer対応しているので、composer.json に追加するだけで大丈夫です。テストだけに利用するなら require-dev に、実行コードからも使いたい場合は require に追加してください。どちらでも動作します。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>    "extra": {
+        "installer-paths": {
+            "Plugin/Fabricate": ["sizuhiko/fabricate"]
+        }
+    },
+    "require": {
+        "composer/installers": "*",
+        "sizuhiko/fabricate": "*"
+    }
+</code></pre></div>
+<p>composer/installers に対応していますので、お好みで extra/installer-paths に追加すれば、Plugin の下に良い感じでインストール可能です。  </p>
+
+<p>後は bootstrap.php でプラグインの宣言を追加してください。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>CakePlugin::load('Fabricate');
+</code></pre></div>
+<h3>概要</h3>
+
+<p>Fabricateプラグインには3つのメソッドがあります。  </p>
+
+<ul>
+<li>Fabricate::attributes<em>for(:model</em>name, :number<em>of</em>generation, :callback) : CakePHPの属性配列をデータ付きで返します（複数件生成可能）</li>
+<li>Fabricate::build(:model_name, :callback) : CakePHPのモデルインスタンスを返します（1件のみ生成可能）</li>
+<li>Fabricate::create(:model<em>name, :number</em>of_generation, :callback) : 指定された件数分データベースに生成する</li>
+</ul>
+
+<h3>用途</h3>
+
+<p>このプラグインは以下のような用途にとても向いています。  </p>
+
+<ul>
+<li>ページングのテストをするのに大量にデータを生成したい</li>
+<li>fixture だと各テストケースで同じデータが生成されてしまうけど、各テストケース毎に違うデータを生成したい。かつテスト対象のカラム以外は適当な値が自動的に入って欲しい</li>
+<li>Bddプラグイン（CakePHPのBehatインテグレーションプラグイン）のステップで「Postモデルに100件のデータが登録されていること」みたいなのを書きたいのに、簡単に記述できないなぁと思ったとき</li>
+</ul>
+
+<h3>使い方＆サンプル</h3>
+
+<h4>attributes_for</h4>
+<div class="highlight"><pre class="highlight plaintext"><code>$results = Fabricate::attributes_for('Post', 10, function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+
+// $results is followings :
+array (
+  0 =&gt; 
+  array (
+    'id' =&gt; 1,
+    'title' =&gt; 'Lorem ipsum dolor sit amet',
+    'body' =&gt; 'Lorem ipsum dolor sit amet, aliquet feugiat. Convallis morbi fringilla gravida, phasellus feugiat dapibus velit nunc, pulvinar eget sollicitudin venenatis cum nullam, vivamus ut a sed, mollitia lectus. Nulla vestibulum massa neque ut et, id hendrerit sit, feugiat in taciti enim proin nibh, tempor dignissim, rhoncus duis vestibulum nunc mattis convallis.',
+    'created' =&gt; '2013-10-09 12:40:28',
+    'updated' =&gt; '2013-10-09 12:40:28',
+  ),
+  1 =&gt; 
+  array (
+  ....
+</code></pre></div>
+<p>これでPostモデル（第一引数に名前を指定）のスキーマ情報からカラム（属性）を取得して、タイプに応じた値が自動的に生成されて配列で戻ります。<br>
+第二引数に生成するレコード件数を指定します。<br>
+ただ、全部自動的だと困るという場合があるので、3つ目の引数にコールバック関数を指定可能になっています。このコールバック関数は、10件のデータを生成する場合、都度計10回呼び出されます。<br>
+戻り値として、属性名をキーに値を持つ連想配列を指定すると、都度array_mergeが実行されます（recursiveではありません）。<br>
+データの自動生成処理は、CakePHPのコアにあった FixtureTask の _generateRecords() というメソッドを拝借してきて、そのまま利用しています。<br>
+CakePHPでfixtureを生成したときrecordsに入っている内容と同じ物になります。  </p>
+
+<p>このメソッドの使いどころとしては、関連先との関連も生成して saveAll したいといったような、ちょっと応用的な使い方に向いていると思います。  </p>
+
+<p>また、第二引数、第三引数は省略可能ですので、  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 1件だけ生成
+Fabricate::attributes_for('Post');
+// 1件だけコールバックを指定して生成
+Fabricate::attributes_for('Post', function($data){
+    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
+});
+// 10件生成
+Fabricate::attributes_for('Post', 10);
+</code></pre></div>
+<p>というバリエーションでも利用可能です。  </p>
+
+<h4>build</h4>
+
+<p>とりあえず本家のFabricatorに近づけたたくて作ったメソッドですが、CakePHPではモデルのインスタンスを複数同時に持てないので、正直使い勝手としては微妙です（作者が言うなという話ですが）。  </p>
+
+<h4>create</h4>
+
+<p>最も簡単にデータをデータベースに保存するなら、このメソッドで十分です。<br>
+attributes<em>forで作ったレコードをすべてデータベースに保存します。<br>
+引数の使い方はattributes</em>forと同一になっています。  </p>
+
+<h3>きっかけと今後</h3>
+
+<p>ページングのテストを書こうとして、とにかく面倒になってきて「<strong>何でCakePHPにはFabricatorがないんだー</strong>」というノリで、カッとなって作った系ですので、機能的には最低限になっています。<br>
+かつたぶん最新のFabricatorのクローンとも言い難い状況です。  </p>
+
+<p>またカッとなったら、最新のFabricatorの機能に近づけようかな〜、どなかた使っていただける方がいればご要望、機能追加は GitHubのIssue、Pull Requestでお願いします。  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのデータジェネレータ Fabricate を作りました" data-url="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html&t=CakePHP%E3%81%AE%E3%83%87%E3%83%BC%E3%82%BF%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AC%E3%83%BC%E3%82%BF%20Fabricate%20%E3%82%92%E4%BD%9C%E3%82%8A%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/10/12/cakephp-fabricate.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h2>
+  <p class="postdate"><a href="/2013/09/13.html" title="Permanent link">Friday, September 13, 2013 02:09:19 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/controller.html" rel="tag">Controller</a>
+      <a href="/tags/phpunit.html" rel="tag">PHPUnit</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<h3>コントローラのテストは難解である</h3>
+
+<p>とは言え、テストを書かないというのも何なのでテストを書くわけですが。  </p>
+
+<p>CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>class PostsTestController extends PostsController {
+// モックしたい処理
+....
+}
+class PostsControllerTest extends ControllerTestCase {
+
+    public function testアクションをテストする() {
+        $this-&gt;testAction('url', array('controller'=&gt;'PostsTestController'));
+    }
+}
+</code></pre></div>
+<p>ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  </p>
+
+<h3>なぜモックが必要？</h3>
+
+<p>もしこの記事を読んでいる方で、testActionがブラウザからも、コンソールからも成功するよ、という場合は依存関係が少ないか、たまたまなのかもしれません。  </p>
+
+<p>Webアプリケーションのコントローラは様々な依存関係があり、簡単にテストを通過させることができません。特にSessionComponentを使ったactionをテストする場合、問題が発生します。<br>
+Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  </p>
+
+<p>しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 実際のコントローラ
+    $components = ['Session', 'Auth'];
+
+    public function index() {
+        $hoge = $this-&gt;Session-&gt;read('hoge');
+        .....
+    }
+
+// テストケース
+    public function testIndex() {
+        CakeSession::write('hoge', 'fuga');
+        $this-&gt;testAction('/posts/index');
+        ......
+    }
+</code></pre></div>
+<p>みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  </p>
+
+<h3>どうやってモックを使うのか</h3>
+
+<p>で、調べてみたら意外と解説してある部分がない。こういうときはCakePHPのコアテストコードを見るのが一番です。<br>
+具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/&hellip;でないところがミソ）。  </p>
+
+<p>で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>    public function testIndex() {
+        $this-&gt;controller = $this-&gt;generate("Posts", ['components' =&gt; ['Session']]);
+        $this-&gt;controller-&gt;Session-&gt;expects($this-&gt;any())
+             -&gt;method('read')
+             -&gt;will($this-&gt;returnValueMap([['hoge', 'fuga']]));
+        $this-&gt;testAction('/posts/index');
+</code></pre></div>
+<p>$this-&gt;generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。<br>
+このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  </p>
+
+<p>generate()の戻り値はコントローラのモックオブジェクトになっています。さらにSessionもモックしているので、 $this-&gt;controller-&gt;Session に対して、read(&lsquo;hoge&rsquo;)はいつでも&#39;fuga&#39;を返すという記述をすることが可能です。<br>
+モック自体はPHPUnitのモックオブジェクトなので、詳しい記法はPHPUnitのマニュアルからモックオブジェクトの章を参照してください。  </p>
+
+<p><a href="http://phpunit.de/manual/3.7/ja/test-doubles.html#test-doubles.mock-objects">PHPUnit3.7のモックオブジェクト解説</a>  </p>
+
+<h3>最後に</h3>
+
+<p>コントローラのテストは本当に難解です。ただコアのテストコードを見るだけでもだいぶ理解が深まります。一度自分のアプリでテストを書く前に、その親クラス(ModelとかControllerなど)やテストケースのテストコードを見ると、これまでにテストの書き方がわからなかったところも、腑に落ちることがあるはずです。  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPのコントローラテストで注意すること" data-url="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html&t=CakePHP%E3%81%AE%E3%82%B3%E3%83%B3%E3%83%88%E3%83%AD%E3%83%BC%E3%83%A9%E3%83%86%E3%82%B9%E3%83%88%E3%81%A7%E6%B3%A8%E6%84%8F%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a></h2>
   <p class="postdate"><a href="/2013/02/19.html" title="Permanent link">Tuesday, February 19, 2013 02:02:05 PM</a></p>
   <p class="tags">
       <a href="/tags/bdd.html" rel="tag">BDD</a>
@@ -524,535 +859,6 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
     </div>
 
   </div>
-  <h2 class="title"><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a></h2>
-  <p class="postdate"><a href="/2012/11/08.html" title="Permanent link">Thursday, November 08, 2012 11:11:53 PM</a></p>
-  <p class="tags">
-      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/2012_matsuri_02.jpg" alt="" /><br>
-On this year, PHP Matsuri had convened of 3rd time around.<br>
-The participant who first timer and the repeater are split 50:50.<br>
-It become common composition of the participant in the event of 100 person scale.   </p>
-
-<p>As a motive of participation are followings:<br>
-1. Repeater brings the friend of the first participation.<br>
-2. Participant in the vicinity who saw last year&rsquo;s article<br>
-3. Enthusiastic fan  </p>
-
-<p>I think that PHP Matsuri has become a annual event at late autumn.  </p>
-
-<p>As the PHP Matsuri staff, this maybe first post. So I stop it only in an easy summary.<br>
-To be continues and the details are posted by DANCHO.   </p>
-
-<blockquote>
-<p>PHP Matsuriも3回目の開催となりました。<br>
-参加者は、始めての人が半分ぐらい、リピーターが半分ぐらいで、100人規模のイベントでは良くある人数構成になってきました。<br>
-参加の動機としては、<br>
-1. リピーターの人が初参加の友人を連れてくる<br>
-2. 去年の記事を見た、近隣の参加者<br>
-3. 熱狂的ファン<br>
-があると思っています。  </p>
-</blockquote>
-
-<p>そういう意味でPHP Matsuriは晩秋の恒例行事となってきたのではないかと思います。  </p>
-
-<p>PHP Matsuri 青年団の最初をきって書くので、簡単なまとめだけに留めたいと思います。詳しくは団長が&hellip;..  </p>
-
-<h3>Thanks:</h3>
-
-<p><img src="/images/blog/2012_matsuri_03.jpg" alt="" /><br>
-It had been offered by many sponsors from the enterprise to the individual.<br>
-As a result, a very gorgeous prize was able to be prepared. And, it became a very happy event.<br>
-I&rsquo;m really thankful.  </p>
-
-<blockquote>
-<p>感謝：<br>
-今年は、企業から個人まで多くのスポンサー様にご提供いただき、大変豪華な賞品を用意でき、とても楽しいイベントになりました。本当に感謝しております。  </p>
-</blockquote>
-
-<h3>This year&rsquo;s challenge:</h3>
-
-<p>The 1st time and the 2nd times were the same hotel groups.<br>
-It is easy to have done arrangements and the preparation about the hall.<br>
-However, this year of the third times was a hall of &ldquo;Fukuoka Prefecture Ruby and contents industry promotion center&rdquo; that a public organization manages .<br>
-(The hotel prepared it until last year. )Because the task had increased, the staff became busy.<br>
-However, the registration fee became low price, and the prize of LT became gorgeous.   </p>
-
-<blockquote>
-<p>今年のチャレンジ：<br>
-1回目、2回目とも同じ系列のホテルだったこともあり、会場に関する手配や準備はとてもやりやすかったです。3回目の今年は「福岡県Ruby・コンテンツ産業振興センター」という公的な機関が運営する会場でした。ホテルの人が担当してくれていた雑務をスタッフ主導でやることは大変でしたが、その分参加費が安くなったりLTの賞品が豪華になったことで参加者へ還元できたのではないかと思っています。  </p>
-</blockquote>
-
-<h3>This is good:</h3>
-
-<p><img src="/images/blog/2012_matsuri_04.jpg" alt="" /><br>
-It is some the improved points that it is a few problem until last year<br>
-1. The wifi doesn&rsquo;t disconnect. We think that we solved the problem of the network because we have controlled the connection with 3 access point.<br>
-2. Just good temperature.<br>
-There were some comments that it was cold, too. However, I think the improvement to have been done since last year (Because the hall is too wide and air-conditioning was not effective).<br>
-3. Neither the conference nor the workshop get entangled. it became a concentrating workshop by using another conference room.   </p>
-
-<blockquote>
-<p>特に良かった事：<br>
-昨年までちょっと課題だと思っていた部分で、いくつか改善された点ですが<br>
-1. 無線が切れない。うまく分散することで、ネットワークの問題はなかったと思います<br>
-2. ちょうど良い温度。若干寒いというご意見もありましたが、昨年は会場が広すぎて空調が効かなかったりしたので、改善はされていたと思います<br>
-3. 講演とワークショップが混線しない。会議室が別だったこともあり、ワークショップを集中して開催できたと思います  </p>
-</blockquote>
-
-<h3>Important things :</h3>
-
-<p><img src="/images/blog/2012_matsuri_05.jpg" alt="" /><br>
-These are important thing in the event. I think that I was able to do this this year.<br>
-1. We are nice smile<br>
-2. It doesn&rsquo;t become loneliness. If first timer that there was not a friend either, then I think that they were able to exchange it at the ice break and break-time.<br>
-3. Meal is delicious.<br>
-4. Wanna become repeater. I think this to be feelings that each one was able to take home.   </p>
-
-<blockquote>
-<p>イベントで大事な事：<br>
-私がイベント大事だと思っていることで、今年も実践できていたと思います<br>
-1. みんな笑顔<br>
-2. ボッチを作らない。もちろん始めての参加で友人もいなかったという人もいると思いますが、アイスブレークや食事時間に交流できたと思います<br>
-3. 食事が美味しい<br>
-4. また参加したくなる。これは参加者皆さんが持ち帰っていただけた気持ちと期待しています  </p>
-</blockquote>
-
-<h3>At last, My presentation:</h3>
-
-<p><img src="/images/blog/2012_matsuri_01.jpg" alt="" /><br>
-In this year, I had plan to make demonstrate application look like the micro framework with using followings component:  </p>
-
-<ul>
-<li>Respect<br>
-<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
-<li>Rails Router DSL for PHP<br>
-<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
-</ul>
-
-<p>The demonstration was not complete.<br>
-When the sample application program became runnable a little more well, I want to announce in Blog or the PHP study meet up.   </p>
-
-<blockquote>
-<p>最後に私事：<br>
-今年は以下のどちらかを使って、マイクロフレームワーク的なコードが書けるところをデモする予定でした。  </p>
-</blockquote>
-
-<ul>
-<li>Respect。まだ dev-beta （一部α）なのですが、コンセプトおもしろい<br>
-<a href="https://github.com/Respect">https://github.com/Respect</a><br></li>
-<li>Rails Router DSL for PHP。Rails3のroutesをかなり再現できていておもしろい<br>
-<a href="https://github.com/Nami-Doc/php_rails_router">https://github.com/Nami-Doc/php<em>rails</em>router</a><br></li>
-</ul>
-
-<p>で、結局 Respectのバグっぽい箇所をふんでしまって、朝方6時ぐらいに Rails Routerに切り替えたけど、こっちはこっちでうまく動作しなくて、8時ぐらいに元鞘に。うまく動いている箇所だけで発表しました。<br>
-これらは、もうちょっとうまく動くサンプルアプリが作れたら、BlogやPHP勉強会などで発表したいと思います。  </p>
-
-<p>See you PHP Matsuri 2013 (maybe HOKKAIDO) !!  </p>
-
-<blockquote>
-<p>また来年のPHP Matsuri（たぶん北海道）で会いましょう  </p>
-</blockquote>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka" data-url="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html&t=PHP%20Matsuri2012%E3%82%92%E7%B5%82%E3%81%88%E3%81%A6%20%E3%80%9C%20Retrospective%20of%20PHP%20Matsuri%202012%20in%20Fukuoka" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2012/09/22/cakephp2.html">CakePHP2 実践入門 が出ます</a></h2>
-  <p class="postdate"><a href="/2012/09/22.html" title="Permanent link">Saturday, September 22, 2012 04:09:09 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<a href="http://www.amazon.co.jp/CakePHP2-%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80-WEB-PRESS-plus/dp/4774153249/ref=sr_1_1?ie=UTF8&amp;qid=1348298990&amp;sr=8-1"><img src="http://ec2.images-amazon.com/images/I/519jJILRR1L._SL500_AA300_.jpg" alt="" /></a></p>
-
-<p>表題のとおりCakePHP2.x系をターゲットにした本がいよいよ9/29に発売となります（池袋ジュンク堂では本日より10冊の先行発売があった模様です）。  </p>
-
-<p>本書のほとんどを企画の安藤さんが書いたのですが、わたしも共著のメンバーとして10章 プラグイン、11章 コンソール、12章 ユニットテスト を担当しました。</p>
-
-<h2>本書のオススメ・ポイント</h2>
-
-<p>執筆の一員という立場で手前味噌なのですが、まだポチっとしていない方の背中を押すという意味で、５つ紹介します。</p>
-
-<ul>
-<li>豪華な執筆陣</li>
-<li>最新のバージョン2.2への追従</li>
-<li>よりチェックされた本文とサンプルコード</li>
-<li>便利なチートシート付き</li>
-<li>隠れポイント</li>
-</ul>
-
-<h3>豪華な執筆陣</h3>
-
-<p>本の帯にも書かれている「コミュニティ主要メンバーが最前線のノウハウを凝縮」という部分に現れているとおり、著者それぞれはCakePHPの勉強会や、翻訳、本体へのパッチ送付、Blogなどで勢力的に活動しており、得意な分野について担当するという意味では共著のメリットを最大限に活かした本と言えます。  </p>
-
-<p>そういう意味で各章には、これまでのCakePHP本にはなかったTipsが含まれていると思います。「実践入門」というタイトルですが、現在CakePHPを使っている方にも何か新しい気付きがあると良いなと思っています。</p>
-
-<h3>最新のバージョン2.2への追従</h3>
-
-<p>本書の始まりはCakePHP2.0の頃であり、「もしかしたら発売する頃には2.1になっているかもね」と言われていたものです。それが気付くと2.1はリリースになり、まだ2.2はリリースとは遠いところにある存在でした。2.1に対応した内容がほぼFixしたころに、2.2が驚く程の速さでリリース（ほんとの直前には2.2.1）となりさらに追従というようなサイクルでした。もちろん本書を手に取っていただけるとわかるのですが、数カ所「このバージョンでは・・・」という記述が見られるようにバージョン違いによる説明が含まれているのも特徴です。</p>
-
-<h3>よりチェックされた本文とサンプルコード</h3>
-
-<p>今まで何度か執筆に参加したのですが、今回は期間も内容もかなりタフなものだったと思います。それはバージョン追従の問題だったり、なるべく多くの内容を詰め込みたいがページ数には上限があり内容を精査したりといったことです。そんな中でも技評の担当者の方が、本の全体を通しての統一感といったところに細かくチェックしてくれていて、共著にありがちなバラバラ感が少なく通して読んだときの違和感もないと思います。また最新バージョンでサンプルコードの動作確認を都度してくれた（これは今までにない経験）ので、サンプルコードを実際に動かして試してみたいという人にも、ここ動かないなぁという迷いが少ないと思います（もちろん著者もチェックしているつもりなのですが、内容の改変などにコード部分が追いついていないということもまま・・・汗）。</p>
-
-<h3>便利なチートシート</h3>
-
-<p>巻末の30ページに渡り記述されているチートシートは本当に便利で、これは現在CakePHPで開発している人にもとても役立つものになっていると思います。これだけでも本書を手元に置く価値があるかも？！</p>
-
-<h3>隠れポイント</h3>
-
-<p><img src="/images/blog/0DSC_0030.JPG" alt="" /> 
-最後にお気に入りポイントを1つ。  </p>
-
-<p>本のカバーを外すと裏表紙にCakePHPの公式マークがプリントされています。ぜひチェックしてみてください。</p>
-
-<h2>さいごに</h2>
-
-<p>さて執筆陣も6名となり、本のサインをコンプリートしたいと思う人にはかなり難しい状況と思います。ところが、それが叶う可能性が11/3,11/4にありますよ（という宣伝）。  </p>
-
-<p>11/3,11/4にPHP Matsuri 2012が福岡にて開催されます。  </p>
-
-<p><a href="http://www.phpmatsuri.net/2012/">http://www.phpmatsuri.net/2012/</a>  </p>
-
-<p>このイベントの青年団がページの下にアイコン表示されていますが、なんと著者6名全員が青年団！！  </p>
-
-<p>つまりMatsuriに参加するとサインがコンプリートすると思いますので、今すぐサイトからチケットを申し込みましょう（数に限りがあります）。個人スポンサーもお待ちしています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP2 実践入門 が出ます" data-url="http://blog.open.tokyo.jp/2012/09/22/cakephp2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/09/22/cakephp2.html&t=CakePHP2%20%E5%AE%9F%E8%B7%B5%E5%85%A5%E9%96%80%20%E3%81%8C%E5%87%BA%E3%81%BE%E3%81%99" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/09/22/cakephp2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2012/09/02/cakefest2012.html">CakeFest2012で発表＆参加しました</a></h2>
-  <p class="postdate"><a href="/2012/09/03.html" title="Permanent link">Monday, September 03, 2012 01:09:20 AM</a></p>
-  <p class="tags">
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/CakeFest2012logo.png" alt="" /> </p>
-
-<p>今年もBakerの祭典CakeFestが（昨年と同じ）マンチェスターで開催されました。  </p>
-
-<p>今年はCFPが通ってスピーカーとして参加することになり、だいぶ準備に時間をかけて&hellip;.と思ったら実質2週間ぐらい前に夏休みの宿題状態で片付けたのでした。。。  </p>
-
-<p>CakeFestのカンファレンスは9/1と9/2の2日間で行われたのですが、私は休暇(30,31の)も含め8/29夜からマンチェスター入りをしていました。
-ヒースローの乗り継ぎ（五輪効果で綺麗になっていた）や空港からの鉄道や徒歩など慣れたもので、飛行機や鉄道が遅れるという英国定番のトラブル（でもないらしい）で疲れての到着となりました。</p>
-
-<h2>カンファレンス1日目</h2>
-
-<p><img src="/images/blog/le2on.jpg" alt="" /> 
-簡単に1日目に参加したセッションをふりかえっておきます。</p>
-
-<h3>09:00 - 09:25 Keynote: CakeFest 2012 Introduction</h3>
-
-<p>これは本来グラハムがやる予定だったのですが、 急遽家庭の事情で来れなくなったので、最初のセッションがスキップされるかと心配された。時間になっても始まらないし、特に説明はないのだけれど、まぁCakeのコミュニティっぽいと言えばそうかなと思ったら、9:20になってマークが壇上に上がってなんとかキーノートを開始。</p>
-
-<ul>
-<li>今年は10カ国以上から参加者がいる。世界的に興味を持たれている</li>
-<li>2日間のワークショップと2日間のカンファレンス。2トラック、ライブストリーミングなど見どころがたくさん</li>
-</ul>
-
-<p>実はマークとグラハムはSkypeでやろうと思ったけど、うまくつながらなかったというのを休憩時間に聞きました。</p>
-
-<h3>09:25 - 09:40 Keynote: Hell has Frozen Over</h3>
-
-<ul>
-<li>マイクロソフトのスポンサーセッション</li>
-<li>99.95% SLA</li>
-<li>Linux,Mac,Windowsに対応したツールがある</li>
-<li>言語はASP.NETかNode.jsかPHP</li>
-<li>FTPかGitでデプロイできる</li>
-<li>始めは無料だよ</li>
-<li>サーバを作るときはリージョンとDBが選べる。MySQLが使えるよ</li>
-<li>Gitリポジトリを設定して、ダウンロードできるよ</li>
-<li>sharedインスタンスと、reserved（専用）インスタンスみたいなのがあって良いよ。最初sharedでresercedに移動も可能</li>
-<li>ロードバランサでどこかが止まっても違うインスタンスに自動的に再デプロイされる</li>
-<li>ビッグデータ、データベース、NoSQLストレージ、最適なネットワーク、キャッシュ（Memcacheとかね）、メッセージングなど使えるよ</li>
-<li>3ヶ月は無料</li>
-<li>詳しくは彼に聞いてね（午後のセッションをやる技術者らしい）、てきな振りで終わり w</li>
-</ul>
-
-<h3>09:40 - 10:30 Keynote: Making the most of 2.2</h3>
-
-<p>コアデベロッパーの中心人物であるマークとホセのセッション</p>
-
-<h4>ViewブロックがDRYじゃなくてなんとかしたかった</h4>
-
-<ul>
-<li>Jinja/Twigから影響を受けたよ</li>
-<li>slots/blocksレイアウトがテンプレートで使える</li>
-</ul>
-
-<h4>JSONとかXMLとか面倒だった</h4>
-
-<ul>
-<li>_serializeというset名でビューに特別に使えるようにしたお</li>
-</ul>
-
-<h4>Setの問題があったね</h4>
-
-<ul>
-<li>Set::extractはいいけど、遅いよ</li>
-<li>いくつかのxpathには対応していなかったし、解決できない問題もあった。内部はクレイジーだったぜ</li>
-<li>ハッシュにして1.6倍ぐらい速くなったよ</li>
-<li>ハッシュはsetの90%ぐらいが実装されている</li>
-</ul>
-
-<h4>CakeTimeとCakeNumberの問題があったね</h4>
-
-<ul>
-<li>HelperじゃなくてUtilライブラリで良いよね。HTML以外でも使うし</li>
-<li>良くテストされた datetimeを使っているよ</li>
-</ul>
-
-<h4>ロギングは特に問題だったね</h4>
-
-<ul>
-<li>pythonのscopesからアイデアをもらったよ</li>
-<li>Configで設定すればmongoとかにもストアできる</li>
-</ul>
-
-<h4>イベント</h4>
-
-<ul>
-<li>いろんなところで使えるイベントシステム</li>
-<li>いろいろとイベントが使えるようになっているよ</li>
-<li>コールバックを使って簡単にできるよ</li>
-<li>独自イベントも簡単！</li>
-</ul>
-
-<h4>キャッシュ</h4>
-
-<ul>
-<li>assetコンパイルを使うと、部品をキャッシュできるよ</li>
-<li>beforedispacherとかafterdispacherとか使うといいよ</li>
-<li>Responseオブジェクトを使って設定するよ</li>
-</ul>
-
-<h4>キャッシュグループ</h4>
-
-<ul>
-<li>何それ？</li>
-<li>キャッシュに論理的なグループを作れるよ</li>
-<li>動的にはできないから、自分のstrategyで計画しなくちゃ行けない</li>
-</ul>
-
-<h4>バリデーション</h4>
-
-<ul>
-<li>動的に追加、変更、削除できるようになったよ</li>
-</ul>
-
-<h3>11:00 - 11:30 Lightning Strikes from Windows Azure</h3>
-
-<p>ここから2トラックになる。
-マイクロソフトのスポンサーセッションで技術担当のCoryによるテクニカルセッション     </p>
-
-<ul>
-<li>Macでも開発できるよ（ここ強調しているな）</li>
-<li>数クリックで開始できるよ</li>
-<li>スケールを簡単に管理できるよ</li>
-<li>自動的にロードバランスするし、インスタンスを超えてストレージは共有される</li>
-</ul>
-
-<h4>Hello Worldのデモ</h4>
-
-<ul>
-<li>Macだぜ</li>
-<li>azure site でオプションがいっぱい出る</li>
-<li>azure site create &lsquo;cf-cakegest&rsquo; &ndash;git</li>
-<li>git add/commit/push</li>
-<li>azureの管理画面で cf-cakefestが出ている</li>
-<li>azure site browse &ndash; ブラウザが立ち上がった</li>
-<li>pushすると自動的にdeployment historyがpushされているように見える</li>
-<li>azure site deployment list &ndash; 一覧が見える</li>
-<li>azure site deployment redeploy &lsquo;コミットID&rsquo;</li>
-<li>モニターでいろいろチェックして（404の数とか）追加で見れる</li>
-<li>VMのOS選択はいろいろ選べるよ。もちろんLinuxも</li>
-<li>azure vm コマンド使うよ</li>
-<li>azure vm create -h とか</li>
-<li>azure vm create &lsquo;name&rsquo; &lsquo;vm&rsquo; &lsquo;user&rsquo; &lsquo;password&rsquo; -l &lsquo;リージョン&rsquo;</li>
-<li>composerやgithubが使えるぜー</li>
-</ul>
-
-<h3>11:30 - 12:30 Create a RESTfull api</h3>
-
-<p>@ceeramのほうのマークによるセッション。     </p>
-
-<p>RESTとはの基本にとても時間をかけて説明していた（重要）。基本からPATCH、HATEOASまで全部入りだった。その後CakePHPでの適用方法について</p>
-
-<h4>router に追加するぞ</h4>
-
-<ul>
-<li>Router::parseExtensions(); // all</li>
-<li>Router::parseExtensions(&lsquo;json&rsquo;); // only json</li>
-</ul>
-
-<h4>RequestHandlerコンポーネント使うよ</h4>
-
-<ul>
-<li>viewClassMapを使うと変えられるよ</li>
-<li>&lsquo;RequestHandler&rsquo;=&gt;array(&lsquo;viewClassMap&rsquo;=&gt;array(&lsquo;json&rsquo;=&gt;&lsquo;RestJson&rsquo;,&lsquo;xml&rsquo;=&gt;&lsquo;RestXml&rsquo;))) とか</li>
-</ul>
-
-<h4>その他</h4>
-
-<ul>
-<li>2.x からは _serialize を使って set すれば良いよ</li>
-<li>見つからなかったら NotFoundException とか</li>
-<li>Router::mapResources(array(&lsquo;Cats&rsquo;, &lsquo;Users&rsquo;))とか使うとマップできるよ</li>
-<li>APacheとかでPUTやDELETEを許可しておく必要があるよね</li>
-<li><code>Router::resourceMap(array(array(&#39;action&#39; =&gt; update&#39;,&#39;method&#39;=&gt;&#39;PATCH&#39;. &#39;id&#39;=&gt;true)</code> みたいに書くといいよね</li>
-<li>Router::mapResources(array(&lsquo;Cats&rsquo;, &lsquo;USers&rsquo;, &lsquo;Pizza.Orders&rsquo;),array(&lsquo;prefix&rsquo;=&gt;&lsquo;/api&rsquo;) とか書くといいよ</li>
-<li>Router::connect(&lsquo;url&rsquo;, action&hellip; ) とかでもOK</li>
-<li>CakeRequest::addDetector(&lsquo;patch&rsquo;, array(&lsquo;env&rsquo;=&gt;&lsquo;REQUEST_METHOD&rsquo;, &lsquo;value&rsquo;=&gt;&lsquo;PATCH&rsquo;)); なんて書き方もできるよ（知らなかった）</li>
-<li>CakeResponse 使ってね</li>
-<li>認証もいろいろサポート</li>
-<li>Versioningが重要だよ</li>
-</ul>
-
-<h3>12:30 - 13:30 Lunch</h3>
-
-<p>カンファレンスに来たらランチが美味しいことはとても重要だと感じました。今年は本当においしかった！！<img src="/images/blog/100_2305.JPG" alt="" /> </p>
-
-<h3>Random tips that will save your projects life</h3>
-
-<p>マリアーノのセッション。毎年興味深いセッションである。 
-内容はとにかく広範囲にわたっていて、</p>
-
-<ul>
-<li>Git使えやー</li>
-<li>Monitだろー</li>
-<li>サーバ監視しろやー</li>
-<li>PHPログはトラックした方がいいよね</li>
-<li>Duckesboard</li>
-<li>statsdとか</li>
-<li>Google Analyticsもいいよね</li>
-<li>やっぱ Varnishだよね</li>
-<li>PHP -&gt; Redis pub/sub -&gt; Node.js -&gt; soket.io -&gt; Client でいいよね</li>
-<li>Sphinx はスケーラビリティがあるし、PECLかSQL使えるし、リアルタイムインデックスだしいいよね</li>
-</ul>
-
-<p>みたいな感じ。</p>
-
-<h3>How to make your CakePHP website into a Phone app</h3>
-
-<p>ここでは安藤さんのセッションの裏で、関西弁こてこてのリチャードさんによるセッションに参加。</p>
-
-<ul>
-<li>PhoneGap では WebView を使ってappっぽく見せた</li>
-<li>Zendで作ったけどね（笑）</li>
-<li>2,231,400 のユニークユーザを捌いたぜ。さすがBBC&amp;オリンピック</li>
-<li>15,000,000 ページビュー/日だったぜ</li>
-</ul>
-
-<h3>その後</h3>
-
-<p>コアチームによるQ&amp;Aセッションがあり、<img src="/images/blog/100_2310.JPG" alt="" /> 
-いろいろ興味深いトークが繰り広げられました。</p>
-
-<p>さらにLTがありの流れでビアタイムに。LTは発表者が何度もやったり、スライドはない方が多かったりドラはなかったり（まぁ当然か）、なんか日本のLTに慣れているとフワフワ感がたまりませんな（笑）</p>
-
-<p>急遽#CakeRadioGaGaをGoogle+でやることになり、日本時間は日曜日の2時ぐらいだったのかな？ゲリラだったのに数名の閲覧者が見てくれました。</p>
-
-<h2>カンファレンス2日目</h2>
-
-<p>今日は発表日なのでなんか寝付きが悪くて、何度も目を覚ます事に。。。</p>
-
-<h3>09:00 - 10:00 Simple search with elastic search</h3>
-
-<p>2日目は最初から2トラックで。メイン会場はマークによりelastic seachのセッション。いわゆる検索エンジンで、よくApache Solrと比較されるやつ。マークのセッションはとてもわかりやすく、Cakeからのインテグレーション方法もよくわかった。これはスライドを見た方が良いね。</p>
-
-<h3>10:00 - 10:30 BDD for CakePHP applications</h3>
-
-<p>さて私のセッションですが、Twitterでの感想はなかなか好評だったみたいで、助かりました。マークからもランチのときにコメントをもらえたし。  </p>
-
-<ul>
-<li><a href="http://twl.sh/NFakdY">スライド:TwileShare</a></li>
-<li><a href="https://github.com/sizuhiko/CakeFest2012">発表用の解説文:Github</a></li>
-</ul>
-
-<p>トラブルが２つあって、</p>
-
-<ul>
-<li>セッション中にレンタルしていた3G Wifiが死亡して、急遽ホテルのWifiへ切り替え。デモの最中に慌ててしまった</li>
-<li>セッションのコンテンツ（英文）をDropboxに入れて、AndroidのMarkdownビューワーで見ながら話していたけど、Androidの自動回転がONのままで頻繁に回転が起きてしまう自体に。そうするとページTOPまでスクロールして、見直したら位置がおかしくなってアワアワしてしまった。自動回転はオフにしておかないとね。後半は記憶に頼って話しました。</li>
-</ul>
-
-<p>で、ネタとしては、BDDのBはBeerだよね、というのは今年も鉄板でこれは世界中で通じる良い導入になります。それとマンチェスターなので香川ですな。和みました。<img src="/images/blog/100_2316.JPG" alt="" /> </p>
-
-<h3>その後</h3>
-
-<p>なぜかここからざっくりとしたまとめになりますが、あまりCakeと直結する話題が少なくなったので、軽く。</p>
-
-<ul>
-<li>あのYour code sucks, let&rsquo;s fix itのRafaelによるセッションが。彼は現在アムステルダムに住んでいて、発表の内容からするとSymfonyガイなのかもしれないなと思いました。Composerの発表もしていたし。</li>
-<li>再びmackstarさんのセッションで、Backbone.js。これはCakeと直結しているのですが、まぁmackstarさんのgithubをチェックしましょう。Ember.jsについてはまだPHP界隈では使われていないし知っている人も少ないからBackbone.jsが良いねという話でした。</li>
-<li>グラハムがやる予定だったFablicのセッションをマークが。ちょうど新原さんがTwitterでFablicについてつぶやいたのでストリーミング見ているのかと思ったら偶然だったらしく、びっくりしました</li>
-</ul>
-
-<p>で、この後 PechaKuchaトークをやるまでの間に #CakeRadioGaGaの生放送を再び。日本では明日は月曜日なので早めの時間に。</p>
-
-<p>この間にやっぱり結構帰る人がいて、さらに戻ってみるとラリーが機材を撤去していたり、何だろうと思ったら応募者がいなかったらしい。まぁLTでだいぶ発表があったのでそんなもんかなと。あとグラハムがいなくてイベントの仕切りが終始ふわふわしていたのも影響しているみたいでした。</p>
-
-<p>もちろん定番のリアルケーキも出ましたよ。大きいものはホテルでは作れないということで、小さいものが7周年を記念して7つになったということでした。ランチデザートで出て、各テーブルに配られて行きました。そういえばケーキの前でのコアデベロッパー写真とか、全体の集合写真とかなかったなー<img src="http://p.twimg.com/A1yco62CEAA2zp9.jpg#twimg" alt="" /> 
-えっ？レポートが段々尻すぼみだって？。いや、実際イベント全体のテンションもそんな感じで。。。。察してください www</p>
-
-<h2>まとめ</h2>
-
-<p>良かった事、反省点、いろいろあるけど、悪い事はないのでみんな海外のカンファレンスも出るといいね。もちろん発表することが重要で、ボクみたいにあんまり英会話得意じゃないけど発表すれば声もかけてもらえるし、プラグインや発表資料をチェックしてくれたりするので、それでフォローできればOKと思っています。  </p>
-
-<p>来年（こそ？）は、カルフォルニアらしいのでマンチェスターより行きやすい！。みんなで参加しよう！！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeFest2012で発表＆参加しました" data-url="http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html&t=CakeFest2012%E3%81%A7%E7%99%BA%E8%A1%A8%EF%BC%86%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2012/09/02/cakefest2012.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/30/">« Prev</a>
@@ -1080,16 +886,16 @@ When the sample application program became runnable a little more well, I want t
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -1100,8 +906,14 @@ When the sample application program became runnable a little more well, I want t
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -1109,7 +921,7 @@ When the sample application program became runnable a little more well, I want t
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -1118,7 +930,7 @@ When the sample application program became runnable a little more well, I want t
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -1167,9 +979,6 @@ When the sample application program became runnable a little more well, I want t
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -1181,10 +990,10 @@ When the sample application program became runnable a little more well, I want t
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1203,7 +1012,7 @@ When the sample application program became runnable a little more well, I want t
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

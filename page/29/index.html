@@ -277,7 +277,639 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a></h2>
+            <h2 class="title"><a href="/2014/06/27/cake3-mokumoku-5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a></h2>
+  <p class="postdate"><a href="/2014/06/27.html" title="Permanent link">Friday, June 27, 2014 02:19:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/co-edo.html" rel="tag">Co-Edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2013/6/16(月) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/12132">CakePHP3 もくもく会 #5</a>」に参加しました。</p>
+
+<p>前回のイベントではBakeすることに成功したので、今回は大きく変更となったモデル周辺についてテストコードから把握してみる目標をたてました。</p>
+
+<h3>環境構築する（前回との差分）</h3>
+
+<p>3回目に参加した記事では</p>
+
+<blockquote>
+<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>composer -sdev create-project friendsofcake/app-template app dev-cake3
+</code></pre></div></blockquote>
+
+<p>のように記述したのですが、その後devが上がったところでこちらのスケルトンは最新追従していなかったので、CakePHPの公式スケルトンを使っています。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>composer create-project -s dev cakephp/app dev-cake3
+</code></pre></div>
+<h3>CakePHP3におけるモデル</h3>
+
+<p>CakePHP3では従来モデル（Model）と呼んでいたクラスはなくなり、テーブル（Table）とエンティティ（Entity）という2つのクラスに別れます。従来のモデルがテーブルに変更になりfindなどの責務を持っています。find結果は従来arrayで返却されてきたのですが、CakePHP3からはエンティティと呼ばれるオブジェクトで返却されます。
+CakePHP1から2にかけてbasukeさんが作られた<a href="https://github.com/josegonzalez/cakephp-entity">CakeEntity</a>というプラグインがあります。このプラグインはCakePHP3の新しいモデルのベースになったものでもあり、利用したことがあればそれほど違和感なく移行できるのではないかと思います。</p>
+
+<h3>Bakeされた結果を見てみる</h3>
+
+<p>前回bakeコマンドで生成したモデル層のファイルを見てみると</p>
+
+<p>App/Model/Table/PostsTable.php</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="kn">namespace</span> <span class="nn">App\Model\Table</span><span class="p">;</span>
+
+<span class="kn">use</span> <span class="nc">Cake\ORM\Table</span><span class="p">;</span>
+<span class="kn">use</span> <span class="nc">Cake\Validation\Validator</span><span class="p">;</span>
+
+<span class="cd">/**
+ * Posts Model
+ */</span>
+<span class="kd">class</span> <span class="nc">PostsTable</span> <span class="kd">extends</span> <span class="nc">Table</span> <span class="p">{</span>
+
+<span class="cd">/**
+ * Initialize method
+ *
+ * @param array $config The configuration for the Table.
+ * @return void
+ */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">array</span> <span class="nv">$config</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">table</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">displayField</span><span class="p">(</span><span class="s1">'title'</span><span class="p">);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">primaryKey</span><span class="p">([</span><span class="s1">'id'</span><span class="p">]);</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">addBehavior</span><span class="p">(</span><span class="s1">'Timestamp'</span><span class="p">);</span>
+
+    <span class="p">}</span>
+
+<span class="cd">/**
+ * Default validation rules.
+ *
+ * @param \Cake\Validation\Validator $validator
+ * @return \Cake\Validation\Validator
+ */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">validationDefault</span><span class="p">(</span><span class="kt">Validator</span> <span class="nv">$validator</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nv">$validator</span>
+            <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'valid'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'rule'</span> <span class="o">=&gt;</span> <span class="s1">'numeric'</span><span class="p">])</span>
+            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'create'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'title'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'body'</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nv">$validator</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>App/Model/Entity/Post.php</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+<span class="kn">namespace</span> <span class="nn">App\Model\Entity</span><span class="p">;</span>
+
+<span class="kn">use</span> <span class="nc">Cake\ORM\Entity</span><span class="p">;</span>
+
+<span class="cd">/**
+ * Post Entity.
+ */</span>
+<span class="kd">class</span> <span class="nc">Post</span> <span class="kd">extends</span> <span class="nc">Entity</span> <span class="p">{</span>
+
+<span class="cd">/**
+ * Fields that can be mass assigned using newEntity() or patchEntity().
+ *
+ * @var array
+ */</span>
+    <span class="k">protected</span> <span class="nv">$_accessible</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">];</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>のようになっています。</p>
+
+<p>PostsTable::initialize()は従来publicプロパティとして定義していたテーブル名などの情報です。
+validationDefault()は$validatesで定義していたバリデーション定義です。</p>
+
+<p>Postクラスはエンティティで$<em>accesibleに利用可能なフィールド名を列挙します。これはRailsでattr</em>accessorを定義するとプロパティにアクセス可能になるのと同様の効果を持つようになると推測されますが、現時点では何も実装はされていないようです。</p>
+
+<h3>コアのテストコード見てみる</h3>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">testRewind</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">();</span>
+        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+</code></pre></div>
+<p>とてもザックリしたところを切り抜きましたが、まぁそういうことです。
+これを2系のコードで似せて書くと</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">testRewind</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Model</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
+        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+</code></pre></div>
+<p>えっ！行数3の方が増えてないか？！とかいうツッコミはいらないですよ！！
+なんか聞いている程変わってないですよね。</p>
+
+<p>ではもう少し複雑な例を</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">testFindAllNoFieldsAndNoHydration</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nv">$table</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Table</span><span class="p">([</span>
+            <span class="s1">'table'</span> <span class="o">=&gt;</span> <span class="s1">'users'</span><span class="p">,</span>
+            <span class="s1">'connection'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">connection</span><span class="p">,</span>
+        <span class="p">]);</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span>
+            <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">where</span><span class="p">([</span><span class="s1">'id IN'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">toArray</span><span class="p">();</span>
+        <span class="nv">$expected</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'mariano'</span><span class="p">,</span>
+                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
+                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:16:23'</span><span class="p">),</span>
+                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:18:31'</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="p">[</span>
+                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'nate'</span><span class="p">,</span>
+                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
+                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:18:23'</span><span class="p">),</span>
+                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:20:31'</span><span class="p">),</span>
+            <span class="p">],</span>
+        <span class="p">];</span>
+        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertEquals</span><span class="p">(</span><span class="nv">$expected</span><span class="p">,</span> <span class="nv">$results</span><span class="p">);</span>
+    <span class="p">}</span>
+
+</code></pre></div>
+<p>どうもテーブルには findやwhere,orderなどのメソッドがあり、それをチェインさせてクエリを組み立てるようです。これも他のActiveRecord系の記述とほぼ変わらない形式になります。
+hydrate(false)を指定するとエンティティでなく従来の配列形式で値を戻すことができるようになっています。
+メソッドチェインの最後のtoArray()はエンティティを配列形式で取得するという意味ではありません。CakePHP3からはfindの戻りがイテレータになります（配列ではないので注意が必要）。なのでイテレータからすべて配列形式で取得するという意味になります。</p>
+
+<p>ではいくつかそれ以外の例を見てみましょう。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">])</span>
+            <span class="o">-&gt;</span><span class="nf">where</span><span class="p">([</span><span class="s1">'created &gt;='</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2010-01-22 00:00'</span><span class="p">)])</span>
+            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+</code></pre></div>
+<p>たとえば取得するカラムを絞り込むためにはselect()を利用するようです。従来はfieldsで指定していたカラム名の配列です。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'list'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'fields'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">]])</span>
+            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+</code></pre></div>
+<p>とはいえ、従来っぽい書き方もできるようです。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'threaded'</span><span class="p">)</span>
+            <span class="o">-&gt;</span><span class="nf">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'parent_id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">])</span>
+</code></pre></div>
+<p>！！！！
+findがチェインの中で2回呼ばれています。</p>
+
+<h3>これがCakePHP3のモデルだ！</h3>
+
+<p>findが2回とはどういうことなのか、ソースを調べてみました。
+まずTable::find()とは何者なのか</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">find</span><span class="p">(</span><span class="nv">$type</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
+        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">query</span><span class="p">();</span>
+        <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">select</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>どうもクエリオブジェクトを取得して、それにselect()をかけて….. callFinder って何ですか？を返すみたいです。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
+        <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">applyOptions</span><span class="p">(</span><span class="nv">$options</span><span class="p">);</span>
+        <span class="nv">$options</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">getOptions</span><span class="p">();</span>
+        <span class="nv">$finder</span> <span class="o">=</span> <span class="s1">'find'</span> <span class="mf">.</span> <span class="nb">ucfirst</span><span class="p">(</span><span class="nv">$type</span><span class="p">);</span>          <span class="c1">// ココ</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">method_exists</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span> <span class="nv">$finder</span><span class="p">))</span> <span class="p">{</span>    <span class="c1">// とココに注目</span>
+            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="p">{</span><span class="nv">$finder</span><span class="p">}(</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span> <span class="o">&amp;&amp;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span><span class="o">-&gt;</span><span class="nf">hasFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span><span class="o">-&gt;</span><span class="nf">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="p">[</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">throw</span> <span class="k">new</span> <span class="err">\</span><span class="nf">BadMethodCallException</span><span class="p">(</span>
+            <span class="nb">sprintf</span><span class="p">(</span><span class="s1">'Unknown finder method "%s"'</span><span class="p">,</span> <span class="nv">$type</span><span class="p">)</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>find(&lsquo;all&rsquo;) と呼ぶと<code>findAll</code>メソッドがあるかどうか（ビヘイビアも含めて）調べて、なければ例外になる。
+ということはTableにfindAllとかあるの？</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">findAll</span><span class="p">(</span><span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>あるよ！</p>
+
+<p>そういうことか、これがCakePHP3のモデルか。</p>
+
+<ul>
+<li>条件やら何やらメソッドチェインである</li>
+<li>旧来の配列形式に変換できる</li>
+<li>findXxxで独自の条件などをメソッドチェインに組み込める（今ココ）</li>
+</ul>
+
+<h3>独自の条件をメソッドチェインに組み込む</h3>
+
+<p>まずPostsテーブルにfindOrderIdDescというIDの降順で検索するメソッドを作成します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">findOrderIdDesc</span><span class="p">(</span><span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">order</span><span class="p">([</span><span class="s1">'id'</span><span class="o">=&gt;</span><span class="s1">'desc'</span><span class="p">]);</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>でそれを使うときは</p>
+<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Posts</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="nv">$config</span><span class="p">);</span> 
+    <span class="nv">$posts</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Posts</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'orderIdDesc'</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">();</span>
+</code></pre></div>
+<p>みたいに書けるわけです。
+もちろんいくつチェインしても良いです。
+例えば様々なテーブルで利用できるファインダ（findXxxメソッド）をtraitで共通化するもの面白そうです。</p>
+
+<p>このように新しいモデルはかなり期待の持てる作りにもなっています。
+CakePHP3もAlphaになりました。
+Alphaを使ってみての感想などはまた書きたいと思います</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた" data-url="http://blog.open.tokyo.jp/2014/06/27/cake3-mokumoku-5.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/06/27/cake3-mokumoku-5.html&t=CakePHP3%20%E3%82%82%E3%81%8F%E3%82%82%E3%81%8F%E4%BC%9A%235%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Model%20%E3%81%AE%E6%96%B0%E6%A9%9F%E8%83%BD%E3%82%92%E8%A9%A6%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/06/27/cake3-mokumoku-5.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/04/19/twfm-2014-04.html">Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた</a></h2>
+  <p class="postdate"><a href="/2014/04/19.html" title="Permanent link">Saturday, April 19, 2014 04:38:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/html5.html" rel="tag">HTML5</a>
+      <a href="/tags/test.html" rel="tag">Test</a>
+      <a href="/tags/shadow-dom.html" rel="tag">Shadow-DOM</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>html5jテスト部の活動「<a href="http://html5j-testing.doorkeeper.jp/events/10161">Test the Web Forward Meetup (仮), Tokyo#2</a>」に参加してきました。</p>
+
+<p>当日は1回目の反省をふまえて以下の仕様について実施することとなっていました。</p>
+
+<ul>
+<li>HTMLのルビ（のパーサ周り）</li>
+<li>CSS Text Decoration</li>
+<li>Shadow DOM</li>
+</ul>
+
+<p>私は Shadow DOM を選択しました。理由はGoogle JapanのHayatoさんがSpecを書いているので、テストがマージされやすいんじゃないか？！という不純な動機と、仕様が難しいので参加者が少ないかな？という妄想からでした（ただ実際は一番人気でした！）。</p>
+
+<p>そもそもこの活動は何なのか？というと、<code>みんなでHTML5やCSS、API仕様のテストケースを書こうというミートアップです</code>と書いてある通りです。
+私たちWebに関わるデベロッパーであれば必ず利用するHTMLやCSS、ブラウザによって実装がマチマチでとか、IEがぁーとか言ってますよね。</p>
+
+<p>なぜそうなるのか？</p>
+
+<p>まずHTMLとかCSSはW3Cの仕様があってそれを各ブラウザベンダが実装するわけです（もちろん先に実装されているケースもあります）。ですが結果としてどのように見えるのか？という部分に関して言うと、特に<code>こうなるべき</code>という具体的な結果が書いてある訳ではありません。そうなると各ベンダは自分の実装は正しいと思ってリリースするのですが、それぞれバラバラだったという結果が起きるのです。
+そのため、W3Cではテストの充実に力を入れているのですが、現時点ではリソース不足であったり、そもそもスペックの理解不足という自体が起こります。W3Cのスペックを読んだことがあると何となく想像できるかな、と思います。
+そこでTest the Web Forwardという公式イベントや、今回のようなコミュニティ主導のミートアップでテストコードを充実させようという機会が増えてきています。</p>
+
+<h3>テストの準備をする</h3>
+
+<p><a href="http://testthewebforward.org/docs/github-101.html">Test the Web Forwardのドキュメント</a>を見れば、今時のWebデベロッパーであれば問題なく環境を構築することができます。
+pythonのバージョンが2.7系だったり、<code>pip install html5lib</code> が必要なのに漏れていた（これについては今回のミートアップでPRが出されてマージされたはずです）り、ちょっと面倒なのですがまぁ問題ないでしょう。GitHub便利。そのうちVagrantファイルでも作ろうかなーと思っています。
+ここまでは事前の準備としてやっておきました。</p>
+
+<h3>当日やったこと</h3>
+
+<p><a href="http://w3c.github.io/webcomponents/spec/shadow/">W3Cのスペック</a>を見ましょう。
+当日はHayato Itoさんから仕様の説明を受けて進めるという流れだったのですが、それにしても仕様がむずい。
+新しいテストケースはちょっと置いておき、既存のテストを流してみることにしました。すると１つエラーがあって、typoであることがわかったので<a href="https://github.com/w3c/web-platform-tests/pull/861">Pull Request</a>。これはすぐ取り込まれました。嬉しい！W3Cへの貢献ですよ！！</p>
+
+<p>続けて Fail しているテストについて、スペシャリストの方に確認して修正方針を聞いたりして、テストを黙々と書いていきます。
+1日作業でしたが、2つのテスト失敗を修正してタイムアップ。</p>
+
+<h3>テストのやり方</h3>
+
+<p>テストには</p>
+
+<ul>
+<li>refテスト
+期待値:新しい仕様で書いたものと同じになるように既存の仕様で書いたもの、実際:新しい仕様で書いたもの、をスクリーンショットで比較する<br></li>
+<li>domテスト
+testharness.js という xUnit ベースのテスティングフレームワークが使える</li>
+</ul>
+
+<p>2通りのやり方があって、Shadow DOMはtestharness.jsでDOMのテストをする段階でした。
+testharness.jsはxUnit系なんですが、equals(:actual, :expected) の記法になっていて、キモい！という話をしたら、開発者がmozilla系の方でfire方面ではそういう記述になっているという話を（FireFoxのcontributorの方から）伺うことができました。
+これもミートアップでこその体験です。</p>
+
+<p>モダンなテストの書き方という意味では、サーバサイドスクリプトとか今時のJavaScriptのテスティングフレームワークの方がイケてる感じにできますが、これも歴史的な背景（DOMの細かい評価をするのにtestharness.jsが最適であるという理由）ということです。今後についてはわからないけど、各ブラウザベンダなどがテストするときに利用しているということで変更（例えばJasmineに変えるとか）には高い壁があるのかもしれないです。</p>
+
+<h3>最後に</h3>
+
+<p>W3Cの活動に貢献する作業は今後も続けて行きたいので、ミートアップなくてもテストコードを書き続けて行きたいとおもいました。
+ただmetaデータの書き方とかちょっと特殊なところもあったので、新しくやる場合は既存のテストコードをいくつか参照して、書き方のテンプレート部分を把握した方が良いと思いました。</p>
+
+<p>それと今回はW3Cのテストスペシャリストとして Gérard Talbot 氏が初来日ということで基調講演を聴く事ができました。<a href="http://test.csswg.org/suites/css2.1/nightly-unstable/html4/vertical-align-117a.htm">2年間かかって作ったという最高傑作テストケース</a>を見てスペックのテストとは！を感じれたのも良かった。早速 Ahem フォントもインストールしました。</p>
+
+<p>ミートアップ終了後は懇親会もあったのですが、体調不良のため最後までは持たずに帰宅いたしました&hellip;.</p>
+
+<p>会場を提供いただいた Adobe さん（ノベルティまでいただき感謝！）、スポンサー各社様の協力でとても楽しいイベント（部活）でした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Test the Web Forward Meetup (仮), Tokyo#2 に参加して Shadow DOM のテストを書いてきた" data-url="http://blog.open.tokyo.jp/2014/04/19/twfm-2014-04.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/04/19/twfm-2014-04.html&t=Test%20the%20Web%20Forward%20Meetup%20(%E4%BB%AE),%20Tokyo%232%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Shadow%20DOM%20%E3%81%AE%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E6%9B%B8%E3%81%84%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/04/19/twfm-2014-04.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/04/19/cake3-mokumoku-3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a></h2>
+  <p class="postdate"><a href="/2014/04/19.html" title="Permanent link">Saturday, April 19, 2014 02:04:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/co-edo.html" rel="tag">Co-Edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2013/4/4(金) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/10020">CakePHP3 もくもく会 #3</a>」に参加しました。</p>
+
+<p>CakePHP3もdev preview2、せっかくの機会なので初Cake3を体験しようということです。</p>
+
+<h3>環境構築する</h3>
+
+<p>イベントページからリンクされていたCo-Edo謹製Vagrantを使っても良かったのですが、私はCakePHPのコアデベロッパも参加するコミュニティ <a href="http://friendsofcake.com/">Friends Of Cake</a> の <a href="https://github.com/FriendsOfCake/vagrant-chef">Vagrant Chef</a> を使いました。</p>
+
+<p>事前に用意するものは</p>
+
+<ul>
+<li><a href="http://www.vagrantup.com/">Vagrant</a></li>
+<li><a href="https://www.virtualbox.org/">Virtual Box</a></li>
+</ul>
+
+<p>です。概ね最新版で大丈夫でしょう。
+ダウンロード＆インストールしたら、任意のディレクトリに先程のVagrant Chefをクローン（またはダウンロード）します。後は</p>
+<div class="highlight"><pre class="highlight plaintext"><code>cd vagrant-chef
+vagrant up
+</code></pre></div>
+<p>を実行してしばらく待ちましょう。Chefでインストールされるものは Vagrant Chef のREADMEに書いてあるので、そちらを参照してください。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>INFO: Chef Run complete in 541.542816 seconds
+INFO: Running report handlers
+INFO: Report handlers complete
+</code></pre></div>
+<p>なメッセージが出て、コンソールが戻ってきたらインストールの完了です。
+動作確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
+
+<p><img src="/images/blog/cakephp3_vagrant_chef.png" alt="" /></p>
+
+<p>デフォルト画面が出たら環境構築の完了です。</p>
+
+<h3>CakePHP3をインストールする</h3>
+
+<p>Vagrant ChefにはCakePHPをインストールするレシピも入っているのですが、Friends Of CakeにCakePHPの環境を作るスケルトンコマンドが別途用意されているので、レシピの編集は必要ないです。
+生成したVagrant環境にログインします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant ssh
+</code></pre></div>
+<p>ログイン直後</p>
+<div class="highlight"><pre class="highlight plaintext"><code>vagrant@precise64:/vagrant$ ls -la
+total 20
+drwxr-xr-x  1 vagrant vagrant  306 Apr 19 05:37 .
+drwxr-xr-x 25 root    root    4096 Apr 19 05:37 ..
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:37 app
+drwxr-xr-x  1 vagrant vagrant  510 Apr 19 05:30 cookbooks
+drwxr-xr-x  1 vagrant vagrant  442 Apr 19 05:30 .git
+-rw-r--r--  1 vagrant vagrant   12 Apr 19 05:30 .gitignore
+-rw-r--r--  1 vagrant vagrant 5489 Apr 19 05:30 README.markdown
+drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
+-rw-r--r--  1 vagrant vagrant 1179 Apr 19 05:30 Vagrantfile
+</code></pre></div>
+<p>のようになっていて、すでにappディレクトリが存在します。ここには先程のデフォルト画面が入っているのですが、今回は新しくアプリを作成するのでappディレクトリは削除します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>rm -rf app
+</code></pre></div>
+<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
+すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>composer -sdev create-project friendsofcake/app-template app dev-cake3
+</code></pre></div>
+<p>app の部分がアプリケーション名です。Vagrant Chefを使った場合はappを指定してください。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
+</code></pre></div>
+<p>最後に上記のような確認メッセージが出てくるので、履歴が気にならなければそのままEnterを押して終了します。
+インストールの確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
+
+<p><img src="/images/blog/cakephp3_installed.png" alt="" /></p>
+
+<p>おなじみのCakePHP画面が表示されます。tmpディレクトリが書き込みできないと警告されます。これはwebサーバのデフォルトuserがvagrantでなくwww-dataであるためですが、開発環境用なの気にせず</p>
+<div class="highlight"><pre class="highlight plaintext"><code>sudo chmod -R 777 app/tmp
+</code></pre></div>
+<p>などのコマンドで権限を書き換えてください。</p>
+
+<p><img src="/images/blog/cakephp3_tmp_ok.png" alt="" /></p>
+
+<h3>データベースを設定する</h3>
+
+<p>vagrant-chefを使うとデフォルトで database<em>name, test</em>database_name というデータベースが生成されています。
+ただ文字コードの指定などの問題もあると思うので、ここは自分でデータベースを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mysql -u root -p
+</code></pre></div>
+<p>vagrant-chefのMySQL rootパスワードは、vagrant-chefのREADMEを参照ください（現時点ではbananasです）。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mysql&gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+mysql&gt; CREATE DATABASE test_cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+</code></pre></div>
+<p>続けておなじみのpostsテーブルを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mysql&gt; use cake3_mokumoku;
+mysql&gt; CREATE TABLE `posts` (
+          `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+          `title` varchar(50) DEFAULT NULL,
+          `body` text,
+          `created` datetime DEFAULT NULL,
+          `modified` datetime DEFAULT NULL,
+          PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+</code></pre></div>
+<p>app-templateで作成したCakePHPアプリケーションは、<a href="https://github.com/josegonzalez/php-dotenv">php-dotenv</a>というライブラリを使って環境設定できるようになっています。
+<code>app/App/Config/.env.default</code> ファイルをコピーして <code>app/App/Config/.env</code>ファイルを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// app/App/Config/.env
+export DATABASE_URL="mysql://my_app:secret@localhost/my_app?encoding=utf8"
+export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_myapp?encoding=utf8"
+</code></pre></div>
+<p>の部分を</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// mysql://ユーザ名:パスワード@URL/データベース名
+export CAKEDATABASE_URL="mysql://root:bananas@localhost/cake3_mokumoku?encoding=utf8"
+export CAKEDATABASE_TEST_URL="mysql://root:bananas@localhost/test_cake3_mokumoku?encoding=utf8"
+</code></pre></div>
+<p>のように書き換えます。データベースの詳しい設定方法は <a href="https://github.com/AD7six/php-dsn">AD7six/php-dsn</a>を参照ください。
+exportの名前を変更しているのは、nginxのfastcgiパラメータとしてvagrantインストール時に</p>
+<div class="highlight"><pre class="highlight plaintext"><code>fastcgi_param DATABASE_URL          "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/database_name?encoding=utf8";
+fastcgi_param DATABASE_TEST_URL     "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/test_database_name?encoding=utf8";
+</code></pre></div>
+<p>のような指定がされているため、設定値が重複してしまいfastcgi側が優先される仕組みとなっています。
+このため異なる名前に変更しておきます。
+合わせて、app.phpでDATABASE<em>URLを利用している箇所もCAKEDATABASE</em>URLに変更します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// app/Config/app.php#L211-
+/**
+ * Connection information used by the ORM to connect
+ * to your application's datastores.
+ */
+    'Datasources' =&gt; [
+        'default' =&gt; DbDsn::parse(env('CAKEDATABASE_URL')),
+
+        /**
+         * The test connection is used during the test suite.
+         */
+        'test' =&gt; DbDsn::parse(env('CAKEDATABASE_TEST_URL'))
+    ],
+</code></pre></div>
+<h3>Cakeシェルを利用する</h3>
+
+<p>コンソールから</p>
+<div class="highlight"><pre class="highlight plaintext"><code>cd app/App
+Console/cake -h
+</code></pre></div>
+<p>とヘルプを表示してみたいのですが、もし</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
+</code></pre></div>
+<p>というエラーが表示されたら、app/App/Console/cake を編集して</p>
+<div class="highlight"><pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
+</code></pre></div>
+<p>の行を</p>
+<div class="highlight"><pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php "$@"
+</code></pre></div>
+<p>のように変更してください。現時点では -working オプションがあるとうまく動作しないためです。
+うまく動作した場合は</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>Console/cake <span class="nt">-h</span>
+
+Welcome to CakePHP v3.0.0-dev2 Console
+<span class="nt">---------------------------------------------------------------</span>
+App : App
+Path: /vagrant/app/App/
+<span class="nt">---------------------------------------------------------------</span>
+Current Paths:
+
+<span class="k">*</span> app: App
+<span class="k">*</span> root: /vagrant/app
+<span class="k">*</span> core: /vagrant/app/vendor/cakephp/cakephp
+
+Available Shells:
+
+<span class="o">[</span>CORE] bake, i18n, server, <span class="nb">test</span>
+
+<span class="o">[</span>app] console
+
+To run an app or core <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="o">[</span>args]
+To run a plugin <span class="nb">command</span>, <span class="nb">type </span>cake Plugin.shell_name <span class="o">[</span>args]
+To get <span class="nb">help </span>on a specific <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="nt">--help</span>
+</code></pre></div>
+<p>のように表示されるはずです。</p>
+
+<h3>Bakeする</h3>
+
+<p>では早速Bakeしましょう</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ Console/cake bake model Posts
+
+Welcome to CakePHP v3.0.0-dev2 Console
+---------------------------------------------------------------
+App : App
+Path: /vagrant/app/App/
+---------------------------------------------------------------
+One moment while associations are detected.
+
+Baking table class for Posts...
+
+Creating file /vagrant/app/App/Model/Table/PostsTable.php
+Wrote `/vagrant/app/App/Model/Table/PostsTable.php`
+
+Baking entity class for Post...
+
+Creating file /vagrant/app/App/Model/Entity/Post.php
+Wrote `/vagrant/app/App/Model/Entity/Post.php`
+
+Baking test fixture for Posts...
+
+Creating file /vagrant/app/Test/Fixture/PostFixture.php
+Wrote `/vagrant/app/Test/Fixture/PostFixture.php`
+
+Baking test case for App\Model\Table\PostsTable ...
+
+Creating file /vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php
+Wrote `/vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php`
+</code></pre></div>
+<p>うまく動きます！！</p>
+
+<p>続けてコントローラとビューも</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ Console/cake bake controller Posts
+$ Console/cake bake view Posts
+</code></pre></div>
+<p>で生成します。</p>
+
+<p>一通りbakeしたら、http://192.168.13.37/posts/ にアクセスしてみます。</p>
+
+<p><img src="/images/blog/cakephp3_baked_posts.png" alt="" /></p>
+
+<p>おなじみのBake画面が表示されます。追加、変更、削除などもうまく動作するようです（執筆時においては）。</p>
+
+<p><img src="/images/blog/cakephp3_baked_saved.png" alt="" /></p>
+
+<h3>最後に</h3>
+
+<p>このブログはもくもく会から2週間ぐらい経過してしまいましたが、今回再度新しい環境を作って試しています。
+もくもく会のときも同様の手順で進めていたのですが、いくらかbake周辺でコードの変更があったようで、うまく動いていた箇所が動かなくなっていたり、動かなかった箇所が動いていたりします。
+開発者用のプレビュー2ということで、今後もコードは変わって行くと思いますが、Bakeが動く事で取り急ぎ動作するプログラムのベースは作れるようになっています。
+実際にアプリケーションを作ってみてCakePHP3の新機能について感想を書いてみたり、要望を出してみたりすることも実リリースまでの期間としては大切なことだと思うので、今回簡単ではありますがブログとして公開してみました。</p>
+
+<p>Co-Edo では今後も CakePHP3もくもく会が開かれると思うので、イベントページをチェックしておくと良いと思います。私も可能な範囲で参加していこうと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP3 もくもく会#3 に参加して Bake してきた" data-url="http://blog.open.tokyo.jp/2014/04/19/cake3-mokumoku-3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/04/19/cake3-mokumoku-3.html&t=CakePHP3%20%E3%82%82%E3%81%8F%E3%82%82%E3%81%8F%E4%BC%9A%233%20%E3%81%AB%E5%8F%82%E5%8A%A0%E3%81%97%E3%81%A6%20Bake%20%E3%81%97%E3%81%A6%E3%81%8D%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/04/19/cake3-mokumoku-3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2014/03/30/composer-autoload.html">Composerのautoloadを使いこなす</a></h2>
   <p class="postdate"><a href="/2014/03/30.html" title="Permanent link">Sunday, March 30, 2014 06:22:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -481,385 +1113,6 @@
     </div>
 
   </div>
-  <h2 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h2>
-  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 05:04:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<p>あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。</p>
-
-<h3>動的にプレフィックスルーティングを追加するには</h3>
-
-<p>公式ドキュメントの解説のとおり、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// routes.php
-Router::connect(
-    "/site-proxy/:controller",
-    array('action' =&gt; 'index', 'prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true)
-);
-
-// core.phpなど
-Configure::write('Routing.prefixes', array('site-proxy'));
-</code></pre></div>
-<p>のように記述します。</p>
-
-<p>RouterTest.phpのテストコードを見たら</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$request = new CakeRequest();
-$request-&gt;addParams(array(
-    'controller' =&gt; 'registrations', 'action' =&gt; 'admin_index',
-    'plugin' =&gt; null, 'prefix' =&gt; 'admin', 'admin' =&gt; true,
-    'ext' =&gt; 'html'
-));
-</code></pre></div>
-<p>みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。</p>
-
-<p>実際コントローラで</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
-</code></pre></div>
-<p>みたいに書くと、View上で $this-&gt;html-&gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。</p>
-
-<h3>ハマりポイント</h3>
-
-<p>View上でフォームを作成するときに</p>
-<div class="highlight"><pre class="highlight plaintext"><code>echo $this-&gt;Form-&gt;create('Post');
-</code></pre></div>
-<p>のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// FormHelper::create() L367付近
-if ($options['action'] === null &amp;&amp; $options['url'] === null) {
-    $options['action'] = $this-&gt;request-&gt;here(false);
-} elseif (empty($options['url']) || is_array($options['url'])) {
-</code></pre></div>
-<p>URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。</p>
-
-<p>で、CakeRequest::here() とはどんなコードか見てみると</p>
-<div class="highlight"><pre class="highlight plaintext"><code>public function here($base = true) {
-    $url = $this-&gt;here;
-    if (!empty($this-&gt;query)) {
-        $url .= '?' . http_build_query($this-&gt;query, null, '&amp;');
-    }
-    if (!$base) {
-        $url = preg_replace('/^' . preg_quote($this-&gt;base, '/') . '/', '', $url, 1);
-    }
-    return $url;
-}
-</code></pre></div>
-<p>のようになっていて、要は現在のURL（$this-&gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。</p>
-
-<h3>まとめ</h3>
-
-<p>解決方法としては</p>
-
-<ul>
-<li>Form::create() で <code>url</code> オプションを追加する</li>
-<li><p>addParams するときに here を変更する</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// 例）
-$request-&gt;addParams(array(
-    'admin' =&gt; true,
-    'prefix' =&gt; 'admin',
-))-&gt;addPaths(array(
-    'here' =&gt; '/admin/this/interesting/index',
-))
-</code></pre></div></li>
-</ul>
-
-<p>あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&hellip;    </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること" data-url="http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html&t=CakePHP%E3%81%A7%E5%8B%95%E7%9A%84%E3%81%AB%E3%83%97%E3%83%AC%E3%83%95%E3%82%A3%E3%83%83%E3%82%AF%E3%82%B9%E3%83%AB%E3%83%BC%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%BF%BD%E5%8A%A0%E3%81%97%E3%81%9F%E3%81%A8%E3%81%8D%E3%81%AB%E6%B0%97%E3%82%92%E3%81%A4%E3%81%91%E3%82%8B%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h2>
-  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 04:12:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/composer.html" rel="tag">composer</a>
-      <a href="/tags/phpunit.html" rel="tag">phpunit</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<p>現在以下のような環境を設置して開発をしています。</p>
-
-<ul>
-<li>ホストOS: Windows7 </li>
-<li>仮想環境: Vagrant + VirtualBox</li>
-<li>ゲストOS: CentOS 6.4</li>
-<li>開発環境: Apache, PHP, MySQL, git, composer, CakePHP, Bdd,  &hellip;</li>
-</ul>
-
-<h3>事件その1: Bddプラグインがインストールできなくなった</h3>
-
-<p>ある日、新しくcomposer installで環境を作っていた人が「Bddプラグインがうまくインストールできないんですけど&hellip;」
-という事で調べていたら Bddプラグインから依存関係にあったライブラリが行方不明になっていました。</p>
-
-<p>それは phpunit/Object_Freezer です。以前はpearにあって、あるときからgithubに移行していたはずなのに、どこにも痕跡を残さず消滅していました。
-で、どこで使っているかというと、Bddプラグインの単体テストモジュールにあたるSpec-PHPです。
-現在は Spec-PHP に同梱する形で解決しているのですが、以前はcomposer.jsonに</p>
-<div class="highlight"><pre class="highlight plaintext"><code>"pear-phpunit/Object_Freezer": "*"
-</code></pre></div>
-<p>のように指定していました。ちょうど金曜日だったので、週末にこれらを解決してBddプラグインがうまくイントールできるようになった（私の自宅Mac OSX環境+BddExampleAppで確認）と安心して月曜日出社したのです。</p>
-
-<h3>事件その2: PHPUnitがインストールできない!</h3>
-
-<p>で、Vagrant環境で更新してみたら&hellip;.</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer update sizuhiko/Bdd
-</code></pre></div>
-<p>失敗&hellip;.</p>
-
-<p>しかも全然関係ないところ PHPUnit のインストールで失敗するよ！
-ちょうどその週末にPHPUnit4.0のコードがGitHubのデフォルトになりはじめたあたりでした。</p>
-
-<p>でcomposer.jsonにはPHPUnitの記述が</p>
-<div class="highlight"><pre class="highlight plaintext"><code>"phpunit/phpunit": "3.7.*"
-</code></pre></div>
-<p>のように入っています。一見PHPUnit4をインストールするわけではないので関係なさそうですが、 <code>composer install</code> を実行すると</p>
-<div class="highlight"><pre class="highlight plaintext"><code>.....
-  - Installing phpunit/php-token-stream (dev-master 292f4d5)
-    Cloning 292f4d5772dad5a12775be69f4a8dd663b20f103
-
-  - Installing phpunit/php-file-iterator (dev-master acd6903)
-    Cloning acd690379117b042d1c8af1fafd61bde001bf6bb
-
-  - Installing phpunit/php-code-coverage (1.2.x-dev 3a60a66)
-    Cloning 3a60a660998e8d41d5ea81ff8d96ead546bce150
-
-[RuntimeException]
-Failed to execute git checkout '3a60a660998e8d41d5ea81ff8d96ead546bce150' &amp;
-&amp; git reset -- hard '3a60a660998e8d41d5ea81ff8d96ead546bce150'
-
-error: Untracked working tree file 'Tests/PHP/CodeCoverage/FilterTest,php'
-would be overwritten by merge.
-</code></pre></div>
-<p>のようにエラーになります。</p>
-
-<h3>事件その3: Issueが光の速さで取り消される</h3>
-
-<p>ともかく事は重大そうなので、PHPUnitにIssue登録した方が良いかなと思ったので、投稿したところ、ものの数秒でそれはcomposerとか環境の問題でPHPUnitじゃないよ、と返ってきました。</p>
-
-<p><a href="https://github.com/sebastianbergmann/phpunit/issues/1144">Can&rsquo;t install 3.7.x to Linux environment by composer</a></p>
-
-<p>ちょっと慌てていたので、あまり確認しなかったのも良くないなと思い、ここから検証作業の開始です。</p>
-
-<h3>原因を調べてみた</h3>
-
-<p>まず、その週末にPHPUnitのgithubを見たところで、デフォルトブランチ(master)が4.0系になっているよ、という事に気がついていました。</p>
-
-<p>ここで composer がどのようにライブラリを取得するか考えてみたところ、</p>
-
-<ul>
-<li>packagist からリポジトリ情報をダウンロード</li>
-<li>phpunit/phpunit と一致するソースコードリポジトリからダウンロード（この場合はgithub）</li>
-<li><code>git clone git@github.com:sebastianbergmann/phpunit.git</code> が実行される</li>
-<li>リリースを指定しているので一致するタグがチェックアウトされる <code>git checkout ....</code></li>
-</ul>
-
-<p>この最後のステップで「Untracked working tree file」になり失敗するのです。</p>
-
-<p>PHPUnitのリポジトリを見てみると、3系まではディレクトリ名が Tests だったのですが、 4系では tests のように小文字に変更となっています。大文字、小文字問題か！と意気たったのが、先程の Issue なわけですが。</p>
-
-<p>自分の環境だけかなーと思って、隣の人にちょっとインストールしてみてもらえないか頼んでみたところ、成功&hellip;. えぇぇー！</p>
-
-<p>その環境は Vagrant上のCentOSでなく、素のWindowsでした。
-何かがおかしい&hellip;.</p>
-
-<p>そこで偶然なぜか思ったのが、とりあえずディレクトリ変えてみるか、という事。とりわけ何か理由があった訳でなくたまたまそう思っただけなのです。</p>
-
-<p>composer update （この日は何度実行したろう&hellip;.）  &hellip;&hellip; 成功した！！！！でも、なんで？！</p>
-
-<h3>違いに悩むと&hellip;</h3>
-
-<p>成功したところ：</p>
-
-<ul>
-<li>素のWindows</li>
-<li>Vagrant仮想環境内の /tmp/work/app</li>
-</ul>
-
-<p>失敗したところ：</p>
-
-<ul>
-<li>Vagrantのsync<em>folderである /var/www/html/your</em>app/app (CentOSから見えるディレクトリ)
-windows上だと c:¥develop¥your_app¥app みたいなところ</li>
-</ul>
-
-<p>もしかしてVagrantでマウントしているWindowsディスク上だと大文字、小文字の変更をトレースできなくなるのでは！！</p>
-
-<p>という結論に至り、他の人で同様にVagrantのsync_folder環境で試したらダメでした。</p>
-
-<h3>まとめ</h3>
-
-<p>ホストがwindowsでゲストがLinuxということはあると思うのですが、ディスク同期してそこにソースコードを置いてエディタはホストOS上で実行は仮想環境上みたいな開発するのは今後も増えてくると思います。
-その中で今回のような事象に陥ることは composer + PHPUnit に限らず起きそうだなと思いました。</p>
-
-<p>上記のような <code>Failed to execute git checkout ...</code> エラーが出た時に、あぁそういう事かと心構えができていれば慌てず、一旦ホストOS側で作業するとか、仮想環境上のsync_folder以外で作業するなどやりようがあるかな、と思います。</p>
-
-<p>まぁ慌てず騒がず、落ち着いて対応しましょうという良い教訓になりました。twitterなどでお騒がせしてすみませんでした&hellip;</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="VagrantでComposerからPHPUnitをインストールするときに注意したいこと" data-url="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html&t=Vagrant%E3%81%A7Composer%E3%81%8B%E3%82%89PHPUnit%E3%82%92%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%99%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AB%E6%B3%A8%E6%84%8F%E3%81%97%E3%81%9F%E3%81%84%E3%81%93%E3%81%A8" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/composer-phpunit-windows-vagrant.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h2>
-  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 11:13:26 AM</a></p>
-  <p class="tags">
-      <a href="/tags/middleman.html" rel="tag">middleman</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
-
-<h3>参考になったサイト</h3>
-
-<p>以下のサイトを参照しながら、作業を実施しました。</p>
-
-<ul>
-<li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
-<li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
-<li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
-<li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
-</ul>
-
-<h3>HTMLジェネレータは何を使うの？</h3>
-
-<p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
-
-<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&hellip;.</p>
-
-<p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
-
-<h3>Middleman インストール</h3>
-
-<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
-もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>gem install middleman
-</code></pre></div>
-<p>でインストールも楽々完了です。</p>
-
-<p>ブログモジュールを使うので、middleman の Gemfile に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>gem "middleman-blog", "~&gt; 3.5.1"
-</code></pre></div>
-<p>を追加して</p>
-<div class="highlight"><pre class="highlight plaintext"><code>bundle install
-middleman init blog --template=blog
-</code></pre></div>
-<p>と実行すると blog ディレクトリに環境が生成されます。</p>
-
-<h3>WorkPress からのインポート</h3>
-
-<p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
-いよいよ先程の変換ツールで実行&hellip;. エラーだよ！！（泣）</p>
-
-<p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
-イロイロ調べたところ、</p>
-
-<ul>
-<li>wp2middleman</li>
-<li>wordpress-to-jekyll</li>
-<li>ruby-wpdb</li>
-<li>wp_conversion</li>
-</ul>
-
-<p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
-どれもうまくいかない&hellip;.</p>
-
-<p>python系のライブラリもあるらしく</p>
-
-<ul>
-<li>wp2md</li>
-<li>prlican-import</li>
-<li>exitwp</li>
-</ul>
-
-<p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
-しかしいくつか失敗する&hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」&hellip;..
-もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
-
-<h3>WordPress インストール</h3>
-
-<p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
-これを先程一番うまく変換できた exitwp にかけると&hellip;&hellip;.</p>
-
-<p>あらー全部奇麗に変換できるじゃないですかー</p>
-
-<h3>デザイン</h3>
-
-<p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>middleman server
-</code></pre></div>
-<p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
-
-<p>GitHub Pages へデプロイするために Gemfile に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>gem "middleman-deploy"
-</code></pre></div>
-<p>モジュールを追加して bundle install。</p>
-
-<p>config.rg に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>activate :deploy do |deploy|
-  deploy.build_before = true # default: false
-  deploy.method = :git
-  deploy.branch   = "master" # default: gh-pages
-end
-</code></pre></div>
-<p>な感じで設定したら </p>
-<div class="highlight"><pre class="highlight plaintext"><code>middleman deproy
-</code></pre></div>
-<p>でビルドした内容をgithubへ連携してくれます。</p>
-
-<h3>今後</h3>
-
-<p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Middleman インストールメモ" data-url="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html&t=Middleman%20%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%83%A1%E3%83%A2" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/28/">« Prev</a>
@@ -887,16 +1140,16 @@ end
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -907,8 +1160,14 @@ end
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -916,7 +1175,7 @@ end
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -925,7 +1184,7 @@ end
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -974,9 +1233,6 @@ end
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -988,10 +1244,10 @@ end
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1010,7 +1266,7 @@ end
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

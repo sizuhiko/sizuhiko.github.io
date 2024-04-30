@@ -277,7 +277,380 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a></h2>
+            <h2 class="title"><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a></h2>
+  <p class="postdate"><a href="/2023/09/27.html" title="Permanent link">Wednesday, September 27, 2023 05:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/github.html" rel="tag">github</a>
+      <a href="/tags/git.html" rel="tag">git</a>
+      <a href="/tags/monorepo.html" rel="tag">monorepo</a>
+      <a href="/tags/npm.html" rel="tag">npm</a>
+      <a href="/tags/workspace.html" rel="tag">workspace</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>背景</h3>
+
+<p>プロジェクトで複数のAPIサーバーや、マイクロサービスなどを展開するのに、OpenAPI の定義を置くリポジトリを個々に作っていたのですが、メンテナンス性を考えてマルチプルレポからモノレポへ移行することにしました。</p>
+
+<p>基本的に OpenAPI の定義（yamlファイル）の内容と、デプロイ先（AWS S3のWebホスティング先バケット）が違うぐらいで、それ以外の内容はまったく一緒であるリポジトリが複数ある感じです。</p>
+
+<ul>
+<li>app-a-apidoc</li>
+<li>app-b-apidoc</li>
+<li>service-account-apidoc</li>
+<li>service-payment-apidoc</li>
+</ul>
+
+<p>みたいなマルチプルレポを <code>apidoc</code> モノレポへまとめていきます。</p>
+
+<p>各 apidoc は <a href="https://www.npmjs.com/package/swagger-ui-dist">swagger-ui-dist</a> に yaml ファイルを入れて、Webホスティングしている S3 バケットにデプロイしています。
+ビルドスクリプトは gulp で、デプロイは serverless framework に serverless-s3-sync プラグインを入れて実行しています。</p>
+
+<h3>リポジトリの移行の準備</h3>
+
+<p>リポジトリを移行するにあたり <a href="https://medium.com/@chris_72272/keeping-git-history-when-converting-multiple-repos-into-a-monorepo-97641744d928">Keeping git history when converting multiple repos into a monorepo</a> という記事がとても役にたったので、こちらの手順を参考にして紹介していきます。</p>
+
+<h4>ディレクトリ構造決定</h4>
+
+<p>まず最初にモノレポ移行後のディレクトリ構造を検討します。
+よくある npm のパッケージをモノレポにしている場合だと</p>
+<div class="highlight"><pre class="highlight plaintext"><code>packages
+  +-- package-a
+  +-- package-b
+</code></pre></div>
+<p>みたいな階層にすることが多いんじゃないかな？と思います。
+参考記事だと <code>projects/*</code> のような感じですね。
+aws-sdk v3 だと clients や lib, packages など目的別にいろいろ分けているようです。</p>
+
+<p>そこで今回私たちは</p>
+<div class="highlight"><pre class="highlight plaintext"><code>apps
+  +-- a
+  +-- b
+services
+  +-- account
+  +-- payment
+</code></pre></div>
+<p>みたいなディレクトリ構造にしました。これはそれぞれのプロジェクトや、まとめたいリポジトリにもよるので、個別に検討しましょう。</p>
+
+<h4>既存リポジトリのディレクトリ変更</h4>
+
+<p>ディレクトリ構造が決まったら、既存リポジトリをそのディレクトリに合わせて階層を変更します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>cd app-a-apidoc
+mkdir -p apps/a
+git mv -k * apps/a
+git mv -k .* apps/a
+git commit -m "chore: move all files into apps/a"
+</code></pre></div>
+<ol>
+<li>既存リポジトリをチェックアウトしたディレクトリに移動</li>
+<li>モノレポにしたときのディレクトリツリーを作成</li>
+<li>2のディレクトリ下にすべてのファイルを移動。移動には <code>git mv</code> コマンドを使う</li>
+<li>コミット</li>
+</ol>
+
+<p>この作業を移行対象のすべての既存リポジトリで実施していきます。</p>
+
+<h4>モノレポの作成</h4>
+
+<p>GitHub上でリポジトリを作ってチェックアウトするか、 <code>git init</code> コマンドでローカルにモノレポのフォルダを準備します。
+続いて、モノレポリポジトリにワークスペースのルートディレクトリを作っておきます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>mkdir apps
+mkdir services
+</code></pre></div>
+<p><code>git remote add</code> を使ってローカルディレクトリのリポジトリ（既存リポジトリのディレクトリ変更でディレクトリ変更してコミットしたもの）を追加します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git remote add -f app-a-apidoc ../app-a-apidoc
+git remote add -f app-b-apidoc ../app-b-apidoc
+git remote add -f service-account-apidoc ../service-account-apidoc
+git remote add -f service-payment-apidoc ../service-payment-apidoc
+</code></pre></div>
+<p>で、それらをモノレポの中にマージしていきます。マージするブランチが <code>main</code> であると仮定します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git merge app-a-apidoc/main --allow-unrelated-histories
+git merge app-b-apidoc/main --allow-unrelated-histories
+git merge service-account-apidoc/main --allow-unrelated-histories
+git merge service-payment-apidoc/main --allow-unrelated-histories
+</code></pre></div>
+<p>最後にリモートを削除しましょう。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>git remote remove app-a-apidoc
+git remote remove app-b-apidoc
+git remote remove service-account-apidoc
+git remote remove service-payment-apidoc
+</code></pre></div>
+<h3>モノレポの設定</h3>
+
+<p>ここまでで既存のリポジトリを1つのモノレポにコミットログ付きで合体できました。
+続いて、モノレポで開発作業ができるように環境整備をしましょう。</p>
+
+<h4>ワークスペースを設定する</h4>
+
+<p>モノレポのルートディレクトリで <code>npm init</code> コマンドを実行して <code>package.json</code> を作ります。
+作成した <code>package.json</code> にワークスペースに関する設定を追加します。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">private</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="dl">"</span><span class="s2">workspaces</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
+    <span class="dl">"</span><span class="s2">apps/*</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">services/*</span><span class="dl">"</span>
+  <span class="p">],</span>
+</code></pre></div>
+<h4>依存関係の設定</h4>
+
+<p>続いて、各リポジトリで使っていた <code>devDependencies</code> や <code>dependencies</code> の依存関係をモノレポのルートディレクトリにある <code>package.json</code> に移動します。
+通常は各リポジトリ共通のものだけですが、今回の apidoc ではすべて共通だったので、そのままコピペしました。</p>
+
+<p>ワークスペース（apps や services）にある <code>package.json</code> の <code>devDependencies</code> や <code>dependencies</code> を削除し、 <code>package-lock.json</code> も削除します。</p>
+
+<p>最後にルートディレクトリで <code>npm i</code> を実行して依存関係をインストールします。</p>
+
+<h4>各 apidoc の整理</h4>
+
+<p><code>.npmrc</code> や <code>.gitignore</code> , <code>.editorconfig</code> など必要な設定ファイルをワークスペースからルートディレクトリに移動しておきます。</p>
+
+<p>その他共通になったものはルートディレクトリ下に移動しておくと良いでしょう。</p>
+
+<h4>GitHub Actions の統合</h4>
+
+<p>ワークスペース（apps や services）にある <code>.github</code> をどれかルートディレクトリに移動して、ワークスペース側からは削除します。
+単に全部のワークスペースをビルドしたりデプロイするだけなら <code>-ws</code> オプションを追加するとすべてのワークスペースに対してコマンドを実行するようになります。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
+</code></pre></div>
+<p>まぁでも通常はそんなことなく、以下のパターンを考慮する必要があります。</p>
+
+<ul>
+<li>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</li>
+<li>ワークスペースのファイルが修正された</li>
+</ul>
+
+<p>前者はすべてのワークスペースに対して Action を実行したほうが良いのですが、後者は変更があったワークスペースだけの実行に絞り込みたいところです。</p>
+
+<p>そこで利用できるのが <a href="https://github.com/AlexShukel/get-changed-workspaces-action">Get changed workspaces action</a> です。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">get-changed-workspaces</span><span class="pi">:</span>
+    <span class="na">outputs</span><span class="pi">:</span>
+      <span class="na">packages</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.packages }}</span>
+      <span class="na">empty</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.empty }}</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Check out repository code</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Find changed workspaces</span>
+        <span class="na">uses</span><span class="pi">:</span> <span class="s">AlexShukel/get-changed-workspaces-action@v2.0.0</span>
+        <span class="na">id</span><span class="pi">:</span> <span class="s">changed-packages</span>
+  <span class="na">deploy</span><span class="pi">:</span>
+    <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">get-changed-workspaces</span><span class="pi">]</span>
+    <span class="na">if</span><span class="pi">:</span> <span class="s">${{ !fromJson(needs.get-changed-workspaces.outputs.empty) }}</span>
+    <span class="na">strategy</span><span class="pi">:</span>
+      <span class="na">matrix</span><span class="pi">:</span>
+        <span class="na">package</span><span class="pi">:</span> <span class="s">${{ fromJson(needs.get-changed-workspaces.outputs.packages) }}</span>  
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} deploy</span>
+</code></pre></div>
+<p>この Action を使うと変更があったワークスペースの名前を配列型式で取得できます。
+ワークスペースに変更がないときは <code>empty</code> でわかるので、 <code>if</code> 文で制御して何もしないように設定も可能です。</p>
+
+<p>で、特定のワークスペースに対して npm コマンドを実行したい場合は <code>-w ワークスペース名</code> オプションを指定します。</p>
+
+<p>そこで、 <code>.github/workflows</code> には以下のファイルを設置することにしました。</p>
+
+<ul>
+<li>build-all.yml</li>
+<li>build.yml</li>
+</ul>
+
+<p>前者は <code>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</code> を想定していて、以下のような条件で起動したら、 <code>-ws</code> オプションですべてのワークスペースで実行されるようにしています。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">on</span><span class="pi">:</span>
+  <span class="na">workflow_dispatch</span><span class="pi">:</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">package.json</span>
+      <span class="pi">-</span> <span class="s">package-lock.json</span>
+    <span class="na">branches</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">master</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">deploy</span><span class="pi">:</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
+</code></pre></div>
+<p>後者は <code>Get changed workspaces action</code> を使って個別のワークスペースビルドされるように設定しました。</p>
+
+<h3>さいごに</h3>
+
+<p>マルチプルレポ、モノレポ、それぞれに良いところはあると思います。
+必ずモノレポが良いというものでもないでしょう。
+それぞれのプロジェクトやリポジトリの運用を見極めて選択していきたいですね。</p>
+
+<p>マルチプルレポからモノレポへ移行するときに、本記事が参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="マルチプルレポをモノレポへコミットログを残しながら移行する" data-url="http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html&t=%E3%83%9E%E3%83%AB%E3%83%81%E3%83%97%E3%83%AB%E3%83%AC%E3%83%9D%E3%82%92%E3%83%A2%E3%83%8E%E3%83%AC%E3%83%9D%E3%81%B8%E3%82%B3%E3%83%9F%E3%83%83%E3%83%88%E3%83%AD%E3%82%B0%E3%82%92%E6%AE%8B%E3%81%97%E3%81%AA%E3%81%8C%E3%82%89%E7%A7%BB%E8%A1%8C%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a></h2>
+  <p class="postdate"><a href="/2023/05/02.html" title="Permanent link">Tuesday, May 02, 2023 03:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/tsyringe.html" rel="tag">tsyringe</a>
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://github.com/microsoft/tsyringe">tsyringe</a> は、Microsoft のオーガナイゼーションにある、JavaScript/TypeScript用のDIコンテナです。</p>
+
+<p>Microsoft は TypeScript の親だし、DIコンテナあるんだったら使うよなーというぐらいの理由で使っていましたが、ここ数年はアップデートのリリースがありません。
+この記事を書いている時点での最新版は、2020/11/9 に出た <a href="https://github.com/microsoft/tsyringe/releases/tag/v4.4.0">v4.4.0</a> です。</p>
+
+<h3>TypeScript 5 でコンパイルエラーになる</h3>
+
+<p>tsyringe を TypeScript 5 で利用しようとすると、コンパイルエラーになります。
+で、さすがに利用者が多いライブラリだけあって、すぐ issue <a href="https://github.com/microsoft/tsyringe/issues/221">TypeScript 5.0 Support of tighter parameter decorator checking</a> が出ました。
+しばらくしたら PR <a href="https://github.com/microsoft/tsyringe/pull/226">fix: allow propertyKey to be undefined</a> も出ました。PRが 2023/3/26 に出て、マージされたのは 2023/4/17 です。</p>
+
+<p>それから2週間ぐらい経過しましたが、リリースされる気配はありません&hellip;.</p>
+
+<h3>でも TypeScript 5 を使いたいんや</h3>
+
+<p>まぁそう思いますよね。
+僕らのプロジェクトでもそう思ったんで、パッチを作りました。</p>
+
+<p>プロジェクトルート(package.json とか置いているディレクトリ)に <code>tsyringe.d.ts</code> を置いて、型定義をオーバーライドする感じです。
+例えば以下のような感じです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">tsyringe</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">tsyringe/dist/typings/index</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">declare</span> <span class="nx">namespace</span> <span class="nx">t</span> <span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">inject</span><span class="p">(</span>
+    <span class="nx">token</span><span class="p">:</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">InjectionToken</span><span class="o">&lt;</span><span class="nx">any</span><span class="o">&gt;</span>
+  <span class="p">):</span> <span class="p">(</span><span class="nx">target</span><span class="p">:</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">propertyKey</span><span class="p">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="nx">symbol</span> <span class="o">|</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">parameterIndex</span><span class="p">:</span> <span class="nx">number</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">any</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">injectable</span><span class="p">:</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">injectable</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">container</span><span class="p">:</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">container</span><span class="p">;</span>
+  <span class="nx">type</span> <span class="nx">DependencyContainer</span> <span class="o">=</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">container</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="o">=</span> <span class="nx">t</span><span class="p">;</span>
+</code></pre></div>
+<p>まずコンパイルエラーになるのは <code>inject</code> 関数なので、それをオーバーライドします。
+次に、プロジェクトで import している関数や型があれば、それぞれ <code>const</code> や <code>type</code> で宣言して require した内容からそのまま export するようにしました。</p>
+
+<p>これはマージされている PR が型定義ぐらいしか修正しておらず、実装に関しては何も修正されていなかったので、問題なしと判断して型定義だけをオーバーライドしたパッチを作ることにしました。</p>
+
+<h3>で、どうなの？</h3>
+
+<p>現時点動作に問題はなく、普通に TypeScript 5 で tsyringe が使えています。
+PRがマージされて、すぐリリースされるんじゃないか？と思ったので、この内容を記事にする必要もないかな？と思っていたのですが、
+リリースされる気配を感じないので、僕らのやっている方法が少しでも役に立てばと思い、記事にしました。
+はやく TypeScript 5 対応が正式リリースされて欲しいですね。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="tsyringe を TypeScript 5 で使う方法" data-url="http://blog.open.tokyo.jp/2023/05/02/tsyringe-with-typescript-5.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/05/02/tsyringe-with-typescript-5.html&t=tsyringe%20%E3%82%92%20TypeScript%205%20%E3%81%A7%E4%BD%BF%E3%81%86%E6%96%B9%E6%B3%95" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/05/02/tsyringe-with-typescript-5.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a></h2>
+  <p class="postdate"><a href="/2023/04/19.html" title="Permanent link">Wednesday, April 19, 2023 04:12:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/localstack.html" rel="tag">LocalStack</a>
+      <a href="/tags/test.html" rel="tag">test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> の中でも書いたように、aws-sdk v3 を使ったコードを UnitTest するには <a href="https://github.com/m-radzikowski/aws-sdk-client-mock">AWS SDK v3 Client mock</a> を利用してモックした方が簡単です。</p>
+
+<p>一方で少し IntegrationTest をしたいと思うこともあるでしょう。そうしたときは LocalStack の利用が便利です。
+手元も環境なら Docker の Extension で動きます。
+CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動すれば大丈夫です。</p>
+
+<h3>インテグレーションテストでのエンドポイント</h3>
+
+<p>こんな感じでテストコードで endpoint を切り替えられるようにしておくとローカルとCI環境のどちらでもテストを実行しやすくなります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">credentials</span><span class="p">:</span> <span class="p">{</span> <span class="na">accessKeyId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">dummy</span><span class="dl">'</span><span class="p">,</span> <span class="na">secretAccessKey</span><span class="p">:</span> <span class="dl">'</span><span class="s1">summy</span><span class="dl">'</span> <span class="p">},</span>
+  <span class="na">endpoint</span><span class="p">:</span> <span class="s2">`http://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">TEST_AWS_HOSTNAME</span> <span class="o">??</span> <span class="dl">'</span><span class="s1">localhost</span><span class="dl">'</span><span class="p">}</span><span class="s2">:4566`</span><span class="p">,</span>
+  <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span><span class="p">,</span>
+<span class="p">};</span>
+<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</code></pre></div>
+<p>手元では localhost で良いし、CI環境（たとえば GitHub Actions ） なら、以下のようにしておくと良いです。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
+    <span class="na">services</span><span class="pi">:</span>
+      <span class="na">localstack</span><span class="pi">:</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">TEST_AWS_HOSTNAME</span><span class="pi">:</span> <span class="s">localstack</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm t</span>
+</code></pre></div>
+<h3>LocalStack v2.0 以降での変更点</h3>
+
+<p>最近バージョンが 2.0 になった LocalStack ですが Lambda 関連で大きな変更がありました。
+基本的に Lambda を利用しなければ問題はありませんが、特に問題なければ localstack サービスを以下のように設定しておくと安心です。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
+    <span class="na">services</span><span class="pi">:</span>
+      <span class="na">localstack</span><span class="pi">:</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="na">LAMBDA_SYNCHRONOUS_CREATE</span><span class="pi">:</span> <span class="m">1</span>
+        <span class="na">volumes</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
+</code></pre></div>
+<p>Actions のホストコントローラの docker.sock をマウントすることで LocalStack の中で Lambda が起動できるようになります。</p>
+
+<p>詳しくは<a href="https://github.com/localstack/localstack/releases/tag/v2.0.0">公式の v2.0.0 リリースノート</a> の <code>Lambda</code> 部分に書いてありますので、読んでみてください。</p>
+
+<h3>さいごに</h3>
+
+<p>単体テストで LocalStack 使うのはやりすぎだと思いますが、部分的にインテグレーションテストしたい、といった場合には有用な方法かな、と思いますので、用途に応じて使い分けられると良いですね。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="LocalStack を使って aws-sdk の Integration Test を実行する" data-url="http://blog.open.tokyo.jp/2023/04/19/integration-test-using-localstack.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/19/integration-test-using-localstack.html&t=LocalStack%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%20aws-sdk%20%E3%81%AE%20Integration%20Test%20%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/19/integration-test-using-localstack.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a></h2>
   <p class="postdate"><a href="/2023/04/18.html" title="Permanent link">Tuesday, April 18, 2023 12:21:00 PM</a></p>
   <p class="tags">
       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
@@ -563,310 +936,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
     </div>
 
   </div>
-  <h2 class="title"><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a></h2>
-  <p class="postdate"><a href="/2023/04/11.html" title="Permanent link">Tuesday, April 11, 2023 04:33:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>先日 <a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> という記事を書いて、実際自分たちで作っていた aws-sdk v2 でできていた CLI ツールも aws-sdk v3 に切り替えました。</p>
-
-<h3>CLIツールを v3 に移行したら、利用するアプリ側がコンパイルエラーになる</h3>
-
-<p>で、それを Lambda にデプロイするアプリの devDependencies に反映してみたところ、また型エラーが出るようになりました。</p>
-
-<p>CLIツールでは <code>@aws-sdk/client-lambda@3.310.0</code> に依存していて、 Lambda アプリ側は <code>@aws-sdk/client-lambda@3.254.0</code> を使っていたためです。</p>
-
-<blockquote>
-<p>error TS2345: Argument of type &lsquo;typeof LambdaClient&rsquo; is not assignable to parameter of type &lsquo;InstanceOrClassType<Client<ServiceInputTypes, MetadataBearer, any>&gt;&rsquo;.
-      Type &lsquo;typeof LambdaClient&rsquo; is not assignable to type &lsquo;ClassType<Client<ServiceInputTypes, MetadataBearer, any>&gt;&rsquo;.</p>
-</blockquote>
-
-<p>で、それぞれの型定義への依存は <code>&quot;@aws-sdk/types&quot;: &quot;*&quot;</code> になっているので、lock ファイルの状態次第でそれぞれでバージョンが異なるものが入る場合があります。
-そこで型が一致しない問題が発生してきます。</p>
-
-<p>CLI ツールでは実行時に aws-sdk が必要になるので、 dependencies に設定していて、CLIツールを使う方のアプリは devDependencies に設定しているわけですが、それぞれの dependencies からインストールされる <code>@aws-sdk/types</code> がドッチ？問題になってしまうという&hellip;</p>
-
-<h3>解決策</h3>
-
-<p>今回は自分たちで作ったライブラリだったので、CLIツール側の aws-sdk を devDependencies に変更して、CLIツールを使うアプリ側の aws-sdk 利用状況に依存するように変更しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">peerDependencies</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">"</span><span class="s2">@aws-sdk/client-lambda</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">^3.0.0</span><span class="dl">"</span>
-  <span class="p">},</span>
-</code></pre></div>
-<p>これでアプリ側が <code>@aws-sdk/client-lambda</code> を使っていればそのバージョンに依存するようになるし、使っていなければ 3系の最新が入るようになります。</p>
-
-<p>ここで、この aws-sdk v3 シリーズを読んでいただいた懸命な皆様はお気づきだと思いますが <a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> でも書いた</p>
-
-<blockquote>
-<p><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</p>
-</blockquote>
-
-<p>これが重要になってきます。
-なので、自分で作ったライブラリで peerDependencies に指定したら、結局アプリ側で使ってなくてもバージョンを揃えるのに追加でインストールした方が良いということです。</p>
-
-<h3>aws-sdk v3 を安心して使うためには（追記）</h3>
-
-<ul>
-<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
-<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
-<li>関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
-<li>自作ライブラリで aws-sdk v3 に依存する場合は <code>peerDependencies</code> に指定する</li>
-</ul>
-
-<p>大事なこと4つ目を追加しました。</p>
-
-<p>aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう" data-url="http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html&t=aws-sdk%20v3%20%E3%82%92%E4%BD%BF%E3%81%86%E3%83%A9%E3%82%A4%E3%83%96%E3%83%A9%E3%83%AA%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%9F%E3%81%A8%E3%81%8D%E3%81%AF%E3%80%81%E3%81%AA%E3%82%8B%E3%81%B9%E3%81%8F%20peerDependencies%20%E3%81%AB%E8%A8%AD%E5%AE%9A%E3%81%97%E3%82%88%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a></h2>
-  <p class="postdate"><a href="/2023/04/06.html" title="Permanent link">Thursday, April 06, 2023 06:24:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v2.html" rel="tag">aws-sdk@v2</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>aws-sdk v2 を使っている CLI ツールで aws 環境を操作していたら、見慣れないメッセージが出てきました。</p>
-
-<blockquote>
-<p>(node:9129) NOTE: The AWS SDK for JavaScript (v2) will be put into maintenance mode in 2023.</p>
-</blockquote>
-
-<p>AWS SDK v2 ってメンテナンスモードに入るんだ&hellip;</p>
-
-<p>Twitter でも書いている人がいました</p>
-
-<p><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Anyone else seeing this new error from <a href="https://twitter.com/awscloud?ref_src=twsrc%5Etfw">@awscloud</a> sdk? <br><br>This is showing to our CLI users and is&hellip; annoying to say the least. <a href="https://t.co/KabEtFDKnl">pic.twitter.com/KabEtFDKnl</a></p>&mdash; David Wells (@DavidWells) <a href="https://twitter.com/DavidWells/status/1626321488742862848?ref_src=twsrc%5Etfw">February 16, 2023</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>これまでも複数回にわたって aws-sdk v3 の記事を書いてきましたが、これは Lambda にデプロイするアプリだから v3 に移行したのであって、CLIツールとかなら v3 に移行するモチベがあるかな&hellip;.</p>
-
-<p>ぶっちゃけ Lambda とかだとランタイムに追従すると sdk も上げないといけないので対応したけど、ツールなら対応しないですよね。</p>
-
-<p>公式のリポジトリにも、サポートについて書かれています。</p>
-
-<p>https://github.com/aws/aws-sdk-js#version-2x-support</p>
-
-<p>そこにリンクされている <a href="https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html">メンテナンスポリシーページ</a> にいくと、以下のような内容が記入されていました。</p>
-
-<blockquote>
-<p>メンテナンス (フェーズ 3) -メンテナンス モードの間、AWS は SDK リリースを制限して、重大なバグ修正とセキュリティ問題のみに対処します。SDK は、新規または既存のサービスの API 更新を受け取ることも、新しいリージョンをサポートするために更新されることもありません。特に指定がない限り、メンテナンス モードのデフォルト期間は 12 か月です。</p>
-
-<p>サポート終了 (フェーズ 4) - SDK がサポート終了に達すると、更新またはリリースを受け取ることができなくなります。以前に公開されたリリースは引き続きパブリック パッケージ マネージャーから入手でき、コードは GitHub に残ります。GitHub リポジトリはアーカイブされる場合があります。サポートが終了した SDK の使用は、ユーザーの判断で行われます。ユーザーが新しいメジャー バージョンにアップグレードすることをお勧めします。</p>
-</blockquote>
-
-<p>v2 自体がリポジトリから無くなることはなさそうですが、膨大にありそうな v2 を使った CLI ツール群はどうするのかなぁ&hellip;</p>
-
-<p>ちなみに Serverless Framerwork は PR <a href="https://github.com/serverless/serverless/pull/11769">Suppress AWS SDK v2 deprecation message</a> でいったんメッセージ出力を OFF にしていますが、 v3 移行は大変だろうなぁ、という感想しかないです。</p>
-
-<p>AWS SDK v3 は、これまでの記事でも書いてますが、結構パッケージ管理が残念な感じだったりするのと、書き方もめっちゃ変わっているので Serverless Framework 規模になると書き換えもかなり工数かかりそうだなぁと（いつかはやるんだろうけど）。</p>
-
-<p>AWS さんが簡易にコンバートできるツールを作ってくれると良いんだろうけど、オプションの書き方も変わっているところがあったりするので、単純な変換も大変そうですね。</p>
-
-<p>上記の引用ツイートのレスの中にもあるけど、v3 のドキュメントが不親切だというのは事実だし、良い解決策が 2023 年中に見つかると良いですね。
-なんか感想ブログになっちゃいましたが、僕らのプロジェクトも v2 依存している CLI ツールは移行対象にしてなかったので、これから移行計画作らないとな、と思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="aws-sdk v2 が 2023 年中にメンテナンスモードになる" data-url="http://blog.open.tokyo.jp/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html&t=aws-sdk%20v2%20%E3%81%8C%202023%20%E5%B9%B4%E4%B8%AD%E3%81%AB%E3%83%A1%E3%83%B3%E3%83%86%E3%83%8A%E3%83%B3%E3%82%B9%E3%83%A2%E3%83%BC%E3%83%89%E3%81%AB%E3%81%AA%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-  <h2 class="title"><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a></h2>
-  <p class="postdate"><a href="/2023/04/05.html" title="Permanent link">Wednesday, April 05, 2023 05:08:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>「Lambda アプリが突然動かなくなる」なんて、どうせバグなんでしょーというのが当然のリアクションですが、これは本当にバグなのか&hellip;</p>
-
-<p>本当にあった怖い話をします。</p>
-
-<h3>ある日、Lambda アプリが突然動かなくなる</h3>
-
-<p>Node.js v18 のライタイムで動く Lambda にデプロイされているアプリで、ある日突然エラーが出るようになりました。</p>
-
-<blockquote>
-<p>original: TypeError: Cannot read properties of undefined (reading ‘RUNNING’)</p>
-</blockquote>
-
-<p>この部分ですが TypeScript のコードでは以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span>
-  <span class="nx">DescribeExecutionCommand</span><span class="p">,</span>
-  <span class="nx">ExecutionDoesNotExist</span><span class="p">,</span>
-  <span class="nx">ExecutionStatus</span><span class="p">,</span>
-  <span class="nx">SFNClient</span><span class="p">,</span>
-  <span class="nx">StartExecutionCommand</span><span class="p">,</span>
-  <span class="nx">paginateListExecutions</span><span class="p">,</span>
-<span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="c1">// 省略</span>
-
-<span class="k">if</span> <span class="p">(</span><span class="nx">latest</span><span class="p">?.</span><span class="nx">status</span> <span class="o">===</span> <span class="nx">ExecutionStatus</span><span class="p">.</span><span class="nx">RUNNING</span><span class="p">)</span> <span class="p">{</span>
-</code></pre></div>
-<p><code>ExecutionStatus</code> は StepFunctions のクライアントで export されている値です。
-StepFuntions のジョブが実行中かどうか判定している箇所で。少し前まで普通に動いていたのに&hellip;.</p>
-
-<h3>Lambda アプリの構成</h3>
-
-<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
-
-<h3>node コンソールで確認してみる</h3>
-
-<p>手元では devDependencies に <code>@aws-sdk/client-sfn</code> が入っているので、 node コンソールに入って require を実行してみました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&gt; ExecutionStatus
-{
-  ABORTED: 'ABORTED',
-  FAILED: 'FAILED',
-  RUNNING: 'RUNNING',
-  SUCCEEDED: 'SUCCEEDED',
-  TIMED_OUT: 'TIMED_OUT'
-}
-</code></pre></div>
-<p>ふむ、問題なさそうだが？</p>
-
-<p>最新版の aws-sdk で変わったのだろうか？
-一時的に最新版にバージョンアップをしてみて、確認してみます</p>
-<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&gt; ExecutionStatus
-undefined
-</code></pre></div>
-<p>えええええええーーー</p>
-
-<h3>aws-sdk の該当箇所の修正履歴をチェックする</h3>
-
-<p><a href="https://github.com/aws/aws-sdk-js-v3/pull/4587">hore(codegen): export enums as const</a></p>
-
-<h4>元のコード</h4>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
- * @public
- */</span>
-<span class="k">export</span> <span class="kr">enum</span> <span class="nx">ExecutionStatus</span> <span class="p">{</span>
-  <span class="nx">ABORTED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">FAILED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">RUNNING</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">SUCCEEDED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">TIMED_OUT</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4>変更後のコード</h4>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
- * @public
- * @enum
- */</span>
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">ABORTED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">FAILED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">RUNNING</span><span class="p">:</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">SUCCEEDED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">TIMED_OUT</span><span class="p">:</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
-<span class="p">}</span> <span class="k">as</span> <span class="kd">const</span><span class="p">;</span>
-</code></pre></div>
-<p>おいおい、これって <code>@public</code> なのに後方互換性なくなっとるだろ&hellip;.</p>
-
-<h3>なぜ undefined になるのか</h3>
-
-<p>enum はコンパイルされて JavaScript になると以下のようなコードになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">ExecutionStatus</span><span class="p">;</span>
-<span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ExecutionStatus</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">;</span>
-<span class="p">})(</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">||</span> <span class="p">(</span><span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{}));</span>
-</code></pre></div>
-<p>でも <code>export const as const</code> になると、JavaScript にはコンパイルされることなく、変数の利用箇所に埋め込みの形になります。</p>
-
-<p>最初にも書きましたが、 aws-sdk v2 では普通だった</p>
-
-<blockquote>
-<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
-</blockquote>
-
-<p>こういう運用はすでにオワコンなんでしょうか？
-いやでも、v3 になってもランタイムに aws-sdk は入っています。</p>
-
-<p>少なくとも <code>ExecutionStatus</code> が内部変数で export されてない private な値だったら良いのですが、これはさすがにマズイんじゃないですかね？awsさん。</p>
-
-<h3>この問題が発生するケース</h3>
-
-<ul>
-<li>AWS Lambda でランタイムの aws-sdk を使っていて、TypeScript から enum の値を参照していた場合（同一の変更ですべての enum が const に書き変わっています）</li>
-</ul>
-
-<p>amplify とか Lambda でなくコンパイルされているケースでは問題は起きませんが、いやこういうのサクッと変更しちゃダメだと思うんですが&hellip;
-しかもランタイム側に入っているので、動作している Lambda アプリケーションが突然動作しなくなります。</p>
-
-<h3>aws-sdk v3 を安心して使うためには（追記）</h3>
-
-<ul>
-<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
-<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
-<li>関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
-</ul>
-
-<p>大事なこと3つ目を追加しました。</p>
-
-<p>aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる" data-url="http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html&t=Node.js%20v18%20/%20aws-sdk%20v3%20%E3%81%AE%20Lambda%20%E3%82%A2%E3%83%97%E3%83%AA%E3%81%8C%E7%AA%81%E7%84%B6%E5%8B%95%E3%81%8B%E3%81%AA%E3%81%8F%E3%81%AA%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/">« Prev</a>
@@ -891,16 +960,16 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
+                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
                   <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
-                  <li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a> <span>2023/04/11</span></li>
-                  <li><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a> <span>2023/04/06</span></li>
-                  <li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a> <span>2023/04/05</span></li>
               </ul>
             </div>
           </div>
@@ -911,8 +980,14 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -920,7 +995,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                     <li class="size1">
                       <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
                     </li>
                     <li class="size1">
@@ -929,7 +1004,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
@@ -978,9 +1053,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
                     </li>
                     <li class="size0">
-                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-                    </li>
-                    <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
@@ -992,10 +1064,10 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                     <li class="size1">
                       <a href="/tags/behat.html" rel="tag">Behat</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/fixture.html" rel="tag">fixture</a>
                     </li>
-                    <li class="size1">
+                    <li class="size0">
                       <a href="/tags/test.html" rel="tag">Test</a>
                     </li>
                     <li class="size0">
@@ -1014,7 +1086,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (5)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
