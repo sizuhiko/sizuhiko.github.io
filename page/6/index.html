@@ -277,7 +277,181 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h2>
+            <h2 class="title"><a href="/2022/05/05/uvu-test-double.html">uvu での Test Double</a></h2>
+  <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 06:10:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/test-double.html" rel="tag">Test Double</a>
+      <a href="/tags/uvu.html" rel="tag">uvu</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://github.com/lukeed/uvu">uvu</a> は軽量で高速なJavaScript/TypeScriptのテスティングランナーです。
+SveltteKit でも利用されており、<a href="https://its-succ.github.io/pong-swoosh/">pong-swoosh</a> でも採用しています。</p>
+
+<p>現時点の uvu は assert 機能がメインで、依存関係をモックして置き換えるような Test Double には対応していません。
+ただ、すべてが DI で解決できるわけではなく、依存パッケージについてはモックしたい場合もあります。</p>
+
+<p>そこで <a href="https://its-succ.github.io/pong-swoosh/">pong-swoosh</a> では、以下の2つのライブラリを使って、 uvu で Test Double を実現しています。</p>
+
+<ul>
+<li><a href="https://www.npmjs.com/package/snoop">snoop</a></li>
+<li><a href="https://www.npmjs.com/package/proxyquire">proxyquire</a></li>
+</ul>
+
+<h3>snoop</h3>
+
+<p><code>Easy breezy test spies fo sheezy.</code> というキャッチです（よくわからんw）。</p>
+
+<p>やれることは Jest でいうところの <code>Jest.fn()</code> だと思っていれば大丈夫です。
+モック関数を作れます。公式の Example でも uvu をランナーに使っていることから、親和性も高いです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">snoop</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">snoop</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">test</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">uvu</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">assert</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">uvu/assert</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">add</span> <span class="o">=</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
+
+<span class="nx">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">add</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">addFn</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(</span><span class="nx">add</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">anotherAddFn</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(</span><span class="nx">add</span><span class="p">);</span>
+
+  <span class="nx">addFn</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="nx">anotherAddFn</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="nx">addFn</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+  <span class="nx">anotherAddFn</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">called</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">not</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">notCalled</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">not</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calledOnce</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">is</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">callCount</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">arguments</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">arguments</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">is</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">result</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">is</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">result</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">not</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">firstCall</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">not</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">lastCall</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calledBefore</span><span class="p">(</span><span class="nx">anotherAddFn</span><span class="p">));</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calledAfter</span><span class="p">(</span><span class="nx">anotherAddFn</span><span class="p">));</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calledImmediatelyBefore</span><span class="p">(</span><span class="nx">anotherAddFn</span><span class="p">));</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">not</span><span class="p">(</span><span class="nx">addFn</span><span class="p">.</span><span class="nx">calledImmediatelyAfter</span><span class="p">(</span><span class="nx">anotherAddFn</span><span class="p">));</span>
+<span class="p">});</span>
+
+<span class="nx">test</span><span class="p">.</span><span class="nx">run</span><span class="p">();</span>
+</code></pre></div>
+<h3>proxyquire</h3>
+
+<p>Node.js の require モジュールをプロキシすることができるライブラリです。
+Jest でいうところの <code>Jest.mock(&#39;ライブラリ名&#39;, {/** モック */})</code> だと思っていれば大丈夫です。</p>
+
+<p><a href="https://www.npmjs.com/package/proxyquire">公式サンプル</a>を引用すると、以下のような感じです。</p>
+
+<p>get.js:</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="kd">get</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">simple-get</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">assert</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">assert</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">fetch</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">get</span><span class="p">(</span><span class="dl">'</span><span class="s1">https://api/users</span><span class="dl">'</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>get.test.js:</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">proxyquire</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">proxyquire</span><span class="dl">'</span><span class="p">).</span><span class="nx">noCallThru</span><span class="p">();</span>
+<span class="kd">var</span> <span class="nx">assert</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">assert</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">fetch</span> <span class="o">=</span> <span class="nx">proxyquire</span><span class="p">(</span><span class="dl">'</span><span class="s1">./get</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="dl">'</span><span class="s1">simple-get</span><span class="dl">'</span><span class="p">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="na">statusCode</span><span class="p">:</span> <span class="mi">200</span> <span class="p">})</span>
+    <span class="p">})</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">fetch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">assert</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+<span class="p">});</span>
+</code></pre></div>
+<h3>pong-swoosh での使い方</h3>
+
+<p>この2つを組み合わせて、依存モジュールを <code>proxyquire</code> で置き換え、置き換える関数は <code>snoop</code> で作っています。</p>
+
+<p><a href="https://github.com/its-succ/pong-swoosh/blob/main/server/tests/create-channel.js">create-channel.jsのテストコード</a>を例にします。
+<code>create-channel</code> は、ブラウザからのチャンネル作成リクエストを受け付けたあと、実際にチャンネルを作成する処理です。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">まだ作成されていないチャンネルの場合は、チャンネル追加されてソケットにオーナー登録されること</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">context</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">getChannelMock</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">);</span> <span class="c1">// 存在しないチャンネル</span>
+  <span class="kd">const</span> <span class="nx">addChannelMock</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{});</span>
+  <span class="kd">const</span> <span class="nx">channelId</span> <span class="o">=</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">datatype</span><span class="p">.</span><span class="nx">uuid</span><span class="p">();</span>
+  <span class="kd">const</span> <span class="nx">createChannel</span> <span class="o">=</span> <span class="nx">proxyquire</span><span class="p">(</span><span class="dl">'</span><span class="s1">../create-channel</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">./channel</span><span class="dl">'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">getChannel</span><span class="p">:</span> <span class="nx">getChannelMock</span><span class="p">.</span><span class="nx">fn</span><span class="p">,</span>
+      <span class="na">addChannel</span><span class="p">:</span> <span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">fn</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="dl">'</span><span class="s1">uuid</span><span class="dl">'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">v4</span><span class="p">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">channelId</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">});</span>
+  <span class="kd">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">createChannel</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">socket</span><span class="p">,</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">test.ch</span><span class="dl">'</span><span class="p">);</span>
+
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">called</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">is</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">callCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">arguments</span><span class="p">,</span> <span class="p">[</span><span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span> <span class="nx">channelId</span><span class="p">,</span> <span class="dl">'</span><span class="s1">test.ch</span><span class="dl">'</span><span class="p">]);</span>
+</code></pre></div>
+<p><code>create-channel</code> の実装では以下のように <code>channel</code> モジュールに依存しているので、そこをモックしていきます。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">channel</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./channel</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="p">{</span> <span class="na">v4</span><span class="p">:</span> <span class="nx">uuidv4</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">uuid</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">(</span><span class="nx">socket</span><span class="p">,</span> <span class="nx">userId</span><span class="p">,</span> <span class="nx">channelName</span><span class="p">,</span> <span class="nx">channelId</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">exists</span> <span class="o">=</span> <span class="nx">channel</span><span class="p">.</span><span class="nx">getChannel</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span> <span class="nx">channelName</span><span class="p">);</span>
+</code></pre></div>
+<p>まず、Test Double を下準備します。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="kd">const</span> <span class="nx">getChannelMock</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">);</span> <span class="c1">// 存在しないチャンネル</span>
+  <span class="kd">const</span> <span class="nx">addChannelMock</span> <span class="o">=</span> <span class="nx">snoop</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{});</span>
+  <span class="kd">const</span> <span class="nx">channelId</span> <span class="o">=</span> <span class="nx">faker</span><span class="p">.</span><span class="nx">datatype</span><span class="p">.</span><span class="nx">uuid</span><span class="p">();</span>
+  <span class="kd">const</span> <span class="nx">createChannel</span> <span class="o">=</span> <span class="nx">proxyquire</span><span class="p">(</span><span class="dl">'</span><span class="s1">../create-channel</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+    <span class="dl">'</span><span class="s1">./channel</span><span class="dl">'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">getChannel</span><span class="p">:</span> <span class="nx">getChannelMock</span><span class="p">.</span><span class="nx">fn</span><span class="p">,</span>
+      <span class="na">addChannel</span><span class="p">:</span> <span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">fn</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="dl">'</span><span class="s1">uuid</span><span class="dl">'</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">v4</span><span class="p">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">channelId</span><span class="p">,</span>
+    <span class="p">},</span>
+  <span class="p">});</span>
+</code></pre></div>
+<p><code>snoop</code> でモック関数を2つ作り、それを <code>proxyquire</code> を使って、 <code>./channel</code> の <code>require</code> モジュールを置き換えます。
+<code>uuid</code> モジュールも同様に <code>snoop</code> でモックしていることがわかるでしょう。</p>
+
+<p>で、実際に <code>const result = createChannel(context.socket, &#39;test&#39;, &#39;test.ch&#39;);</code> でテスト対象のモジュールを呼び出したら
+<code>getChannel</code> が <code>false</code> になると <code>addChannel</code> が呼ばれるのが正しい動作なので、以下のように検証しています。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">called</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">is</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">callCount</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span><span class="nx">addChannelMock</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">arguments</span><span class="p">,</span> <span class="p">[</span><span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span> <span class="nx">channelId</span><span class="p">,</span> <span class="dl">'</span><span class="s1">test.ch</span><span class="dl">'</span><span class="p">]);</span>
+</code></pre></div>
+<ul>
+<li>1行目は、 <code>addChannel</code> が呼ばれたかどうか</li>
+<li>2行目は、 <code>addChannel</code> が何回呼ばれたか</li>
+<li>3行目は、 <code>addChannel</code> がどのような引数で呼び出されたか</li>
+</ul>
+
+<p>を検証することができます。Jest で Test Double を書いたことがあれば、イメージはつきやすいと思います。
+このように Test Double の機能が標準では備わってない uvu でも、どうしてもモックしたいテストも記述できるようになっています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="uvu での Test Double" data-url="http://blog.open.tokyo.jp/2022/05/05/uvu-test-double.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/05/uvu-test-double.html&t=uvu%20%E3%81%A7%E3%81%AE%20Test%20Double" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/05/uvu-test-double.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h2>
   <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 11:35:00 AM</a></p>
   <p class="tags">
       <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
@@ -845,118 +1019,6 @@ cron のスケジュールは日次なり、週次なりで良いでしょう。
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a></h2>
-  <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 11:07:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/swc.html" rel="tag">swc</a>
-      <a href="/tags/swc-node.html" rel="tag">swc-node</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>TypeScriptを使ってサーバーサイドのAPIサーバーなどを作っていて、テスティングフレームワークとして <a href="https://jestjs.io/ja/">Jest</a> を使っているとき
-まずは <a href="https://kulshekhar.github.io/ts-jest/">ts-jest</a> を使いはじめると思います。</p>
-
-<p>ts-jestはTypeScriptのコードをJestでテストするのに大変便利で、とても使いやすいのですが、コード量が多くなってきたときCI/CDにおける
-テスト時間が問題になってきます。</p>
-
-<h2>Jest + TypeScript のテストを高速化するノウハウ</h2>
-
-<p>このあたりはすでに多くのブログ記事が出ているように、ググるとたくさんの情報が出てきます。</p>
-
-<ul>
-<li><a href="https://miyauchi.dev/ja/posts/speeding-up-jest/">JestでTypeScriptを高速化する</a></li>
-<li><a href="https://akfm.dev/blog/2020-09-25/jest.html">Jest高速化の魔法のレシピ</a></li>
-<li><a href="https://kazuhira-r.hatenablog.com/entry/2022/01/10/203844">Jest＋TypeScriptを高速に実行したい（ts-jest、esbuild、SWCを比べる）</a></li>
-</ul>
-
-<p>などなど&hellip;</p>
-
-<p>これらで書かれているもので、共通してくるワードが</p>
-
-<ul>
-<li><a href="https://github.com/aelbore/esbuild-jest">esbuild-jest</a></li>
-<li><a href="https://github.com/swc-project/jest">@swc/jest</a></li>
-</ul>
-
-<p>です。
-どちらも esbuild(Goで書かれている) や swc(Rustで書かれている) といった高速のトランスパイラを使って実行するので、
-Jestのテストが速くなります。</p>
-
-<h2>TypeScript も様々</h2>
-
-<p>では実際に esbuild や swc を簡単に導入できるかということです。
-TypeScript で、特にサーバーサイドの実装の場合、いろいろな機能を使っている場合があります。
-たとえば DI であったり、 ORM であったり。
-私が関わっているプロジェクトでも DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っています。
-これらのライブラリは TypeScript の DI や ORM としては一番に思いつく有名どことで特にマニアックなライブラリではないと思います。</p>
-
-<p>で、これらのライブラリを使う上では、 tsconfig に以下の設定を入れる必要があります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">{</span>
-  <span class="dl">"</span><span class="s2">compilerOptions</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
-    <span class="dl">"</span><span class="s2">experimentalDecorators</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="dl">"</span><span class="s2">emitDecoratorMetadata</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>さて、そこで問題になるのが esbuild です。
-esbuild ではデコレータのサポートがないので、まず候補から外しました
-（もちろん <a href="https://github.com/anatine/esbuildnx/tree/main/packages/esbuild-decorators">esbuild-decorators</a> 
-という拡張があるのも知ってはいますが、公式ではないうえ、これ自体がTypeScriptで書かれているので実行速度的に結局美味しくないというのがあります）。</p>
-
-<p>そうすると、 swc を使うことになるのです。 swc はデコレータにも対応しており、理想的です。</p>
-
-<h2>@swc/jest の使い勝手</h2>
-
-<p><code>@swc/jest</code> を使って速くなったという記事のソースコードは単純なサンプルであることが多く、実際に単純に導入するだけではうまくいきません。
-もちろんうまく動作するプロジェクトもそれなりにはあるでしょうが。</p>
-
-<p>swc では　tsconfig を解釈してくれるわけではないので、 <a href="https://swc.rs/docs/configuration/swcrc">.swcrc</a> でコンフィグを書く必要があります。
-これが微妙に tsconfig と違うので、ビルドでは swc を使わず webback と serverless framework で AWS Lambda にデプロイするような
-APIサーバーでは設定を合わせるのが面倒です。</p>
-
-<h2>@swc-node/jest という解決策</h2>
-
-<p>そこで調べていくと、 <a href="https://github.com/swc-project/swc-node">@swc-node</a> という swc をより node.js 環境に特化したラッパーがあることを知りましt。</p>
-
-<p>で、 <code>@swc-node</code> には <a href="https://github.com/swc-project/swc-node/tree/master/packages/jest">@swc-node/jest</a> というパッケージがあり、
-これは <code>@swc/jest</code> と対になっている関係ですね。</p>
-
-<p><code>@swc-node</code> も tsconfig を解釈してくれるわけではないのですが、オプションの項目は tsconfig を一致しているので特に迷いなく設定できます。</p>
-
-<p>ちなみに 1.5系からは tsconfig を読み込むように変更されているのですが、現時点私たちのプロジェクトではビルドが失敗するので、まだ 1.4 系を利用しています。
-問題はすでに issue <a href="https://github.com/swc-project/swc-node/issues/626">TypeScript path mapping is not working.</a> になっており、
-パスエイリアスを使っているときに、うまくファイルが import できないところなのですが、これが解決されれば transformer の設定も不要になるので、
-とても便利になるはずです。</p>
-
-<p>ところで、この <code>@swc-node</code> ですが、当初(私たちが採用を決めたとき)は <a href="https://github.com/Brooooooklyn">@Brooooooklyn</a> さんの個人リポジトリにあったと思うのですが、現在は <code>@swc-project</code> 配下に移動しています。
-プロジェクトの一部になったというのは、一つ安心材料ですね。</p>
-
-<p><code>@swc-node</code> も TypeScript で書かれていて、 <code>esbuild-decorators</code> と同じじゃないのか？という話はあるかもしれませんが、 <code>@swc-node</code> に関していうと、これは tsconfig の設定値を swcrc にマッピングするラッパーという感じなので、動作時は swc 相当となります（実際に測定値もGitHubに出ている）。</p>
-
-<p>もし、サーバーサイドのTypeScriptプロジェクトで同様の課題を持っている人がいたら、 <code>@swc-node</code> の利用を試してもらえると良いかなと思っています。
-私たちはCIの時間を劇的に改善することができました。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="@swc-node/jest を使ってテストを高速化する" data-url="http://blog.open.tokyo.jp/2022/05/03/swc-node-jest.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/03/swc-node-jest.html&t=@swc-node/jest%20%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%83%86%E3%82%B9%E3%83%88%E3%82%92%E9%AB%98%E9%80%9F%E5%8C%96%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/03/swc-node-jest.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/5/">« Prev</a>
@@ -984,6 +1046,7 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
@@ -993,7 +1056,6 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
-                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
               </ul>
             </div>
           </div>
@@ -1110,7 +1172,7 @@ APIサーバーでは設定を合わせるのが面倒です。</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (5)</li>
+                  <li><a href="/2024.html">2024</a> (6)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

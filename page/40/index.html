@@ -277,7 +277,54 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h2>
+            <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-treebehavior.html">CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった</a></h2>
+  <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:49 PM</a></p>
+  <p class="tags">
+      <a href="/tags/1-2.html" rel="tag">1.2</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/rc1.html" rel="tag">RC1</a>
+      <a href="/tags/treebehavior.html" rel="tag">TreeBehavior</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;TreeBehavior自体1.2から追加された機能なのに、変更になるなんて。。。  </p>
+
+<p>1.2βでは</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;setScope(array('company_id'=&gt;'1'));
+$categories = $this-&gt;Category-&gt;children();
+</code></pre></div>
+<p>のように書くと、company_idが1のカテゴリだけ階層構造で取得できていたのだが、RC1ではsetScopeがDeprecatedになってしまった。で、上記方法を使っている画面を表示すると、「(TreeBehavior::setScope) Deprecated - Use BehaviorCollection::attach() to re-attach with new settings」というエラーメッセージが出るが、お世辞にもどう変更していいかわかるメッセージじゃないし、ドキュメントにも書いてない。  </p>
+
+<p>なので、ソースを読み込むことに。まぁソース読めばわかります。結果としては、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;$this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;array('company_id'=&gt;'1')));
+$categories = $this-&gt;Category-&gt;children();
+</code></pre></div>
+<p>のように記述するのですが、これを使用箇所で全部変更するのは大変ですね。そこで、Categoryのモデルクラスに以下のようなメソッドを追加してあげました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>function setScope($scope = array()) {
+    return $this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;$scope));
+}
+</code></pre></div>
+<p>ま、AppModelに追加しても良かったんですが、全部がTreeBehavior使っている訳ではないと思うので、その場合は、setTreeScopeのような名前に変更した方が良いかな？と思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html&t=CakePHP%201.2%20RC1%E3%81%A7TreeBehavior%E3%81%AE%E7%B5%9E%E8%BE%BC%E3%81%BF%E7%AF%84%E5%9B%B2%E6%8C%87%E5%AE%9A%E3%81%8C%E5%A4%89%E6%9B%B4%E3%81%A8%E3%81%AA%E3%81%A3%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h2>
   <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:17 PM</a></p>
   <p class="tags">
       <a href="/tags/1-2.html" rel="tag">1.2</a>
@@ -789,65 +836,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
     </div>
 
   </div>
-  <h2 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h2>
-  <p class="postdate"><a href="/2008/04/22.html" title="Permanent link">Tuesday, April 22, 2008 04:04:25 PM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/flashdevelop.html" rel="tag">FlashDevelop</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第二回は、FlexでFlashコンポーネントを開発するのに便利なIDEを導入する手順を整理します。  </p>
-
-<h3>■FlashDevelopとは</h3>
-
-<p>FlashDevelopは、フリーで利用可能なFlashの統合開発環境です。Flex Builderは有償版なので、タダで開発したいという人は、このツールを使うのがオススメです。Flex2,Flex3に必要なmxmlやActionScriptのコード補完機能などプログラミングをするには十分な機能を持っています。メニューなどすべて英語表記ですが、Eclipse IDEと操作性は似ているので、大きな問題はないでしょう。  </p>
-
-<h3>■ダウンロードする</h3>
-
-<p><a href="http://www.flashdevelop.org/">FlashDevelopのサイト</a>へアクセスします。
-<img src="/images/blog/images/flex2_coverflow_2/download1.jpg" alt="" /> 最新版を入手するには、Releasesを選択します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/download2.jpg" alt="" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/download3.jpg" alt="" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
-
-<h3>■インストールする</h3>
-
-<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/install1.jpg" alt="" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br>
-<img src="/images/blog/images/flex2_coverflow_2/install2.jpg" alt="" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
-
-<h3>■はじめにすること</h3>
-
-<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev1.jpg" alt="" /> まずインストールしたFlashDevelopを実行します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev2.jpg" alt="" /> Tools - Program Settings&hellip; （もしくはF10）を選択します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev4.jpg" alt="" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
-
-<h3>■次回</h3>
-
-<p>Flex2を使って画像を表示する簡単なサンプルからスタートしていきます。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (2) ～IDEを導入する" data-url="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(2)%20%EF%BD%9EIDE%E3%82%92%E5%B0%8E%E5%85%A5%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/39/">« Prev</a>
@@ -872,6 +860,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
@@ -881,7 +870,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
                   <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
-                  <li><a href="/2023/04/13/ts-jest-will-gradually-opt-in-adoption-of-esbuild-swc-more-to-improve-the-performance.html">ts-jest が esbuild/swc をトランスフォーマーに使って高速化していた</a> <span>2023/04/13</span></li>
               </ul>
             </div>
           </div>
@@ -998,7 +986,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (5)</li>
+                  <li><a href="/2024.html">2024</a> (6)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

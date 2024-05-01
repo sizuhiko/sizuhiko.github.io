@@ -5,10 +5,93 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-04-30T13:52:00+09:00</updated>
+  <updated>2024-05-01T18:32:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</title>
+    <link rel="alternate" href="http://blog.url.com/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html"/>
+    <id>http://blog.url.com/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html</id>
+    <published>2024-05-01T18:32:00+09:00</published>
+    <updated>2024-05-01T19:19:25+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は &lt;a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4&lt;/a&gt; の続編となります。&lt;/p&gt;
+
+&lt;h3&gt;GAEにデプロイして動作確認しながら修正&lt;/h3&gt;
+
+&lt;p&gt;前回で Slim4 へ移行でき、少し動く様になってきたので動作確認しながら微修正していきます。&lt;/p&gt;
+
+&lt;h4&gt;GAE 2nd gen 用の設定変更&lt;/h4&gt;
+
+&lt;p&gt;&lt;code&gt;app.yml&lt;/code&gt; ファイルに定義していたデプロイ対象外ファイルの一覧 &lt;code&gt;skip_files&lt;/code&gt; は別のファイル &lt;code&gt;.gcloudignore&lt;/code&gt; に記述するように変更になったので、定義を移行しました。その&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/98ec0f6157778a1b37807664193d1ee0afc56ec1"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+
+&lt;h4&gt;Carbon のバージョンアップ&lt;/h4&gt;
+
+&lt;p&gt;8.2 環境で動くように Carbon を 1.21 から 2.72 にアプデしました。その&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f33a78013a00996a30de76849abe76d40e404b1b"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+
+&lt;h4&gt;composer ファイルをデプロイ対象に追加&lt;/h4&gt;
+
+&lt;p&gt;GAE 2nd gen からは composer での依存関係はGAEデプロイ時に解決されるので、デプロイ対象ファイルに composer.json と composer.lock ファイルを追加しました。その&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/33bfe6f232d1b4794a6a27cfc0ceed139159615b"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+
+&lt;h4&gt;ミドルウェアの定義を変更&lt;/h4&gt;
+
+&lt;p&gt;ミドルウェアがうまく動作していないことがわかったので、調べていると書き方が変わっていることに気づきました。すでにパラメータは変更していたのですが、実行メソッド名も変更になっていました。&lt;/p&gt;
+
+&lt;p&gt;そこでt PHP5.5 のときは interface を実装するコードになっていなかったので、ちゃんと &lt;code&gt;MiddlewareInterface&lt;/code&gt; を実装するようなコードに修正。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Psr\Http\Server\MiddlewareInterface&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;AllowedProvidersMiddleware&lt;/span&gt;
+&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;AllowedProvidersMiddleware&lt;/span&gt; &lt;span class="kd"&gt;implements&lt;/span&gt; &lt;span class="nc"&gt;MiddlewareInterface&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;そうすると、以前は &lt;code&gt;__invoke&lt;/code&gt; メソッドで定義していたところを &lt;code&gt;process&lt;/code&gt; に変更する必要があることがわかりました。
+その修正&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e737549267d4f231cc5894f88f00bd91cbf9862"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+
+&lt;h4&gt;セッションの処理も修正&lt;/h4&gt;
+
+&lt;p&gt;さきほどのコミットでは、セッション保持の Memcache がうまく動作していなかったので、いったん &lt;code&gt;session_set_save_handler&lt;/code&gt; はコメントアウトして、デフォルトの tmp 管理にしています。ただ複数インスタンス起動するとうまく動作しなくなるので、いったん動作確認を進める上での暫定対応です。&lt;/p&gt;
+
+&lt;p&gt;またセッションミドルウェアも全体に対して有効にするのでなく、セッションが必要なAPI（ここでいうと管理画面のログイン周辺）についてだけ有効にするようにルーティングを変更しています。&lt;/p&gt;
+
+&lt;p&gt;その後、Google Cloud の Cloud Datastore に &lt;code&gt;DatastoreSessionHandler&lt;/code&gt; というものがあるのがわかり、以下のように設定を変更しました。その&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/d85b82286d6ec844c6e73144cbcd889d3ae8ff52"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Google\Cloud\Datastore\DatastoreClient&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Google\Cloud\Datastore\DatastoreSessionHandler&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+    &lt;span class="nv"&gt;$datastore&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;DatastoreClient&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="nv"&gt;$handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;DatastoreSessionHandler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$datastore&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nb"&gt;session_set_save_handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$handler&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="nb"&gt;session_save_path&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'sessions'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;POST のボディに JSON を渡す場合の対応&lt;/h4&gt;
+
+&lt;p&gt;Slim4 では &lt;code&gt;addBodyParsingMiddleware&lt;/code&gt; を利用する必要があったので、修正しました。その&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/376485104e1ac12a28b749dfc911506f57bcc27d"&gt;コミット&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;併せて BASIC 認証時の before 処理も不要であることがわかったので削除しています。&lt;/p&gt;
+
+&lt;h3&gt;GAE へのデプロイ方法を README に追記&lt;/h3&gt;
+
+&lt;p&gt;GAE 2nd gen からはビルド結果を以下のコマンドでデプロイします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;gcloud app deploy --project toiletevolution --version 2 --no-promote --appyaml=app.yml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;version&lt;/code&gt; を指定して新しいバージョンで動作確認を可能にして、 &lt;code&gt;--no-promote&lt;/code&gt; をつけることで従来のURLからのアクセスは、新しいバージョンに振り分けられない様にします。&lt;/p&gt;
+
+&lt;h3&gt;そしてどうなったか&lt;/h3&gt;
+
+&lt;p&gt;この記事は PHP のバージョンアップをメインにしているのですが、実際には WebComponents 側も修正しています。&lt;/p&gt;
+
+&lt;p&gt;そしてシュミレータで一ヶ月ぐらいの稼働テストを実施して、問題なさそうだったので某日に正式リリースを実施しました。
+その後、新しいバージョンでの問題も発生せず順調に動いています。&lt;/p&gt;
+
+&lt;p&gt;これでしばらくは落ち着くのと、バージョンアップ追従もどんどんできるようになっていくので安心です。&lt;/p&gt;
+
+&lt;p&gt;ブログの記事にまとめてみると、そんなに大変な修正でもなかったな？という感じですが、当時は久々に PHP 触ったりするのもあり、結構大変でした。&lt;/p&gt;
+
+&lt;p&gt;今後は phpstan とか入れたりして、コードの品質も上げていければなと思っています。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</title>
     <link rel="alternate" href="http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html"/>
@@ -607,215 +690,6 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
 
 &lt;p&gt;久しぶりということで運営の経験値とかもリセットされた中での開催だったと思うけど、そういうのを感じさせない良いカンファレンスでした。
 参加のみなさま、久しぶりに再会したみなさま。そして何より運営のみなさまありがとうございました。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>マルチプルレポをモノレポへコミットログを残しながら移行する</title>
-    <link rel="alternate" href="http://blog.url.com/2023/09/27/converting-multiple-repos-into-a-monorepo.html"/>
-    <id>http://blog.url.com/2023/09/27/converting-multiple-repos-into-a-monorepo.html</id>
-    <published>2023-09-27T17:25:00+09:00</published>
-    <updated>2023-09-28T16:16:47+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;h3&gt;背景&lt;/h3&gt;
-
-&lt;p&gt;プロジェクトで複数のAPIサーバーや、マイクロサービスなどを展開するのに、OpenAPI の定義を置くリポジトリを個々に作っていたのですが、メンテナンス性を考えてマルチプルレポからモノレポへ移行することにしました。&lt;/p&gt;
-
-&lt;p&gt;基本的に OpenAPI の定義（yamlファイル）の内容と、デプロイ先（AWS S3のWebホスティング先バケット）が違うぐらいで、それ以外の内容はまったく一緒であるリポジトリが複数ある感じです。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;app-a-apidoc&lt;/li&gt;
-&lt;li&gt;app-b-apidoc&lt;/li&gt;
-&lt;li&gt;service-account-apidoc&lt;/li&gt;
-&lt;li&gt;service-payment-apidoc&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;みたいなマルチプルレポを &lt;code&gt;apidoc&lt;/code&gt; モノレポへまとめていきます。&lt;/p&gt;
-
-&lt;p&gt;各 apidoc は &lt;a href="https://www.npmjs.com/package/swagger-ui-dist"&gt;swagger-ui-dist&lt;/a&gt; に yaml ファイルを入れて、Webホスティングしている S3 バケットにデプロイしています。
-ビルドスクリプトは gulp で、デプロイは serverless framework に serverless-s3-sync プラグインを入れて実行しています。&lt;/p&gt;
-
-&lt;h3&gt;リポジトリの移行の準備&lt;/h3&gt;
-
-&lt;p&gt;リポジトリを移行するにあたり &lt;a href="https://medium.com/@chris_72272/keeping-git-history-when-converting-multiple-repos-into-a-monorepo-97641744d928"&gt;Keeping git history when converting multiple repos into a monorepo&lt;/a&gt; という記事がとても役にたったので、こちらの手順を参考にして紹介していきます。&lt;/p&gt;
-
-&lt;h4&gt;ディレクトリ構造決定&lt;/h4&gt;
-
-&lt;p&gt;まず最初にモノレポ移行後のディレクトリ構造を検討します。
-よくある npm のパッケージをモノレポにしている場合だと&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;packages
-  +-- package-a
-  +-- package-b
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;みたいな階層にすることが多いんじゃないかな？と思います。
-参考記事だと &lt;code&gt;projects/*&lt;/code&gt; のような感じですね。
-aws-sdk v3 だと clients や lib, packages など目的別にいろいろ分けているようです。&lt;/p&gt;
-
-&lt;p&gt;そこで今回私たちは&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;apps
-  +-- a
-  +-- b
-services
-  +-- account
-  +-- payment
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;みたいなディレクトリ構造にしました。これはそれぞれのプロジェクトや、まとめたいリポジトリにもよるので、個別に検討しましょう。&lt;/p&gt;
-
-&lt;h4&gt;既存リポジトリのディレクトリ変更&lt;/h4&gt;
-
-&lt;p&gt;ディレクトリ構造が決まったら、既存リポジトリをそのディレクトリに合わせて階層を変更します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;cd app-a-apidoc
-mkdir -p apps/a
-git mv -k * apps/a
-git mv -k .* apps/a
-git commit -m "chore: move all files into apps/a"
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;ol&gt;
-&lt;li&gt;既存リポジトリをチェックアウトしたディレクトリに移動&lt;/li&gt;
-&lt;li&gt;モノレポにしたときのディレクトリツリーを作成&lt;/li&gt;
-&lt;li&gt;2のディレクトリ下にすべてのファイルを移動。移動には &lt;code&gt;git mv&lt;/code&gt; コマンドを使う&lt;/li&gt;
-&lt;li&gt;コミット&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;この作業を移行対象のすべての既存リポジトリで実施していきます。&lt;/p&gt;
-
-&lt;h4&gt;モノレポの作成&lt;/h4&gt;
-
-&lt;p&gt;GitHub上でリポジトリを作ってチェックアウトするか、 &lt;code&gt;git init&lt;/code&gt; コマンドでローカルにモノレポのフォルダを準備します。
-続いて、モノレポリポジトリにワークスペースのルートディレクトリを作っておきます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;mkdir apps
-mkdir services
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;git remote add&lt;/code&gt; を使ってローカルディレクトリのリポジトリ（既存リポジトリのディレクトリ変更でディレクトリ変更してコミットしたもの）を追加します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;git remote add -f app-a-apidoc ../app-a-apidoc
-git remote add -f app-b-apidoc ../app-b-apidoc
-git remote add -f service-account-apidoc ../service-account-apidoc
-git remote add -f service-payment-apidoc ../service-payment-apidoc
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;で、それらをモノレポの中にマージしていきます。マージするブランチが &lt;code&gt;main&lt;/code&gt; であると仮定します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;git merge app-a-apidoc/main --allow-unrelated-histories
-git merge app-b-apidoc/main --allow-unrelated-histories
-git merge service-account-apidoc/main --allow-unrelated-histories
-git merge service-payment-apidoc/main --allow-unrelated-histories
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;最後にリモートを削除しましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;git remote remove app-a-apidoc
-git remote remove app-b-apidoc
-git remote remove service-account-apidoc
-git remote remove service-payment-apidoc
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;モノレポの設定&lt;/h3&gt;
-
-&lt;p&gt;ここまでで既存のリポジトリを1つのモノレポにコミットログ付きで合体できました。
-続いて、モノレポで開発作業ができるように環境整備をしましょう。&lt;/p&gt;
-
-&lt;h4&gt;ワークスペースを設定する&lt;/h4&gt;
-
-&lt;p&gt;モノレポのルートディレクトリで &lt;code&gt;npm init&lt;/code&gt; コマンドを実行して &lt;code&gt;package.json&lt;/code&gt; を作ります。
-作成した &lt;code&gt;package.json&lt;/code&gt; にワークスペースに関する設定を追加します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;private&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;workspaces&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;apps/*&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;services/*&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;
-  &lt;span class="p"&gt;],&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;依存関係の設定&lt;/h4&gt;
-
-&lt;p&gt;続いて、各リポジトリで使っていた &lt;code&gt;devDependencies&lt;/code&gt; や &lt;code&gt;dependencies&lt;/code&gt; の依存関係をモノレポのルートディレクトリにある &lt;code&gt;package.json&lt;/code&gt; に移動します。
-通常は各リポジトリ共通のものだけですが、今回の apidoc ではすべて共通だったので、そのままコピペしました。&lt;/p&gt;
-
-&lt;p&gt;ワークスペース（apps や services）にある &lt;code&gt;package.json&lt;/code&gt; の &lt;code&gt;devDependencies&lt;/code&gt; や &lt;code&gt;dependencies&lt;/code&gt; を削除し、 &lt;code&gt;package-lock.json&lt;/code&gt; も削除します。&lt;/p&gt;
-
-&lt;p&gt;最後にルートディレクトリで &lt;code&gt;npm i&lt;/code&gt; を実行して依存関係をインストールします。&lt;/p&gt;
-
-&lt;h4&gt;各 apidoc の整理&lt;/h4&gt;
-
-&lt;p&gt;&lt;code&gt;.npmrc&lt;/code&gt; や &lt;code&gt;.gitignore&lt;/code&gt; , &lt;code&gt;.editorconfig&lt;/code&gt; など必要な設定ファイルをワークスペースからルートディレクトリに移動しておきます。&lt;/p&gt;
-
-&lt;p&gt;その他共通になったものはルートディレクトリ下に移動しておくと良いでしょう。&lt;/p&gt;
-
-&lt;h4&gt;GitHub Actions の統合&lt;/h4&gt;
-
-&lt;p&gt;ワークスペース（apps や services）にある &lt;code&gt;.github&lt;/code&gt; をどれかルートディレクトリに移動して、ワークスペース側からは削除します。
-単に全部のワークスペースをビルドしたりデプロイするだけなら &lt;code&gt;-ws&lt;/code&gt; オプションを追加するとすべてのワークスペースに対してコマンドを実行するようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;    &lt;span class="na"&gt;steps&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;uses&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;actions/checkout@v3&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm ci&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -ws build&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -ws deploy&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;まぁでも通常はそんなことなく、以下のパターンを考慮する必要があります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）&lt;/li&gt;
-&lt;li&gt;ワークスペースのファイルが修正された&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;前者はすべてのワークスペースに対して Action を実行したほうが良いのですが、後者は変更があったワークスペースだけの実行に絞り込みたいところです。&lt;/p&gt;
-
-&lt;p&gt;そこで利用できるのが &lt;a href="https://github.com/AlexShukel/get-changed-workspaces-action"&gt;Get changed workspaces action&lt;/a&gt; です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;jobs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;get-changed-workspaces&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;outputs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;packages&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;${{ steps.changed-packages.outputs.packages }}&lt;/span&gt;
-      &lt;span class="na"&gt;empty&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;${{ steps.changed-packages.outputs.empty }}&lt;/span&gt;
-    &lt;span class="na"&gt;steps&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;Check out repository code&lt;/span&gt;
-        &lt;span class="na"&gt;uses&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;actions/checkout@v3&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;Find changed workspaces&lt;/span&gt;
-        &lt;span class="na"&gt;uses&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;AlexShukel/get-changed-workspaces-action@v2.0.0&lt;/span&gt;
-        &lt;span class="na"&gt;id&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;changed-packages&lt;/span&gt;
-  &lt;span class="na"&gt;deploy&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;needs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="pi"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;get-changed-workspaces&lt;/span&gt;&lt;span class="pi"&gt;]&lt;/span&gt;
-    &lt;span class="na"&gt;if&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;${{ !fromJson(needs.get-changed-workspaces.outputs.empty) }}&lt;/span&gt;
-    &lt;span class="na"&gt;strategy&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;matrix&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-        &lt;span class="na"&gt;package&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;${{ fromJson(needs.get-changed-workspaces.outputs.packages) }}&lt;/span&gt;  
-    &lt;span class="na"&gt;steps&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;uses&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;actions/checkout@v3&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm ci&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -w ${{ matrix.package.name }} build&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -w ${{ matrix.package.name }} deploy&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;この Action を使うと変更があったワークスペースの名前を配列型式で取得できます。
-ワークスペースに変更がないときは &lt;code&gt;empty&lt;/code&gt; でわかるので、 &lt;code&gt;if&lt;/code&gt; 文で制御して何もしないように設定も可能です。&lt;/p&gt;
-
-&lt;p&gt;で、特定のワークスペースに対して npm コマンドを実行したい場合は &lt;code&gt;-w ワークスペース名&lt;/code&gt; オプションを指定します。&lt;/p&gt;
-
-&lt;p&gt;そこで、 &lt;code&gt;.github/workflows&lt;/code&gt; には以下のファイルを設置することにしました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;build-all.yml&lt;/li&gt;
-&lt;li&gt;build.yml&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;前者は &lt;code&gt;ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）&lt;/code&gt; を想定していて、以下のような条件で起動したら、 &lt;code&gt;-ws&lt;/code&gt; オプションですべてのワークスペースで実行されるようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;on&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;workflow_dispatch&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;push&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;paths&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;package.json&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;package-lock.json&lt;/span&gt;
-    &lt;span class="na"&gt;branches&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;master&lt;/span&gt;
-&lt;span class="na"&gt;jobs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;deploy&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;steps&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;uses&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;actions/checkout@v3&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm ci&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -ws build&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="na"&gt;run&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;npm run -ws deploy&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;後者は &lt;code&gt;Get changed workspaces action&lt;/code&gt; を使って個別のワークスペースビルドされるように設定しました。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;マルチプルレポ、モノレポ、それぞれに良いところはあると思います。
-必ずモノレポが良いというものでもないでしょう。
-それぞれのプロジェクトやリポジトリの運用を見極めて選択していきたいですね。&lt;/p&gt;
-
-&lt;p&gt;マルチプルレポからモノレポへ移行するときに、本記事が参考になれば幸いです。&lt;/p&gt;
 </content>
   </entry>
 </feed>
