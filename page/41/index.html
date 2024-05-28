@@ -277,7 +277,118 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h2>
+            <h2 class="title"><a href="/2008/04/22/flex2-e3-81-a7coverflow-e3-82-af-e3-83-ad-e3-83-bc-e3-83-b3-e3-82-92-e4-bd-9c-e3-82-8b-3-ef-bd-9e-e7-94-bb-e5-83-8f-e3-82-92-e8-a1-a8-e7-a4-ba-e3-81-99-e3-82-8b.html">Flex2でCoverFlowクローンを作る (3) ～画像を表示する</a></h2>
+  <p class="postdate"><a href="/2008/04/22.html" title="Permanent link">Tuesday, April 22, 2008 05:04:50 PM</a></p>
+  <p class="tags">
+      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+      <a href="/tags/flex.html" rel="tag">Flex</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第三回は、Flashコンポーネント内に画像を表示する手順を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>単純に画像が表示されるだけですが、まずはじめの一歩として取り組んでみましょう。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_3/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+</ul>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■動かしてみよう！</h3>
+
+<p><img src="/images/blog/images/flex2_coverflow_3/test.jpg" alt="" /> 
+細かい解説は後にして、ひとまずソースコードを記述したら、コンパイルです。
+ツールバーの再生ボタンをクリックするとコンパイルが始まり、下ペインにコンパイルメッセージが出力されます。
+「reflector.swf」ができあがると、自動的に再生がはじまり、<br>
+<img src="/images/blog/images/flex2_coverflow_3/run.jpg" alt="" /> 
+amazon.comから取得したWeb2.0ビギナーズバイブル[*1]の書籍画像が表示できましたね。  </p>
+
+<h3>■カスタムコントロールを作るなら、UIComponent</h3>
+
+<p>Flex2でカスタムコントロールを作るには、いくつか方法がありますが、本サンプルのように、UIComponentクラスを継承するのが最も簡単です。UIComponentはPlayerからのイベントを制御してくれるので、カスタムコントロールを作る場合、特定のメソッドのみオーバライドすれば良い事になります。また、表示する画像自体は、_contentという属性に持たせることにします。UIComponentは表示要素のスーパークラスです。</p>
+
+<h3>■コントロールの値を変更する、commitProperties</h3>
+
+<p>commitProperties()メソッドをオーバライドして、このカスタムコントロールが持つ値を設定します。FlashPlayerがmxml上の</p>
+<div class="highlight"><pre class="highlight plaintext"><code>&lt;local:ImageReflector /&gt;
+</code></pre></div>
+<p>を解析すると、内部的にはaddChild() メソッドを使用してコンポーネントが追加されまず。するとFlexはinvalidateProperties()を自動的に呼び出します。  </p>
+
+<p>つまり、必ず１度は最初にcommitProperties()が呼び出されるのです。カスタムコントロールの場合、コンストラクタでなく、ここで描画情報を初期化します。  </p>
+
+<p>まず、画像(Imageクラス)を実体として、UIComponentを作成します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>_content = UIComponent(new Image());
+</code></pre></div>
+<p>Amazonの画像を指定します。IDataRenderer.dataに画像のパスを指定すると、実際の描画はImageクラスが担当してくれます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>IDataRenderer(_content).data = "http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCZZZZZZZ_.jpg";
+</code></pre></div>
+<p>カスタムコントロールの要素として、自身の子エレメントとして追加します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>addChild(_content);
+</code></pre></div>
+<p>つまり、mxml上では、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>      &lt;local:ImageReflector &gt;
+        &lt;Image /&gt;
+      &lt;/local:ImageReflector &gt;
+</code></pre></div>
+<p>と書いたのと同じような状態となります。  </p>
+
+<p>最後に、invalidateDisplayList()メソッドを呼びます。
+invalidateDisplayList()を呼び出すと、画像の描画サイズを調整するため、updateDisplayList()が呼ばれる仕組みとなっています。  </p>
+
+<h3>■コントロールのサイズを指定する、measure</h3>
+
+<p>invalidateProperties()では、commitProperties()の後にmeasure()メソッドの呼び出されます。このメソッドではFlashPlayer上に表示するサイズを設定する必要があるので、_contentから実際の画像サイズを取得して、measuredHeightとmeasuredWidthのプロパティに値を設定します。  </p>
+
+<h3>■画像サイズを調整する、updateDisplayList</h3>
+
+<p>commitProperties()の最後で、子要素の描画を行うためにinvalidateDisplayList()を呼び出しています。ここでは主に子要素の表示サイズ、位置を調整します。  </p>
+
+<p>親要素のどの辺に、どのくらいの大きさで表示するか指定するのです。今回は画像を表示するだけなので、画像サイズを取得して、UIComponentのサイ
+ズに設定します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>_content.setActualSize(contentWidth,contentHeight);
+</code></pre></div>
+<h3>■まとめ</h3>
+
+<p>今回は画像を表示するだけだったので、これほどコードを記述しなくても、もっと簡単な方法もあったのですが、この過程は鏡面効果画像を表示するまでに重要なものです。いよいよ次回は画像を鏡面加工しますので、楽しみに待っていてください。  </p>
+
+<h4>[1]:Web2.0ビギナーズバイブル</h4>
+
+<p>著者名：伊藤 浩一、大津 真、岸田 健一郎、まえだ ひさこ、安井 力  </p>
+
+<p>Web2.0に不可欠なオープンソース技術にはどのようなものがあるのか、そして、それらを使用して具体的にどのようなWebアプリケーション作成ができるのかということを一冊の書籍としてまとめたものです。  </p>
+
+<p><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839923221/xpjp-22">http://www.amazon.co.jp/exec/obidos/ASIN/4839923221/xpjp-22</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Flex2でCoverFlowクローンを作る (3) ～画像を表示する" data-url="http://blog.open.tokyo.jp/2008/04/22/flex2-e3-81-a7coverflow-e3-82-af-e3-83-ad-e3-83-bc-e3-83-b3-e3-82-92-e4-bd-9c-e3-82-8b-3-ef-bd-9e-e7-94-bb-e5-83-8f-e3-82-92-e8-a1-a8-e7-a4-ba-e3-81-99-e3-82-8b.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2008/04/22/flex2-e3-81-a7coverflow-e3-82-af-e3-83-ad-e3-83-bc-e3-83-b3-e3-82-92-e4-bd-9c-e3-82-8b-3-ef-bd-9e-e7-94-bb-e5-83-8f-e3-82-92-e8-a1-a8-e7-a4-ba-e3-81-99-e3-82-8b.html&t=Flex2%E3%81%A7CoverFlow%E3%82%AF%E3%83%AD%E3%83%BC%E3%83%B3%E3%82%92%E4%BD%9C%E3%82%8B%20(3)%20%EF%BD%9E%E7%94%BB%E5%83%8F%E3%82%92%E8%A1%A8%E7%A4%BA%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2008/04/22/flex2-e3-81-a7coverflow-e3-82-af-e3-83-ad-e3-83-bc-e3-83-b3-e3-82-92-e4-bd-9c-e3-82-8b-3-ef-bd-9e-e7-94-bb-e5-83-8f-e3-82-92-e8-a1-a8-e7-a4-ba-e3-81-99-e3-82-8b.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h2>
   <p class="postdate"><a href="/2008/04/22.html" title="Permanent link">Tuesday, April 22, 2008 04:04:25 PM</a></p>
   <p class="tags">
       <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
@@ -490,6 +601,7 @@
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
@@ -499,7 +611,6 @@
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
-                  <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
               </ul>
             </div>
           </div>
@@ -507,6 +618,9 @@
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
@@ -533,9 +647,6 @@
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-                    </li>
-                    <li class="size0">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -616,7 +727,7 @@
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (6)</li>
+                  <li><a href="/2024.html">2024</a> (7)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

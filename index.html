@@ -277,7 +277,266 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a></h2>
+            <h2 class="title"><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a></h2>
+  <p class="postdate"><a href="/2024/05/28.html" title="Permanent link">Tuesday, May 28, 2024 03:44:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/codecommit.html" rel="tag">CodeCommit</a>
+      <a href="/tags/codebuild.html" rel="tag">CodeBuild</a>
+      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
+      <a href="/tags/eventbridge.html" rel="tag">EventBridge</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は AWS の CodeCommit と CodeBuild を使って「 GitHub と Actions だったら簡単にできる PR のビルドが成功したときだけマージ可能になる」仕組みを作ってみたので、その手順をまとめました。</p>
+
+<h3>それって標準でできないの？</h3>
+
+<p>はい、 AWS の Code 兄弟だけでソースコードを管理している場合、CodeCommit には PR の機能と承認フローの制御はあるけど、ビルド結果と連動した仕組みは用意されていません。
+僕も担当するプロジェクトで使うまで、それぐらいあるやろーと思っていたのですが、無いと聞いて衝撃を受けました。</p>
+
+<h3>前提</h3>
+
+<p>CodeCommit 上のリポジトリのブランチ戦略は git-flow で運用しています。
+なので、 以下のようなブランチやタグが存在します。</p>
+
+<ul>
+<li>master</li>
+<li>develop</li>
+<li>release/v9.9.9</li>
+<li>hotfix/v9.9.9</li>
+<li>feature/xxxx-xxx</li>
+</ul>
+
+<h3>CodeCommit と CodeBuild で git-flow を取り扱う</h3>
+
+<p>この時点でかなり面倒なのですが、以下のQiita記事が参考になります。</p>
+
+<ul>
+<li><a href="https://qiita.com/yoshii0110/items/0eb427cb7331647f2c12">AWS CodeシリーズをAWS Step Functionsで実行し継続的デプロイする</a></li>
+</ul>
+
+<p>なんで StepFunctions を使うかというと、Code兄弟を組み合わせて使ったとき、 <code>feature/*</code> のような動的ブランチの PR に対してビルドを実行できないといった問題があるためです。 <code>feature/*</code> に PUSH されたときに CodeBuild が動くとかはできるんですけど、そういうことじゃないんだよ Code兄弟よ。わかってないな、というとこ。</p>
+
+<h4>EventBridge -&gt; StepFunctions への連携</h4>
+
+<p>CodeCommit への PR や PUSH のイベントを EventBridge で受け取って StepFunctions へ受け流します。</p>
+
+<p>こちらの記事が参考になります。</p>
+
+<ul>
+<li><a href="https://qiita.com/isamuJazz/items/c8e4a4c27b46b87e01f3">AWS StepFunctionsを使って CodeCommitでプルリク時にそのブランチ名を自動的に既存のCodeBuildの対象ブランチにしてテスト実行する。</a></li>
+<li><a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/">新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築</a></li>
+</ul>
+
+<p>CodeCommit の PR や PUSH のイベントが発生したら、StepFunctions を呼び出すように設定します。</p>
+
+<p>基本的には事前定義パターンでも問題ないと思いますが、EventBridgeの段階でイベントを絞り込みたい場合は、カスタムで絞り込んでも良いと思います。
+対象イベントをどうするかは EventBridge でも StepFunctions で判定してもどちらでも良いでしょう。実行コストを機にするなら EventBridge でフィルタしたほうが良いですね。</p>
+
+<p>たとえば PR の作成とソースの更新時にだけ動かしたい場合は、以下のようなJSONになります。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"detail"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"pullRequestCreated"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pullRequestSourceBranchUpdated"</span><span class="p">]</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"detail-type"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"CodeCommit Pull Request State Change"</span><span class="p">],</span><span class="w">
+  </span><span class="nl">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"CodeCommitのARN"</span><span class="p">],</span><span class="w">
+  </span><span class="nl">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws:codecommit"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>GitHub Actions に置き換えると、以下のような部分を EventBridge や StepFunctions で設定すると思っていれば間違いないです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">on</span><span class="pi">:</span>
+  <span class="na">pull_request</span><span class="pi">:</span>
+    <span class="na">types</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">opened</span><span class="pi">,</span> <span class="nv">synchronize</span><span class="pi">]</span>
+    <span class="na">branches</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">feature/**'</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">release/**'</span>
+      <span class="pi">-</span> <span class="s">develop</span>
+      <span class="pi">-</span> <span class="s">master</span>
+  <span class="na">push</span><span class="pi">:</span>
+    <span class="na">branches</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">release/**'</span>
+      <span class="pi">-</span> <span class="s">develop</span>
+    <span class="na">tags</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s1">'</span><span class="s">v[0-9]+.[0-9]+.[0-9]+'</span>
+</code></pre></div>
+<h4>StepFunctions のフロー</h4>
+
+<p>参考記事に StepFunctions から CodeBuild を実行する例が出ているので、そちらを参考にしてください。</p>
+
+<p>フローとしては以下の様な流れを設定しています。</p>
+
+<ol>
+<li>PR かどうか判定する <code>$.detail-type</code> を <code>Choise</code> で判定して分岐
+
+<ol>
+<li>PR だったら CodeBuild の <code>build</code> を実行して、 <code>ResultPath: $.BuildResult</code> に結果を格納</li>
+<li>ビルド結果を CodeCommit に通知する Lambda を実行</li>
+</ol></li>
+<li>1 の ELSE
+
+<ol>
+<li>PUSH になるので、ブランチ <code>$.detail.sourceReference</code> が <code>refs/heads/develop</code> や <code>refs/heads/master</code> , <code>refs/heads/release</code> にマッチしていたら CodeBuild の <code>deploy</code> を実行して、 <code>ResultPath: $.BuildResult</code> に結果を格納</li>
+</ol></li>
+</ol>
+
+<p>実際はチャットにもビルド結果を通知したりしているので、フローはもう少し複雑ですが、大まかには上記のとおりです。</p>
+
+<p>StepFunctions から CodeBuild を呼び出す時の設定可能なパラメータなど。AWSの公式ドキュメントを見るとわかりやすいです（翻訳のタイトル変だけどw）</p>
+
+<p><a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/connect-codebuild.html">Step AWS CodeBuild Functions による呼び出し</a></p>
+
+<p>git-flow の CodeBuild プロジェクトを設定するときは、ソースの設定を指定せずに PR のソースブランチに対してビルドするようにします。</p>
+
+<p><a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/">新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築</a>の記事で CodeBuild を実行するときの StepFunctions 定義は以下のようになっています。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"Trigger CodeBuild Build With Tests"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Task"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"Resource"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arn:${AWS::Partition}:states:::codebuild:startBuild.sync"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"ProjectName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"${projectName}"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"Next"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Get Test Results"</span><span class="w">
+    </span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p><code>Parameters</code> に以下のパラメータを追加して、特定のソースブランチに対してビルドできるように設定します。</p>
+
+<ul>
+<li>SouceTypeOverride: &ldquo;CODECOMMIT&rdquo;</li>
+<li>SourceLocationOverride: CodeCommit のURL</li>
+<li>BuildspecOverride: 実行するビルドスペックのパス</li>
+<li>SourceVersion: ブランチ名（event.detail.sourceReference）</li>
+</ul>
+
+<h4>CodeBuild でやること</h4>
+
+<p>CodeBuild では分岐処理を書くとしてもシェルの if 文を使うことになるので、そういったケース分けは StepFunctions で分岐して、buildspecfile を分けておいて <code>BuildspecOverride</code> で切り替える様にしておいた方が良いです。</p>
+
+<p>GitHub Actions でいうと、単純なジョブが1つ書けるだけと思っていたほうが良いです。</p>
+
+<h4>CodeCommit にビルド結果を通知する</h4>
+
+<p>では CodeBuild の結果を CodeCommit に通知してみましょう。
+ここは連携の仕組みはないので、 CodeCommit のコメント欄と承認機能を利用します。</p>
+
+<p>まずビルド結果を CodeCommit にコメントして、ビルドが成功していたら承認する Lambda を実装します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">CodeCommitClient</span><span class="p">,</span> <span class="nx">PostCommentForPullRequestCommand</span><span class="p">,</span> <span class="nx">UpdatePullRequestApprovalStateCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">@aws-sdk/client-codecommit</span><span class="dl">"</span><span class="p">:</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">handler</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CodeCommitClient</span><span class="p">();</span>
+    <span class="kd">const</span> <span class="nx">buildResult</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span> <span class="p">?</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nx">Cause</span><span class="p">)</span> <span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">buildUrl</span> <span class="o">=</span> <span class="s2">`https://リージョン.console.aws.amazon.com/codesuite/codebuild/コードビルドID/projects/</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">ProjectName</span><span class="p">}</span><span class="s2">/build/</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">Id</span><span class="p">}</span><span class="s2">`</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">icon</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span> <span class="p">?</span> <span class="dl">'</span><span class="s1">❌</span><span class="dl">'</span> <span class="p">:</span> <span class="dl">'</span><span class="s1">✅</span><span class="dl">'</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">icon</span><span class="p">}</span><span class="s2"> ビルド [</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">Id</span><span class="p">}</span><span class="s2">](</span><span class="p">${</span><span class="nx">buildUrl</span><span class="p">}</span><span class="s2">)`</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">pullRequestId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">pullRequestId</span><span class="p">,</span>
+        <span class="na">repositoryName</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">repositoryNames</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="na">beforeCommitId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">sourceCommit</span><span class="p">,</span>
+        <span class="na">afterCommitId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">destinationCommit</span><span class="p">,</span>
+        <span class="nx">content</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">command</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PostCommentForPullRequestCommandI</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">command</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span> <span class="o">||</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="kd">const</span> <span class="nx">approvalInput</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">pullRequestId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">pullRequestId</span><span class="p">,</span>
+        <span class="na">revisionId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">revisionId</span><span class="p">,</span>
+        <span class="na">approvalState</span><span class="p">:</span> <span class="dl">"</span><span class="s2">APPROVE</span><span class="dl">"</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="kd">const</span> <span class="nx">approvalCommand</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">UpdatePullRequestApprovalStateCommand</span><span class="p">(</span><span class="nx">approvalInput</span><span class="p">);</span>
+    <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">approvalCommand</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>本当は絵文字じゃなくて、バッジを使いたかったのですけど、CodeCommit では利用できる Markdown 記法に制限があって、外部画像は利用できないようです。
+CodeBuild にもバッジ機能はありますが、 git-flow のように <code>feature/*</code> のワイルドカードブランチで、 StepFunctions からビルド対象ブランチを指定して実行する場合にはバッジが作れないので、それも使えません。
+ここは絵文字一択でしょう。
+あとは、ビルドが成功していても失敗していても、ビルド結果に飛べるリンクを付けることで確認しやすくなります。</p>
+
+<p>この Lambda からは以下の2つのコマンドを利用するためのポリシーが必要になるので、忘れずにアタッチしましょう。</p>
+
+<ul>
+<li>PostCommentForPullRequest</li>
+<li>UpdatePullRequestApprovalState</li>
+</ul>
+
+<h4>ビルドが成功したときだけマージ可能にする</h4>
+
+<p>上記の Lambda でビルドに成功したときだけ承認を実行するようにしました。
+CodeCommit では「承認ルールテンプレート」を設定できます。</p>
+
+<p>以下のルールを前提とします。</p>
+
+<ul>
+<li>CI でのビルドが成功している</li>
+<li>PR 作成者以外の人が承認している</li>
+</ul>
+
+<p>まず前者の承認ルールテンプレートを設定してみましょう。</p>
+
+<ul>
+<li>必要な承認の数: 1</li>
+<li>承認プールのメンバー
+
+<ul>
+<li>IAMユーザー名または引き受けたロール</li>
+<li>値: ビルドが成功していたら承認する Lambda のロール名</li>
+</ul></li>
+<li>ブランチ名: develop</li>
+</ul>
+
+<p>git-flow では <code>feature/*</code> から <code>develop</code> に向けて PR を出すので、ブランチフィルターを設定しておくと良いです。
+また、Lambda からの承認であることを判定するには、Lambda に割り当てているロール名で判定するのが楽だと思うので、ロール名で判定すると良いでしょう。</p>
+
+<p>続いて後者の承認ルールテンプレートを設定してみましょう。</p>
+
+<ul>
+<li>必要な承認の数: 2</li>
+<li>ブランチ名: develop</li>
+</ul>
+
+<p>ここでは承認者の絞り込みはしておらず、2つの承認があったらというルールにしています。
+プロジェクトによっては特定の人の承認を必要とする場合もあるでしょうから、そのあ場合は承認プールのメンバーを設定して必要な承認数を指定してください。
+ここでは誰かしら1人以上が承認してくれたら、という前提になっています。</p>
+
+<p>ではなぜ必要な承認の数が 2 なのか？というと、CIでの承認数1と人の承認数1を合わせて2以上という形にしています。
+人が2人以上承認していてもCIが失敗していた場合は、前者の承認ルールを満たしていないのでマージすることはできません。</p>
+
+<p>ビルド成功で1、人の承認が1つ以上でルールが満たされます。</p>
+
+<h3>さいごに</h3>
+
+<p>これらの手順で CodeCommit / CodeBuild を使ったときに GitHub と Actions で簡単にできていたワークフローを実現できます。</p>
+
+<p>面倒だ、面倒すぎる、と思いますよね。</p>
+
+<p>できれば Code兄弟を避けていきたいのですが、プロジェクト事情でそれ以外の選択肢が選べないこともあるでしょう。
+そのようなときに、この記事が参考になればと思います。
+ここまで全体の手順を解説してくれる記事が見当たらなかったので、細かい設定は置いておいて大まかなら流れをベースに解説しました。
+それぞれの部分（たとえばStepFunctionsとCodeBuildの連携）といった記事は検索すると見つかるので、具体的な実装方法はそれぞれの最新情報を確認ください。</p>
+
+<p>Code兄弟さん、もっと便利になってくれないかな、と願う日々です。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う" data-url="http://blog.open.tokyo.jp/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html&t=CodecCmmit%20%E3%81%A8%20CodeBuild%20%E3%82%92%20GitHub%20%E3%81%A8%20Actions%20%E3%81%AE%E7%B5%84%E3%81%BF%E5%90%88%E3%82%8F%E3%81%9B%E3%81%AE%E3%82%88%E3%81%86%E3%81%AB%E4%BD%BF%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a></h2>
   <p class="postdate"><a href="/2024/05/01.html" title="Permanent link">Wednesday, May 01, 2024 06:32:00 PM</a></p>
   <p class="tags">
       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -836,122 +1095,6 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
     </div>
 
   </div>
-  <h2 class="title"><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a></h2>
-  <p class="postdate"><a href="/2024/03/20.html" title="Permanent link">Wednesday, March 20, 2024 12:34:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2023年2月3日にGoogle Cloudからメールが届きました。</p>
-
-<p><img src="/images/blog/gae-gen1-support-mail.png" alt="" /></p>
-
-<p>ここで作っていた個人開発のサービスとは <a href="https://toiletevolution.space/#/about">Toilet Evolution</a> です。一時期に流行ったトイレ利用状況可視化のIoTサービスです。</p>
-
-<p>PHP + Web Components の SPA 構成でできていて、Google App Engine（以下GAE）の第一世代で動いています。
-当時ほぼ無料で動かせるPaaSというのはあまりなくて、GAEばかりを選択していたと記憶しています。
-その後 Heroku とか出ましたけど、実質それなりの利用で月100円もかからずに運用しつづけられている状況なのでありがたいです。</p>
-
-<p><a href="https://cloud.google.com/appengine/docs/standard/lifecycle/support-schedule?hl=ja">GAEのランタイム サポート スケジュール</a> によると PHP5.5 は 2024年1月30日にサポートの終了で、非推奨が2026年1月31日ということ。廃止は書かれていません。</p>
-
-<p>と同時にまだ使っている人もいるので、簡単にメンテ大変なんでクローズしますというのも違いますね。ユーザー大事。ありがたや。</p>
-
-<p>そこで、サポート終了状態でずっと動かすのもなと思い、最新版のPHPへの移行を検討し始めました。</p>
-
-<h3>一番最後のメンテナンス</h3>
-
-<p>このWebサービスは長いことやっているのですが、直近で記事にしたのは <a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a> で、2019年4月。あのあとコロナがあっての5年ぶりのメンテになります。</p>
-
-<h3>移行前の composer.json</h3>
-
-<p>以下のような依存バージョンでした。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
-    </span><span class="nl">"php"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&gt;=5.5.0"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"slim/slim"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.1"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"monolog/monolog"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.17"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"tomwalder/php-gds"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"tuupola/slim-basic-auth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.0"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"nesbot/carbon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.21"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"league/oauth2-client"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.4"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"league/oauth2-google"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.0"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"akrabat/rka-slim-session-middleware"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0.0-RC1"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"sizuhiko/slim3-csrf-utilities"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev-master"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"justinrainbow/json-schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.0"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"phpunit/phpunit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^4.8"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"helmich/phpunit-psr7-assert"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.1"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"gecko-packages/gecko-memcache-mock"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"google/appengine-php-sdk"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.9"</span><span class="w">    
-</span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p>歴史を感じますね。</p>
-
-<h3>GAE gen1 から gen2 で何が変わるのか</h3>
-
-<p>GAEでの移行ガイドが出ていて、PHPだと <a href="https://cloud.google.com/appengine/migration-center/standard/migrate-to-second-gen/php-differences?hl=ja">PHP 5.5 と PHP 7 / 8 の違い</a> というドキュメントがあります。</p>
-
-<p>PHP公式ドキュメントの移行ガイドへのリンクと、GAE特有のアップグレードガイドが書かれています。
-タイトルだけ拾うと、以下のような移行が必要になるということでした。</p>
-
-<ul>
-<li>app.yaml ファイルを移行する</li>
-<li>ランタイム制限の緩和</li>
-<li>App Engine の PHP SDK から移行する（レガシーバンドルサービスAPI利用方法）</li>
-<li>ローカルでの実行方法</li>
-</ul>
-
-<p>レガシーバンドルサービスとは <a href="https://cloud.google.com/appengine/docs/standard/php-gen2/services/access?hl=ja">PHP 7 / 8 用の以前のバンドル サービスにアクセスする</a> で書かれているサービスで、今回のサービスで言うと Memcache とセッションを利用していました。</p>
-
-<p>で、これらは使えるので、使い続けて良いのか？という選択を迫られます。
-もう少し関連するドキュメントを読んでみましょう。
-<a href="https://cloud.google.com/appengine/docs/standard/bundled-services-overview?hl=ja">以前のバンドル サービスの概要</a> によると</p>
-
-<blockquote>
-<p>レガシー ランタイムの一部はオープンソース コミュニティで管理されなくなったため、App Engine デベロッパーは、新しいランタイムに移行すべきかどうか難しい判断に迫られる可能性があります。こうした移行には時間と労力がかかりますが、レガシー ランタイムの使用を継続すれば、アプリの維持コストが増大する結果になります。
-こうした課題を踏まえ、Google Cloud では新しいランタイムへの移行パスを段階的に提供していく予定です。Google Cloud では、ランタイム移行の複雑さを軽減するために、Python 3、Java 11、Go 1.12 以降、PHP 7 / 8 などの第 2 世代ランタイムで App Engine の従来のバンドル サービスとその関連 API をサポートしています。</p>
-</blockquote>
-
-<p>移行大変なんで段階的な移行パスを用意するよってことですね。
-Memcache はこの移行バスに入ったようでそのままでも利用できたんですが、あとでまた移行するのが面倒そうなんで、このタイミングでやっておきたいと考えました。</p>
-
-<p>レガシーランタイムからの移行に関してのドキュメントは <a href="https://cloud.google.com/appengine/migration-center/standard/services/migrating-services?hl=ja&amp;tab=php">レガシー バンドル サービスからの移行</a> にあって、参考になります。</p>
-
-<h3>実行目標</h3>
-
-<ul>
-<li>PHPのバージョンを最新化する</li>
-<li>GAEのレガシーランタイムからの脱却</li>
-</ul>
-
-<p>というのを掲げてみました。</p>
-
-<p>けど、PHP自体あんまり触ってない（たぶん7を少しやったぐらいで、実質5系の知識で止まっている）ため、長期戦は予想していました。当時はまだ1年ぐらいあるから何とかなるやろ、ぐらいに思っていた自分がいました。</p>
-
-<p>そして、その後の1年ぐらいで移行を完了させて、現在は GAE gen2 の PHP8.2 で稼働しています。👏👏</p>
-
-<p>このあと数回にわたって、どうやって移行してきたかをコミットログと共にふりかえっていきたいと思います。
-少しでも PHP のバージョンアップや GAE gen2 へ移行する人の助けになればな、と思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1" data-url="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html&t=GAE%20gen1%20%E3%81%A7%E5%8B%95%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%20PHP5.5%20%E3%81%A7%E4%BD%9C%E3%81%A3%E3%81%9F%E5%80%8B%E4%BA%BA%E9%96%8B%E7%99%BA%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%82%92%20gen2%20PHP8.2%20%E3%81%B8%E7%A7%BB%E8%A1%8C%E3%81%97%E3%81%9F1%E5%B9%B4%E8%A8%98%20%E3%80%9C%20%E3%81%9D%E3%81%AE%201" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
         <b>1</b>
@@ -974,6 +1117,7 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
@@ -983,7 +1127,6 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
                   <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
-                  <li><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a> <span>2023/04/18</span></li>
               </ul>
             </div>
           </div>
@@ -991,6 +1134,9 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
@@ -1017,9 +1163,6 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-                    </li>
-                    <li class="size0">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -1100,7 +1243,7 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (6)</li>
+                  <li><a href="/2024.html">2024</a> (7)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

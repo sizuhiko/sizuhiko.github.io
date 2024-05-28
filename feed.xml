@@ -5,10 +5,250 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-05-01T18:32:00+09:00</updated>
+  <updated>2024-05-28T15:44:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</title>
+    <link rel="alternate" href="http://blog.url.com/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html"/>
+    <id>http://blog.url.com/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html</id>
+    <published>2024-05-28T15:44:00+09:00</published>
+    <updated>2024-05-28T18:10:22+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;この記事は AWS の CodeCommit と CodeBuild を使って「 GitHub と Actions だったら簡単にできる PR のビルドが成功したときだけマージ可能になる」仕組みを作ってみたので、その手順をまとめました。&lt;/p&gt;
+
+&lt;h3&gt;それって標準でできないの？&lt;/h3&gt;
+
+&lt;p&gt;はい、 AWS の Code 兄弟だけでソースコードを管理している場合、CodeCommit には PR の機能と承認フローの制御はあるけど、ビルド結果と連動した仕組みは用意されていません。
+僕も担当するプロジェクトで使うまで、それぐらいあるやろーと思っていたのですが、無いと聞いて衝撃を受けました。&lt;/p&gt;
+
+&lt;h3&gt;前提&lt;/h3&gt;
+
+&lt;p&gt;CodeCommit 上のリポジトリのブランチ戦略は git-flow で運用しています。
+なので、 以下のようなブランチやタグが存在します。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;master&lt;/li&gt;
+&lt;li&gt;develop&lt;/li&gt;
+&lt;li&gt;release/v9.9.9&lt;/li&gt;
+&lt;li&gt;hotfix/v9.9.9&lt;/li&gt;
+&lt;li&gt;feature/xxxx-xxx&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;CodeCommit と CodeBuild で git-flow を取り扱う&lt;/h3&gt;
+
+&lt;p&gt;この時点でかなり面倒なのですが、以下のQiita記事が参考になります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://qiita.com/yoshii0110/items/0eb427cb7331647f2c12"&gt;AWS CodeシリーズをAWS Step Functionsで実行し継続的デプロイする&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;なんで StepFunctions を使うかというと、Code兄弟を組み合わせて使ったとき、 &lt;code&gt;feature/*&lt;/code&gt; のような動的ブランチの PR に対してビルドを実行できないといった問題があるためです。 &lt;code&gt;feature/*&lt;/code&gt; に PUSH されたときに CodeBuild が動くとかはできるんですけど、そういうことじゃないんだよ Code兄弟よ。わかってないな、というとこ。&lt;/p&gt;
+
+&lt;h4&gt;EventBridge -&amp;gt; StepFunctions への連携&lt;/h4&gt;
+
+&lt;p&gt;CodeCommit への PR や PUSH のイベントを EventBridge で受け取って StepFunctions へ受け流します。&lt;/p&gt;
+
+&lt;p&gt;こちらの記事が参考になります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://qiita.com/isamuJazz/items/c8e4a4c27b46b87e01f3"&gt;AWS StepFunctionsを使って CodeCommitでプルリク時にそのブランチ名を自動的に既存のCodeBuildの対象ブランチにしてテスト実行する。&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/"&gt;新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;CodeCommit の PR や PUSH のイベントが発生したら、StepFunctions を呼び出すように設定します。&lt;/p&gt;
+
+&lt;p&gt;基本的には事前定義パターンでも問題ないと思いますが、EventBridgeの段階でイベントを絞り込みたい場合は、カスタムで絞り込んでも良いと思います。
+対象イベントをどうするかは EventBridge でも StepFunctions で判定してもどちらでも良いでしょう。実行コストを機にするなら EventBridge でフィルタしたほうが良いですね。&lt;/p&gt;
+
+&lt;p&gt;たとえば PR の作成とソースの更新時にだけ動かしたい場合は、以下のようなJSONになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"detail"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="nl"&gt;"event"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"pullRequestCreated"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"pullRequestSourceBranchUpdated"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"detail-type"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"CodeCommit Pull Request State Change"&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"resources"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"CodeCommitのARN"&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"source"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;"aws:codecommit"&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;GitHub Actions に置き換えると、以下のような部分を EventBridge や StepFunctions で設定すると思っていれば間違いないです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;on&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="na"&gt;pull_request&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;types&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="pi"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;opened&lt;/span&gt;&lt;span class="pi"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;synchronize&lt;/span&gt;&lt;span class="pi"&gt;]&lt;/span&gt;
+    &lt;span class="na"&gt;branches&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;feature/**'&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;release/**'&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;develop&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;master&lt;/span&gt;
+  &lt;span class="na"&gt;push&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;branches&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;release/**'&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;develop&lt;/span&gt;
+    &lt;span class="na"&gt;tags&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;v[0-9]+.[0-9]+.[0-9]+'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;StepFunctions のフロー&lt;/h4&gt;
+
+&lt;p&gt;参考記事に StepFunctions から CodeBuild を実行する例が出ているので、そちらを参考にしてください。&lt;/p&gt;
+
+&lt;p&gt;フローとしては以下の様な流れを設定しています。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;PR かどうか判定する &lt;code&gt;$.detail-type&lt;/code&gt; を &lt;code&gt;Choise&lt;/code&gt; で判定して分岐
+
+&lt;ol&gt;
+&lt;li&gt;PR だったら CodeBuild の &lt;code&gt;build&lt;/code&gt; を実行して、 &lt;code&gt;ResultPath: $.BuildResult&lt;/code&gt; に結果を格納&lt;/li&gt;
+&lt;li&gt;ビルド結果を CodeCommit に通知する Lambda を実行&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;li&gt;1 の ELSE
+
+&lt;ol&gt;
+&lt;li&gt;PUSH になるので、ブランチ &lt;code&gt;$.detail.sourceReference&lt;/code&gt; が &lt;code&gt;refs/heads/develop&lt;/code&gt; や &lt;code&gt;refs/heads/master&lt;/code&gt; , &lt;code&gt;refs/heads/release&lt;/code&gt; にマッチしていたら CodeBuild の &lt;code&gt;deploy&lt;/code&gt; を実行して、 &lt;code&gt;ResultPath: $.BuildResult&lt;/code&gt; に結果を格納&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;実際はチャットにもビルド結果を通知したりしているので、フローはもう少し複雑ですが、大まかには上記のとおりです。&lt;/p&gt;
+
+&lt;p&gt;StepFunctions から CodeBuild を呼び出す時の設定可能なパラメータなど。AWSの公式ドキュメントを見るとわかりやすいです（翻訳のタイトル変だけどw）&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/connect-codebuild.html"&gt;Step AWS CodeBuild Functions による呼び出し&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;git-flow の CodeBuild プロジェクトを設定するときは、ソースの設定を指定せずに PR のソースブランチに対してビルドするようにします。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/"&gt;新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築&lt;/a&gt;の記事で CodeBuild を実行するときの StepFunctions 定義は以下のようになっています。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nl"&gt;"Trigger CodeBuild Build With Tests"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nl"&gt;"Type"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"Task"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nl"&gt;"Resource"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"arn:${AWS::Partition}:states:::codebuild:startBuild.sync"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nl"&gt;"Parameters"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+          &lt;/span&gt;&lt;span class="nl"&gt;"ProjectName"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"${projectName}"&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+        &lt;/span&gt;&lt;span class="nl"&gt;"Next"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"Get Test Results"&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Parameters&lt;/code&gt; に以下のパラメータを追加して、特定のソースブランチに対してビルドできるように設定します。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;SouceTypeOverride: &amp;ldquo;CODECOMMIT&amp;rdquo;&lt;/li&gt;
+&lt;li&gt;SourceLocationOverride: CodeCommit のURL&lt;/li&gt;
+&lt;li&gt;BuildspecOverride: 実行するビルドスペックのパス&lt;/li&gt;
+&lt;li&gt;SourceVersion: ブランチ名（event.detail.sourceReference）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;CodeBuild でやること&lt;/h4&gt;
+
+&lt;p&gt;CodeBuild では分岐処理を書くとしてもシェルの if 文を使うことになるので、そういったケース分けは StepFunctions で分岐して、buildspecfile を分けておいて &lt;code&gt;BuildspecOverride&lt;/code&gt; で切り替える様にしておいた方が良いです。&lt;/p&gt;
+
+&lt;p&gt;GitHub Actions でいうと、単純なジョブが1つ書けるだけと思っていたほうが良いです。&lt;/p&gt;
+
+&lt;h4&gt;CodeCommit にビルド結果を通知する&lt;/h4&gt;
+
+&lt;p&gt;では CodeBuild の結果を CodeCommit に通知してみましょう。
+ここは連携の仕組みはないので、 CodeCommit のコメント欄と承認機能を利用します。&lt;/p&gt;
+
+&lt;p&gt;まずビルド結果を CodeCommit にコメントして、ビルドが成功していたら承認する Lambda を実装します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;CodeCommitClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;PostCommentForPullRequestCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;UpdatePullRequestApprovalStateCommand&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;@aws-sdk/client-codecommit&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;CodeCommitClient&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;buildResult&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nb"&gt;Error&lt;/span&gt; &lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Cause&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;buildUrl&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;`https://リージョン.console.aws.amazon.com/codesuite/codebuild/コードビルドID/projects/&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;buildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Build&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ProjectName&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;/build/&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;buildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Build&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;icon&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nb"&gt;Error&lt;/span&gt; &lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;❌&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;✅&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;content&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;icon&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt; ビルド [&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;buildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Build&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;](&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;buildUrl&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;)`&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;input&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;pullRequestId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pullRequestId&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;repositoryName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;repositoryNames&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="na"&gt;beforeCommitId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;sourceCommit&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;afterCommitId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;destinationCommit&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="nx"&gt;content&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;};&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;command&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;PostCommentForPullRequestCommandI&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;input&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;command&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;BuildResult&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nb"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;approvalInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;pullRequestId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pullRequestId&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;revisionId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;detail&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;revisionId&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;approvalState&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="s2"&gt;APPROVE&lt;/span&gt;&lt;span class="dl"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;};&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;approvalCommand&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;UpdatePullRequestApprovalStateCommand&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;approvalInput&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;approvalCommand&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;本当は絵文字じゃなくて、バッジを使いたかったのですけど、CodeCommit では利用できる Markdown 記法に制限があって、外部画像は利用できないようです。
+CodeBuild にもバッジ機能はありますが、 git-flow のように &lt;code&gt;feature/*&lt;/code&gt; のワイルドカードブランチで、 StepFunctions からビルド対象ブランチを指定して実行する場合にはバッジが作れないので、それも使えません。
+ここは絵文字一択でしょう。
+あとは、ビルドが成功していても失敗していても、ビルド結果に飛べるリンクを付けることで確認しやすくなります。&lt;/p&gt;
+
+&lt;p&gt;この Lambda からは以下の2つのコマンドを利用するためのポリシーが必要になるので、忘れずにアタッチしましょう。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PostCommentForPullRequest&lt;/li&gt;
+&lt;li&gt;UpdatePullRequestApprovalState&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;ビルドが成功したときだけマージ可能にする&lt;/h4&gt;
+
+&lt;p&gt;上記の Lambda でビルドに成功したときだけ承認を実行するようにしました。
+CodeCommit では「承認ルールテンプレート」を設定できます。&lt;/p&gt;
+
+&lt;p&gt;以下のルールを前提とします。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CI でのビルドが成功している&lt;/li&gt;
+&lt;li&gt;PR 作成者以外の人が承認している&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;まず前者の承認ルールテンプレートを設定してみましょう。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;必要な承認の数: 1&lt;/li&gt;
+&lt;li&gt;承認プールのメンバー
+
+&lt;ul&gt;
+&lt;li&gt;IAMユーザー名または引き受けたロール&lt;/li&gt;
+&lt;li&gt;値: ビルドが成功していたら承認する Lambda のロール名&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;ブランチ名: develop&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;git-flow では &lt;code&gt;feature/*&lt;/code&gt; から &lt;code&gt;develop&lt;/code&gt; に向けて PR を出すので、ブランチフィルターを設定しておくと良いです。
+また、Lambda からの承認であることを判定するには、Lambda に割り当てているロール名で判定するのが楽だと思うので、ロール名で判定すると良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;続いて後者の承認ルールテンプレートを設定してみましょう。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;必要な承認の数: 2&lt;/li&gt;
+&lt;li&gt;ブランチ名: develop&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ここでは承認者の絞り込みはしておらず、2つの承認があったらというルールにしています。
+プロジェクトによっては特定の人の承認を必要とする場合もあるでしょうから、そのあ場合は承認プールのメンバーを設定して必要な承認数を指定してください。
+ここでは誰かしら1人以上が承認してくれたら、という前提になっています。&lt;/p&gt;
+
+&lt;p&gt;ではなぜ必要な承認の数が 2 なのか？というと、CIでの承認数1と人の承認数1を合わせて2以上という形にしています。
+人が2人以上承認していてもCIが失敗していた場合は、前者の承認ルールを満たしていないのでマージすることはできません。&lt;/p&gt;
+
+&lt;p&gt;ビルド成功で1、人の承認が1つ以上でルールが満たされます。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;これらの手順で CodeCommit / CodeBuild を使ったときに GitHub と Actions で簡単にできていたワークフローを実現できます。&lt;/p&gt;
+
+&lt;p&gt;面倒だ、面倒すぎる、と思いますよね。&lt;/p&gt;
+
+&lt;p&gt;できれば Code兄弟を避けていきたいのですが、プロジェクト事情でそれ以外の選択肢が選べないこともあるでしょう。
+そのようなときに、この記事が参考になればと思います。
+ここまで全体の手順を解説してくれる記事が見当たらなかったので、細かい設定は置いておいて大まかなら流れをベースに解説しました。
+それぞれの部分（たとえばStepFunctionsとCodeBuildの連携）といった記事は検索すると見つかるので、具体的な実装方法はそれぞれの最新情報を確認ください。&lt;/p&gt;
+
+&lt;p&gt;Code兄弟さん、もっと便利になってくれないかな、と願う日々です。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</title>
     <link rel="alternate" href="http://blog.url.com/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html"/>
@@ -597,99 +837,6 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
 
 &lt;p&gt;このあと数回にわたって、どうやって移行してきたかをコミットログと共にふりかえっていきたいと思います。
 少しでも PHP のバージョンアップや GAE gen2 へ移行する人の助けになればな、と思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</title>
-    <link rel="alternate" href="http://blog.url.com/2024/02/18/php-conference-kansai-2024.html"/>
-    <id>http://blog.url.com/2024/02/18/php-conference-kansai-2024.html</id>
-    <published>2024-02-18T12:40:00+09:00</published>
-    <updated>2024-04-30T13:19:59+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;大阪自体はそれほど久しぶりではないけど、東京以外のカンファレンスにリアル参加するのは久しぶりだった。
-ブログを振り返ると、&lt;a href="/2019/10/13/phpcon-okinawa-2019.html"&gt;PHPカンファレンス沖縄2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました&lt;/a&gt;がコロナ前最後に参加した地域PHP conであったようだ。
-大阪へは藤井風のパナスタライブ以来なので、1年半ぶりぐらい。&lt;/p&gt;
-
-&lt;h3&gt;このところのホテル事情&lt;/h3&gt;
-
-&lt;p&gt;昨年秋のシルバーウィークに九州まで車でスカイラインを巡る旅をしてきて、ホテルの混雑状況とか把握していたつもりでしたが、今回はやばかった。
-ちょうど3連休開催ということで、ホテルの値段がやばい。大阪ではいつも宿泊する本町のホテルが早々に売り切れててどうしよう？となりましたが、
-運よくリニューアルしたばかりの東横inn淀屋橋駅南が空いてて、普段の東横価格だったので安心できました。&lt;/p&gt;
-
-&lt;h3&gt;前夜祭への参加&lt;/h3&gt;
-
-&lt;p&gt;さらに前日入りをすることにしていたのですが、午前中に東京で用事があったので &lt;a href="https://connpass.com/event/309163/"&gt;【非公式！前夜祭】 PHPカンファレンス関西2024&lt;/a&gt; へも新幹線に乗るタイミングで間に合いそうだったので参加表明するという慌ただしさ。&lt;/p&gt;
-
-&lt;p&gt;前夜祭で他の人の発表を聞いていて、自分も何か話したいなーという欲が出てきたので、その場でスライドをさくさくと作ってWebアクセシビリティの話をしました。
-いろいろなところで4月から義務化？！とか言われてますが、実際のところどうなのよ？みたいなところを。
-最新関係する仕事もしていてかなり調べたので、気になっている人もいるのでは？と思ったのです。&lt;/p&gt;
-
-&lt;p&gt;かつてはカンファレンスを開催していた大阪産業創造館という場所も懐かしかった。&lt;/p&gt;
-
-&lt;p&gt;前夜祭を楽しんだ後は、最近大阪に来たら必ずいく Bar で飲んでちゃんと終電ではホテルに戻りました。&lt;/p&gt;
-
-&lt;h3&gt;カンファレンス当日&lt;/h3&gt;
-
-&lt;p&gt;今回はあまり普段登壇で見かけない人の発表を聞く、久しぶりに会うコミュニティメンバーと会話する、という2つの目的で参加していました。
-どちらも当初の見込みは達成できて、たくさんの刺激をもらいました。
-午後は主にアンカンファレンスの会場にいて、枠も空いていたので前夜祭で話した内容をまたやってみたりと、聞くだけでなく積極的にイベントにも参加しました。
-ちゃんとスポンサークイズにも応募したよ！（半分ぐらいは聴けてなかったので勘で回答しちゃいましたがw）&lt;/p&gt;
-
-&lt;p&gt;懇親会 -&amp;gt; 2次会 -&amp;gt; ホテルそばで1人3次会 をやって終了。
-翌日の月曜日も3連休ということで休みでしたが、東京で推しのライブがあるのでお昼には新幹線に乗り込みました。
-いつものネギ焼きは新幹線のフードコードで&lt;/p&gt;
-
-&lt;p&gt;&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="ja" dir="ltr"&gt;いつもの(本店ではないが &lt;a href="https://t.co/YfGW0D6zAf"&gt;pic.twitter.com/YfGW0D6zAf&lt;/a&gt;&lt;/p&gt;&amp;mdash; しずひこ (@sizuhiko) &lt;a href="https://twitter.com/sizuhiko/status/1756862605984239984?ref_src=twsrc%5Etfw"&gt;February 12, 2024&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;あ、その前にもちろん聖地巡礼（阪急梅田のタイガースショップ）もして、グッズも買いました。&lt;/p&gt;
-
-&lt;h3&gt;久しぶりの地域カンファレンスに参加してのまとめ&lt;/h3&gt;
-
-&lt;p&gt;昨年のPHPカンファレンス福岡に始まり、地域カンファレンスの開催も戻ってきて、今回の大阪に久しぶりに参加しました。
-大阪のPHPcon自体は &lt;a href="/2018/08/03/phpcon-kansai-2018.html"&gt;PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました&lt;/a&gt; のとき以来で、今回はこのときの登壇者Tシャツを来て参加しました。&lt;/p&gt;
-
-&lt;p&gt;つまり関西では 6年ぶりということですね。
-オフライン開催のPHP系カンファレンスに関しても昨年の福岡などより前となると、おそらく &lt;a href="/2020/02/21/phperkaigi-2020.html"&gt;PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました&lt;/a&gt; このときの PHPerKaigi がコロナ前最後であったという記憶があります。&lt;/p&gt;
-
-&lt;p&gt;それでも4年。
-つまり6年以上前からコミュニティに参加していた関西圏の人以外はほぼ初参加となるわけです。&lt;/p&gt;
-
-&lt;p&gt;今年は月刊PHPカンファレンスなんて言葉が出るぐらいですが、それも昨年の福岡に始まった地域カンファレンスの楽しさから触発されたもので、しばらく行われてこなかった反動だったり、この4から6年の間に新たにこの業界で働き始めた人たちの新しい交流の場なんだなというのを実感しました。&lt;/p&gt;
-
-&lt;p&gt;今回のPHPCon関西ではいくつもの素晴らしい取り組みがありました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://note.com/phpcon_kansai/"&gt;公式 note&lt;/a&gt; で発信&lt;/li&gt;
-&lt;li&gt;PHPerシール&lt;/li&gt;
-&lt;li&gt;お誘いチケット&lt;/li&gt;
-&lt;li&gt;おすすめトーク診断&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;まず公式 note は X だけで発信していると流れてしまいそうな情報に簡単にアクセスできるのもあり、良いなーと思いました。
-困ったら note 見る、みたいな動線がある。もちろん公式HPに載せるのもありなんで、そこは運用の手間がどちらが少ないかという判断もあるでしょう。&lt;/p&gt;
-
-&lt;p&gt;続いて PHPerシール。こちらは2020のPHPerKaigiで行われていたトレーディングカードにインスパイアされたものだと思いますが、積極的に交流できるようにするアイテムとしてとても良いと思いました。スピーカーにはレアカードがあったりしたのも良かったと思います。&lt;/p&gt;
-
-&lt;p&gt;お誘いチケットは有料イベントで参加を迷っている人を誘いやすい仕組みとして良いなと思いました。
-PHPerシールとか当日の交流の仕組みがあっても、まず参加してくれないと届きませんね。&lt;/p&gt;
-
-&lt;p&gt;おすすめトーク診断も、誘ってもらったり紹介してもらったので参加するけど、カンファレンスの歩き方ってわからんな？という人も向けて楽しみながら参加できる仕掛けだったと思います。&lt;/p&gt;
-
-&lt;p&gt;つまりPHP関西自体に初参加、ましてやコロナで勉強会を含めオフラインのイベントそのものに初参加ということが6年というブランクから容易に想像できる環境での地域コミュニティの盛り上げ方に優れた戦略が練られていたことがわかります。&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;お誘いチケットで誘って参加してもらい&lt;/li&gt;
-&lt;li&gt;おすすめトーク診断で当日迷わないようにして&lt;/li&gt;
-&lt;li&gt;PHPer シールで当日は交流してもらう&lt;/li&gt;
-&lt;li&gt;なんなら X のアカウント持ってなかったけど、シール経由で作ってもらって今後の交流やPHP関西からの発信を受け取ってもらえるようにする&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;委員長の閉会の挨拶でもこれらを話されていましたが、関西でのPHPコミュニティを盛り上げたいという熱い想いを聞いて、また来年開催されたら参加したいな、発表もしてみたいなと思いました。&lt;/p&gt;
-
-&lt;p&gt;久しぶりということで運営の経験値とかもリセットされた中での開催だったと思うけど、そういうのを感じさせない良いカンファレンスでした。
-参加のみなさま、久しぶりに再会したみなさま。そして何より運営のみなさまありがとうございました。&lt;/p&gt;
 </content>
   </entry>
 </feed>
