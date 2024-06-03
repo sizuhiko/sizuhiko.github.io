@@ -5,10 +5,267 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-05-30T17:03:00+09:00</updated>
+  <updated>2024-06-03T14:32:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</title>
+    <link rel="alternate" href="http://blog.url.com/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html"/>
+    <id>http://blog.url.com/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html</id>
+    <published>2024-06-03T14:32:00+09:00</published>
+    <updated>2024-06-03T18:12:20+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://aws.amazon.com/jp/appsync/"&gt;AppSync&lt;/a&gt; は、AWS上で GraphQL API をサーバーレスに構築できるサービスです。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://aws.amazon.com/jp/amplify/"&gt;Amplify&lt;/a&gt; で利用されていることでも有名ですね。
+Amplify から DynamoDB にアクセスするときや、通常の CRUD だけでなくクエリ条件を指定したい場合などのカスタマイズをするときは、自動生成されたリゾルバーを修正することになります。
+このとき従来は &lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-mapping-template-reference.html"&gt;VTL&lt;/a&gt; というテンプレート言語を学ぶ必要がありましたが、今日ではJavaScript(TypeScript)を利用できます。&lt;/p&gt;
+
+&lt;p&gt;最新の Amplify Gen2 でも TypeScript でリゾルバを指定できます。&lt;a href="https://dev.classmethod.jp/articles/amplify-gen2-nextjs/"&gt;Amplify Gen2でNextJSのアプリケーション作成まで&lt;/a&gt; というクラメソの記事が参考になります。&lt;/p&gt;
+
+&lt;h3&gt;公式ドキュメントで学ぶ&lt;/h3&gt;
+
+&lt;p&gt;AWS のデベロッパーガイドに&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/tutorials-js.html"&gt;リゾルバーチュートリアル (JavaScript)&lt;/a&gt;があるので、これを読めば理解が進みます。
+特に&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/tutorial-dynamodb-resolvers-js.html"&gt;チュートリアル: DynamoDB JavaScript リゾルバー&lt;/a&gt;を読むと、DynamoDB にアクセスする GraphQL API の作り方が理解できるようになるでしょう。&lt;/p&gt;
+
+&lt;h4&gt;TypeScript を使う&lt;/h4&gt;
+
+&lt;p&gt;Amplify Gen2 を使っている場合は、すべて TypeScript で記述していて Amplify プロジェクトで管理されている Lint ルールなどを利用しているので、問題ないと思います。
+一方で AppSync を直接使う（たとえば Terraform や CDK などを使って AppSync の API をデプロイする）場合は、JavaScript リゾルバーの概要の中にある&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#additional-utilities"&gt;バンドル、TypeScript、ソースマップ&lt;/a&gt;を読むと良いです。&lt;/p&gt;
+
+&lt;p&gt;ここを読むと、以下の理解が深まります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;esbuild を使って TypeScript ファイルをバンドルして 1 つの JavaScript ファイルにする方法&lt;/li&gt;
+&lt;li&gt;リゾルバや関数を作るときの TypeScript 設定や記述方法（主に型定義）&lt;/li&gt;
+&lt;li&gt;GraphQL スキーマ情報から TypeScript  型定義を生成する方法&lt;/li&gt;
+&lt;li&gt;Linter の設定&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;特に Linter の設定は重要になります。
+詳しくは&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#utility-resolvers"&gt;ユーティリティ&lt;/a&gt;の &lt;code&gt;eslint プラグインの設定&lt;/code&gt; で確認できます。&lt;/p&gt;
+
+&lt;h4&gt;APPSYNC_JS の制約&lt;/h4&gt;
+
+&lt;p&gt;リゾルバや関数を JavaScript で記述できるようになったのは(VTLを書くことに比べ)嬉しいことなのですが、あくまでも JavaScript の文法が使える程度と思っていた方が良いです。もちろん単体テストコードが書きやすいなどのメリットはありつつも、制約が非常に多いことを理解しなくてはなりません。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;コードサイズ: 32,000文字&lt;/li&gt;
+&lt;li&gt;外部モジュール: npm でインストールされるようなものは、開発ツールを除いてほぼ使えないと思っていたほうが良い&lt;/li&gt;
+&lt;li&gt;ネットワークアクセス: できない。すべてのリソースへのアクセスはデータソースを使って行う&lt;/li&gt;
+&lt;li&gt;ファイルシステムアクセス: できない&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;どのようなものが向いているかは、&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#choosing-data-source"&gt;データソースへの直接アクセスと Lambda データソース経由のプロキシのどちらかを選択する&lt;/a&gt;に書かれています。&lt;/p&gt;
+
+&lt;h4&gt;ランタイム制約&lt;/h4&gt;
+
+&lt;p&gt;次の制約を理解するとき読むべきは&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/supported-features.html"&gt;サポートされているランタイム機能&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;p&gt;さきほど&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;あくまでも JavaScript の文法が使える程度と思っていた方が良い&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;と書きましたが、それがこのランタイム機能を理解した上での感想です。&lt;/p&gt;
+
+&lt;p&gt;サポートされていない機能は以下のとおりです。&lt;/p&gt;
+
+&lt;h5&gt;ステートメント&lt;/h5&gt;
+
+&lt;ul&gt;
+&lt;li&gt;try / catch / finally&lt;/li&gt;
+&lt;li&gt;throw
+
+&lt;ul&gt;
+&lt;li&gt;代わりに &lt;code&gt;util.error()&lt;/code&gt; 関数を利用する&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;continue&lt;/li&gt;
+&lt;li&gt;do-while&lt;/li&gt;
+&lt;li&gt;for
+
+&lt;ul&gt;
+&lt;li&gt;ただし for-in および for-of 式は例外でサポートされている。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;while&lt;/li&gt;
+&lt;li&gt;ラベル付きステートメント&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5&gt;数学&lt;/h5&gt;
+
+&lt;ul&gt;
+&lt;li&gt;次の Math 関数はサポートされていません。
+
+&lt;ul&gt;
+&lt;li&gt;Math.random()&lt;/li&gt;
+&lt;li&gt;Math.min()&lt;/li&gt;
+&lt;li&gt;Math.max()&lt;/li&gt;
+&lt;li&gt;Math.round()&lt;/li&gt;
+&lt;li&gt;Math.floor()&lt;/li&gt;
+&lt;li&gt;Math.ceil()&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5&gt;関数&lt;/h5&gt;
+
+&lt;ul&gt;
+&lt;li&gt;apply、bind call メソッドはサポートされていません。&lt;/li&gt;
+&lt;li&gt;関数コンストラクタはサポートされていません。&lt;/li&gt;
+&lt;li&gt;関数を引数として渡すことはサポートされていません。&lt;/li&gt;
+&lt;li&gt;再帰的な関数呼び出しはサポートされていません。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5&gt;promise&lt;/h5&gt;
+
+&lt;p&gt;非同期プロセスはサポートされておらず、Promise もサポートされていません。&lt;/p&gt;
+
+&lt;h4&gt;制約を理解した上で進める&lt;/h4&gt;
+
+&lt;p&gt;と途中まででも読んだ段階で、これは &lt;code&gt;JavaScript の文法が使える程度&lt;/code&gt; になるということが理解できたでしょう。
+外部ライブラリにこれらの記述を使っていないかというと、大抵どれか1つぐらいは該当してしまいます。
+つまり実質的にテストコードを除いてバンドルするコードには、外部モジュールを使うという選択肢はなくなります。
+ただ実際にはそれでは困ることが多いので、組み込むユーティリティや、ヘルパー関数などが揃っています。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-util-reference-js.html"&gt;リゾルバーおよび関数の JavaScript runtime 機能&lt;/a&gt;のページから、それらのユーティリティやヘルパーへのドキュメントページに遷移できるので、確認してください。&lt;/p&gt;
+
+&lt;p&gt;ただ一部 VTL のドキュメントには書いてあるユーティリティやヘルパーのうち、 JavaScript のリファレンスには記述されていないけど、利用可能なものもあります。
+これらはドキュメントバグと思いますが、TypeScript で作っている場合はインポートで利用する型定義ファイルと、VTLのリファレンスを突き合わせてみると良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;たとえば多くの Math 関数がサポートされていない代わりに、mathヘルパーがあるのですが、これは JavaScript 側のドキュメントからは漏れています。もちろん利用可能なので、どのような機能があるかは VTL 側の&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/math-helpers-in-util-math.html"&gt;$util.math の math ヘルパー&lt;/a&gt;を読むことになります。&lt;/p&gt;
+
+&lt;h3&gt;Lambda データソースを使うという選択&lt;/h3&gt;
+
+&lt;p&gt;もちろん、これは AppSync のリゾルバや関数で JavaScript を利用する場合の制約であって、AppSync のリゾルバから Lambda データソースを呼び出してそちらで処理する分には制約はありません。&lt;/p&gt;
+
+&lt;p&gt;AppSync のリゾルバや関数の実行に関する料金が AppSync に全て含まれているのに対し、Lambda データソースで実行される計算リソースは別途 Lambda の料金がかかるので、Lambda でないとできない場合だけとしておくとコストを抑えることができるでしょう。&lt;/p&gt;
+
+&lt;h3&gt;困っていること&lt;/h3&gt;
+
+&lt;p&gt;AppSync の JavaScript ランタイムには様々な制約があるので、AWS のコンソールからソースコードを書いているとリアルタイムで制約違反を教えてくれます。もちろん手元のエディタを使っていても ESLint のルールでチェックできるようになっています。
+とくに TypeScript で記述すると、より厳密に ESLint のルールで確認できるようになっています。&lt;/p&gt;
+
+&lt;p&gt;多くのシンプルなリゾルバや関数では、ここで書く困りごとには遭遇しないかもしれません。
+しかし運良く？その事象を引き当てたのです。&lt;/p&gt;
+
+&lt;h4&gt;サンプルコード&lt;/h4&gt;
+
+&lt;p&gt;例として（実際のケースとほぼ一緒ですが）、DynamoDB データソースに対して、複数のテーブルに跨った TransactWriteItem や BatchWriteItem を実行したいと仮定します。&lt;/p&gt;
+
+&lt;p&gt;サンプルコードとして&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/"&gt;Amazon DynamoDB Item Tagging&lt;/a&gt;という、aws-samples オーガナイゼーションにあるリポジトリを利用します。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/blob/main/src/lambda/create.ts#L49"&gt;DynamoDBに保存するコード例&lt;/a&gt; は Lambda の実装ですが、ここでは書き込みのパターンについて注目してください。
+このコードは、タスクを保存するときにタグ付けされていた場合は、タグの &lt;code&gt;WriteRequest&lt;/code&gt; を配列に追加しています（&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/blob/main/src/lambda/create.ts#L88"&gt;L88&lt;/a&gt;）。&lt;/p&gt;
+
+&lt;p&gt;特に何の変哲も無い、DynamoDB で TransactWriteItem や BatchWriteItem を使うときに書きそうなコードですが、ここに落とし穴があります。&lt;/p&gt;
+
+&lt;p&gt;このコードは TypeScript で、配列に追加するとき &lt;code&gt;WriteRequest&lt;/code&gt; 型を指定しています。タグ付けするときも追加する型は &lt;code&gt;WriteRequest&lt;/code&gt; なので、配列に追加される型が一致するためエラーにはなりません。&lt;/p&gt;
+
+&lt;h4&gt;同じようなコードを AppSync のリゾルバや関数で書くと TS2322 になる&lt;/h4&gt;
+
+&lt;p&gt;では同じようなコードを AppSync のリゾルバや関数で書いたとします。
+TypeScript で書いていて、 AppSync が指定する ESLint のルールなどがあっても問題なく通過するとします。
+では結果を esbuild でバンドルしてデプロイしてみましょう。&lt;/p&gt;
+
+&lt;p&gt;なんと、デプロイすると &lt;code&gt;TS2322&lt;/code&gt; エラーになります。&lt;/p&gt;
+
+&lt;p&gt;えっ、AppSync って JavaScript はサポートしているけど、 TypeScript はサポートしてないよね？&lt;/p&gt;
+
+&lt;p&gt;というのが、最初の驚きです。
+またまたー、と思って先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を書くと、デプロイできるようになります。&lt;/p&gt;
+
+&lt;p&gt;ふぁぁっ！何だと、 &lt;code&gt;tsc&lt;/code&gt; が実行されているのか？！という疑惑が生まれてきます。&lt;/p&gt;
+
+&lt;p&gt;いずれにせよ、このままではデプロイできないので、神様/AWSサポート様に問い合わせを行いました。
+この問い合わせ、めっちゃ最終回答まで時間かかったのです&amp;hellip;..&lt;/p&gt;
+
+&lt;p&gt;で、現時点これの回避策は、先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を書く、が正式回答になります。まじかー&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;現時点 AppSync では JavaScript の制約をチェックするため、デプロイ時に JavaScript ファイルを TypeScript コードとしてチェックしているそうです。まじかー&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;先ほどのコードを再度確認してみてください。TypeScript のコードをコンパイルして型情報を取り除くと、以下のようなコードになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;taskDbItem&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;PutRequest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;Item&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+          &lt;span class="c1"&gt;// we set the pk and sk to the item id. we prefix both with `task#` to allow filtering by task items&lt;/span&gt;
+          &lt;span class="na"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="na"&gt;sk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="c1"&gt;// we are using a gsi to allow listing all items of a certain type, which in this case is task items&lt;/span&gt;
+          &lt;span class="c1"&gt;// task: GSI key sharding&lt;/span&gt;
+          &lt;span class="na"&gt;siKey1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;task&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="na"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;description&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="c1"&gt;// tags are duplicated here to simplify retrieval&lt;/span&gt;
+          &lt;span class="na"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;
+        &lt;span class="p"&gt;}&lt;/span&gt;
+      &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;};&lt;/span&gt;
+    &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestItems&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tableName&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;taskDbItem&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// next we write all the tags as separate DynamoDB items. We use the tag name as the partition key, and the tag value and the TaskItem id as a composite sort key.&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="nb"&gt;Object&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;entries&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(([&lt;/span&gt;&lt;span class="nx"&gt;tagName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;tagValue&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;tagDbItem&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+          &lt;span class="na"&gt;PutRequest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+            &lt;span class="na"&gt;Item&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+              &lt;span class="na"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`tag#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;tagName&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+              &lt;span class="na"&gt;sk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;tagValue&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;#task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="p"&gt;}&lt;/span&gt;
+          &lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="p"&gt;};&lt;/span&gt;
+        &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestItems&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tableName&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;tagDbItem&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="p"&gt;});&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;いうて &lt;code&gt;DocumentClient.WriteRequest&lt;/code&gt; という型情報が消える程度ですが、これが落とし穴です。
+型情報がなくなった &lt;code&gt;params.RequestItems[this.tableName]&lt;/code&gt; の配列は、TypeScript の型推論が働くために、最初の &lt;code&gt;taskDbItem&lt;/code&gt; 構造の型の要素を持つことが期待されます。&lt;/p&gt;
+
+&lt;p&gt;そこに &lt;code&gt;item.tags&lt;/code&gt; があったときに構造が異なる &lt;code&gt;taskDbItem&lt;/code&gt; を配列に追加しようとしたら、どうなるかわかりますね。 &lt;code&gt;TS2322&lt;/code&gt; です。&lt;/p&gt;
+
+&lt;p&gt;おそらく Amplify Gen2 でリゾルバを上書きして書いたときも、同じようなコードを書くとエラーになると推測されます(CDKがesbuildした結果をデプロイするので)。&lt;/p&gt;
+
+&lt;h4&gt;回避策を入れる&lt;/h4&gt;
+
+&lt;p&gt;回避策の、先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を入れる方法として、esbuild の &lt;code&gt;banner&lt;/code&gt; オプションを利用します。
+バンドルのリンティングで紹介されているサンプルコードに設定を追加します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/* eslint-disable */&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esbuild&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;eslint&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esbuild-plugin-eslint&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;glob&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;glob&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;glob&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;src/**/*.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esm&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;target&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esnext&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;platform&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;external&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-appsync/utils&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="na"&gt;outdir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;dist/&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;entryPoints&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;files&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;bundle&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;plugins&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;eslint&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;useEslintrc&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;})],&lt;/span&gt;
+  &lt;span class="na"&gt;banner&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;js&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;// @ts-nocheck&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;この例のままだと、全部のファイルに &lt;code&gt;// @ts-nocheck&lt;/code&gt; が入ってしまうので、特定のファイルだけにしたい場合は、esbuild を2つに分割して特定のリゾルバや関数だけに追加されるようにすると良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;なお、AWSサポートへは TypeScript かつデベロッパーガイドに書いてあるとおり &lt;code&gt;eslint プラグインの設定&lt;/code&gt;  をしてあれば、同じ効果を期待できるそうなので、全ファイルに入っていたとしても大きな問題はないのかな？とも思います。 &lt;code&gt;// @ts-nocheck&lt;/code&gt; を入れたAPIについては念入りに動作確認をするようにコメントが入っていたこともお伝えしておきます。&lt;/p&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;AppSync のリゾルバーや関数を JavaScript (TypeScript) で書けるようになって、VTL を書くよりも生産性があがったり、ユニットテストが書けるようになって品質を維持しやすくなるといった効果が期待できます。&lt;/p&gt;
+
+&lt;p&gt;一方で TS2322 に遭遇するといった落とし穴もあったりするので、注意は必要ですね。&lt;/p&gt;
+
+&lt;p&gt;APPSYNC_JS でそういったトラブルになった記事だったり StackOverflow の投稿だったりはまだ少ないので、問題や回避策がわかったら積極的に記事にしておくと良いかな？というのが今回ブログ記事にするきっかけにもなりました。&lt;/p&gt;
+
+&lt;p&gt;僕は JavaScript で書けるようになってすごく嬉しいので、今後も使っていきたいなと思っています。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CodeCommit で Renovate を使う</title>
     <link rel="alternate" href="http://blog.url.com/2024/05/30/renovate-on-codecommit.html"/>
@@ -807,98 +1064,6 @@ dev_appserver.py での実行が困難になっているので、新しいバー
 &lt;h3&gt;さいごに&lt;/h3&gt;
 
 &lt;p&gt;&lt;code&gt;google-github-actions/auth&lt;/code&gt; の認証方法が変更になっているので最新に追従しないといけないので、おいおい対応していきます。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</title>
-    <link rel="alternate" href="http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html"/>
-    <id>http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html</id>
-    <published>2024-03-20T14:58:00+09:00</published>
-    <updated>2024-04-30T13:19:59+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;この記事は &lt;a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1&lt;/a&gt; の続編となります。&lt;/p&gt;
-
-&lt;h3&gt;単体テストを通過するようにアップグレード&lt;/h3&gt;
-
-&lt;p&gt;やることは多そうだなというのは想像していたのですが、いざ取り掛かろうとしたとき頼りになるのは単体テストだな、ということでPHPUnitとPHPのバージョンを上げて、テストが通過するように修正していきます。&lt;/p&gt;
-
-&lt;p&gt;テストが通過するようになったコミットが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/0a73d2d12bd05bd4a67e80a60e9f64f682416529"&gt;こちら&lt;/a&gt; 。&lt;/p&gt;
-
-&lt;h4&gt;composer の依存バージョンを変更&lt;/h4&gt;
-
-&lt;ul&gt;
-&lt;li&gt;PHPのバージョンを8.2以上へ&lt;/li&gt;
-&lt;li&gt;PHPUnitのバージョンを10.1.3（当時最新）へ&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;その関連で合わせてあげないといけない依存もバージョンup。&lt;/p&gt;
-
-&lt;h4&gt;PHPUnit の実行方法を変更&lt;/h4&gt;
-
-&lt;p&gt;以前は GAE の内部コンポーネントに依存していたので、PHPUnitを実行するのも dev_appserver.py を起動してからそのインスタンス内の PHPUnit 実行スクリプトを経由して実行していたのですが、GAE gen2 ではPHPスクリプトの起動自体が &lt;code&gt;php -S&lt;/code&gt; に変わったりしたこともあり、PHPUnitもComposer スクリプトから直接実行するように変更しました。&lt;/p&gt;
-
-&lt;p&gt;以前は dev_appserver 経由で起動されていたデータストアとキャッシュについては、docker と gcloud emulator で起動してから PHPUnit を実行するように変更しました。&lt;/p&gt;
-
-&lt;p&gt;実行手順をREADMEにも記述。&lt;/p&gt;
-
-&lt;p&gt;ここで、レガシーランタイム脱却のため Memcache を Redis に変更する対応も入っています。
-当初は Memcache を変更せずに PHPUnit が通過してから移行する予定だったのですが、 &lt;code&gt;GeckoPackages\MemcacheMock&lt;/code&gt; が終了していて、最新のPHP/PHPUnitで動作しないことがわかったのでこのタイミングで一緒に移行を決断しました。&lt;/p&gt;
-
-&lt;h4&gt;簡単なアーキテクチャと既存テストコード&lt;/h4&gt;
-
-&lt;p&gt;Toilet Evolution は PHP Slim Framework に、Google Datastore を使用（&lt;a href="https://cloud.google.com/appengine/docs/standard/using-firestore-in-datastore-mode?hl=ja&amp;amp;tab=php"&gt;DatastoreモードのFirestoreを使用&lt;/a&gt;）しています。
-REST API を通じてデバイスからトイレの利用状況をデータストアやキャッシュに格納したり、Webアプリから利用状況を閲覧できるAPI が用意されています。&lt;/p&gt;
-
-&lt;p&gt;テストコードは、データストアとキャッシュのI/O、PSRのミドルウェア部分にあって、主なロジックはこのあたりに集中しています。&lt;/p&gt;
-
-&lt;h4&gt;テストコードの記述を修正&lt;/h4&gt;
-
-&lt;p&gt;PHPUnit のテストケース（クラス）の宣言を修正&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// PHP5.5 / PHPUnit 4.8&lt;/span&gt;
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;DeviceTest&lt;/span&gt; &lt;span class="k"&gt;extends&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="n"&gt;PHPUnit_Framework_TestCase&lt;/span&gt; &lt;span class="p"&gt;{}&lt;/span&gt;
-
-&lt;span class="c1"&gt;// PHP8.2 / PHPUnit 10.1.3&lt;/span&gt;
-&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;PHPUnit\Framework\TestCase&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;DeviceTest&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nc"&gt;TestCase&lt;/span&gt; &lt;span class="p"&gt;{}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;setUp を before に変更&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// PHP5.5 / PHPUnit 4.8&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;setUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-
-&lt;span class="c1"&gt;// PHP8.2 / PHPUnit 10.1.3&lt;/span&gt;
-&lt;span class="cd"&gt;/**
- * @before
- */&lt;/span&gt;
-&lt;span class="kt"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;before&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;assert を &lt;code&gt;$this&lt;/code&gt; 経由で呼び出すように変更&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// PHP5.5 / PHPUnit 4.8&lt;/span&gt;
-&lt;span class="nf"&gt;assertEquals&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$results&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// PHP8.2 / PHPUnit 10.1.3&lt;/span&gt;
-&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;assertEquals&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'username'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$results&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;Memcache から Redis への記述を修正&lt;/h4&gt;
-
-&lt;p&gt;インスタンスはDIしているので、変数名を memcache から redis に変更した。
-メソッドは get / set で同じになるけど、データがオブジェクト形式から文字列に変わるので以下のような対応となった&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// GAE gen1&lt;/span&gt;
-&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;memcache&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"device:id:&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getKeyId&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// GAE gen2&lt;/span&gt;
-&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;redis&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;"device:id:&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getKeyId&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;serialize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;データを set するときは &lt;code&gt;serialize&lt;/code&gt; して、 get するときは &lt;code&gt;unserialize&lt;/code&gt; するように変更している。&lt;/p&gt;
-
-&lt;h4&gt;このぐらいで PHPUnit がうごくようになった&lt;/h4&gt;
-
-&lt;p&gt;Warining は出てるんですが、PHPUnit がエラーで落ちることはなくなりました。
-これはバージョンアップ意外と楽チンなのでは？！と勘違いしたのは言うまでもなく、この連載もまだ続きます。&lt;/p&gt;
-
-&lt;p&gt;ここで勘違いしたので、心も折れず続けられたというのはあるかもしれないと振り返り思うのでした。&lt;/p&gt;
 </content>
   </entry>
 </feed>

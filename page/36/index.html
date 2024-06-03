@@ -277,7 +277,100 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2011/02/13/php-bdd-behat.html">PHPのBDDフレームワーク Behat について発表してきました</a></h2>
+            <h2 class="title"><a href="/2011/03/26/behat.html">Behatのインストールについての注意事項</a></h2>
+  <p class="postdate"><a href="/2011/03/26.html" title="Permanent link">Saturday, March 26, 2011 06:03:31 PM</a></p>
+  <p class="tags">
+      <a href="/tags/bdd.html" rel="tag">BDD</a>
+      <a href="/tags/behat.html" rel="tag">Behat</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;4/2 に行われる<a href="http://phpcon.php.gr.jp/kansai/">PHPカンファレンス関西</a>にて、BehatについてLTをすることになりました。  </p>
+
+<p>そこで最近Behatをダウンロードしてみたのですが、git submoduleでのSymfonyコンポーネントのインストールで問題がありますので、解決策を書いておきます。  </p>
+
+<ol>
+<li><p>Behat 本体のインストール  </p>
+
+<p>git clone git://github.com/Behat/Behat.git</p></li>
+<li><p>サブモジュールのインストール  </p>
+
+<p>cd Behat
+git submodule update &ndash;init</p></li>
+</ol>
+
+<p>とくに問題がなければ、しばらくして終了しますが、本稿執筆次点では以下のようなエラーで中断してしまいます。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>Initialized empty Git repository in /Behat/vendor/Symfony/Component/Translation/.git/
+remote: Counting objects: 220, done.
+remote: Compressing objects: 100% (124/124), done.
+remote: Total 220 (delta 147), reused 141 (delta 94)
+Receiving objects: 100% (220/220), 52.61 KiB, done.
+Resolving deltas: 100% (147/147), done.
+fatal: reference is not a tree: d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
+Unable to checkout 'd5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c' in submodule path 'vendor/Symfony/Component/Translation'
+</code></pre></div>
+<p>そこで、エラーになったサブモジュールの変更ログを確認します。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>git log --oneline -p -- vendor/Symfony/Component/Translation
+</code></pre></div>
+<p>上記コマンドを実行すると、以下のように表示されます。  </p>
+<div class="highlight"><pre class="highlight diff"><code><span class="p">85d8dac updated vendors
+</span><span class="gh">diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
+index f70e0ba..d5cdaba 160000
+</span><span class="gd">--- a/vendor/Symfony/Component/Translation
+</span><span class="gi">+++ b/vendor/Symfony/Component/Translation
+</span><span class="p">@@ -1 +1 @@</span>
+<span class="gd">-Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
+</span><span class="gi">+Subproject commit d5cdaba8550b7b99f37d2aad345dd8ebbe3efb9c
+</span><span class="p">da2503a updated submodules
+</span><span class="gh">diff --git a/vendor/Symfony/Component/Translation b/vendor/Symfony/Component/Translation
+</span><span class="p">new file mode 160000
+</span><span class="gh">index 0000000..f70e0ba
+</span><span class="gd">--- /dev/null
+</span><span class="gi">+++ b/vendor/Symfony/Component/Translation
+</span><span class="p">@@ -0,0 +1 @@</span>
+<span class="gi">+Subproject commit f70e0ba1b04e7db4b3aa6d122470291d4fb34732
+</span></code></pre></div>
+<p>ここで表示されたログの１行目「85d8dac updated vendors」の85d8dacを使ってチェックアウトします。  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>git checkout 85d8dac~ -- vendor/Symfony/Component/Translation
+git submodule update
+</code></pre></div>
+<p>こうすることで、サブモジュールのインストールが継続できます。  </p>
+
+<ol>
+<li><p>実行する  </p>
+
+<p>bash-3.2$ ./bin/behat.php 
+&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;.
+&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;.
+&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;&hellip;.</p>
+
+<p>36 scenarios (36 passed)
+222 steps (222 passed)
+0m7.045s</p></li>
+</ol>
+
+<p>成功したら、インストールは完了です。  </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Behatのインストールについての注意事項" data-url="http://blog.open.tokyo.jp/2011/03/26/behat.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2011/03/26/behat.html&t=Behat%E3%81%AE%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A0%85" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2011/03/26/behat.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2011/02/13/php-bdd-behat.html">PHPのBDDフレームワーク Behat について発表してきました</a></h2>
   <p class="postdate"><a href="/2011/02/13.html" title="Permanent link">Sunday, February 13, 2011 11:02:18 AM</a></p>
   <p class="tags">
       <a href="/tags/bdd.html" rel="tag">BDD</a>
@@ -1079,58 +1172,6 @@ And for Japanese PHP developer, it will become to trigger to publish some inform
     </div>
 
   </div>
-  <h2 class="title"><a href="/2009/11/02/cakematsuri-2009-tokyo.html">CakeMatsuri 2009 TOKYO ふりかえり</a></h2>
-  <p class="postdate"><a href="/2009/11/02.html" title="Permanent link">Monday, November 02, 2009 11:11:31 AM</a></p>
-  <p class="tags">
-      <a href="/tags/cakematsuri.html" rel="tag">cakematsuri</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;昨年のCakePHPカンファレンスでは、一講演者としての参加だったのですが、今回は中の人として参加しました。<br>
-Blogを書くまでがイベントです、ということで、一息ついたところでの思いをKPTでまとめてみました。<br>
-イベント全般に関しては、スタッフで「ふりかえり」をしたので、当日の担当範囲中心に。  </p>
-
-<p>Keep:<br>
-二日間にわたり、かなり多くのかたと交流できたのが、今回のテーマ「交流」にマッチしていて、よかったのではないかと思います:yes:<br>
-特にこれまで勉強会などで会ったことのない初対面のかたと、いろいろな話ができたので楽しかったです。<br>
-コア開発者とも仲良くなれた気がしました！！:up:<br>
-また１日目の懇親会でJoelに先日のPHP勉強会で発表した「WebTestCaseでfixtureを使う」について、プレゼンできたことが良かったです。後で英語に翻訳してBakelyにアップするぜ！と宣言した（自分を追い込んだ）ので、頑張ります。:star:   </p>
-
-<p>Problem:<br>
-ワークショップ（実務者編）のユニットテスト基礎・実践は、実質基礎しかできませんでした:ko: 。イベントごとという意味ではオブジェクト倶楽部などの経験もあったので大丈夫かな？と思っていたのですが、ちょっと上級内容だったのかな？と。。。ただ資料としては、後で十分振り返ってできる内容になっているので、持ち帰ってゆっくり確認してもらえると、理解が深まるかな？と思います。<br>
-２日目の２次会は、grahamの向かいの席でがっつり英語談義だったのですが、途中から疲労:faint: とアルコール:beer: から頭の回転がおかしくなってきて、だんだんと聞き取りもできなくなってきてしまいました。  </p>
-
-<p>Try:<br>
-PHPerにはコマンドラインは難しい？というのもあったので、別の方式が良いのかな？とも思ったのですが、実務ではconsoleのテストを使ったりすることの方が多いので、やはりコマンドラインは捨てがたいのですよね。なので次回以降は、オブラブの合宿前にもやった「環境構築前夜祭」をできれば良いなと思います。地方からの参加で必ずしも前夜祭に参加できない（当日移動など）の方もいるので、資料は事前公開ということで。<br>
-そういったことも含め、実務者コースのハンズオンの感触は、今回かなり掴めたので、進め方などもっと良い形でできるようにしたいと思っています。<br>
-後は英会話ですなー、毎日仕事で使っていたときより明らかに落ちてるし（とは言っても元々たいしたこともないけど）。。。何か解決策を見つけて英会話力をアップしたいと思うのでした:) 。  </p>
-
-<hr>
-
-<p>最後に。<br>
-参加者の皆様の温かい声援や、Blogでの感想に助けられました。ありがとうございます。<br>
-ワークショップの持ち出し企画はやりたいなーと思いますが、ちょっとしばらくイベントは・・・と思ったりしてます:pが、来年には実施したいですね。<br>
-また皆様にお会いできるのを楽しみにしています。  </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CakeMatsuri 2009 TOKYO ふりかえり" data-url="http://blog.open.tokyo.jp/2009/11/02/cakematsuri-2009-tokyo.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2009/11/02/cakematsuri-2009-tokyo.html&t=CakeMatsuri%202009%20TOKYO%20%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8A" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2009/11/02/cakematsuri-2009-tokyo.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/35/">« Prev</a>
@@ -1158,6 +1199,7 @@ PHPerにはコマンドラインは難しい？というのもあったので、
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
@@ -1167,7 +1209,6 @@ PHPerにはコマンドラインは難しい？というのもあったので、
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
-                  <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
               </ul>
             </div>
           </div>
@@ -1177,6 +1218,9 @@ PHPerにはコマンドラインは難しい？というのもあったので、
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1201,9 +1245,6 @@ PHPerにはコマンドラインは難しい？というのもあったので、
                     </li>
                     <li class="size1">
                       <a href="/tags/jest.html" rel="tag">Jest</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/import-maps.html" rel="tag">import maps</a>
@@ -1284,7 +1325,7 @@ PHPerにはコマンドラインは難しい？というのもあったので、
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (8)</li>
+                  <li><a href="/2024.html">2024</a> (9)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
