@@ -277,7 +277,185 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a></h2>
+            <h2 class="title"><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a></h2>
+  <p class="postdate"><a href="/2024/05/30.html" title="Permanent link">Thursday, May 30, 2024 05:03:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/codecommit.html" rel="tag">CodeCommit</a>
+      <a href="/tags/renovate.html" rel="tag">Renovate</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://www.mend.io/renovate/">Renovate</a>は依存関係の更新を自動化（PRを生成してくれたり、マージしてくれたり） するツールで、dependabot などと並んで有名なツールです。</p>
+
+<p>CodeCommit で依存関係の更新を公式にサポートしているツールを探していたのですが、Renovate しか見つからなかったので、選択肢を検討することもなく導入してみることにしました。</p>
+
+<h3>導入方法</h3>
+
+<p><a href="https://docs.renovatebot.com/modules/platform/codecommit/">CodeCommit に導入するための公式ドキュメント</a>があります。</p>
+
+<p>前回のブログ<a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a>で CodeCommit と CodeBuild の環境は設定済みで、かつ PR に対してビルド結果が連携できるようにしてあります。</p>
+
+<p>Renovate を導入するときもこの手順は重要で、ライブラリをアップデートするときにビルドが通過するかわからないものはマージできないので、まず導入前に連携できるように設定しておきましょう。</p>
+
+<h4>AWS 環境の設定</h4>
+
+<p>ドキュメントどおり IAM や Role の設定を行います。
+ここはプロジェクトによってやり方がいろいろあると思いますが、結果として CodeBuild から CodeCommit に PR が出せる様な設定になっていれば良いです。
+必要なポリシーなども列挙されているので、ドキュメントをよく読んで進めれば大丈夫です。</p>
+
+<h4>AWS 環境ではできないこと</h4>
+
+<p>これもドキュメントに明記されています。</p>
+
+<ul>
+<li>PR への担当アサイン</li>
+<li>PRの自動マージ</li>
+<li><code>rebaseLabel</code> オプションの有効化</li>
+</ul>
+
+<h4>環境設定ファイルを記述する</h4>
+
+<p>ドキュメントでは <code>config.js</code> で書かれていますが、 <code>renovate.json</code> でも大丈夫です。
+このあたりはお好きな<a href="https://docs.renovatebot.com/configuration-options/">設定ファイル形式</a>を利用すると良いでしょう。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://docs.renovatebot.com/renovate-schema.json"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>スキーマ定義やパッケージルールなどを設定しておきます。
+Renovate の対象リポジトリごとにリポジトリルートにファイルを設置します。</p>
+
+<h4>CodeBuild の設定</h4>
+
+<h5>導入方法の選択</h5>
+
+<p>Renovate を導入するときの単位として、2つの選択肢があります。</p>
+
+<ul>
+<li>Renovate を複数のリポジトリに対して実行する管理リポジトリを1つと、対になる CodeBuild プロジェクトを作成する</li>
+<li>Renovate の対象リポジトリごとに CodeBuild のプロジェクトを作成する</li>
+</ul>
+
+<p>前者の良いところは、Renovate の対象リポジトリが多数あるとき、管理リポジトリに設定している CodeBuild の buildspec ファイルでリポジトリ名を列挙していき、対象リポジトリ側は、リポジトリルートに設定ファイルを入れておくだけで良いことです。
+ただしリポジトリごとに実行スケジュールを変更するといったことはできないので、すべての対象リポジトリに対して順番に PR が作成されていきます。</p>
+
+<p>後者の良いところは、リポジトリごとに実行スケジュールを柔軟に変更できることです。ただしリポジトリ数ぶんの CodeBuild プロジェクトが必要になるので対象リポジトリ数が多くなると面倒に感じるかもしれません（IaC で構築していればそうでもないかも？）。</p>
+
+<h5>buildspec ファイルの設置</h5>
+
+<p>今回は導入リポジトリ数も少なかったのと、実行スケジュールをリポジトリごとに変更したいという要望があったので、後者の方式で導入してみました。</p>
+
+<p>どちらの方法でも CodeCommit / CodeBuild では実現可能です。</p>
+
+<p>前回の記事で build.yml や deploy.yml を作っているので、そこに renovate.yml といった名前で buildspec ファイルを記述します。</p>
+
+<p>ドキュメントでは Docker を使う方法と CLI を使う方法が紹介されていますが、私たちは CLI の方式を採用しました。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">version</span><span class="pi">:</span> <span class="m">0.2</span>
+<span class="na">env</span><span class="pi">:</span>
+  <span class="na">shell</span><span class="pi">:</span> <span class="s">bash</span>
+  <span class="na">git-credential-helper</span><span class="pi">:</span> <span class="s">yes</span>
+  <span class="na">variables</span><span class="pi">:</span>
+    <span class="na">RENOVATE_PLATFORM</span><span class="pi">:</span> <span class="s1">'</span><span class="s">codecommit'</span>
+    <span class="na">RENOVATE_REPOSITORIES</span><span class="pi">:</span> <span class="s1">'</span><span class="s">["repoName1"]'</span>
+    <span class="na">RENOVATE_CONFIG</span><span class="pi">:</span> <span class="s1">'</span><span class="s">{"extends":["config:recommended"]}'</span>
+    <span class="na">LOG_LEVEL</span><span class="pi">:</span> <span class="s1">'</span><span class="s">debug'</span>
+    <span class="na">AWS_REGION</span><span class="pi">:</span> <span class="s1">'</span><span class="s">ap-northeast-1'</span>
+<span class="na">phases</span><span class="pi">:</span>
+  <span class="na">install</span><span class="pi">:</span>
+    <span class="na">runtime-version</span><span class="pi">:</span>
+      <span class="na">nodejs</span><span class="pi">:</span> <span class="m">20</span>
+  <span class="na">build</span><span class="pi">:</span>
+    <span class="na">on-failure</span><span class="pi">:</span> <span class="s">CONTINUE</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">npm install -g renovate</span>
+      <span class="pi">-</span> <span class="s">renovate</span>
+</code></pre></div>
+<p><code>RENOVATE_REPOSITORIES</code> が違うだけで、各リポジトリに入れておきます。</p>
+
+<h5>CodeBuild プロジェクトの作成して実行スケジュールを設定する</h5>
+
+<p>CodeBuild プロジェクトを新規作成してリポジトリを紐づけておきます。
+あとは実行スケジュールを EventBridge に設定して、作成した CodeBuild プロジェクトを実行 ( <code>StartBuild</code> ) するように設定します。</p>
+
+<p>ここまでで実行スケジュールに応じて PR が生成できるようになります。</p>
+
+<h3>セキュリティアップデートに対応する</h3>
+
+<p>Renovate は標準では CVE などに対応するパッチの PR は生成されません。
+この機能を有効にするためのオプションは2つあります。</p>
+
+<ul>
+<li><a href="https://docs.renovatebot.com/configuration-options/#vulnerabilityalerts">vulnerabilityAlerts</a></li>
+<li><a href="https://docs.renovatebot.com/configuration-options/#osvvulnerabilityalerts">osvVulnerabilityAlerts</a></li>
+</ul>
+
+<p>前者は GitHub のみサポートしており CodeCommit では利用できません。
+後者は実験的な機能という位置付けのようですが、すべてのプラットフォームで動作する様になっています。</p>
+
+<h4>osvVulnerabilityAlerts を有効にする</h4>
+
+<p>環境設定ファイル（この記事では renovate.json）に設定を追加します。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"$schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://docs.renovatebot.com/renovate-schema.json"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"osvVulnerabilityAlerts"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<h4>実は GitHub が必要なんです</h4>
+
+<p>ドキュメントを読むとこれだけで良いのかと思っていたのですが、実際に Renovate を実行しても CVE の PR は生成されません。</p>
+
+<p>おや？っと思ってログを確認したりしたのですが、原因がわからず Renovate のソースコード自体を確認してみました。</p>
+
+<p>すると、なんと OSV のデータソースが GitHub に固定してハードコードされてるじゃないですか。</p>
+
+<p><a href="https://github.com/renovatebot/renovate/blob/main/lib/workers/repository/process/vulnerabilities.ts#L52">該当のコード</a></p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="kr">private</span> <span class="k">async</span> <span class="nx">initialize</span><span class="p">():</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="k">void</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// hard-coded logic to use authentication for github.com based on the githubToken for api.github.com</span>
+    <span class="kd">const</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">findGithubToken</span><span class="p">(</span>
+      <span class="nx">find</span><span class="p">({</span>
+        <span class="na">hostType</span><span class="p">:</span> <span class="dl">'</span><span class="s1">github</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">url</span><span class="p">:</span> <span class="dl">'</span><span class="s1">https://api.github.com/</span><span class="dl">'</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">osvOffline</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">OsvOffline</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">token</span><span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>ドキュメントからリンクされている<a href="https://github.com/renovatebot/renovate/discussions/20542">ディスカッション</a>には、<a href="https://github.com/renovatebot/renovate/discussions/20542#discussioncomment-8889250">違うデータソースを使う場合の書き方</a>があって、OSVの任意のデータソースを利用する場合は独自にzipファイルをダウンロードしてやるのも良いでしょう。</p>
+
+<p>で、そのまま GitHub のデータソースを利用する場合は、GitHub の PAT を生成して（権限は <code>public_repo</code> ぐらいでok） renovate.yml に設定を追加します。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">env</span><span class="pi">:</span>
+  <span class="na">secrets-manager</span><span class="pi">:</span>
+    <span class="na">GITHUB_COM_TOKEN</span><span class="pi">:</span> <span class="s2">"</span><span class="s">[シークレットの名前]:[シークレットのキー]"</span>
+</code></pre></div>
+<p>CodeBuild の buildspec では環境変数に設定する値を SecretsManager から取得できるので、GitHub で生成した PAT はそこに格納しておいて、CodeBuild から参照できるようにしておきましょう。</p>
+
+<p>プロジェクト都合で GitHub 使えないから CodeCommit 使っているのに！という声はごもっともだと思うので、そういう場合は zip ファイルをダウンロードして実行する手順を試してみることをお勧めします。</p>
+
+<h3>さいごに</h3>
+
+<p>できれば CodeCommit も GitHub と Dependabot の関係のように標準で脆弱性の PR 対応して欲しいですよね。
+ビルド結果の通知とか脆弱性の対応とか、Code兄弟の機能として不足しているなーという部分の強化に期待しましょう。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="CodeCommit で Renovate を使う" data-url="http://blog.open.tokyo.jp/2024/05/30/renovate-on-codecommit.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2024/05/30/renovate-on-codecommit.html&t=CodeCommit%20%E3%81%A7%20Renovate%20%E3%82%92%E4%BD%BF%E3%81%86" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2024/05/30/renovate-on-codecommit.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a></h2>
   <p class="postdate"><a href="/2024/05/28.html" title="Permanent link">Tuesday, May 28, 2024 03:44:00 PM</a></p>
   <p class="tags">
       <a href="/tags/aws.html" rel="tag">AWS</a>
@@ -986,115 +1164,6 @@ dev_appserver.py での実行が困難になっているので、新しいバー
     </div>
 
   </div>
-  <h2 class="title"><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a></h2>
-  <p class="postdate"><a href="/2024/03/20.html" title="Permanent link">Wednesday, March 20, 2024 02:58:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は <a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> の続編となります。</p>
-
-<h3>単体テストを通過するようにアップグレード</h3>
-
-<p>やることは多そうだなというのは想像していたのですが、いざ取り掛かろうとしたとき頼りになるのは単体テストだな、ということでPHPUnitとPHPのバージョンを上げて、テストが通過するように修正していきます。</p>
-
-<p>テストが通過するようになったコミットが<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/0a73d2d12bd05bd4a67e80a60e9f64f682416529">こちら</a> 。</p>
-
-<h4>composer の依存バージョンを変更</h4>
-
-<ul>
-<li>PHPのバージョンを8.2以上へ</li>
-<li>PHPUnitのバージョンを10.1.3（当時最新）へ</li>
-</ul>
-
-<p>その関連で合わせてあげないといけない依存もバージョンup。</p>
-
-<h4>PHPUnit の実行方法を変更</h4>
-
-<p>以前は GAE の内部コンポーネントに依存していたので、PHPUnitを実行するのも dev_appserver.py を起動してからそのインスタンス内の PHPUnit 実行スクリプトを経由して実行していたのですが、GAE gen2 ではPHPスクリプトの起動自体が <code>php -S</code> に変わったりしたこともあり、PHPUnitもComposer スクリプトから直接実行するように変更しました。</p>
-
-<p>以前は dev_appserver 経由で起動されていたデータストアとキャッシュについては、docker と gcloud emulator で起動してから PHPUnit を実行するように変更しました。</p>
-
-<p>実行手順をREADMEにも記述。</p>
-
-<p>ここで、レガシーランタイム脱却のため Memcache を Redis に変更する対応も入っています。
-当初は Memcache を変更せずに PHPUnit が通過してから移行する予定だったのですが、 <code>GeckoPackages\MemcacheMock</code> が終了していて、最新のPHP/PHPUnitで動作しないことがわかったのでこのタイミングで一緒に移行を決断しました。</p>
-
-<h4>簡単なアーキテクチャと既存テストコード</h4>
-
-<p>Toilet Evolution は PHP Slim Framework に、Google Datastore を使用（<a href="https://cloud.google.com/appengine/docs/standard/using-firestore-in-datastore-mode?hl=ja&amp;tab=php">DatastoreモードのFirestoreを使用</a>）しています。
-REST API を通じてデバイスからトイレの利用状況をデータストアやキャッシュに格納したり、Webアプリから利用状況を閲覧できるAPI が用意されています。</p>
-
-<p>テストコードは、データストアとキャッシュのI/O、PSRのミドルウェア部分にあって、主なロジックはこのあたりに集中しています。</p>
-
-<h4>テストコードの記述を修正</h4>
-
-<p>PHPUnit のテストケース（クラス）の宣言を修正</p>
-<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
-<span class="kd">class</span> <span class="nc">DeviceTest</span> <span class="k">extends</span> <span class="err">\</span><span class="n">PHPUnit_Framework_TestCase</span> <span class="p">{}</span>
-
-<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
-<span class="kn">use</span> <span class="nc">PHPUnit\Framework\TestCase</span><span class="p">;</span>
-
-<span class="kd">class</span> <span class="nc">DeviceTest</span> <span class="kd">extends</span> <span class="nc">TestCase</span> <span class="p">{}</span>
-</code></pre></div>
-<p>setUp を before に変更</p>
-<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
-<span class="k">public</span> <span class="k">function</span> <span class="n">setUp</span><span class="p">()</span>
-
-<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
-<span class="cd">/**
- * @before
- */</span>
-<span class="kt">public</span> <span class="k">function</span> <span class="n">before</span><span class="p">()</span>
-</code></pre></div>
-<p>assert を <code>$this</code> 経由で呼び出すように変更</p>
-<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
-<span class="nf">assertEquals</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="nv">$results</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
-
-<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
-<span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertEquals</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="nv">$results</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
-</code></pre></div>
-<h4>Memcache から Redis への記述を修正</h4>
-
-<p>インスタンスはDIしているので、変数名を memcache から redis に変更した。
-メソッドは get / set で同じになるけど、データがオブジェクト形式から文字列に変わるので以下のような対応となった</p>
-<div class="highlight"><pre class="highlight php"><code><span class="c1">// GAE gen1</span>
-<span class="nv">$this</span><span class="o">-&gt;</span><span class="n">memcache</span><span class="o">-&gt;</span><span class="nf">set</span><span class="p">(</span><span class="s2">"device:id:</span><span class="si">{</span><span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">getKeyId</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nv">$device</span><span class="p">);</span>
-
-<span class="c1">// GAE gen2</span>
-<span class="nv">$this</span><span class="o">-&gt;</span><span class="n">redis</span><span class="o">-&gt;</span><span class="nf">set</span><span class="p">(</span><span class="s2">"device:id:</span><span class="si">{</span><span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">getKeyId</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$device</span><span class="p">));</span>
-</code></pre></div>
-<p>データを set するときは <code>serialize</code> して、 get するときは <code>unserialize</code> するように変更している。</p>
-
-<h4>このぐらいで PHPUnit がうごくようになった</h4>
-
-<p>Warining は出てるんですが、PHPUnit がエラーで落ちることはなくなりました。
-これはバージョンアップ意外と楽チンなのでは？！と勘違いしたのは言うまでもなく、この連載もまだ続きます。</p>
-
-<p>ここで勘違いしたので、心も折れず続けられたというのはあるかもしれないと振り返り思うのでした。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2" data-url="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html&t=GAE%20gen1%20%E3%81%A7%E5%8B%95%E3%81%84%E3%81%A6%E3%81%84%E3%82%8B%20PHP5.5%20%E3%81%A7%E4%BD%9C%E3%81%A3%E3%81%9F%E5%80%8B%E4%BA%BA%E9%96%8B%E7%99%BA%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%82%92%20gen2%20PHP8.2%20%E3%81%B8%E7%A7%BB%E8%A1%8C%E3%81%97%E3%81%9F1%E5%B9%B4%E8%A8%98%20%E3%80%9C%20%E3%81%9D%E3%81%AE%202" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
         <b>1</b>
@@ -1117,6 +1186,7 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
@@ -1126,7 +1196,6 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
                   <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
-                  <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
               </ul>
             </div>
           </div>
@@ -1243,7 +1312,7 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (7)</li>
+                  <li><a href="/2024.html">2024</a> (8)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

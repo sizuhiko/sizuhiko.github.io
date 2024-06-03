@@ -5,10 +5,171 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-05-28T15:44:00+09:00</updated>
+  <updated>2024-05-30T17:03:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>CodeCommit で Renovate を使う</title>
+    <link rel="alternate" href="http://blog.url.com/2024/05/30/renovate-on-codecommit.html"/>
+    <id>http://blog.url.com/2024/05/30/renovate-on-codecommit.html</id>
+    <published>2024-05-30T17:03:00+09:00</published>
+    <updated>2024-06-03T10:23:34+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;&lt;a href="https://www.mend.io/renovate/"&gt;Renovate&lt;/a&gt;は依存関係の更新を自動化（PRを生成してくれたり、マージしてくれたり） するツールで、dependabot などと並んで有名なツールです。&lt;/p&gt;
+
+&lt;p&gt;CodeCommit で依存関係の更新を公式にサポートしているツールを探していたのですが、Renovate しか見つからなかったので、選択肢を検討することもなく導入してみることにしました。&lt;/p&gt;
+
+&lt;h3&gt;導入方法&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://docs.renovatebot.com/modules/platform/codecommit/"&gt;CodeCommit に導入するための公式ドキュメント&lt;/a&gt;があります。&lt;/p&gt;
+
+&lt;p&gt;前回のブログ&lt;a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html"&gt;CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う&lt;/a&gt;で CodeCommit と CodeBuild の環境は設定済みで、かつ PR に対してビルド結果が連携できるようにしてあります。&lt;/p&gt;
+
+&lt;p&gt;Renovate を導入するときもこの手順は重要で、ライブラリをアップデートするときにビルドが通過するかわからないものはマージできないので、まず導入前に連携できるように設定しておきましょう。&lt;/p&gt;
+
+&lt;h4&gt;AWS 環境の設定&lt;/h4&gt;
+
+&lt;p&gt;ドキュメントどおり IAM や Role の設定を行います。
+ここはプロジェクトによってやり方がいろいろあると思いますが、結果として CodeBuild から CodeCommit に PR が出せる様な設定になっていれば良いです。
+必要なポリシーなども列挙されているので、ドキュメントをよく読んで進めれば大丈夫です。&lt;/p&gt;
+
+&lt;h4&gt;AWS 環境ではできないこと&lt;/h4&gt;
+
+&lt;p&gt;これもドキュメントに明記されています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PR への担当アサイン&lt;/li&gt;
+&lt;li&gt;PRの自動マージ&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;rebaseLabel&lt;/code&gt; オプションの有効化&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;環境設定ファイルを記述する&lt;/h4&gt;
+
+&lt;p&gt;ドキュメントでは &lt;code&gt;config.js&lt;/code&gt; で書かれていますが、 &lt;code&gt;renovate.json&lt;/code&gt; でも大丈夫です。
+このあたりはお好きな&lt;a href="https://docs.renovatebot.com/configuration-options/"&gt;設定ファイル形式&lt;/a&gt;を利用すると良いでしょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"$schema"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"https://docs.renovatebot.com/renovate-schema.json"&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;スキーマ定義やパッケージルールなどを設定しておきます。
+Renovate の対象リポジトリごとにリポジトリルートにファイルを設置します。&lt;/p&gt;
+
+&lt;h4&gt;CodeBuild の設定&lt;/h4&gt;
+
+&lt;h5&gt;導入方法の選択&lt;/h5&gt;
+
+&lt;p&gt;Renovate を導入するときの単位として、2つの選択肢があります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Renovate を複数のリポジトリに対して実行する管理リポジトリを1つと、対になる CodeBuild プロジェクトを作成する&lt;/li&gt;
+&lt;li&gt;Renovate の対象リポジトリごとに CodeBuild のプロジェクトを作成する&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;前者の良いところは、Renovate の対象リポジトリが多数あるとき、管理リポジトリに設定している CodeBuild の buildspec ファイルでリポジトリ名を列挙していき、対象リポジトリ側は、リポジトリルートに設定ファイルを入れておくだけで良いことです。
+ただしリポジトリごとに実行スケジュールを変更するといったことはできないので、すべての対象リポジトリに対して順番に PR が作成されていきます。&lt;/p&gt;
+
+&lt;p&gt;後者の良いところは、リポジトリごとに実行スケジュールを柔軟に変更できることです。ただしリポジトリ数ぶんの CodeBuild プロジェクトが必要になるので対象リポジトリ数が多くなると面倒に感じるかもしれません（IaC で構築していればそうでもないかも？）。&lt;/p&gt;
+
+&lt;h5&gt;buildspec ファイルの設置&lt;/h5&gt;
+
+&lt;p&gt;今回は導入リポジトリ数も少なかったのと、実行スケジュールをリポジトリごとに変更したいという要望があったので、後者の方式で導入してみました。&lt;/p&gt;
+
+&lt;p&gt;どちらの方法でも CodeCommit / CodeBuild では実現可能です。&lt;/p&gt;
+
+&lt;p&gt;前回の記事で build.yml や deploy.yml を作っているので、そこに renovate.yml といった名前で buildspec ファイルを記述します。&lt;/p&gt;
+
+&lt;p&gt;ドキュメントでは Docker を使う方法と CLI を使う方法が紹介されていますが、私たちは CLI の方式を採用しました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;0.2&lt;/span&gt;
+&lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="na"&gt;shell&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;bash&lt;/span&gt;
+  &lt;span class="na"&gt;git-credential-helper&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;yes&lt;/span&gt;
+  &lt;span class="na"&gt;variables&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;RENOVATE_PLATFORM&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;codecommit'&lt;/span&gt;
+    &lt;span class="na"&gt;RENOVATE_REPOSITORIES&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;["repoName1"]'&lt;/span&gt;
+    &lt;span class="na"&gt;RENOVATE_CONFIG&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;{"extends":["config:recommended"]}'&lt;/span&gt;
+    &lt;span class="na"&gt;LOG_LEVEL&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;debug'&lt;/span&gt;
+    &lt;span class="na"&gt;AWS_REGION&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;ap-northeast-1'&lt;/span&gt;
+&lt;span class="na"&gt;phases&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="na"&gt;install&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;runtime-version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="na"&gt;nodejs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;
+  &lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;on-failure&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;CONTINUE&lt;/span&gt;
+    &lt;span class="na"&gt;commands&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;npm install -g renovate&lt;/span&gt;
+      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;renovate&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;RENOVATE_REPOSITORIES&lt;/code&gt; が違うだけで、各リポジトリに入れておきます。&lt;/p&gt;
+
+&lt;h5&gt;CodeBuild プロジェクトの作成して実行スケジュールを設定する&lt;/h5&gt;
+
+&lt;p&gt;CodeBuild プロジェクトを新規作成してリポジトリを紐づけておきます。
+あとは実行スケジュールを EventBridge に設定して、作成した CodeBuild プロジェクトを実行 ( &lt;code&gt;StartBuild&lt;/code&gt; ) するように設定します。&lt;/p&gt;
+
+&lt;p&gt;ここまでで実行スケジュールに応じて PR が生成できるようになります。&lt;/p&gt;
+
+&lt;h3&gt;セキュリティアップデートに対応する&lt;/h3&gt;
+
+&lt;p&gt;Renovate は標準では CVE などに対応するパッチの PR は生成されません。
+この機能を有効にするためのオプションは2つあります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://docs.renovatebot.com/configuration-options/#vulnerabilityalerts"&gt;vulnerabilityAlerts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://docs.renovatebot.com/configuration-options/#osvvulnerabilityalerts"&gt;osvVulnerabilityAlerts&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;前者は GitHub のみサポートしており CodeCommit では利用できません。
+後者は実験的な機能という位置付けのようですが、すべてのプラットフォームで動作する様になっています。&lt;/p&gt;
+
+&lt;h4&gt;osvVulnerabilityAlerts を有効にする&lt;/h4&gt;
+
+&lt;p&gt;環境設定ファイル（この記事では renovate.json）に設定を追加します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"$schema"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"https://docs.renovatebot.com/renovate-schema.json"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="nl"&gt;"osvVulnerabilityAlerts"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;実は GitHub が必要なんです&lt;/h4&gt;
+
+&lt;p&gt;ドキュメントを読むとこれだけで良いのかと思っていたのですが、実際に Renovate を実行しても CVE の PR は生成されません。&lt;/p&gt;
+
+&lt;p&gt;おや？っと思ってログを確認したりしたのですが、原因がわからず Renovate のソースコード自体を確認してみました。&lt;/p&gt;
+
+&lt;p&gt;すると、なんと OSV のデータソースが GitHub に固定してハードコードされてるじゃないですか。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/renovatebot/renovate/blob/main/lib/workers/repository/process/vulnerabilities.ts#L52"&gt;該当のコード&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="kr"&gt;private&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="nx"&gt;initialize&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt; &lt;span class="nb"&gt;Promise&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;void&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="c1"&gt;// hard-coded logic to use authentication for github.com based on the githubToken for api.github.com&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;token&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;findGithubToken&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+      &lt;span class="nx"&gt;find&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;hostType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;github&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;url&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;https://api.github.com/&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+    &lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;osvOffline&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;OsvOffline&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;create&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;token&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;ドキュメントからリンクされている&lt;a href="https://github.com/renovatebot/renovate/discussions/20542"&gt;ディスカッション&lt;/a&gt;には、&lt;a href="https://github.com/renovatebot/renovate/discussions/20542#discussioncomment-8889250"&gt;違うデータソースを使う場合の書き方&lt;/a&gt;があって、OSVの任意のデータソースを利用する場合は独自にzipファイルをダウンロードしてやるのも良いでしょう。&lt;/p&gt;
+
+&lt;p&gt;で、そのまま GitHub のデータソースを利用する場合は、GitHub の PAT を生成して（権限は &lt;code&gt;public_repo&lt;/code&gt; ぐらいでok） renovate.yml に設定を追加します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+  &lt;span class="na"&gt;secrets-manager&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
+    &lt;span class="na"&gt;GITHUB_COM_TOKEN&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="s"&gt;[シークレットの名前]:[シークレットのキー]"&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;CodeBuild の buildspec では環境変数に設定する値を SecretsManager から取得できるので、GitHub で生成した PAT はそこに格納しておいて、CodeBuild から参照できるようにしておきましょう。&lt;/p&gt;
+
+&lt;p&gt;プロジェクト都合で GitHub 使えないから CodeCommit 使っているのに！という声はごもっともだと思うので、そういう場合は zip ファイルをダウンロードして実行する手順を試してみることをお勧めします。&lt;/p&gt;
+
+&lt;h3&gt;さいごに&lt;/h3&gt;
+
+&lt;p&gt;できれば CodeCommit も GitHub と Dependabot の関係のように標準で脆弱性の PR 対応して欲しいですよね。
+ビルド結果の通知とか脆弱性の対応とか、Code兄弟の機能として不足しているなーという部分の強化に期待しましょう。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</title>
     <link rel="alternate" href="http://blog.url.com/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html"/>
@@ -738,105 +899,6 @@ REST API を通じてデバイスからトイレの利用状況をデータス�
 これはバージョンアップ意外と楽チンなのでは？！と勘違いしたのは言うまでもなく、この連載もまだ続きます。&lt;/p&gt;
 
 &lt;p&gt;ここで勘違いしたので、心も折れず続けられたというのはあるかもしれないと振り返り思うのでした。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</title>
-    <link rel="alternate" href="http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html"/>
-    <id>http://blog.url.com/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html</id>
-    <published>2024-03-20T12:34:00+09:00</published>
-    <updated>2024-04-30T13:19:59+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;2023年2月3日にGoogle Cloudからメールが届きました。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/gae-gen1-support-mail.png" alt="" /&gt;&lt;/p&gt;
-
-&lt;p&gt;ここで作っていた個人開発のサービスとは &lt;a href="https://toiletevolution.space/#/about"&gt;Toilet Evolution&lt;/a&gt; です。一時期に流行ったトイレ利用状況可視化のIoTサービスです。&lt;/p&gt;
-
-&lt;p&gt;PHP + Web Components の SPA 構成でできていて、Google App Engine（以下GAE）の第一世代で動いています。
-当時ほぼ無料で動かせるPaaSというのはあまりなくて、GAEばかりを選択していたと記憶しています。
-その後 Heroku とか出ましたけど、実質それなりの利用で月100円もかからずに運用しつづけられている状況なのでありがたいです。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://cloud.google.com/appengine/docs/standard/lifecycle/support-schedule?hl=ja"&gt;GAEのランタイム サポート スケジュール&lt;/a&gt; によると PHP5.5 は 2024年1月30日にサポートの終了で、非推奨が2026年1月31日ということ。廃止は書かれていません。&lt;/p&gt;
-
-&lt;p&gt;と同時にまだ使っている人もいるので、簡単にメンテ大変なんでクローズしますというのも違いますね。ユーザー大事。ありがたや。&lt;/p&gt;
-
-&lt;p&gt;そこで、サポート終了状態でずっと動かすのもなと思い、最新版のPHPへの移行を検討し始めました。&lt;/p&gt;
-
-&lt;h3&gt;一番最後のメンテナンス&lt;/h3&gt;
-
-&lt;p&gt;このWebサービスは長いことやっているのですが、直近で記事にしたのは &lt;a href="/2019/04/28/toilet-evolution-polymer3-vol4.html"&gt;Toilet EvolutionのフロントエンドをPolymer3対応する(4)&lt;/a&gt; で、2019年4月。あのあとコロナがあっての5年ぶりのメンテになります。&lt;/p&gt;
-
-&lt;h3&gt;移行前の composer.json&lt;/h3&gt;
-
-&lt;p&gt;以下のような依存バージョンでした。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"php"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"&amp;gt;=5.5.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"slim/slim"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^3.1"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"monolog/monolog"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.17"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"tomwalder/php-gds"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^2.1"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"tuupola/slim-basic-auth"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^2.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"nesbot/carbon"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.21"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"league/oauth2-client"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.4"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"league/oauth2-google"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"akrabat/rka-slim-session-middleware"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"2.0.0-RC1"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"sizuhiko/slim3-csrf-utilities"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"dev-master"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"justinrainbow/json-schema"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^2.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"phpunit/phpunit"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^4.8"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"helmich/phpunit-psr7-assert"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.1"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"gecko-packages/gecko-memcache-mock"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^2.1"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"google/appengine-php-sdk"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^1.9"&lt;/span&gt;&lt;span class="w"&gt;    
-&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;歴史を感じますね。&lt;/p&gt;
-
-&lt;h3&gt;GAE gen1 から gen2 で何が変わるのか&lt;/h3&gt;
-
-&lt;p&gt;GAEでの移行ガイドが出ていて、PHPだと &lt;a href="https://cloud.google.com/appengine/migration-center/standard/migrate-to-second-gen/php-differences?hl=ja"&gt;PHP 5.5 と PHP 7 / 8 の違い&lt;/a&gt; というドキュメントがあります。&lt;/p&gt;
-
-&lt;p&gt;PHP公式ドキュメントの移行ガイドへのリンクと、GAE特有のアップグレードガイドが書かれています。
-タイトルだけ拾うと、以下のような移行が必要になるということでした。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;app.yaml ファイルを移行する&lt;/li&gt;
-&lt;li&gt;ランタイム制限の緩和&lt;/li&gt;
-&lt;li&gt;App Engine の PHP SDK から移行する（レガシーバンドルサービスAPI利用方法）&lt;/li&gt;
-&lt;li&gt;ローカルでの実行方法&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;レガシーバンドルサービスとは &lt;a href="https://cloud.google.com/appengine/docs/standard/php-gen2/services/access?hl=ja"&gt;PHP 7 / 8 用の以前のバンドル サービスにアクセスする&lt;/a&gt; で書かれているサービスで、今回のサービスで言うと Memcache とセッションを利用していました。&lt;/p&gt;
-
-&lt;p&gt;で、これらは使えるので、使い続けて良いのか？という選択を迫られます。
-もう少し関連するドキュメントを読んでみましょう。
-&lt;a href="https://cloud.google.com/appengine/docs/standard/bundled-services-overview?hl=ja"&gt;以前のバンドル サービスの概要&lt;/a&gt; によると&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;レガシー ランタイムの一部はオープンソース コミュニティで管理されなくなったため、App Engine デベロッパーは、新しいランタイムに移行すべきかどうか難しい判断に迫られる可能性があります。こうした移行には時間と労力がかかりますが、レガシー ランタイムの使用を継続すれば、アプリの維持コストが増大する結果になります。
-こうした課題を踏まえ、Google Cloud では新しいランタイムへの移行パスを段階的に提供していく予定です。Google Cloud では、ランタイム移行の複雑さを軽減するために、Python 3、Java 11、Go 1.12 以降、PHP 7 / 8 などの第 2 世代ランタイムで App Engine の従来のバンドル サービスとその関連 API をサポートしています。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;移行大変なんで段階的な移行パスを用意するよってことですね。
-Memcache はこの移行バスに入ったようでそのままでも利用できたんですが、あとでまた移行するのが面倒そうなんで、このタイミングでやっておきたいと考えました。&lt;/p&gt;
-
-&lt;p&gt;レガシーランタイムからの移行に関してのドキュメントは &lt;a href="https://cloud.google.com/appengine/migration-center/standard/services/migrating-services?hl=ja&amp;amp;tab=php"&gt;レガシー バンドル サービスからの移行&lt;/a&gt; にあって、参考になります。&lt;/p&gt;
-
-&lt;h3&gt;実行目標&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;PHPのバージョンを最新化する&lt;/li&gt;
-&lt;li&gt;GAEのレガシーランタイムからの脱却&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;というのを掲げてみました。&lt;/p&gt;
-
-&lt;p&gt;けど、PHP自体あんまり触ってない（たぶん7を少しやったぐらいで、実質5系の知識で止まっている）ため、長期戦は予想していました。当時はまだ1年ぐらいあるから何とかなるやろ、ぐらいに思っていた自分がいました。&lt;/p&gt;
-
-&lt;p&gt;そして、その後の1年ぐらいで移行を完了させて、現在は GAE gen2 の PHP8.2 で稼働しています。👏👏&lt;/p&gt;
-
-&lt;p&gt;このあと数回にわたって、どうやって移行してきたかをコミットログと共にふりかえっていきたいと思います。
-少しでも PHP のバージョンアップや GAE gen2 へ移行する人の助けになればな、と思っています。&lt;/p&gt;
 </content>
   </entry>
 </feed>

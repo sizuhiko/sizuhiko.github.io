@@ -277,7 +277,171 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a></h2>
+            <h2 class="title"><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a></h2>
+  <p class="postdate"><a href="/2023/04/05.html" title="Permanent link">Wednesday, April 05, 2023 05:08:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>「Lambda アプリが突然動かなくなる」なんて、どうせバグなんでしょーというのが当然のリアクションですが、これは本当にバグなのか&hellip;</p>
+
+<p>本当にあった怖い話をします。</p>
+
+<h3>ある日、Lambda アプリが突然動かなくなる</h3>
+
+<p>Node.js v18 のライタイムで動く Lambda にデプロイされているアプリで、ある日突然エラーが出るようになりました。</p>
+
+<blockquote>
+<p>original: TypeError: Cannot read properties of undefined (reading ‘RUNNING’)</p>
+</blockquote>
+
+<p>この部分ですが TypeScript のコードでは以下のようになっていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span>
+  <span class="nx">DescribeExecutionCommand</span><span class="p">,</span>
+  <span class="nx">ExecutionDoesNotExist</span><span class="p">,</span>
+  <span class="nx">ExecutionStatus</span><span class="p">,</span>
+  <span class="nx">SFNClient</span><span class="p">,</span>
+  <span class="nx">StartExecutionCommand</span><span class="p">,</span>
+  <span class="nx">paginateListExecutions</span><span class="p">,</span>
+<span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="c1">// 省略</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="nx">latest</span><span class="p">?.</span><span class="nx">status</span> <span class="o">===</span> <span class="nx">ExecutionStatus</span><span class="p">.</span><span class="nx">RUNNING</span><span class="p">)</span> <span class="p">{</span>
+</code></pre></div>
+<p><code>ExecutionStatus</code> は StepFunctions のクライアントで export されている値です。
+StepFuntions のジョブが実行中かどうか判定している箇所で。少し前まで普通に動いていたのに&hellip;.</p>
+
+<h3>Lambda アプリの構成</h3>
+
+<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
+Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
+
+<h3>node コンソールで確認してみる</h3>
+
+<p>手元では devDependencies に <code>@aws-sdk/client-sfn</code> が入っているので、 node コンソールに入って require を実行してみました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
+undefined
+&gt; ExecutionStatus
+{
+  ABORTED: 'ABORTED',
+  FAILED: 'FAILED',
+  RUNNING: 'RUNNING',
+  SUCCEEDED: 'SUCCEEDED',
+  TIMED_OUT: 'TIMED_OUT'
+}
+</code></pre></div>
+<p>ふむ、問題なさそうだが？</p>
+
+<p>最新版の aws-sdk で変わったのだろうか？
+一時的に最新版にバージョンアップをしてみて、確認してみます</p>
+<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
+undefined
+&gt; ExecutionStatus
+undefined
+</code></pre></div>
+<p>えええええええーーー</p>
+
+<h3>aws-sdk の該当箇所の修正履歴をチェックする</h3>
+
+<p><a href="https://github.com/aws/aws-sdk-js-v3/pull/4587">hore(codegen): export enums as const</a></p>
+
+<h4>元のコード</h4>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
+ * @public
+ */</span>
+<span class="k">export</span> <span class="kr">enum</span> <span class="nx">ExecutionStatus</span> <span class="p">{</span>
+  <span class="nx">ABORTED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">FAILED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">RUNNING</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">SUCCEEDED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">TIMED_OUT</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4>変更後のコード</h4>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
+ * @public
+ * @enum
+ */</span>
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">ABORTED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">FAILED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">RUNNING</span><span class="p">:</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">SUCCEEDED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">TIMED_OUT</span><span class="p">:</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
+<span class="p">}</span> <span class="k">as</span> <span class="kd">const</span><span class="p">;</span>
+</code></pre></div>
+<p>おいおい、これって <code>@public</code> なのに後方互換性なくなっとるだろ&hellip;.</p>
+
+<h3>なぜ undefined になるのか</h3>
+
+<p>enum はコンパイルされて JavaScript になると以下のようなコードになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">ExecutionStatus</span><span class="p">;</span>
+<span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ExecutionStatus</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">;</span>
+    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">;</span>
+    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">;</span>
+    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">;</span>
+    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">;</span>
+<span class="p">})(</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">||</span> <span class="p">(</span><span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{}));</span>
+</code></pre></div>
+<p>でも <code>export const as const</code> になると、JavaScript にはコンパイルされることなく、変数の利用箇所に埋め込みの形になります。</p>
+
+<p>最初にも書きましたが、 aws-sdk v2 では普通だった</p>
+
+<blockquote>
+<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
+Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
+</blockquote>
+
+<p>こういう運用はすでにオワコンなんでしょうか？
+いやでも、v3 になってもランタイムに aws-sdk は入っています。</p>
+
+<p>少なくとも <code>ExecutionStatus</code> が内部変数で export されてない private な値だったら良いのですが、これはさすがにマズイんじゃないですかね？awsさん。</p>
+
+<h3>この問題が発生するケース</h3>
+
+<ul>
+<li>AWS Lambda でランタイムの aws-sdk を使っていて、TypeScript から enum の値を参照していた場合（同一の変更ですべての enum が const に書き変わっています）</li>
+</ul>
+
+<p>amplify とか Lambda でなくコンパイルされているケースでは問題は起きませんが、いやこういうのサクッと変更しちゃダメだと思うんですが&hellip;
+しかもランタイム側に入っているので、動作している Lambda アプリケーションが突然動作しなくなります。</p>
+
+<h3>aws-sdk v3 を安心して使うためには（追記）</h3>
+
+<ul>
+<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
+<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
+<li>関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
+</ul>
+
+<p>大事なこと3つ目を追加しました。</p>
+
+<p>aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる" data-url="http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html&t=Node.js%20v18%20/%20aws-sdk%20v3%20%E3%81%AE%20Lambda%20%E3%82%A2%E3%83%97%E3%83%AA%E3%81%8C%E7%AA%81%E7%84%B6%E5%8B%95%E3%81%8B%E3%81%AA%E3%81%8F%E3%81%AA%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a></h2>
   <p class="postdate"><a href="/2023/04/04.html" title="Permanent link">Tuesday, April 04, 2023 04:20:00 PM</a></p>
   <p class="tags">
       <a href="/tags/typescript.html" rel="tag">TypeScript</a>
@@ -762,122 +926,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
     </div>
 
   </div>
-  <h2 class="title"><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a></h2>
-  <p class="postdate"><a href="/2022/12/30.html" title="Permanent link">Friday, December 30, 2022 03:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/lambda.html" rel="tag">Lambda</a>
-      <a href="/tags/node-js.html" rel="tag">Node.js</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>クラメソさんの <a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/">[アップデート] AWS Lambdaが Node.js 18をサポートしました</a> 記事のとおり、やっと AWS Lambda でも Node.js 18 が使えるようになりました。</p>
-
-<p>現在 Node.js 14 を使って AWS Lambda で API サーバーを構築しているのですが、 Node.js 16 の LTS が 9ヶ月終了が早まったこともあり、
-このタイミングで Node.js 18 へ移行することにしました。</p>
-
-<p>本稿では CI/CD 環境を Node.js 14 から Node.js 18 へ移行するときに実施した作業を振り返って、まとめておきます。</p>
-
-<p>現在の構成はこんな感じです。</p>
-
-<ul>
-<li>Node.js 14 / TypeScript</li>
-<li>CI/CD に GitHub Actions を利用</li>
-<li>Amazonlinux ベースの <a href="https://hub.docker.com/r/amazon/aws-cli">amazon/aws-cli</a> コンテナをベースにパッケージを追加した独自コンテナイメージで CI/CD を実施</li>
-<li>Serverless Framework でビルド/デプロイ</li>
-</ul>
-
-<h2>CI/CD イメージの Node.js を 18 にする</h2>
-
-<p>まずはビルド/デプロイをするコンテナイメージを Node.js 18 にしていきます。
-実際に Node.js 18 をインストールしようとしたのですが、エラーになってしまいます。</p>
-
-<p>具体的なエラーは <a href="https://stackoverflow.com/questions/50564999/lib64-libc-so-6-version-glibc-2-14-not-found-why-am-i-getting-this-error">/lib64/libc.so.6: version `GLIBC_2.14&rsquo; not found. Why am I getting this error?</a> と一緒で、調べていくと Amazonlinux2 ベースである CentOS7 と Node.js 18 は <a href="https://it.ama2pro.net/2022/05/31/node%E3%81%AEv18%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%89%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%EF%BC%88centos7%EF%BC%89/">nodeのv18を使ったらエラーになった（CentOS7）</a> などにもあるように単純な話ではないようです。</p>
-
-<p>おや？でも Lambda は Node.js 18 が使えるんですよね？どういうこと？と思いますよね。</p>
-
-<p>Node.js のディストリビューション issue を確認すると <a href="https://github.com/nodesource/distributions/issues/1367">distribution package Amazon Linux 2022 not supported</a> なんてのがありました。</p>
-
-<h3>で、Amazon Linux 2022 って何なん？！</h3>
-
-<p><a href="https://hub.docker.com/_/amazonlinux">amazonlinux のコンテナイメージ</a>をみると、 <code>latest</code> は <code>amazonlinux2</code> なんですが、タグをみていくと確かに <code>2022</code> があります。
-あと現時点では aws-cli のイメージは 2022 には追従していません。</p>
-
-<p>そこで、 amazonlinux2022 をベースにして Node.js 18 をインストールするのを試してみます。</p>
-
-<p>しかし、ここでプロビジョニングツールが amazonlinux 2022 に対応していないことがわかります（グルグル循環して脳が溶けてくる&hellip; 溶けてやがる、まだ早すぎたんだ&hellip;.）。違うプロビジョニングツールも調べてみたのですが、どれも 2022 には対応していませんでした。ここでプロビジョニングツールを捨てる選択となりました。</p>
-
-<p>（実際僕らは Chef を使っているんですが、Chef Workstation 自体に amazonlinux 2022 の対応は入っていました（<a href="https://github.com/chef/omnitruck/issues/569">Omnitruck artifact does not exist for version 17 on platform Amazon Linux 2022 </a>）。ただまだリリースパッケージに含まれていないので、いずれリリースされるバージョンでは対応されているでしょう。Ansibleも調べましたが、同様にまだリリースパッケージには含まれていませんでした。）</p>
-
-<p>調べていたら、<a href="https://www.geekfeed.co.jp/geekblog/amazonlinx3-amazonlinux2022-al2022">AmazonLinux3じゃなくってAmazon Linux 2022 (AL2022) だってさ。</a> という記事が見つかりました。
-そんで </p>
-
-<blockquote>
-<p>AmazonLinux2022以降はメジャーバージョンが2年ごとにリリースされる</p>
-</blockquote>
-
-<p>まじかー。まぁ今までの AmazonLinux2 が長かったですね。そのぐらいで OS イメージを最新にしていかないとですよね。
-ということで、今後も踏まえて CI/CD のフローを含め利用するコンテナイメージを検討しなおすことにしました。
-（2年ごとの変更がプロビジョニングツールを捨てる決定的な要因になったのは間違いない）</p>
-
-<h2>CI/CD フローの変更</h2>
-
-<p>現時点のフローを整理してみました</p>
-
-<ol>
-<li>チェックアウト</li>
-<li>ビルド</li>
-<li>デプロイが必要な場合
-
-<ol>
-<li>環境のスイッチロール</li>
-<li>デプロイ</li>
-</ol></li>
-</ol>
-
-<p>だいたいこんな感じです。
-これを今までは全部1つのコンテナでやっていたのですが、それぞれ分割していくことにしました。</p>
-
-<ol>
-<li>チェックアウト -&gt; alpine/git</li>
-<li>ビルド -&gt; amazon/aws-lambda-nodejs:18 ベースに zip/unzip を追加したもの</li>
-<li>デプロイが必要な場合
-
-<ol>
-<li>環境のスイッチロール -&gt; amazon/aws-cli ベースに jq を追加したもの</li>
-<li>デプロイ -&gt; node:18</li>
-</ol></li>
-</ol>
-
-<p>ビルドに関しては <code>node:18</code> でも良かったのですが、ここは以前と同じく稼働する OS イメージと合わせています。
-今後 OS イメージを追従するというより、実際の Lambda 実行コンテナイメージを使うことで、 Node.js ランタイムにあった OS バージョンを気にせず利用できるメリットがあると考えました（サイズ大きいけど）。</p>
-
-<p>それ以外は必要な部分に最低限のコンテナという感じですね。</p>
-
-<h2>さいごに</h2>
-
-<p>LTS に合わせて開発環境をアップデートしていくのは、とても大事ですね。
-記事にすると、さらっと解決したように見えますが、それぞれのツールのソースコードや issue を確認しながら進んでいたので、かなり時間を取られてしまいました。
-ただ、今後同じようにな環境でアップデートしていこうと思う人の助けになればと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）" data-url="http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html&t=AWS%20Lambda%20%E3%81%AE%20Node.js%2014%20%E3%82%92%2018%20%E3%81%AB%E7%A7%BB%E8%A1%8C%E3%81%99%E3%82%8B%EF%BC%88CI/CD%E7%92%B0%E5%A2%83%E7%A7%BB%E8%A1%8C%E7%B7%A8%EF%BC%89" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/3/">« Prev</a>
@@ -904,6 +952,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
@@ -913,7 +962,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
                   <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
-                  <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
               </ul>
             </div>
           </div>
@@ -1030,7 +1078,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (7)</li>
+                  <li><a href="/2024.html">2024</a> (8)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>

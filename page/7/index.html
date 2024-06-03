@@ -277,7 +277,221 @@
       <div id="mainwrap">
         <div id="main">
 
-            <h2 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h2>
+            <h2 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h2>
+  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 11:34:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>TypeORM 0.2 系をずっと使ってきて、 2022/03/23 の Dependabot 更新で、 0.3 系へのアップデートを確認しました。
+CIのテストが失敗していたので、何か大きな変更があるのか Release notes を確認してみました。</p>
+
+<p>すると、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#030-2022-03-17">0.3.0</a> と <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#031-2022-03-21">0.3.1</a> の2度に BREAKING CHANGES があることがわかりました。
+ただし後者 <code>0.3.1</code> の BREAKING CHANGES については、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#032-2022-03-22">0.3.2</a> で元に戻されているので <code>0.3.0</code> の変更点を見ていきましょう。</p>
+
+<h3>0.3 系での変更点</h3>
+
+<ul>
+<li>ormconfig のような接続オブションファイル利用は非推奨になった</li>
+<li>非推奨の migrations:* コマンドが削除された</li>
+<li>CLI コマンドの前面見直し</li>
+<li>未実行のマイグレーションとスキーマ同期の両方がある場合、マイグレーションがスキーマ同期の前に実行されるようになった</li>
+<li>aurora-data-api が aurora-mysql に変更</li>
+<li>aurora-data-api-pg が aurora-postgres に変更</li>
+<li>EntityManager.connection が EntityManager.dataSource に変更</li>
+<li>Repository のコンストラクタが新しくなった。カスタムクラスリポジトリは使えなくなった</li>
+<li>@TransactionRepository、@TransactionManager、@Transaction デコレータが削除された</li>
+<li>ジャンクションテーブル名だけが短縮されるようになった（@Entityデコレータでカスタム名を指定するのが理想的</li>
+<li>パラメータなしの findOne() は廃止</li>
+<li>findOne(id) は削除</li>
+<li>findOne, findOneOrFail, find, count, findAndCount メソッドは FindOptions パラメータのみに変更。その代わり FindOptions を使わずに where 条件を直接与えるために、新しいメソッドが追加された: findOneBy, findOneByOrFail, findBy, countBy, findAndCountBy</li>
+<li>findByIdsは非推奨となり、代わりにIn演算子と組み合わせてfindByメソッドを使用することが推奨となる</li>
+<li>findOne と QueryBuilder.getOne() は、データベースで何も見つからなかった場合、undefined ではなく null を返すようになった</li>
+<li>find* メソッドで使用される where の値として null はサポートされず、IsNull() 演算子を明示的に使用するようになった</li>
+<li>すべてのCLIコマンドはormconfigをサポートしなくなった</li>
+<li>DataSourceOptions 内のエンティティ、マイグレーション、サブスクライバのオプションにディレクトリ文字列を指定するのは非推奨になった</li>
+<li>すべてのコンテナ関連の機能 (UseContainerOptions, ContainedType, ContainerInterface, defaultContainer, useContainer, getFromContainer) は非推奨となった</li>
+<li>トランザクション内で使用される EntityManager の getCustomRepository は、非推奨となった。代わりに withRepository メソッドを使用する</li>
+<li>Connection.isConnected は非推奨になった。代わりに .isInitialized を使用する</li>
+<li>FindOptions (find* メソッドで使用) の select や relations でプロパティ名の配列指定は非推奨となった。代わりにオブジェクトリテラル表記を使用する</li>
+<li>FindOptions の join (find* メソッドで使用されます) は非推奨になった。結合を含むクエリを作成するには、QueryBuilder を使用する</li>
+<li>Connection、ConnectionOptions は非推奨になった。DataSource と DataSourceOptions を使用する</li>
+<li>createConnection(), createConnections() は非推奨になった。Connection は DataSource になった</li>
+<li>getConnection() は非推奨になった。グローバルな接続を持つには、データソースをエクスポートして必要な場所でそれを使用する</li>
+<li>getManager(), getMongoManager(), getSqljsManager(), getRepository(), getTreeRepository(), getMongoRepository(), createQueryBuilder() はすべて非推奨になった。これらは DataSource から取得する</li>
+<li>getConnectionManager() と ConnectionManager は非推奨になった。Connection は DataSource になり、各データソースは変数としてエクスポートできる</li>
+<li>getConnectionOptions() は非推奨になった</li>
+<li>AbstractRepository は非推奨になった</li>
+<li>Connection.name と BaseConnectionOptions.name は非推奨になった</li>
+</ul>
+
+<p>めっちゃ、いっぱいありますね。</p>
+
+<h3>修正箇所の確認</h3>
+
+<p>修正箇所に関して、型が変わったものに関しては、 <code>tsc</code> でコンパイルすればエラーになるので、対応箇所は明確です。
+findオプションが変わったり、メソッド自体が無くなったりしたものが中心です。</p>
+
+<p>コンパイルエラーが修正できたら、あとは単体テストでの失敗箇所の確認ですね。</p>
+
+<h3>非推奨になった部分にも目を向ける</h3>
+
+<p>最新のドキュメントは非推奨になった記述がすべてなくなり（そりゃそうですが）、新しい記述方法に変わっているのと、いつ <code>0.4.0</code> になっても良いように、
+どのように修正したら対応できるかを考えておく必要があります。</p>
+
+<p>また、最近新しいAPIサーバーを作ることになったので、その実装は <code>0.3</code> 系で始めるようにしました（あえて古いバージョンを使う必要はないですしね）。
+で、そこで問題になるのが、周辺ライブラリの対応状況です。
+TypeORM に対応したテストデータ作成のライブラリはいくつかあるのですが、そういったものが <code>0.3</code> 系に追従してくるまで待つか、そもそも依存ライブラリを使わずに <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> のような TypeScript のモックデータを作れるライブラリと TypeORM の create/save を組み合わせて使うかの選択になります。
+今回の新しいAPIサーバーでは、後者のやり方で進めることにしました。いずれライブラリの対応が進んだとして切り替えるか、そのままにするかは検討の余地がありますが、それほど手間は変わっていない印象です。</p>
+
+<p>ここからは、昨日の記事でもふれたのですが、私が関わっているプロジェクトでは DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っていますので、その範囲でどのように記述しているかを紹介していきます。</p>
+
+<h3>Connection から DataSource への変更に対応する</h3>
+
+<p>TypeORM 0.2 系では以下の書き方が一般的でした。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">if</span> <span class="p">(</span><span class="nx">getConnectionManager</span><span class="p">().</span><span class="nx">has</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">conn</span> <span class="o">=</span> <span class="nx">getConnectionManager</span><span class="p">().</span><span class="kd">get</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">conn</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="nx">conn</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="k">await</span> <span class="nx">createConnection</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span> <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>これが 0.3 系では以下のようになります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">let</span> <span class="nx">ds</span><span class="p">:</span> <span class="nx">DataSource</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">isRegistered</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
+  <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">ds</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span><span class="p">});</span>
+  <span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">useValue</span><span class="p">:</span> <span class="nx">ds</span> <span class="p">});</span>
+<span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ds</span><span class="p">.</span><span class="nx">isInitialized</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">await</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>データソースのオブジェクトは tsyringe の DI コンテナに登録して利用できるようにしておきます。
+さらに DB（リポジトリ）を、ユースケースクラスで DI できるようにします。</p>
+
+<p>TypeORM 0.2 系では以下のようにしていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">getCustomRepository</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">))</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>TypeORM がグローバルにアクセスできる <code>getCustomRepository</code> を用意してくれていたので、カスタムリポジトリクラスを指定するだけで良かったのですが、
+ここでは <code>getCustomRepository</code> が非推奨になったのと、クラスベースのカスタムリポジトリが非推奨になった、という2つの非推奨の影響を受け、書き方がだいぶ変わりました。</p>
+
+<p>0.3 系では以下のようにしてみました。データソースを DI コンテナから取得して新しいカスタムリポジトリの書き方 <code>extend</code> を使っています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<h3>クラスベースのカスタムリポジトリからオブジェクトベースへの変更に対応する</h3>
+
+<p>で、 0.2 系でのカスタムリポジトリは以下のようにクラスベースになっていたのです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>これを 0.3系では、クラスベースでなくオブジェクトベースに変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">UserDatabase</span><span class="p">:</span> <span class="nx">UserRepository</span> <span class="o">&amp;</span> <span class="nx">ThisType</span><span class="o">&lt;</span><span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="nx">UserRepository</span><span class="o">&gt;</span> <span class="o">=</span>
+<span class="p">{</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="na">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">null</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">},</span>
+<span class="p">}</span> 
+</code></pre></div>
+<p>クラスベースからオブジェクトベースになって、とても困ったことがあります。
+上記の変更では簡略化しましたが、実は find 系メソッドにはデコレータをつけていて、ロギングできるような仕組みを入れていました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
+  <span class="p">@</span><span class="nd">Logging</span><span class="p">()</span>
+  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="c1">// 検索処理</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>こんな感じです。
+これがオブジェクトベースになると、デコレータが使えなくなります。
+いい感じの解決策はあまりなかったので、AOPのライブラリ <a href="https://www.npmjs.com/package/ts-aspect">ts-aspect</a> を使うことにしました。
+AOPのライブラリはnpmレジストリにたくさんあるので、どれか自分の好みにあうものを利用すれば良いと思います。</p>
+
+<p>で、0.3 系ではデコレータを使わず、AOPで以下のように対応しました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
+    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
+    <span class="nx">addAspect</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="dl">'</span><span class="s1">findByEmail</span><span class="dl">'</span><span class="p">,</span> <span class="nx">Advice</span><span class="p">.</span><span class="nx">Around</span><span class="p">,</span> <span class="k">new</span> <span class="nx">LoggingAspect</span><span class="p">());</span>
+    <span class="k">return</span> <span class="nx">repository</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>カスタムリポジトリをインスタンス化するときに、いったん変数 <code>repository</code> にしてから <code>ts-aspect</code> を使って、メソッド単位で仕込んでいきます。</p>
+
+<h3>マイグレーションやCLIの変更に対応する</h3>
+
+<p>CLIオプションが変更になっているので、マイグレーションの書き方も変更が必要です。
+0.2 系では <code>package.json</code> の <code>scripts</code> にこんな感じで書いていたと思います。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -f db/ormconfig.ts -n Migration</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<p>ormconfig.ts の中身は以下のような感じでした。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="na">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
+  <span class="na">cli</span><span class="p">:</span> <span class="p">{</span>
+    <span class="na">entitiesDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">domain/entities</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">migrationsDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/migrations</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">subscribersDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/subscribers</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>0.3 系では、まずスクリプトが以下のように変更になります。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
+</code></pre></div>
+<p><code>-f</code> オプションがデータソース <code>-d</code> 指定となり、マイグレーションファイルの出力先を最後に指定するようになりました。
+<code>datasource.ts</code> は以下のようになります。データソースに変わった関係で、 <code>cli</code> オプションはなくなっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
+  <span class="c1">// データベース接続オプション</span>
+  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>migration:run や migration:show は、データソースに指定した <code>migrations</code> のパスからファイルを探索してくれるので、 <code>-f</code> が <code>-d</code> に変わったぐらいの影響範囲で大丈夫です。</p>
+
+<h3>さいごに</h3>
+
+<p>typeorm は 0.2 -&gt; 0.3 -&gt; 0.4 と 0.x 系なので 0.1 ごとに破壊的変更が実施されてきます。
+バージョン 2.0 -&gt; 3.0 -&gt; 4.0 にすれば良いのに&hellip; とか思いますが。</p>
+
+<p>次の 0.4 系に備えて、修正の方針を見つけていきたいですね。
+もしこの記事が参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <ul class="social-buttons cf">
+          <li>
+            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="TypeORM を 0.3 系にアップグレードする" data-url="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
+          </li>
+          <li>
+            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html&t=TypeORM%20%E3%82%92%200.3%20%E7%B3%BB%E3%81%AB%E3%82%A2%E3%83%83%E3%83%97%E3%82%B0%E3%83%AC%E3%83%BC%E3%83%89%E3%81%99%E3%82%8B" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+  <h2 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h2>
   <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 02:40:00 PM</a></p>
   <p class="tags">
       <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
@@ -765,119 +979,6 @@ https://github.com/its-succ/pong-swoosh</p>
     </div>
 
   </div>
-  <h2 class="title"><a href="/2020/02/21/phperkaigi-2020.html">PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました</a></h2>
-  <p class="postdate"><a href="/2020/02/21.html" title="Permanent link">Friday, February 21, 2020 10:49:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phperkaigi.html" rel="tag">PHPerKaigi</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><img src="https://phperkaigi.jp/2020/common/images/logo.svg" alt="" /></p>
-
-<p>昨年に続いて<a href="https://phperkaigi.jp/2020/">PHPerKaigi</a>に参加できました。
-今年は 2/9(日), 2/10((月), 2/11(祝) の3日間の開催で、私はメインセッションが行われる10,11の2日間参加しました。</p>
-
-<p>2日間の過ごし方は、概ね以下のような感じでした。</p>
-
-<ul>
-<li>2/10
-
-<ul>
-<li>午前中は登壇とAsk The Speaker</li>
-<li>午後一はPHPの現場公開収録に参加</li>
-<li>CI/CDのIRTに参加</li>
-<li>ルームCで歓談</li>
-<li>PHPer茶会に参加</li>
-</ul></li>
-<li>2/11
-
-<ul>
-<li>ルームCで歓談</li>
-<li>ランチセッションに参加</li>
-<li><a href="https://twitter.com/hnw">@hnw</a>さんのZend VMにおける例外の実装に参加</li>
-<li>コードゴルフやったりアジャイルIRTやったりルームCで歓談</li>
-<li>懇親会に参加</li>
-</ul></li>
-</ul>
-
-<p>ほとんどルームCで誰かと話していた感じですね。
-でもPHPerKaigiのコンセプトには合っているはず。</p>
-
-<h3>「E2Eテストに向き合う」</h3>
-
-<p><a href="https://fortee.jp/phperkaigi-2020/proposal/b8abdbb7-733e-47c3-b5b0-502278d3aa10">E2Eテストに向き合う</a>というタイトルで登壇しました。</p>
-
-<script async class="speakerdeck-embed" data-id="535ec30dae704309b3bbc36bb85395e0" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p><a href="https://pptr.dev/">Puppeteer</a>について、昨年も何回か登壇する機会があったのですが、
-視点を変えてE2Eテストから見たときの考え方/ツールとしての可能性/有用性を話したかったのと、
-テスティングピラミッドの背景みたいなところから自動テストについて理解が深まると良いなという思いでした。</p>
-
-<p>最後のスライドでも紹介した<a href="https://github.com/microsoft/playwright">Playwright</a>のREADMEに書かれている
-<a href="https://github.com/microsoft/playwright#q-what-about-the-webdriver">Q: What about the WebDriver?</a>の
-下りは、私が特に感銘を受けているところです。</p>
-
-<p>Webブラウザを使ったE2EテストやUIテストの自動化はWebDriverなしには、
-ここまでにはなっていなかっただろうし、そういう意味で「普遍的な標準」であると私も思います。</p>
-
-<p>一方でPWAなど新しい技術、新しいWebの登場により、自動テストが困難になっていることも事実です。</p>
-
-<p>私たちWebに関わるプログラマは、こういった局面においてより多くの事実と事例を積み上げて標準にフィードバックするという姿勢が必要だと思っています。
-なぜなら「みんなのインターネット」だから。</p>
-
-<p>これはテスト自動化に関わらず、Webの標準についても同じだと思っています。
-HTMLやCSS、はたまたブラウザに新しく追加される機能、どれも最初は少しユースケースが見えないものだったり、
-遅くて使い物にならないものかもしれません。
-でもその有用性や可能性、必要性がある人が結果を積み重ねることで、少しずつデファクトスタンダートに
-近づいていく、これが現在のWebに関する標準の進み方だと思っています。</p>
-
-<p><a href="https://github.com/extensibleweb/manifesto">The Extensible Web Manifesto</a>の宣言から7年。
-フィードバックループにおける標準化の流れは現実になってきていると思っています。
-いつかWebDriverにも同様のユースケースが取り入れられることを願って、今はそれぞれのWebアプリケーションに適したツールや環境を使い、アプリケーションの品質や、リリースサイクルの効率化ができると良いなと思います。</p>
-
-<h3>さいごに</h3>
-
-<p>PHPerKaigiは今年も楽しめました。
-交流スペースで多くの人と、様々な話題について議論できました。</p>
-
-<p>今年たくさんのノベルティがあって、その中にトレーディングカードがありました。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phperkaigi?src=hash&amp;ref_src=twsrc%5Etfw">#phperkaigi</a> 到着 (@ ココネリホール (区民交流ホール) in 練馬区, 東京都) <a href="https://t.co/0shvD2w1qe">https://t.co/0shvD2w1qe</a> <a href="https://t.co/i9HRPqJ9tp">pic.twitter.com/i9HRPqJ9tp</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1226672647670566913?ref_src=twsrc%5Etfw">February 10, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>名札の右に立てて置いているものです。</p>
-
-<p>私はTwitterもアカウント名だし、Publicにいろいろなことやっているからあまり気にならなかったのですが、
-Twitterアカウントが実名だったり、写真も実写だったりする人もいますよね。</p>
-
-<p>で、実際イベント期間中に PHPerKaigi の残念なところ(どういう風に利用されてしまうかわからず怖い)として 
-Twitter に書き込みをされている方がいました
-（私はたまたまイベントのハッシュタグ付きで呟かれてたのをTL上で見たのですが）。</p>
-
-<p>個人的にはトレーディングカード確かに面白いし、名刺代わり？になって便利だなーと思ったけど、
-事前にあまり告知されていなかったこともあり、個人情報の利用という観点からはちょっと微妙かもなーと思いました。
-申し込み時に拒否できたり、個人情報(写真や名前)が含まれないデフォルトカード？てきなものが選択できても良かったのかも。（とにかくみんな持っている/交換するみたいな雰囲気だったので、持ってないよりは良さそう、カード作成後に申し込みした人はそれに近い扱いだった模様）。</p>
-
-<p>あと、トレカたくさん余っているので、これの使い道もどうしたら良いか考えたいw</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました" data-url="http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html&t=PHPerKaigi%202020%E3%81%A7%E3%80%8CE2E%E3%83%86%E3%82%B9%E3%83%88%E3%81%AB%E5%90%91%E3%81%8D%E5%90%88%E3%81%86%E3%80%8D%E3%81%A4%E3%81%84%E3%81%A6%E7%99%BA%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%8D%E3%81%BE%E3%81%97%E3%81%9F" class="socialite facebook-like" data-href="http://blog.open.tokyo.jp/2020/02/21/phperkaigi-2020.html" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
 
   <p class="pagenav">
       <a href="/page/6/">« Prev</a>
@@ -905,6 +1006,7 @@ Twitter に書き込みをされている方がいました
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
@@ -914,7 +1016,6 @@ Twitter に書き込みをされている方がいました
                   <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
                   <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
                   <li><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a> <span>2023/05/02</span></li>
-                  <li><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a> <span>2023/04/19</span></li>
               </ul>
             </div>
           </div>
@@ -1031,7 +1132,7 @@ Twitter に書き込みをされている方がいました
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (7)</li>
+                  <li><a href="/2024.html">2024</a> (8)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
