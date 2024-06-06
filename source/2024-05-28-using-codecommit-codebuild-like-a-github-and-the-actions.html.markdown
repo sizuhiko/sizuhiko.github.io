@@ -1,5 +1,5 @@
 ---
-title: CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う
+title: CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う
 date: 2024-05-28 06:44 UTC
 tags: 
 - AWS
