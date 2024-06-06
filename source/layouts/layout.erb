@@ -10,8 +10,8 @@
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="/javascripts/socialite.min.js"></script>
-    <script type="text/javascript" src="http://www.scribd.com/javascripts/scribd_api.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js" defer init></script>    
     <%= feed_tag :atom, "#{blog.options.prefix.to_s}/feed.xml", title: "Atom Feed" %>
 
     <!--[if lte IE 8]>
@@ -41,12 +41,6 @@
     <style type="text/css">
       <%= Rouge::Themes::Github.render(:scope => '.highlight') %>
     </style>
-    <script type="text/javascript">
-      $(document).ready(function() {
-        Socialite.load("blog-social");
-      });
-    </script>
-
   </head>
   <body id="myopera" data-twttr-rendered="true">
     <!--[if IE 6]><div class="ie6"><![endif]-->
@@ -82,14 +76,10 @@
             <% permalink_url = "http://blog.open.tokyo.jp#{current_article.url}" %>
             <div class="row">
               <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-                <ul class="social-buttons cf">
-                  <li>
-                    <a href="http://twitter.com/share" class="socialite twitter-share" data-text="<%= current_article.title %>" data-url="<%= permalink_url %>" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-                  </li>
-                  <li>
-                    <a href="http://www.facebook.com/sharer.php?u=<%= permalink_url %>&t=<%= URI.encode(current_article.title) %>" class="socialite facebook-like" data-href="<%= permalink_url %>" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-                  </li>
-                </ul>
+                <div class="shareon" data-url="<%= permalink_url %>">
+                  <a class="twitter" data-title="<%= URI.encode(current_article.title) %>"></a>
+                  <a class="facebook" data-title="<%= URI.encode(current_article.title) %>"></a>
+                </div>
               </div>
               <div class="clearfix"></div>
             </div>

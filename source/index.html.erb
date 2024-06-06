@@ -20,14 +20,10 @@ per_page: 5
     <% permalink_url = "http://blog.open.tokyo.jp#{article.url}" %>
     <div class="row">
       <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <ul class="social-buttons cf">
-          <li>
-            <a href="http://twitter.com/share" class="socialite twitter-share" data-text="<%= article.title %>" data-url="<%= permalink_url %>" data-count="vertical" rel="nofollow" target="_blank"><span class="vhidden">Share on Twitter</span></a>
-          </li>
-          <li>
-            <a href="http://www.facebook.com/sharer.php?u=<%= permalink_url %>&t=<%= URI.encode(article.title) %>" class="socialite facebook-like" data-href="<%= permalink_url %>" data-send="false" data-layout="box_count" data-width="60" data-show-faces="false" rel="nofollow" target="_blank"><span class="vhidden">Share on Facebook</span></a>
-          </li>
-        </ul>
+        <div class="shareon" data-url="<%= permalink_url %>">
+          <a class="twitter" data-title="<%= article.title %>"></a>
+          <a class="facebook" data-title="<%= article.title %>"></a>
+        </div>
       </div>
       <div class="clearfix"></div>
     </div>
