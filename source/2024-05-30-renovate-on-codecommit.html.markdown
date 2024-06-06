@@ -15,7 +15,7 @@ CodeCommit で依存関係の更新を公式にサポートしているツール
 
 [CodeCommit に導入するための公式ドキュメント](https://docs.renovatebot.com/modules/platform/codecommit/)があります。
 
-前回のブログ[CodecCmmit と CodeBuild を GitHub と Actions の組み合わせのように使う](/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html)で CodeCommit と CodeBuild の環境は設定済みで、かつ PR に対してビルド結果が連携できるようにしてあります。
+前回のブログ[CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う](/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html)で CodeCommit と CodeBuild の環境は設定済みで、かつ PR に対してビルド結果が連携できるようにしてあります。
 
 Renovate を導入するときもこの手順は重要で、ライブラリをアップデートするときにビルドが通過するかわからないものはマージできないので、まず導入前に連携できるように設定しておきましょう。
 
