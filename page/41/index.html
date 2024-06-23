@@ -272,6 +272,90 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h1>
+  <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:17 PM</a></p>
+  <p class="tags">
+      <a href="/tags/1-2.html" rel="tag">1.2</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/find.html" rel="tag">find</a>
+      <a href="/tags/rc1.html" rel="tag">RC1</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;CakePHP1.2 も RC1 となり、現在開発中のプロジェクトでβからRC1に変更したところ、様々なトラブルが。。。  </p>
+
+<p>1.2βでは1.1の検索方法を踏襲しており、以下のように記述できる。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.title" =&gt; "This is a post");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>この例は完全一致（=）なので問題はなかったのだが、それ以外の&lt;や&gt;、LIKEやBETWEENなど記述方法が変更となっている。
+なおINの場合は、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.id" =&gt; array(1,2,3,4,5));
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>のように記述でき、1.1などからの変更はない。
+ではLIKEについてこれまでの記法をおさらいすると、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.title" =&gt; "LIKE %post%");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>となっていた。しかしこれを1.2 RC1で実行すると、WHERE句は「&#39;Post.title&rsquo; = &lsquo;LIKE %post%&#39;」のようになってしまう。そこで、dbo_source.phpを見て解析してみた。結果、LIKEなどの記法は</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.title LIKE" =&gt; "%post%");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>のように変更となっていた。この変更はかなり驚きだが、カラム名の方にLIKEや&lt;=などの条件を移動することで、様々なSQLインジェクションを考えると、従来のようにvalue側を正規表現で切り分けるより安全な気がする。  </p>
+
+<p>値が１つの場合は良さそうだ。ではBETWEENの場合はどうだろう？従来は、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.date" =&gt; "BETWEEN 2008-1-1 AND 2009-1-1");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>のように記述していたが、これもそのままだとWHERE句は「&#39;Post.data&rsquo; = &lsquo;BETWEEN 2008-1-1 AND 2009-1-1&#39;」のようになってしまう。ではLIKEと同じようにしてみると、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.date BETWEEN" =&gt; "2008-1-1 AND 2009-1-1");
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1 AND 2009-1-1&#39;」のようになってしまう。これも正しくない。このようなケースはさらに変更されており、以下のようになる。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.date BETWEEN ? AND ?" =&gt; array("2008-1-1", "2009-1-1"));
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>BETWEENなど値が複数ある場合は、カラム名上で?を使うと配列の値を順番にセットしてくれる。WHERE句は「&#39;Post.data&rsquo; BETWEEN &lsquo;2008-1-1&rsquo; AND &lsquo;2009-1-1&#39;」のように期待通りの結果となる。  </p>
+
+<p>なおLIKEなどでも</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$conditions = array("Post.title LIKE ?" =&gt; array("%post%"));
+
+//Example usage with a model:
+$this-&gt;Post-&gt;find($conditions);
+</code></pre></div>
+<p>と書くことが可能だが、そこまで見栄えに統一感を持たせなくても良いかな？と思う。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-find.html">
+          <a class="twitter" data-title="CakePHP 1.2 RC1からfindの条件指定方法が変更となった"></a>
+          <a class="facebook" data-title="CakePHP 1.2 RC1からfindの条件指定方法が変更となった"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2008/05/29/flex2-coverflow-5.html">Flex2でCoverFlowクローンを作る (５) ～並べて台形変形させる</a></h1>
   <p class="postdate"><a href="/2008/05/29.html" title="Permanent link">Thursday, May 29, 2008 03:05:21 PM</a></p>
   <p class="tags">
@@ -748,79 +832,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2008/04/22/flex2-coverflow-1.html">Flex2でCoverFlowクローンを作る (1) ～環境を整える </a></h1>
-  <p class="postdate"><a href="/2008/04/22.html" title="Permanent link">Tuesday, April 22, 2008 12:04:15 PM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>今回は第一回として、FlexでFlashコンポーネントを開発するための環境を整える手順を整理します。  </p>
-
-<h3>■Flexとは</h3>
-
-<p>Flexは、プログラミング言語を使ってFlashアプリケーションを作るための製品群を表すもので、Flex製品ラインナップには、以下のようなものがあります。  </p>
-
-<ul>
-<li>Adobe Flex SDK (ソフトウェア開発キット)</li>
-<li>Adobe Flex Builder</li>
-<li>Adobe Flex Data Services</li>
-<li>Adobe Flex Charting
-メルマガ執筆時点の正式版はFlex 2でしたので、このシリーズはFlex2でテストされたコードで記述されていますが、現在Flex 3がAirとして正式公開されています。おそらくFlex3でも動きます。<br></li>
-</ul>
-
-<h3>■ダウンロードする</h3>
-
-<p>早速Flexで開発する環境を作っていきましょう。本シリーズではWindows XP Proを使った手順を説明をしていきます。  </p>
-
-<p><a href="http://www.adobe.com/jp/products/flex/">Adobe Flexのサイト</a>へアクセスします。  </p>
-
-<p>Flex2の頃、ダウンロードページには</p>
-
-<ul>
-<li>Flex Builderを30日間無償で試用（SDK込み）</li>
-<li>Flex 2 SDKを利用して、無償でFlexアプリケーションの開発・実装をスタート</li>
-<li>Flex Data Services 2 Expressエディションをダウンロード（無償）
-の3つのコンテンツがあったのですが、現在は、以下のようなページに変わっています。<br></li>
-</ul>
-
-<p><img src="/images/blog/download_page.jpg" alt="" /> 
-なお、ダウンロードページへ行くには、Adobe IDでログインを求められます。Adobe ID自体の登録は無料ですので、まだな人は登録をしてからログインしてください。仕方がないので、日本語 | Windows | 425.0MB を選択して、ダウンロードします。またSDKだけダウンロードできるようになってほしいですね。。。  </p>
-
-<h3>■インストールする</h3>
-
-<p>おそろしく大きいファイルFB3_WWEJ.exeのダウンロードが終了したら、ファイルを実行します。<img src="/images/blog/download_page3.jpg" alt="" /> 
-インストールプログラムの実行にしばらく時間がかかります。。。。。。<br>
-<img src="/images/blog/download_page4.jpg" alt="" /> 
-日本語を選択してインストールを開始します。その後、ライセンスに同意とか、インストールする場所とか聞いてくるので、お好みで進んでいきます。インストールを開始すると、以下のような画面になります。<br>
-<img src="/images/blog/download_page5.jpg" alt="" /> 
-ボクのマシンは結構スペックが良いと思っているのですが、それでも20分近く時間がかかりました。気長に待ちましょう。。。。<br>
-<img src="/images/blog/flexdir.jpg" alt="" /> インストールが完了すると、自動的にインストールしたディレクトリ（デフォルトだとC:Program FilesAdobeFlex Builder 3）が開きます。よくみると、ディレクトリ名にsdksというフォルダがあるのに気が付きます。ディレクトリを移動すると、<br>
-<img src="/images/blog/flexdir2.jpg" alt="" /> のようになっていて、なんだFlex2もあるじゃないですか。それぞれのバージョンディレクトリの下、たとえば2.0.1frameworkslocaleには日本語のファイルも入っているようで、コンパイルメッセージも無事日本語で表示できそうです。しかしそうなると、やっぱり個別にインストールさせてほしい。。。。とにかくダウンロードとインストールは辛抱です・・・  </p>
-
-<h3>■次回は</h3>
-
-<p>Flex Builderは便利だし使いやすいのですが、有償なので仕事以外では使うのをためらいます。そんなときはフリーの開発環境FlashDevelopを使うと良いと思います。次回はこのFlashDevelopのインストール方法を紹介したいと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-1.html">
-          <a class="twitter" data-title="Flex2でCoverFlowクローンを作る (1) ～環境を整える "></a>
-          <a class="facebook" data-title="Flex2でCoverFlowクローンを作る (1) ～環境を整える "></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -847,6 +858,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
@@ -856,7 +868,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
-                  <li><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a> <span>2023/09/27</span></li>
               </ul>
             </div>
           </section>
@@ -864,14 +875,17 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-                    </li>
-                    <li class="size5">
-                      <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/gae.html" rel="tag">GAE</a>
@@ -912,7 +926,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                     <li class="size3">
                       <a href="/tags/polymer.html" rel="tag">Polymer</a>
                     </li>
-                    <li class="size3">
+                    <li class="size2">
                       <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
                     </li>
                     <li class="size1">
@@ -938,9 +952,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                     </li>
                     <li class="size0">
                       <a href="/tags/web-components.html" rel="tag">Web Components</a>
-                    </li>
-                    <li class="size0">
-                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
@@ -973,7 +984,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2024.html">2024</a> (9)</li>
+                  <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
                   <li><a href="/2021.html">2021</a> (1)</li>
