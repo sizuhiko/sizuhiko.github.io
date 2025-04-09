@@ -272,6 +272,54 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2020/02/16/serverless-alias.html">Serverless Framework 1.61.3 以上で Alias プラグインが利用できない</a></h1>
+  <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 04:07:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/serverless-framework.html" rel="tag">Serverless Framework</a>
+      <a href="/tags/alias-plugin.html" rel="tag">Alias Plugin</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>Serverless Frameworkのバージョンも dependabot で追従してあげているのですが、
+あるとき <code>sls deploy</code> がエラーになってしまいました。</p>
+
+<p>Aliasのエラーが出ていたので、<a href="https://www.npmjs.com/package/serverless-aws-alias">serverless-aws-alias</a>
+を調査しようとしたら、ビンゴなissueを見つけました。</p>
+
+<p><a href="https://github.com/serverless-heaven/serverless-aws-alias/issues/181">ServerlessError: Export &lsquo;project-name-ServerlessAliasReference&rsquo; does not exist. #181</a></p>
+
+<p><a href="https://github.com/serverless/serverless/commit/f1cc3a899856a12ed251ea4a0947a331861cd8b3">Serverless Framework 1.61.3 のコミット</a>でAliasプラグインがうまく動かなくなることがあるようです。</p>
+
+<p>私たちのプロジェクトでは 1.61.2 に戻して、dependabotから来るPRにはWIPをつけるようにしました。</p>
+
+<p>どのようなときに問題がおきるかというと、</p>
+
+<ul>
+<li>1つのServerlessアプリケーションに複数のハンドラがある</li>
+<li>新しいハンドラが追加になった</li>
+</ul>
+
+<p>ケースです。</p>
+
+<p>複数のハンドラがあるけど、追加がないケースでは新しいバージョンを使っても問題は発生していません。
+Aliasプラグイン便利なので、はやく修正されると良いなー（困った人はPRを出そうというのはわかるが、これは難しい問題のようだった</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2020/02/16/serverless-alias.html">
+          <a class="twitter" data-title="Serverless Framework 1.61.3 以上で Alias プラグインが利用できない"></a>
+          <a class="facebook" data-title="Serverless Framework 1.61.3 以上で Alias プラグインが利用できない"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2020/02/16/serverless-ghe-dependabot.html">Serverless Frameworkでプライベートパッケージを利用するときの注意点</a></h1>
   <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 12:25:00 PM</a></p>
   <p class="tags">
@@ -731,63 +779,6 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/12/08/asucon-night-2019.html">明日の開発カンファレンス アスカントークナイトを開催しました</a></h1>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 09:03:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/asucon.html" rel="tag">asucon</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://asucon2019talknight.peatix.com/">明日の開発カンファレンス アスカントークナイト</a>の中の人として運営参加しました。</p>
-
-<p><img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/1373423/cover-LlQx4v2cmC9LXR1nkwb6LLMHkCkgxemi.png" alt="" /></p>
-
-<p>今回は「明日の開発カンファレンス年末スペシャル」ということで、以下の趣旨で開催となりました。</p>
-
-<blockquote>
-<p>開発にまつわる全ての話題について、腹を割って話し合える「明日の開発カンファレンス」
-今回は過去のカンファレンスに登壇いただいた皆様により熱く語っていただけるようトークライブ形式のイベント「アスカントークナイト」
-を12/6(金)に開催致します。</p>
-</blockquote>
-
-<p>私は、最初のトークセッションでモデレータを担当しました。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">一つ目のセッション始まってます！「開発現場の生の声　〜様々な障害を乗り越えて〜」 <a href="https://twitter.com/hashtag/asucon?src=hash&amp;ref_src=twsrc%5Etfw">#asucon</a> <a href="https://twitter.com/hashtag/%E3%82%A2%E3%82%B9%E3%82%AB%E3%83%B3?src=hash&amp;ref_src=twsrc%5Etfw">#アスカン</a> <a href="https://t.co/5MAHZCKpVb">pic.twitter.com/5MAHZCKpVb</a></p>&mdash; asuconjp (@asuconjp) <a href="https://twitter.com/asuconjp/status/1202894021535780869?ref_src=twsrc%5Etfw">December 6, 2019</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p><code>開発現場の生の声 〜様々な障害を乗り越えて〜</code> とはまた重厚なテーマですが、基本的には3名の登壇者に、登壇してから現在までのアップデートを5分ずつ話してもらい、チャチャをちょっと入れながら進め、最後20分ぐらいをQ&amp;Aセッションにする、という流れでした。</p>
-
-<p>質問ないだろうなぁ？というのはこういうセッションでは <code>あるある</code> なので、ちゃんとお題も2つ用意しておきました。</p>
-
-<ul>
-<li>最近取り入れてみて良いと思ったプラクティス</li>
-<li>課題対私たち の構図を生み出すために、良いと思う施策やアイデア</li>
-</ul>
-
-<p><code>開発現場</code> ということで、なるべく <code>チーム</code> にフォーカスした話をしたかったのですが、
-<code>人</code> の話が多くなってしまったのはすり合わせ不足なのか、それが現場のリアルな悩みなのか？
-ということがありましたが、後で聞くと盛り上がっていて良かったという感想をいただきましたので、
-良かったと思います。</p>
-
-<p>当日の雰囲気は <a href="https://togetter.com/li/1439655">アスカンナイトトーク2019</a> にTogetterまとめがありますので、みていただければと思います。</p>
-
-<p>SNS書けない話もたくさんあったので、次回あるときはみなさまぜひご来場ください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/12/08/asucon-night-2019.html">
-          <a class="twitter" data-title="明日の開発カンファレンス アスカントークナイトを開催しました"></a>
-          <a class="facebook" data-title="明日の開発カンファレンス アスカントークナイトを開催しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -817,6 +808,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -826,7 +818,6 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -834,14 +825,14 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -943,6 +934,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

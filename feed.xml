@@ -5,10 +5,107 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2024-06-23T11:35:00+09:00</updated>
+  <updated>2025-04-08T18:45:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>AppRunner へのデプロイは cdk でサクッとできるのか？</title>
+    <link rel="alternate" href="http://blog.url.com/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html"/>
+    <id>http://blog.url.com/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html</id>
+    <published>2025-04-08T18:45:00+09:00</published>
+    <updated>2025-04-09T11:07:45+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;blockquote&gt;
+&lt;p&gt;AWS App Runner は、ソースコードまたはコンテナイメージから AWS クラウドのスケーラブルで安全なウェブアプリケーションに直接デプロイするための、高速でシンプル、かつ費用対効果の高い方法を提供する AWS サービスです。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;と&lt;a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/what-is-apprunner.html"&gt;公式ドキュメント&lt;/a&gt; に書かれています。&lt;/p&gt;
+
+&lt;p&gt;ソースコードからデプロイする場合は&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;GitHub&lt;/li&gt;
+&lt;li&gt;BitBucket&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;といったところのクラウドリポジトリを使っていれば簡単に連携して自動デプロイができます。&lt;/p&gt;
+
+&lt;p&gt;一方、仕事でオンプレのソースコードリポジトリ、たとえば GitHub Enterprise とか BitBucket Server とか、GitLabs とかをパブリッククラウドでなく使っている場合はソースコード連携できないので、ECR にイメージをデプロイして AppRunner と連携することになります。
+本ブログは、この方法について、ネット上で簡単にできそうに書いてある記事をやってみたら、実際はそんなことなかったということについて記録するものです。&lt;/p&gt;
+
+&lt;h2&gt;CDK で AppRunner + ECR でデプロイする&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;cdk apprunner DockerImageDeployment&lt;/code&gt; みたいな検索条件でググると、まぁいっぱい出てきます。&lt;/p&gt;
+
+&lt;p&gt;ここで &lt;code&gt;DockerImageDeployment&lt;/code&gt; というのは、Dockerfile をビルドして ECR に push までしてくれる CDK のライブラリです。
+で、その ECR を AppRunner に関連づけてというのが流れです。&lt;/p&gt;
+
+&lt;p&gt;ちなみに &lt;code&gt;DockerImageAsset&lt;/code&gt; というのもあって、そちらの記事も多く見受けられます。こちらはあらかじめ ECR を作っておかなくてもいい感じに作ってくれるものですが、&lt;a href="https://qiita.com/rickey0808/items/1e715b016d50f1d4c094"&gt;[AWS CDK] コンテナイメージもまとめてデプロイ！？DockerImageAssetの動作確認をしてみた&lt;/a&gt; という記事のとおりお試しで使う分には良いと思いますが、ちゃんと管理して使いたい場合は &lt;code&gt;DockerImageDeployment&lt;/code&gt; を使った方が良いでしょう。&lt;/p&gt;
+
+&lt;h2&gt;DockerImageDeployment を使って ECR にデプロイする&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/cdklabs/cdk-docker-image-deployment"&gt;DockerImageDeployment の公式GitHubリポジトリ&lt;/a&gt; にある例どおり簡単に利用できます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-cdk-lib/aws-ecr&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;cdk-docker-image-deployment&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;repo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromRepositoryName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;MyRepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;myrepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;DockerImageDeployment&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ExampleImageDeploymentWithTag&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;directory&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;path/to/directory&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+  &lt;span class="na"&gt;destination&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Destination&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;repo&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; 
+    &lt;span class="na"&gt;tag&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;myspecialtag&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;}),&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;AppRunner と連携でデプロイする&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;@aws-cdk/aws-apprunner-alpha&lt;/code&gt; というまだα版ですが、CDK のコンストラクタがあるので、これを利用します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-cdk-lib/aws-ecr&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;apprunner&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;apprunner&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+    &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromRepositoryName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;NginxRepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;nginx&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;latest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;}),&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;あとは CDK でいい感じにつなぎこんで、みたいな感じです。&lt;/p&gt;
+
+&lt;h2&gt;やってみたがエラーになる&lt;/h2&gt;
+
+&lt;p&gt;はい、エラーになりました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The deployment will wait until the CodeBuild Project completes successfully before finishing.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;というメッセージが出て失敗します。
+メッセージどおり受け取ると、ECR のデプロイが終わってないので AppRunner にデプロイできないということです。&lt;/p&gt;
+
+&lt;h2&gt;どうやって解決したか&lt;/h2&gt;
+
+&lt;p&gt;実はアプリケーションのソースコードリポジトリと、AWSのリソース構成をデプロイするインフラリポジトリは分けていたので、アプリケーションコード側の CI/CD で &lt;code&gt;DockerImageDeployment&lt;/code&gt; を使って ECR までデプロイ。
+ECR までデプロイされている状況で、インフラリポジトリ側の CI/CD で ECR と AppRunner の関連付けをやるようにしました。&lt;/p&gt;
+
+&lt;p&gt;では最初はなんで両方を一緒にやっていたかというと、アプリケーションが外部サービスに連携しているため、開発環境ではモックサーバーを使っているのですが、それは Dockerfile 1つだけなんでそのファイルをインフラリポジトリ側において AppRunner にデプロイしようとしていたという感じでした。&lt;/p&gt;
+
+&lt;p&gt;他の解決策としては、カスタムリソースを使って ECR へのデプロイを待ち合わせてデプロイするという方法があります。モノレポなどを使っているときにアプリケーションとインフラを同時にデプロイしたいときなどは有効な方法だと思います。
+カスタムリソースも Lambda を作らないといけないというわけではなく、 AWS の API を実行する程度なら Lambda が不要なので、そういった選択肢も検討できます。&lt;/p&gt;
+
+&lt;p&gt;参考記事: &lt;a href="https://dev.classmethod.jp/articles/create-custom-resources-with-aws-cdk-without-using-lambda-functions/"&gt;[AWS CDK] APIを呼び出すだけのカスタムリソースならLambda関数は不要な件&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;AppRunner を cdk を使ってデプロイしたい、というときに参考になれば幸いです。
+&lt;code&gt;@aws-cdk/aws-apprunner-alpha&lt;/code&gt; がαじゃなくなるときには、もう少し便利に（ちゃんと待ち合わせてくれるみたいな）ことができるようになるのかもしれないので期待はしたいですね。&lt;/p&gt;
+
+&lt;p&gt;ちなみにモックサーバーは &lt;a href="https://mockoon.com/"&gt;Mockoon&lt;/a&gt; を使ってます。とても便利で助かる。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHP カンファレンス福岡2024に参加した</title>
     <link rel="alternate" href="http://blog.url.com/2024/06/23/php-conference-fukuoka-2024.html"/>
@@ -855,282 +952,6 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
 &lt;p&gt;ブログの記事にまとめてみると、そんなに大変な修正でもなかったな？という感じですが、当時は久々に PHP 触ったりするのもあり、結構大変でした。&lt;/p&gt;
 
 &lt;p&gt;今後は phpstan とか入れたりして、コードの品質も上げていければなと思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</title>
-    <link rel="alternate" href="http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html"/>
-    <id>http://blog.url.com/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html</id>
-    <published>2024-04-30T13:52:00+09:00</published>
-    <updated>2024-04-30T15:37:24+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;この記事は &lt;a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3&lt;/a&gt; の続編となります。&lt;/p&gt;
-
-&lt;h3&gt;PHP 8.2 で実行できるように修正していく&lt;/h3&gt;
-
-&lt;p&gt;ひとまずロジック部分については 8.2 環境で PHPUnit でテストできるようになり、CI も動作するようになったので、アプリケーションを起動して動くのかを試していきたいと思います。&lt;/p&gt;
-
-&lt;h4&gt;Memcache の残りを移行する&lt;/h4&gt;
-
-&lt;p&gt;Memcache は Redis に移行したのですが、単体テスト外の部分にも少し残っていたので、&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/febd6d51eea461b5aa44504102fcb10d1d746c29"&gt;こちらのコミット&lt;/a&gt; で対応しました。&lt;/p&gt;
-
-&lt;p&gt;移行方法は &lt;a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html"&gt;GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2&lt;/a&gt; でも実施した内容なのですが、DI 部分と設定ファイルのデフォルト値、READMEの説明を修正しました。&lt;/p&gt;
-
-&lt;h4&gt;GAE のアプリケーションバージョンを新しく設定する&lt;/h4&gt;
-
-&lt;p&gt;GAE では通常のトラフィックを古いバージョンへ向けて、新しいバージョンもデプロイして別のURLから実行できるようにする機能があります。
-dev_appserver.py での実行が困難になっているので、新しいバージョンを GAE にデプロイして動作するのかを検証していくことにしました。&lt;/p&gt;
-
-&lt;p&gt;今回はバージョン2として&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e8416cf0bf26c06bce2125e357b16d429bdec4e"&gt;修正&lt;/a&gt;しました。&lt;/p&gt;
-
-&lt;p&gt;GAE で動かすにあたり php.ini も変更が必要だったので、拡張に redis を追加して&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/5b827d53174e8f3c87ea00afcda4e1a6ee21636d"&gt;修正&lt;/a&gt;しました&lt;/p&gt;
-
-&lt;h4&gt;デプロイして動かしてみる&lt;/h4&gt;
-
-&lt;p&gt;全然動きませんな  (^^;;&lt;/p&gt;
-
-&lt;p&gt;まず問題を切り分けるために、まだビジネスロジックに分岐できていなかったデバイス値の取得処理を Google Cloud Storage から取得する処理をテスト可能なサービスとしてリファクタリングしました。&lt;/p&gt;
-
-&lt;p&gt;あとセッションの保存場所を設定する必要があったので、いったん &lt;code&gt;php.ini&lt;/code&gt; に &lt;code&gt;session.save_path=Google\AppEngine\Api\Memcache\Memcache&lt;/code&gt; を追加しました。&lt;/p&gt;
-
-&lt;p&gt;依存のライブラリもいくつか PHP 8.2 環境だと動かないものがあったのでアップデート。&lt;/p&gt;
-
-&lt;p&gt;いったんそれらの修正コミットが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/ba9be14f65cc75fdc6604fde328192a3ec125b57"&gt;こちら&lt;/a&gt;。&lt;/p&gt;
-
-&lt;p&gt;で、いろいろやっていくうちに、そもそも slim3 だと PHP 8系で動かないな&amp;hellip;という基本的なところに気づきました（さいしょから考えておけよという話）。&lt;/p&gt;
-
-&lt;h3&gt;Slim3 から Slim4 に移行していく&lt;/h3&gt;
-
-&lt;p&gt;幸いなことにこちらに関してはインターネットに移行記事がたくさんあり、とても参考になりました。&lt;/p&gt;
-
-&lt;p&gt;今回の移行に関するコミットが&lt;a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f0aed649629a24bad6f4dbbf4b0f724415569a33"&gt;こちら&lt;/a&gt;です。&lt;/p&gt;
-
-&lt;h4&gt;依存関係の更新&lt;/h4&gt;
-
-&lt;ul&gt;
-&lt;li&gt;slim 3.1 を 4.12 に&lt;/li&gt;
-&lt;li&gt;monolog のアプデ&lt;/li&gt;
-&lt;li&gt;BASIC認証のライブラリ &lt;code&gt;tuupola/slim-basic-auth&lt;/code&gt; のアプデ&lt;/li&gt;
-&lt;li&gt;セッションミドルウェア &lt;code&gt;akrabat/rka-slim-session-middleware&lt;/code&gt; のアプデ&lt;/li&gt;
-&lt;li&gt;PSR7実行が外部依存になったので &lt;code&gt;slim/psr7&lt;/code&gt; の追加&lt;/li&gt;
-&lt;li&gt;DI が外部依存になったので &lt;code&gt;php-di/php-di&lt;/code&gt; の追加&lt;/li&gt;
-&lt;li&gt;Google Cloud Storage がランタイム外になったので &lt;code&gt;google/cloud-storage&lt;/code&gt; の追加&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;php-di への移行&lt;/h4&gt;
-
-&lt;p&gt;もともとは Slim3 のアプリケーションコンテナを使っていたので、こんな感じでやっていたのを&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Instantiate the app&lt;/span&gt;
-&lt;span class="nv"&gt;$settings&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/settings.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Slim\App&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$settings&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;以下のように変更しました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;DI\Container&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="nv"&gt;$settings&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/settings.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$container&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;Container&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;set&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'settings'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$settings&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'settings'&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;続いてDIコンテナの初期化処理化を&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/dependencies.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;のように指定していたのを&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Slim\Factory\AppFactory&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="nv"&gt;$dependencies&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/dependencies.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$container&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$dependencies&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="nc"&gt;AppFactory&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nf"&gt;setContainer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$container&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="nv"&gt;$app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nc"&gt;AppFactory&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="nf"&gt;create&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;このように変更しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;コンテナを初期化&lt;/li&gt;
-&lt;li&gt;環境設定の注入やコンテナの初期化を実行&lt;/li&gt;
-&lt;li&gt;AppFactory でアプリケーション初期化&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;のような実装に変わります。&lt;/p&gt;
-
-&lt;h4&gt;Slim4 っぽい書き方に変更&lt;/h4&gt;
-
-&lt;p&gt;もともとは&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Register middleware&lt;/span&gt;
-&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/middleware.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Register routes&lt;/span&gt;
-&lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/routes.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;こんな感じでミドルウェアとルーティングの設定を書いていたのですが、&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Register middleware&lt;/span&gt;
-&lt;span class="nv"&gt;$middleware&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/middleware.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$middleware&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="c1"&gt;// Register routes&lt;/span&gt;
-&lt;span class="nv"&gt;$routes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;require&lt;/span&gt; &lt;span class="k"&gt;__DIR__&lt;/span&gt; &lt;span class="mf"&gt;.&lt;/span&gt; &lt;span class="s1"&gt;'/src/routes.php'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nv"&gt;$routes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Slim4アプリを引数で指定して設定するように変更しました。
-&lt;code&gt;$app&lt;/code&gt; をグローバル参照から引数参照するコールバック関数に変わったぐらいです。&lt;/p&gt;
-
-&lt;h4&gt;Basic認証の修正&lt;/h4&gt;
-
-&lt;p&gt;登録済みのデバイスからデータを受信するAPIでは、Basic認証ミドルウェアを設定していて、 &lt;code&gt;callback&lt;/code&gt; という処理が呼び出されることになっていました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="c1"&gt;//&lt;/span&gt;
-&lt;span class="c1"&gt;// For Registered Devices&lt;/span&gt;
-&lt;span class="c1"&gt;//&lt;/span&gt;
-&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/api/devices/{id}/values'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'\ToiletEvolution\Controllers\DeviceValuesController:add'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Slim\Middleware\HttpBasicAuthentication&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
-        &lt;span class="s2"&gt;"authenticator"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getContainer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'DeviceStore'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
-        &lt;span class="s2"&gt;"callback"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="nv"&gt;$route&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getAttribute&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'route'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-          &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$route&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getArgument&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-          &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'user'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-        &lt;span class="p"&gt;},&lt;/span&gt;
-        &lt;span class="s2"&gt;"secure"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;
-      &lt;span class="p"&gt;]));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Slim4でのBasic認証では &lt;code&gt;before&lt;/code&gt; が呼び出される様に変わっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;  &lt;span class="c1"&gt;//&lt;/span&gt;
-  &lt;span class="c1"&gt;// For Registered Devices&lt;/span&gt;
-  &lt;span class="c1"&gt;//&lt;/span&gt;
-  &lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;post&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'/api/devices/{id}/values'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'\ToiletEvolution\Controllers\DeviceValuesController:add'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-      &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="err"&gt;\&lt;/span&gt;&lt;span class="nf"&gt;Tuupola\Middleware\HttpBasicAuthentication&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;
-          &lt;span class="s2"&gt;"authenticator"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$app&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getContainer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'DeviceStore'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
-          &lt;span class="s2"&gt;"before"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'id'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-            &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$id&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="nv"&gt;$arguments&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;'user'&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
-          &lt;span class="p"&gt;},&lt;/span&gt;
-          &lt;span class="s2"&gt;"secure"&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;
-        &lt;span class="p"&gt;]));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;コントローラーの修正&lt;/h4&gt;
-
-&lt;p&gt;APIでJSONを返却するときの処理が標準ではなくなったので、JSON文字列を出力する &lt;code&gt;JsonRenderer&lt;/code&gt; のようなクラスを作ります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kn"&gt;namespace&lt;/span&gt; &lt;span class="nn"&gt;ToiletEvolution\Renderer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kn"&gt;use&lt;/span&gt; &lt;span class="nc"&gt;Psr\Http\Message\ResponseInterface&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="k"&gt;final&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;JsonRenderer&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="cd"&gt;/**
-     * Write JSON to the response body.
-     *
-     * This method prepares the response object to return an HTTP JSON
-     * response to the client.
-     *
-     * @param ResponseInterface $response The response
-     * @param mixed $data The data
-     *
-     * @return ResponseInterface The response
-     */&lt;/span&gt;
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="kt"&gt;mixed&lt;/span&gt; &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Content-Type'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;'application/json'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-        &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;getBody&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-            &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="nb"&gt;json_encode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-                &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-                &lt;span class="no"&gt;JSON_UNESCAPED_SLASHES&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="no"&gt;JSON_PARTIAL_OUTPUT_ON_ERROR&lt;/span&gt;
-            &lt;span class="p"&gt;)&lt;/span&gt;
-        &lt;span class="p"&gt;);&lt;/span&gt;
-
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;で、それをコントローラのコンストラクタで初期化して、APIメソッドで呼び出します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;DevicesController&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;protected&lt;/span&gt; &lt;span class="kt"&gt;ContainerInterface&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="k"&gt;private&lt;/span&gt; &lt;span class="kt"&gt;JsonRenderer&lt;/span&gt; &lt;span class="nv"&gt;$renderer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__construct&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ContainerInterface&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$ci&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-    &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;JsonRenderer&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-
-  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ServerRequestInterface&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;array&lt;/span&gt; &lt;span class="nv"&gt;$args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nv"&gt;$deviceModel&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Device&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-    &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;array_map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;toArrayWithoutSecret&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="nv"&gt;$deviceModel&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;all&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;renderer&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;json&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="mi"&gt;204&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Slim3 では以下のようなコードで &lt;code&gt;$response-&amp;gt;withJson&lt;/code&gt; でよかったところが変更になっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nv"&gt;$deviceModel&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;ci&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nc"&gt;Device&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-    &lt;span class="nv"&gt;$data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;array_map&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$device&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;toArrayWithoutSecret&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="p"&gt;},&lt;/span&gt; &lt;span class="nv"&gt;$deviceModel&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;all&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
-
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withJson&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;?&lt;/span&gt;&lt;span class="mi"&gt;204&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;ミドルウェアの修正&lt;/h4&gt;
-
-&lt;p&gt;PSR の書き方が変わっているので、それに応じて修正しています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RequireLoginMiddleware&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__invoke&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$next&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'current_user'&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;
-        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;302&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Location'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;redirectIfNotLogin&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="k"&gt;else&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;    
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;こんな感じだったのが、以下のように変更になっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight php"&gt;&lt;code&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;RequireLoginMiddleware&lt;/span&gt;
-&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="k"&gt;function&lt;/span&gt; &lt;span class="n"&gt;__invoke&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;Request&lt;/span&gt; &lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;RequestHandler&lt;/span&gt; &lt;span class="nv"&gt;$handler&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="kt"&gt;ResponseInterface&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nc"&gt;Response&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;session&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'current_user'&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;
-        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;302&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-        &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;withHeader&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;'Location'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;$this&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;redirectIfNotLogin&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="k"&gt;else&lt;/span&gt;
-    &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nv"&gt;$response&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nv"&gt;$handler&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="nf"&gt;handle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;$request&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nv"&gt;$response&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;引数が変更になっていて、 &lt;code&gt;$response&lt;/code&gt; がなくなって、次のミドルウェアへ処理を引き継ぐのが &lt;code&gt;$next&lt;/code&gt; から &lt;code&gt;$handler&lt;/code&gt;  に変わっています。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;$response&lt;/code&gt; はミドルウェアごとに作成して設定していきます。
-次のミドルウェアに引き継ぐときは、 &lt;code&gt;$handler-&amp;gt;handle&lt;/code&gt; で呼び出してレスポンスを取得します。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;Slim3 から Slim4 への移行手順がインターネットに多くあって助かりました。
-また Slim 関連の OSS パッケージも 3 から 4 への移行をドキュメントにしてくれていたので、比較的スムーズに移行できたと思います。&lt;/p&gt;
-
-&lt;p&gt;ここではその一部を紹介する感じになりましたが、同じような対応をする人に役立つ内容になっていれば嬉しいです。&lt;/p&gt;
 </content>
   </entry>
 </feed>

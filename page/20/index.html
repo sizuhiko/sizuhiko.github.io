@@ -272,6 +272,160 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/09/24/web-i2c-element-update.html">web-i2cエレメントをより使いやすくしました。</a></h1>
+  <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 03:41:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>先日の<a href="/2018/08/13/maker-faire-tokyo-2018.html">Maker Faire Tokyo 2018 に CHIRIMENコミュニティで参加しました</a>で <code>web-i2c-element はどうなの？</code> 
+に記述した改良ポイントを使った<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>をアップしました。</p>
+
+<h3>変更したポイント：</h3>
+
+<p>変更の概要は以下のとおりです。</p>
+
+<ul>
+<li><code>no-web-i2c</code> スロットを指定すると、非対応メッセージを表示できるようになった</li>
+<li><code>WebI2cSensorElement</code> を使って、センサー毎の共通実装をなくし、より簡単にセンサーのカスタムエレメントが実装できるようになった</li>
+<li>Polymer使ってなくても、タグだけを使ってセンサーの値が取得できるようなサンプルに変更した</li>
+</ul>
+
+<p>では、それぞれの変更を詳しく見ていきましょう。</p>
+
+<h3>非対応メッセージの表示</h3>
+
+<p><a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;web-i2c&gt;</span>
+  <span class="nt">&lt;grove-touch</span> <span class="na">slave-address=</span><span class="s">"0x5a"</span><span class="nt">&gt;&lt;/grove-touch&gt;</span>
+  <span class="nt">&lt;grove-gesture</span> <span class="na">slave-address=</span><span class="s">"0x73"</span><span class="nt">&gt;&lt;/grove-gesture&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">slot=</span><span class="s">"no-web-i2c"</span><span class="nt">&gt;</span>
+    このデバイスはCHIRIMENではありませんが、ピアノ演奏はお楽しみいただけます。
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/web-i2c&gt;</span>
+</code></pre></div>
+<p><code>web-i2c</code> タグの内側に <code>no-web-i2c</code> というslot名のタグを記述することで、
+もしCHIRIMEN以外のデバイス（例えばPCなど）から、このページを表示するとメッセージを表示することができるようになります。
+試しに、PCから<a href="http://blog.open.tokyo.jp/chirimen-piano/">chirimen-pianoのデモページ</a>にアクセスしてみてください。</p>
+
+<h3>WebI2cSensorElementを利用したカスタムエレメントの記述</h3>
+
+<p>最初のバージョンでは、 <code>PolymerElement</code> を使っていたため共通的な実装が多くなっていたのですが、
+いくつかのセンサー実装をしてみて共通化できそうな箇所もわかってきたので、I2C用の親クラスを作ることにしました。</p>
+
+<p><code>WebI2cSensorElement</code> を使ったセンサーのクラスとして、GROVEタッチとGROVEジェスチャーのカスタムエレメントを作りました。</p>
+
+<p>例として<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/src/chirimen-piano-app/grove-touch.js">grove-touch.js</a>ファイルを見てましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">GroveTouch</span> <span class="kd">extends</span> <span class="nx">WebI2cSensorElement</span> <span class="p">{</span>
+  <span class="k">async</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_autoRead</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2b</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2c</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2d</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2e</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x2f</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x30</span><span class="p">,</span><span class="mh">0x01</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x31</span><span class="p">,</span><span class="mh">0xff</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x32</span><span class="p">,</span><span class="mh">0x02</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">i</span><span class="o">&lt;</span><span class="mi">12</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span><span class="nx">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+      <span class="c1">// console.log(i);</span>
+      <span class="kd">var</span> <span class="nx">address</span> <span class="o">=</span> <span class="mh">0x41</span><span class="o">+</span><span class="nx">i</span><span class="p">;</span>
+      <span class="c1">// console.log(address);</span>
+      <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="p">,</span><span class="mh">0x0f</span><span class="p">);</span>
+      <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="nx">address</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x0a</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5d</span><span class="p">,</span><span class="mh">0x04</span><span class="p">);</span>
+    <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">write8</span><span class="p">(</span><span class="mh">0x5e</span><span class="p">,</span><span class="mh">0x0c</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">async</span> <span class="nx">read</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">_i2cSlave</span><span class="p">.</span><span class="nx">read16</span><span class="p">(</span><span class="mh">0x00</span><span class="p">);</span>
+    <span class="c1">// console.log(value);</span>
+    <span class="kd">var</span> <span class="nx">array</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">;</span> <span class="nx">cnt</span> <span class="o">++</span><span class="p">){</span>
+      <span class="nx">array</span><span class="p">.</span><span class="nx">push</span><span class="p">(((</span><span class="nx">value</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="nx">cnt</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)?</span><span class="kc">true</span><span class="p">:</span><span class="kc">false</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">value</span><span class="p">)))</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_setValue</span><span class="p">(</span><span class="nx">array</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nb">window</span><span class="p">.</span><span class="nx">customElements</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">,</span> <span class="nx">GroveTouch</span><span class="p">);</span>
+</code></pre></div>
+<p>まず <code>WebI2cSensorElement</code> を継承したクラスを定義します。
+このクラスには2つのオーバライド可能なメソッドがあります。</p>
+
+<ul>
+<li>init</li>
+<li>read</li>
+</ul>
+
+<p>どちらも <code>async</code> メソッドにすることで I2Cスレーブデバイスからの応答を待ち合わせる(<code>await</code>)ことができるようになっています。</p>
+
+<p><code>WebI2cSensorElement</code> は、 <code>init</code> 呼び出し時にメンバー変数として <code>_i2cSlave</code> が利用可能になっています。
+これはWeb I2Cのスレーブオブジェクトで、どんなメソッドが使えるかは<a href="https://rawgit.com/browserobo/WebI2C/master/index.html">Web I2C API Specification</a>の <code>4.6 Reading the value</code> や <code>4.8 Writing a value</code> を参照ください。
+サンプルコードの <code>slaveDevice</code> が <code>_i2cSlave</code> と同じものになります。</p>
+
+<h4>init を実装する</h4>
+
+<p>init ではI2Cデバイスの初期化コードを記述します。
+とくに戻り値は必要ありません。</p>
+
+<p>もしセンサーが読み取り可能なら、 <code>this._autoRead = true;</code> のように設定してください。
+これを設定すると、インターバル間隔(デフォルトは100ミリ秒)ごとに <code>read</code> メソッドを呼び出してくれます。</p>
+
+<h4>read を実装する</h4>
+
+<p>init で <code>_autoRead</code> を <code>true</code> に設定した場合、インターバル間隔ごとに呼び出されます。
+センサーの値を読み取って、値が変わった場合は <code>this._setValue(value)</code> を呼び出してください。
+エレメントの <code>value</code> プロパティに値が保持されると同時に、 <code>value-changed</code> イベントが発行されます。</p>
+
+<h3>普通のHTMLからセンサーを取り扱う</h3>
+
+<p>ふたたび<a href="https://github.com/sizuhiko/chirimen-piano">chirimen-piano</a>のリポジトリにある<a href="https://github.com/sizuhiko/chirimen-piano/blob/master/index.html">index.html</a>ファイルを見てましょう。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script&gt;</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-touch</span><span class="dl">'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">value-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">chirimen-piano-app</span><span class="dl">'</span><span class="p">).</span><span class="nx">touchChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">});</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">grove-gesture</span><span class="dl">'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">value-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">chirimen-piano-app</span><span class="dl">'</span><span class="p">).</span><span class="nx">gestureChanged</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="nt">&lt;/script&gt;</span>
+</code></pre></div>
+<p>センサー値の変更を受け取るには、センサーエレメントに対して <code>value-changed</code> イベントのリスナーを設定します。
+値はイベントオブジェクトの <code>detail.value</code> に入っていて、センサーによってセットされる値（型も含め）が違います。</p>
+
+<p>たとえば <code>grouve-touch</code> エレメントは、タッチセンサーの数分のBoolean配列がセットされ、 <code>grove-gesture</code> エレメントは、発生したジェスチャー名がセットされます。</p>
+
+<h3>さいごに</h3>
+
+<p>このようにHTMLからセンサーの値をコントロールできたり、センサーのエレメントを簡単に実装できるようになりました。
+今後は、それぞれのエレメントやベースクラスを <code>npm install</code> で取得できるようにしたいと思っています。</p>
+
+<p>また、以前作った <code>WebGpioElement</code> も <code>Polymer3</code> で書き換えていきたいなと思っています。</p>
+
+<p>WebComponents と CHIRIMEN の融合は、私がそれぞれのコミュニティに参加して得られたもののアウトプットです。
+もしこれらの活動に興味がありましたら、<a href="https://polymer-jp.org/">Polymer Japan</a> <a href="https://chirimen.org/">CHIRIMEN Open Hardware</a> <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> などの活動に参加ください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/09/24/web-i2c-element-update.html">
+          <a class="twitter" data-title="web-i2cエレメントをより使いやすくしました。"></a>
+          <a class="facebook" data-title="web-i2cエレメントをより使いやすくしました。"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/09/24/polymer-co-edo-meetup-17.html">Polymer.co-edo meetup ＃17 を開催しました</a></h1>
   <p class="postdate"><a href="/2018/09/24.html" title="Permanent link">Monday, September 24, 2018 11:49:00 AM</a></p>
   <p class="tags">
@@ -774,88 +928,6 @@ LitElementとは関係ないですが、Polyfillのインポートが以下の�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a></h1>
-  <p class="postdate"><a href="/2018/07/28.html" title="Permanent link">Saturday, July 28, 2018 01:27:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/wot.html" rel="tag">WoT</a>
-      <a href="/tags/mftokyo2018.html" rel="tag">MFTokyo2018</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="http://makezine.jp/event/mft2018/">Maker Faire Tokyo 2018</a>に<a href="http://makezine.jp/event/mft2018/">CHIRIMEコミュニティ</a>で参加するためのデモをセットアップしたときのメモ。</p>
-
-<h2>購入したもの</h2>
-
-<ul>
-<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4KC6">Raspberry Pi 3 model B+</a></li>
-<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-55ZD">Adafruit PiTFT Plus 480x320 3.5インチTFT</a></li>
-<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-56B6">Adafruit GPIOリボンケーブル - 26ピン</a></li>
-<li><a href="https://www.amazon.co.jp/dp/B078JKJP8D">TOSHIBA microSDHC 16GB</a></li>
-</ul>
-
-<h2>インストール</h2>
-
-<h3>イメージファイルのダウンロード</h3>
-
-<p><a href="http://download.chirimen.org/release/raspberry_pi_3/">CHIRIMEN公式サイトのダウンロードページ</a>から、<a href="http://download.chirimen.org/release/raspberry_pi_3/CHIRIMEN_Raspberry_pi_3_20180716.zip">CHIRIMEN<em>Raspberry</em>pi<em>3</em>20180716.zip</a>をダウンロードします。
-Raspberry Pi 3 model B+ で利用できる CHIRIMEN のイメージファイルは現時点では評価版です。</p>
-
-<h3>イメージファイルの書き込み</h3>
-
-<p><a href="https://www.1ft-seabass.jp/memo/2018/07/23/raspbian-install-201807-memo/">最近のRaspberry Piイメージ（Raspbian）をインストールするメモ</a>が参考になります。
-<a href="https://etcher.io/">Etcher</a>を使って、ダウンロードしたイメージファイルをmicroSDカードに書き込みます。</p>
-
-<h3>SSHの有効化</h3>
-
-<p>Raspbianはセキュリティを考慮してデフォルトではSSHが無効になっているので、
-SDカードをマウントして、以下のコマンドを実行しておきます。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">touch</span> /Volumes/boot/ssh
-</code></pre></div>
-<h2>起動</h2>
-
-<p>microSDカードをRaspberry Pi 本体に挿して、起動します。
-Raspberry Piにsshで入るため、有線LANをMacと接続しました。
-<a href="https://qiita.com/fumishitan/items/88bb832cb08fe8016f66">MacとRaspberry piをインターネット共有でつないでみる</a>が参考になります。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>ssh pi@192.168.2.2
-</code></pre></div>
-<p>初期パスワードは <code>rasp</code> になっています。</p>
-
-<p>3.5TFTを有効にするため、<a href="https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi/easy-install-2">公式サイトのEASY INSTALL</a>を参考に、ドライバーをインストールします。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd</span> ~
-wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
-<span class="nb">chmod</span> +x adafruit-pitft.sh
-<span class="nb">sudo</span> ./adafruit-pitft.sh
-</code></pre></div>
-<p>で、このままでは X を利用できないので <a href="https://qiita.com/hishi/items/bdd630666277e4f8162a#x-windows%E3%81%AE%E6%8F%8F%E7%94%BB">Raspberry Pi Zero(W)でPiTFTを使う - X Windowsの描画</a>を参考に、設定の変更とタッチスクリーンの調整を行います。</p>
-
-<h2>ソフトウェアキーボードのインストール</h2>
-
-<p><a href="https://darmus.net/raspberry-pi-matchbox-keyboard-install/">Raspberry Piでソフトウェアキーボードをインストール&amp;起動する方法</a>を参考に、Matchbox Keyboardをインストールします。</p>
-
-<h2>デモプログラムの作成</h2>
-
-<p>Web Components(Polymer) meets REAL WORLD ということで、2年連続 HTML のパーツを組み合わせることで WoT を体験できるようなデモを実施予定です。
-昨年は WebGpio タグを作ったので、今年は WebI2c タグを予定しています。
-近日コードは公開予定！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html">
-          <a class="twitter" data-title="CHIRIMEN Raspi setup"></a>
-          <a class="facebook" data-title="CHIRIMEN Raspi setup"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -885,6 +957,7 @@ wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/m
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -894,7 +967,6 @@ wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/m
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -902,14 +974,14 @@ wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/m
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -1011,6 +1083,7 @@ wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/m
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

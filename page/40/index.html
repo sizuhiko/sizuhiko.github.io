@@ -272,6 +272,112 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2008/08/25/flex2-coverflow-7.html">Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する</a></h1>
+  <p class="postdate"><a href="/2008/08/25.html" title="Permanent link">Monday, August 25, 2008 11:08:41 AM</a></p>
+  <p class="tags">
+      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+      <a href="/tags/flex.html" rel="tag">Flex</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
+
+<p>第七回は、マウスイベントを取得する手順を整理します。  </p>
+
+<h3>■今回サンプルの完成イメージ</h3>
+
+<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように加速効果付きでスクロールします。</p>
+
+<p>前回はスクロール処理とアニメーション効果を付けてみました。今回は画像を掴んで勢い良く放したり、掴みながらスクロールさせるといった動作を、マウスイベントを取得して変更していきます。今回は、mxmlファイルのみ修正していきます。  </p>
+
+<h3>■ファイルの準備</h3>
+
+<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_7/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
+
+<ul>
+<li>reflector.as3proj</li>
+<li>reflector.mxml</li>
+<li>ImageReflector.as</li>
+<li>TransformUtil.as</li>
+</ul>
+
+<p>前回から修正したのは、reflector.mxmlだけです。  </p>
+
+<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
+
+<h3>■マウスの基本動作はクリックと移動</h3>
+
+<p>Flexではマウスを操作した結果は、マウスイベントをフックすると知ることができます。例えばmxmlで以下のように書いてみます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>&lt;HBox id="h_frame" height="400" width="500" backgroundColor="0x000000" 
+      paddingLeft="200" paddingRight="200" verticalScrollPolicy="off" scroll="onScroll(event)" 
+      mouseUp="onMouseUp(event)" mouseDown="onMouseDown(event)" mouseMove="onMouseMove(event)"  
+      mouseOut="onMouseOut(event)" initialize="onInitialize()" &gt;
+</code></pre></div>
+<p>このコードが今回修正したCoverFlow表示領域のボックス記述です。それぞれ</p>
+
+<ol>
+<li><p>mouseUp : マウスのボタンが押された後、放されたときに発生する  </p></li>
+<li><p>mouseDown : マウスとボタンが押されたときに発生する  </p></li>
+<li><p>mouseMove : マウスポインターが動いたときに発生する  </p></li>
+<li><p>mouseOut : マウスポインターがHBOXから出たときに発生する  </p></li>
+</ol>
+
+<p>のような意味を持っています。</p>
+
+<h3>■マウスがどこで操作されたのか調べる</h3>
+
+<p>マウスイベントは表示領域で取得しますが、対象のHBOXには様々な子コントロールが含まれています。本サンプルで使っているのは</p>
+
+<ul>
+<li>カバー写真</li>
+<li>横スクロールバー</li>
+</ul>
+
+<p>です。マウスイベント(MouseEvent)がどこで発生したのかを調べるには、MouseEvent#targetで判断できますが、mxmlで定義されているクラス名を判断材
+料にする場合は、MouseEvent#target.parentを使います。これは、target自体は表示リストノードであるため、  </p>
+<div class="highlight"><pre class="highlight plaintext"><code>if(event.target.parent is HScrollBar)
+</code></pre></div>
+<p>のように記述する必要があります。ちょっと面倒ですね。。  </p>
+
+<h3>■マウスが領域外に出たときを考慮する</h3>
+
+<p>マウス操作を実装していて、忘れがちになるのが、この処理です。全画面表示で操作しているようなケースでは無縁ですが、実際はドラッグしながらウィンドウの外でマウスを放した、というケースは珍しくありません。このときイベントを拾っておかないと、再度マウスが領域に戻ったとき、マウスが押されたままと間違って判断してしまうことがあります。マウスが領域から出たら、一旦マウスを放した、という仮定が必要となります。マウスが領域外に出たかどうかはステージオブジェクトのマウスイベントをフックします。これは前述のMouseOutでHBOXから出たのか判断していますが、勢い良くマウスを動かして、一気にFlashPlayerから出てしまうと、MouseOutが呼ばれないことがあります。  </p>
+
+<p>そのため、FlashPlayerからマウスが出た場合も想定して、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>h_frame.stage.addEventListener(Event.MOUSE_LEAVE, onMouseOut);
+</code></pre></div>
+<p>のように、記述します。  </p>
+
+<p>似たイベントで、MouseEvent.ROLL_OUTがありますが、これはHTMLの:hoverのような実装をする際に使うイベントです。つまり対象のコントロールの上に来た・離れたというのを制御します。</p>
+
+<h3>■クロスドメインの注意事項</h3>
+
+<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
+
+<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
+
+<p>まずPHPのコードは過去記事を参考にしてください。  </p>
+
+<h3>■次回予告</h3>
+
+<p>画像間の隙間をなくして、ホンモノのように画像が重なって表示されている効果を実装してみます。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/08/25/flex2-coverflow-7.html">
+          <a class="twitter" data-title="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する"></a>
+          <a class="facebook" data-title="Flex2でCoverFlowクローンを作る (７) ～マウスイベントを取得する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2008/07/25/e6-9c-ac-e6-97-a5-e3-80-81-e7-84-a1-e4-ba-8b-e7-99-ba-e5-a3-b2-e3-81-95-e3-82-8c-e3-81-be-e3-81-97-e3-81-9f.html">本日、無事発売されました</a></h1>
   <p class="postdate"><a href="/2008/07/25.html" title="Permanent link">Friday, July 25, 2008 05:07:10 PM</a></p>
   <p class="tags">
@@ -592,51 +698,6 @@ y6 = y4 + _reflectionShapeBitmap.height - tiltingMargin;
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-treebehavior.html">CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった</a></h1>
-  <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:49 PM</a></p>
-  <p class="tags">
-      <a href="/tags/1-2.html" rel="tag">1.2</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/rc1.html" rel="tag">RC1</a>
-      <a href="/tags/treebehavior.html" rel="tag">TreeBehavior</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;TreeBehavior自体1.2から追加された機能なのに、変更になるなんて。。。  </p>
-
-<p>1.2βでは</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;setScope(array('company_id'=&gt;'1'));
-$categories = $this-&gt;Category-&gt;children();
-</code></pre></div>
-<p>のように書くと、company_idが1のカテゴリだけ階層構造で取得できていたのだが、RC1ではsetScopeがDeprecatedになってしまった。で、上記方法を使っている画面を表示すると、「(TreeBehavior::setScope) Deprecated - Use BehaviorCollection::attach() to re-attach with new settings」というエラーメッセージが出るが、お世辞にもどう変更していいかわかるメッセージじゃないし、ドキュメントにも書いてない。  </p>
-
-<p>なので、ソースを読み込むことに。まぁソース読めばわかります。結果としては、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;$this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;array('company_id'=&gt;'1')));
-$categories = $this-&gt;Category-&gt;children();
-</code></pre></div>
-<p>のように記述するのですが、これを使用箇所で全部変更するのは大変ですね。そこで、Categoryのモデルクラスに以下のようなメソッドを追加してあげました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>function setScope($scope = array()) {
-    return $this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;$scope));
-}
-</code></pre></div>
-<p>ま、AppModelに追加しても良かったんですが、全部がTreeBehavior使っている訳ではないと思うので、その場合は、setTreeScopeのような名前に変更した方が良いかな？と思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html">
-          <a class="twitter" data-title="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった"></a>
-          <a class="facebook" data-title="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -664,6 +725,7 @@ $categories = $this-&gt;Category-&gt;children();
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -673,7 +735,6 @@ $categories = $this-&gt;Category-&gt;children();
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -681,14 +742,14 @@ $categories = $this-&gt;Category-&gt;children();
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -790,6 +851,7 @@ $categories = $this-&gt;Category-&gt;children();
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

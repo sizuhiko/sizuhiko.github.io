@@ -272,6 +272,96 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/01/23/the-solution-if-your-mac-crashed-due-to-overheating.html">MACが熱暴走したときの原因と対応策</a></h1>
+  <p class="postdate"><a href="/2018/01/23.html" title="Permanent link">Tuesday, January 23, 2018 10:15:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/mac.html" rel="tag">Mac</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2017年は、ほとんどアウトプットできなかったので、2018年はBlog書くぞーと思っていたのに、もう23日です。どうも&hellip;</p>
+
+<p>さて、皆さんは虹が好きですか？</p>
+
+<ul>
+<li>雨が降っていたけど、晴れて虹が出ていた。キレイだねー</li>
+<li>ダブルレインボー珍しい</li>
+<li>ラルクの虹&hellip;</li>
+</ul>
+
+<p>とか、まぁ良いイメージあるじゃないですか。
+でも マッキントッシュ/Macintosh （通称 Mac）では <code>虹</code> は最悪なイメージです。
+Windows をお使いの方だと <code>砂時計</code> なわけですが、それよりも <code>虹</code> になるときは邪悪で、ほぼフリーズに近いです。</p>
+
+<h2>またあいつがやってきた</h2>
+
+<p>当方は MacBook Pro(13-inch,2017)、機種IDでいうと <code>MacBookPro14,1</code> を使っています。本記事執筆時点の最新版は <code>MacBookPro14,2</code> です。</p>
+
+<p>半年ぐらい前か、頻繁にMacがフリーズすることがあって、そのときは <code>Docker for Mac</code> が「応答なし」状況になっていたので、よく「Docker不安定だわー」とつぶやいていました。</p>
+
+<p>そうしたら親切なフォロワーさんが「それ <code>Docker for Mac Edge</code> でしょ。安定板は大丈夫ですよ」と教えてくれたので、ここ最近はフリーズとはおさらばしていたのです。</p>
+
+<p>しかし年が明けて、頻繁にフリーズするようになりました。
+仕事にならん&hellip;</p>
+
+<h2>どうやって死んでいくか</h2>
+
+<p>何か操作（特に重いわけでもない）をやっていると、ファンがものすごい勢いで回り始めて、Macは熱くなり、なぜかネットワークインターフェースを使用するプログラム（ブラウザ、Twitterクライアント、Slack、Dockerなど）から「応答なし」になっていきます。次第にマウスポインターはレインボーになり、何も反応しなくなります&hellip;.</p>
+
+<p>このころ、1日に3回ぐらい、4日間連続ぐらいでフリーズしていたので、イライラMAXになっていました。</p>
+
+<h2>オマエか！？</h2>
+
+<p>アクティビティモニターを起動したかったのですが、WiFiタブがあるためなのか開けなくて、その状況でどのプロセスが悪さをしているのかわかりませんでした。
+そこでずっとアクティビティモニターを起動しっぱなしにして、検証してみることにしました。</p>
+
+<p>何回かのフリーズでは、うまく確認することができなくて「これMacの不良？」と思っていたのですが、ついに原因と思われる挙動を発見しました。</p>
+
+<p><code>mdworker</code> がCPUを独占している・・・・</p>
+
+<p>そうそしてすぐググりましたよ（残念ながらMacはフリーズしていたので、Androidで）。
+「Mac mdworker」みたいなキーワードで検索したところ <a href="http://www.dafuku.com/2014/11/mac-mdworker.html">Macが熱暴走するときの原因と対処法</a> というサイトが見つかりました。</p>
+
+<h2>原因は Spotlight ？</h2>
+
+<p>そういえば、よく熱暴走する前に <code>npm install</code> とか <code>git clone/pull</code> 、 <code>composer install</code> 、 <code>docker build</code> とか実行していたなぁと。新しいファイルが見つかると <code>Spotlight</code> がサーチを始めて悪さをするのでしょうか？</p>
+
+<p>とりあえず <code>Spotlight</code> でドライブをサーチしないように <code>Macintosh HD</code> (SSDなのにHDとはコレいかに？みたいなツッコミどころですが&hellip;) を対象外に追加します。
+私は Spotlight まったく使っていないので気になりません。</p>
+
+<p>と、ここで Finder のサイドバーに <code>Macintosh HD</code> が表示されなかったので <a href="https://www.lastday.jp/2012/03/06/how-to-show-hd-on-desktop">Macintosh HD(ハードディスク)をデスクトップ・Finderに表示する方法 macOS Sierra</a> というサイトを参考に追加しました。</p>
+
+<h2>どうなったか</h2>
+
+<p>それから約1週間、ファンが回りまくることもなくなり、虹も見なくなりました。
+作業自体は何も変わっていないので、効果があることは間違いないでしょう。</p>
+
+<p>まぁ今までなんでならなくて、突然新しいMacでなるのかなぁ？
+そして、なぜ WiFi に関するプロセスから「応答なし」になっていくのかは不明ですが、CPUとWiFiのチップが近くて熱暴走が伝搬する？とか思い、分解記事を読んでみました。</p>
+
+<p><a href="https://gigazine.net/news/20161102-macbook-pro-2016-teardown/">新型「MacBook Pro 13インチモデル」の分解・修理は極めて難しいことがiFixitの分解レポートで判明</a> で見ると、WiFiチップの位置は数字の3か4のキーの裏あたりでしょうか？USB-Cに近い位置です。
+赤枠になっているCPUにすごい近いわけではないのですが（まぁ遠いわけでもないけど）。</p>
+
+<p>ともかく <code>虹</code> が出なくなって、快適に開発を続けております。</p>
+
+<p>最後に、今年はBlog書くよー</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/01/23/the-solution-if-your-mac-crashed-due-to-overheating.html">
+          <a class="twitter" data-title="MACが熱暴走したときの原因と対応策"></a>
+          <a class="facebook" data-title="MACが熱暴走したときの原因と対応策"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2017/07/17/phpkansai.html">PHPカンファレンス関西2017に参加してRoboについて発表してきました</a></h1>
   <p class="postdate"><a href="/2017/07/17.html" title="Permanent link">Monday, July 17, 2017 08:10:00 PM</a></p>
   <p class="tags">
@@ -652,69 +742,6 @@ CakePHPに関連するインフラがどのようになっているのか。お�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2017/05/03/polymer-japan-facebook-group.html">Polymer の日本語ユーザー交流用のFacebook Groupを作りました</a></h1>
-  <p class="postdate"><a href="/2017/05/03.html" title="Permanent link">Wednesday, May 03, 2017 05:24:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Polymer に興味がある人の参加をお待ちしております。</p>
-
-<p><a href="https://www.facebook.com/groups/416344608738146/">Polymer JAPAN Facebook Group</a></p>
-
-<p>今年になって毎月 <a href="https://polymercoedo.doorkeeper.jp/">Polymer.co-edo</a> というコミュニティ（勉強会）を開催しているのですが、
-もう少し広がりがあると良いな、というのと、ここへ来て大きいニュースが2つ続いたのも背中を押してくれました（たかだかグループ作っただけですが）。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">“Introducing GE’s data visualization framework for IoT” by <a href="https://twitter.com/davcron">@davcron</a> <a href="https://t.co/d3CnAQJD8q">https://t.co/d3CnAQJD8q</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/857641149393117184">2017年4月27日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>まずは GE の IoT プラットフォーム Predix のUI部分で Polymer 使われているという記事。そして続いて</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="en" dir="ltr">&ldquo;<a href="https://twitter.com/YouTube">@YouTube</a>’s redesign is official, and there’s a dark mode&rdquo; - Congrats to our close friends on YT&rsquo;s desktop team! <a href="https://t.co/KZmEn6I8n1">https://t.co/KZmEn6I8n1</a></p>&mdash; Polymer (@polymer) <a href="https://twitter.com/polymer/status/859442998349660160">2017年5月2日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>YouTubeの新しいデザイン（dark mode）はPolymerでrewriteされているという記事。</p>
-
-<p>これまで Polymer でできている代表的なサイトは Google I/O 2016 ですよ！ということが多かったので、この2つのニュースは Polymer 何それいいの？
-みたいなところを超えるのに有効な事例になるな、と思っています。
-（古いIEのMSサポートが終わったのもあるかもと思っていますが&hellip;）</p>
-
-<p>Polymer.co-edo では<a href="https://polymercoedo.doorkeeper.jp/events/60318">今月も勉強会を開催します</a>ので、上記の記事で Polymer に興味を持った方もお待ちしております。
-2月はGoogle Mapの使い方、3月/4月はFirebaseアプリを作ってみるハンズオンを開催しました。</p>
-
-<p>仕事では Polymer を1年と8ヶ月ぐらい使っています。
-昨年「秋のJavaScript祭り」でLTした内容</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">LTのスライドをupしました。「Web Componentsを1年使って」 <a href="https://t.co/fyot0LRPlo">https://t.co/fyot0LRPlo</a> <a href="https://twitter.com/hashtag/jsfes?src=hash">#jsfes</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/787554090297417729">2016年10月16日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>からPolymerやWeb Components周辺で起きたアップデートを加えて「<a href="https://javascript-fes.doorkeeper.jp/events/60189">初夏のJavaScript祭り</a>」で再びLTをします。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">LTやります! / 初夏のJavaScript祭 in mixiに申し込みました! <a href="https://twitter.com/hashtag/jsfes?src=hash">#jsfes</a> <a href="https://t.co/J8Dasnm2r7">https://t.co/J8Dasnm2r7</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/859669077450674176">2017年5月3日</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2017/05/03/polymer-japan-facebook-group.html">
-          <a class="twitter" data-title="Polymer の日本語ユーザー交流用のFacebook Groupを作りました"></a>
-          <a class="facebook" data-title="Polymer の日本語ユーザー交流用のFacebook Groupを作りました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -744,6 +771,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -753,7 +781,6 @@ CakePHPに関連するインフラがどのようになっているのか。お�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -761,14 +788,14 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -870,6 +897,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

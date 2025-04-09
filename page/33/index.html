@@ -272,6 +272,132 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2013/02/06/cakephp-bddplugin-updates.html">CakePHP BddPlugin updates</a></h1>
+  <p class="postdate"><a href="/2013/02/06.html" title="Permanent link">Wednesday, February 06, 2013 05:02:04 PM</a></p>
+  <p class="tags">
+      <a href="/tags/bddplugin.html" rel="tag">BddPlugin</a>
+      <a href="/tags/behat.html" rel="tag">Behat</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/spec.html" rel="tag">Spec</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<h3>v0.9.2リリース</h3>
+
+<p>CakePHPのBddプラグインも少しずつ浸透し、国内外より利用者様の声が届いて、いくつか不具合＆機能改善などを取り込んできました。  </p>
+
+<p>本日リリースしたv0.9.2としては、数回にわたり<a href="http://twitter.com/kaz_29">@kaz_29</a>さんと、もくもく会を重ねた結果が入っています。  </p>
+
+<ul>
+<li>selenium2 webdriver対応（これは0.9.1.xで対応済みでしたが）</li>
+<li>spec(単体テスト)でコードカバレッジを出力できるようにした</li>
+<li>story(Behat)のステップ翻訳ファイルを置き換えられるようにした</li>
+<li>プラグイン内のコードインデントを4tabに統一</li>
+</ul>
+
+<h4>0.9.2よりちょっと前の改修について</h4>
+
+<p>v0.9.1においては、Authコンポーネントを利用した場合にうまく動作しないというポレートを海外から受けました。  </p>
+
+<p>これはAuthの問題というよりも、Authでログインした結果リダイレクトが動くので、リダイレクト先が正しいか検証したい、ということでした。  </p>
+
+<p>これはBehat&amp;Mink側の問題だけど、使ってくれているのでMLとか漁ったところ、goutte&amp;guzzleではパラメータを指定しろ、という変更が入っていることがわかり、behat.yml.defaultに以下の設定を追加しました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>      goutte:
+        guzzle_parameters:
+          request.params:
+            redirect.disable: true
+</code></pre></div>
+<p>その上で、サンプルアプリにAuthのケースを追加し、動作検証後にリリース。質問者に返信を打ってIssueをCloseしました。  </p>
+
+<p>リダイレクトURLを検証する方法としては、以下のサンプルシナリオのようになります。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>  シナリオ: 記事を追加できること
+    前提 "トップページ" を表示している
+    もし "追加" のリンク先へ移動する
+    かつ "bob"、"obo"でログインする
+    かつ I do not follow redirects
+    かつ 記事投稿フォームに以下の内容を登録すること:
+      | ラベル  | 値                |
+      | タイトル | 今日は歓送迎会      |
+      | 本文    | 19:30からせかいいち |
+    かつ "投稿" ボタンをクリックする
+    もし I should be redirected to "/posts"
+    ならば "今日は歓送迎会" と表示されていること
+</code></pre></div>
+<ul>
+<li>I do not follow redirects と宣言することで、リダイレクトがHTTPヘッダに入っていても自動ではリダクレクとしなくなります（redirect.disable: trueが有効になる）。</li>
+<li>「&quot;投稿&ldquo; ボタンをクリックする」の後で一覧画面にリダイレクトされるので、I should be redirected to &rdquo;/posts&quot; のように指定したURLにリダイレクトしようとしているか検証します。検証結果が正しければ、そのURLに遷移してテストが継続します。</li>
+</ul>
+
+<p>つまり自動リダイレクトをOFFにして、検証が成功したら遷移して継続という流れです。<br>
+日本語のステップにはなっていませんが、必要であれば独自のステップ定義を作っていただき、そこから英語ステップを呼び出すという方式でもできると思います。ただ、ここまでテクニカルというか内部動作をシナリオに書くのはユーザーストーリーとしては微妙だと思うので、ステップ定義内で使えるステップぐらいの認識で利用していただければと思います。サンプルアプリのストーリーは、問い合わせのあった形式に合わせているので、そこはあまり意識されていません。</p>
+
+<h4>0.9.2ハイライト</h4>
+
+<h5>コードカバレッジ</h5>
+
+<p>みんな大好きJenkinsなどでCI環境を作ってコードカバレッジなどを計測している現場では、PHPUnitではカバレッジレポートが出せるのに、BddPluginでは出ないのはアレだよね、ということで対応しました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>lib/Cake/Console/cake Bdd.spec --coverage-html report
+</code></pre></div>
+<p>でコードカバレッジを出力できるようになっています。</p>
+
+<ul>
+<li>出力できるレポートはPHPUnitがサポートしている coverage-html, coverage-clover, coverage-php, coverage-textの4つです。</li>
+<li>カバレッジ対象のディレクトリは app 以下です（ただしapp/Pluginおよびapp/Vendor, app/Testは対象外です）。</li>
+</ul>
+
+<p>Bdd.story側はseleniumとの兼ね合いがあって単純ではないので、shin1x1さんの「<a href="http://www.1x1.jp/blog/2011/06/php_codecoverage_cakephp.html">コードカバレッジ測定ツールPHP_CodeCoverageをCakePHPで使ってみた</a>」を参照にすると良いかなと思います。細かいコードの利用方法などはPHPUnitのバージョンによって微妙に異なるのでPHPUnitの公式ドキュメントを一度確認した方が良いと思います。  </p>
+
+<p>CakePHP2.3からはPHP5.4のサーバ機能が動くのでそれを絡めるとカバレッジレポートが取りやすくなるのかな？などと思ったりしておりますが。。。</p>
+
+<h5>mink-extensionのi18nステップファイルの置き換えを可能に</h5>
+
+<p>Behat&amp;MinkをBddPluginから利用する場合、シナリオに「前提 &ldquo;トップページ&rdquo; を表示している」のように書けたりするわけですが、これらはすべてmink-extensionのi18n機構で翻訳されています。例えばこのステップは</p>
+<div class="highlight"><pre class="highlight plaintext"><code>        &lt;trans-unit id="i-go-to-page"&gt;
+            &lt;source&gt;&lt;![CDATA[/^(?:|I )go to "(?P&lt;page&gt;[^"]+)"$/]]&gt;&lt;/source&gt;
+            &lt;target&gt;&lt;![CDATA[/^(?:|ユーザーが )"(?P&lt;page&gt;[^s]+)" へ移動する$/]]&gt;&lt;/target&gt;
+        &lt;/trans-unit&gt;
+</code></pre></div>
+<p>というxmlで変換定義されているのですが、見て分かる通り正規表現です。PHPで正規表現、それに日本語というと、まぁ考慮しないといけませんね。preg<em>match にUTF-8オプションを付けないと「s」が変なところでマッチして期待どおりに動きません。@kaz</em>29さんから指摘を受けたのは「&quot;管理者画面&ldquo;へ移動する」みたいに「者」が入っているとステップが認識されないというものでした。  </p>
+
+<p>現時点 mink-extension へ <a href="https://github.com/Behat/MinkExtension/pull/66">Pull Request </a>しているので、そのうち新しいmink-extensionのバージョンで有効になると思います。  </p>
+
+<p>Mink-ExtensionはComposerで依存関係を解決しているので、そこのバージョンが新しくなるまでしばらく時間がかかると思います。</p>
+
+<p>それまでの対策（もしくは別の言語ファイルを入れたい場合など）として、/features/steps の下に i18n ディレクトリを作成することで、そのディレクトリを翻訳ファイルの置き場にすることができます。  </p>
+
+<p>上記の問題で対応版のxliffを入れたい場合、必要なファイル（例えば <a href="https://github.com/Behat/MinkExtension/blob/master/i18n/ja.xliff">ja.xliff</a> )を features/steps/i18n/ja.xliff といったパスになるように入れておいてください。これは差分インストールではなく置き換えになりますので、必要な言語ファイルはすべて配置する必要があります。</p>
+
+<h4>さいごに</h4>
+
+<p>このように、地道に修正も行っていますので、たまにGithubのリポジトリを訪れてもらえればと思います。  </p>
+
+<p>もしBddPluginを使ってみたいけど、よくわからない！！という場合は、twitterなどで@sizuhikoにメンションもらえればと思います。時間を調整してお会いしたり、もくもく会や勉強会のようなイベントを企画したりします。  </p>
+
+<p>うまく動かない！！というケースは、Githubのissueに書いてもらえると助かります。もちろん日本語でOKです。  </p>
+
+<p>これBehatやSpec4PHPの問題っぽいよね、と思ってもOKです。どしどしご意見＆ご感想をください。  </p>
+
+<p>ボクは連携部分を作っただけですが、BddPluginのまとまりとしては中々良いものだと思いますので（手前味噌ですが）、少しでも多くの方にご体験いただければと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2013/02/06/cakephp-bddplugin-updates.html">
+          <a class="twitter" data-title="CakePHP BddPlugin updates"></a>
+          <a class="facebook" data-title="CakePHP BddPlugin updates"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2012/11/08/php-matsuri2012-retrospective-of-php-matsuri-2012-in-fukuoka.html">PHP Matsuri2012を終えて 〜 Retrospective of PHP Matsuri 2012 in Fukuoka</a></h1>
   <p class="postdate"><a href="/2012/11/08.html" title="Permanent link">Thursday, November 08, 2012 11:11:53 PM</a></p>
   <p class="tags">
@@ -1003,177 +1129,6 @@ Behat/Minkについても日本語問題をチェックしていたりします�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2012/05/15/php.html">PHPのスペックフレームワーク</a></h1>
-  <p class="postdate"><a href="/2012/05/16.html" title="Permanent link">Wednesday, May 16, 2012 02:05:22 AM</a></p>
-  <p class="tags">
-      <a href="/tags/bdd.html" rel="tag">BDD</a>
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/xspec.html" rel="tag">xSpec</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;<img src="/images/blog/phpspec_cover.png" alt="" /> </p>
-
-<p>PHPでのBDDについては、何度か取り上げてきましたがほとんどがストーリフレームワークであるBehatについてで、スペックフレームワークについてはあまりふれてきませんでした。せっかく今回はPHPカンファレンス関西のLTで2種類のBDDフレームワークについて話したので、スペックフレームワークについてまとめてみたいと思います。  </p>
-
-<h3>最初にたどり着くのはPHPSpec</h3>
-
-<p>LTのスライドでも紹介したのはPHPといえばまず最初に思いつく <a href="http://www.phpspec.net/">PHPSpec</a> です。大抵はまず「言語プレフィクス+Spec」で検索してみますよね。PHPはユニットテストがPHPUnitだからPHPSpecだよね、と誰もが連想できます。  </p>
-
-<p>で、PHPSpecの書き方としては、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>class DescribeNewBowlingGame extends PHPSpecContext {  
-    private $_bowling = null;  
-    public function before() {  
-        $this-&gt;_bowling = $this-&gt;spec(new Bowling);  
-    }  
-    public function itShouldScore0ForGutterGame() {  
-        for ($i=1; $i&lt;=20; $i++) {  
-            // someone is really bad at bowling!  
-            $this-&gt;_bowling-&gt;hit(0);  
-        }  
-        $this-&gt;_bowling-&gt;score-&gt;should-&gt;equal(0);  
-    }  
-}  
-</code></pre></div>
-<p>のように、まぁPHPのコードだとすれば読むのはそれほど困難ではないわけですが、やっぱりSpec（仕様）という視点で眺めると、ちょっと無駄な記述が目立ちますよね。それは言語の文法だからしょうがない、そうなんですが。  </p>
-
-<h3>その他のスペックフレームワーク</h3>
-
-<p>で、試しにGitHubで他にないのかと探すと、意外とスペックフレームワークがある事に気がつきました。  </p>
-
-<p>名前所感</p>
-
-<p><a href="http://www.phpspec.net/">PHPSpec</a>
-最初に出てくる有名どころ</p>
-
-<p><a href="https://github.com/noonat/pecs">pecs</a>
-JSpecに影響を受けている。しばらくメンテされていない&hellip;</p>
-
-<p><a href="https://github.com/mkharitonov/spectrum">spectrum</a>
-まだα版でドキュメントもロシア語しかないが、設計の筋が良くいろいろできそう。今後に期待</p>
-
-<p><a href="https://github.com/speciphy/speciphy">speciphy</a>
-yuya-takeyamaさん(@yuya_takeyama)がRspecに影響を受けて作成。subjectが使える。コアはPHPSpecを利用している</p>
-
-<p><a href="https://github.com/drslump/Spec-PHP">Spec for PHP</a>
-Hamcrestライブラリとtoken<em>get</em>all関数を使って、自然に英語として読める文章として記述が可能。解析した結果をPHPUnitのテストケースとして生成して実行している</p>
-
-<p>以下のコードは、Speciphy を例にPHPSpec以外でどのように書けるかをあらわしています。pecsもspectrumもほぼ同じような記述になります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>namespace SpeciphyDSL;
-return
-describe('Bowling',
-    describe('-&gt;score',
-        context('all gutter game',
-            subject(function () {
-                $bowling = new Bowling;
-                for ($i = 1; $i &lt;= 20; $i++) {
-                    $bowling-&gt;hit(0);
-                }
-                return $bowling;
-            }),
-            it('should equal 0', function ($bowling) {
-                $bowling-&gt;score-&gt;should-&gt;equal(0);
-            })
-        )
-    )
-);
-</code></pre></div>
-<p>だいぶ読みやすくなりました。ではRSpecと比較してみま&hellip;.す？えっ、やっちゃうの、それは&hellip;.</p>
-<div class="highlight"><pre class="highlight plaintext"><code>describe Bowling, "#score" do
-  it "returns 0 for all gutter game" do
-    bowling = Bowling.new
-    20.times { bowling.hit(0) }
-    bowling.score.should eq(0)
-  end
-end
-</code></pre></div>
-<p>こんな感じです。subjectやcontext使っている違いとかありますが、PHPの場合はどうしても無名関数を使うのに </p>
-
-<blockquote>
-<p>function () {&hellip;}</p>
-</blockquote>
-
-<p>を使わなくてはならないので、そこが惜しいのです。  </p>
-
-<h3>変態PHPスペックフレームワーク Spec for PHP</h3>
-
-<p>そこで Spec for PHP ということなのですが、こいつはだいぶ変態です（ごめんなさい。良い意味です）。まず先程紹介したような funcition(){ &hellip; } の無名関数で書いたような記法も使えます。それはほぼ同じように書く事が可能です。で、何が変態かと言うと Hamcrestライブラリとtoken<em>get</em>all関数を使って構文解析することで、以下のようなSpecが書けちゃいます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>describe "Bowling"
-  describe "#score"
-    it "returns 0 for all gutter game"
-      $bowling = new Bowling;
-      for ($i = 1; $i &lt;= 20; $i++) {
-        $bowling-&gt;hit(0);
-      }
-      $bowling-&gt;score should equal 0
-    end
-  end
-end
-</code></pre></div>
-<p>it ブロックの内容は、Hamcrestを使って$bowling-&gt;score should equal 0 のように書いていますが、基本的にはPHPのソースコードであるとわかるでしょう。ただしdescribeやitなどの構文からはfunctionが消えて見通しが良くなっています。  </p>
-
-<h4>では早速試してみましょう</h4>
-
-<p>Spec for PHP は以下の依存関係を持っています。</p>
-
-<ul>
-<li>PHP 5.3</li>
-<li>PHPUnit 3.5</li>
-<li>Hamcrest matchers library（ベータ版のときに作成されたらしい）</li>
-<li>PHP Object_Freezer 1.0.0</li>
-</ul>
-
-<p>この記事の執筆時点で最新版の依存関係を適用すると、PHPUnitとHamcrestを利用している箇所で一部エラーになってしまいます。そこで、これらを修正し本家にPull Requestを送付しています。<br>
-<img src="/images/blog/spec4php_pr.png" alt="" /> 
-このため、本家に取り込まれるまでは、私のforkリポジトリから取得することを推奨します。  </p>
-
-<p><a href="https://github.com/sizuhiko/Spec-PHP">https://github.com/sizuhiko/Spec-PHP</a>  </p>
-
-<p>上記問題に対応するための修正と、日本語関連でPHP関数名の正規表現に x7f-xff の範囲を追加した修正が、 <strong>develop ブランチ</strong>に入っていますので、こちらでお試しください。  </p>
-
-<p>まず必要なpearパッケージをインストールします。すでにインストール済みならスキップして構いません。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>pear channel-discover pear.phpunit.de
-pear install phpunit/PHPUnit
-pear install phpunit/Object_Freezer
-pear install Console_CommandLine
-
-Install Hamcrest matchers library
-pear channel-discover hamcrest.googlecode.com/svn/pear
-pear install hamcrest/Hamcrest
-</code></pre></div>
-<p>つづいて、githubからcloneしてdevelopにスイッチします。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>git clone git@github.com:sizuhiko/Spec-PHP.git
-git checkout origin/develop -b develop
-</code></pre></div>
-<p>Spec for PHPはPHPUnit経由の実行方法と、Cliランナーも持っています。</p>
-
-<ul>
-<li>phpunit tests/AllTests.php</li>
-<li>./spec4php.php tests</li>
-</ul>
-
-<h3>さいごに</h3>
-
-<p>Spec for PHP はテストコードを書いていて楽しい気分になれるような気がします。まだまだ奥がありそうなので、ちょっと追いかけてみようと思っています。また本家にPRが取り込まれたときなどに、インストール方法など更新予定です。  </p>
-
-<p>また、PHPのスペックフレームワークについて「もくもく会」か「勉強会」をやろうと思っていますので、こちらは<a href="http://twitter.com/sizuhiko">@sizuhiko</a>のTwitterなどをチェックしておいていただければと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2012/05/15/php.html">
-          <a class="twitter" data-title="PHPのスペックフレームワーク"></a>
-          <a class="facebook" data-title="PHPのスペックフレームワーク"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1203,6 +1158,7 @@ git checkout origin/develop -b develop
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -1212,7 +1168,6 @@ git checkout origin/develop -b develop
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -1220,14 +1175,14 @@ git checkout origin/develop -b develop
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -1329,6 +1284,7 @@ git checkout origin/develop -b develop
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

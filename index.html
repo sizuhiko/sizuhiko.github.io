@@ -272,6 +272,118 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a></h1>
+  <p class="postdate"><a href="/2025/04/08.html" title="Permanent link">Tuesday, April 08, 2025 06:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+      <a href="/tags/cdk.html" rel="tag">CDK</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <blockquote>
+<p>AWS App Runner は、ソースコードまたはコンテナイメージから AWS クラウドのスケーラブルで安全なウェブアプリケーションに直接デプロイするための、高速でシンプル、かつ費用対効果の高い方法を提供する AWS サービスです。</p>
+</blockquote>
+
+<p>と<a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/what-is-apprunner.html">公式ドキュメント</a> に書かれています。</p>
+
+<p>ソースコードからデプロイする場合は</p>
+
+<ul>
+<li>GitHub</li>
+<li>BitBucket</li>
+</ul>
+
+<p>といったところのクラウドリポジトリを使っていれば簡単に連携して自動デプロイができます。</p>
+
+<p>一方、仕事でオンプレのソースコードリポジトリ、たとえば GitHub Enterprise とか BitBucket Server とか、GitLabs とかをパブリッククラウドでなく使っている場合はソースコード連携できないので、ECR にイメージをデプロイして AppRunner と連携することになります。
+本ブログは、この方法について、ネット上で簡単にできそうに書いてある記事をやってみたら、実際はそんなことなかったということについて記録するものです。</p>
+
+<h2>CDK で AppRunner + ECR でデプロイする</h2>
+
+<p><code>cdk apprunner DockerImageDeployment</code> みたいな検索条件でググると、まぁいっぱい出てきます。</p>
+
+<p>ここで <code>DockerImageDeployment</code> というのは、Dockerfile をビルドして ECR に push までしてくれる CDK のライブラリです。
+で、その ECR を AppRunner に関連づけてというのが流れです。</p>
+
+<p>ちなみに <code>DockerImageAsset</code> というのもあって、そちらの記事も多く見受けられます。こちらはあらかじめ ECR を作っておかなくてもいい感じに作ってくれるものですが、<a href="https://qiita.com/rickey0808/items/1e715b016d50f1d4c094">[AWS CDK] コンテナイメージもまとめてデプロイ！？DockerImageAssetの動作確認をしてみた</a> という記事のとおりお試しで使う分には良いと思いますが、ちゃんと管理して使いたい場合は <code>DockerImageDeployment</code> を使った方が良いでしょう。</p>
+
+<h2>DockerImageDeployment を使って ECR にデプロイする</h2>
+
+<p><a href="https://github.com/cdklabs/cdk-docker-image-deployment">DockerImageDeployment の公式GitHubリポジトリ</a> にある例どおり簡単に利用できます。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">ecr</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-cdk-lib/aws-ecr</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">imagedeploy</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">cdk-docker-image-deployment</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">repo</span> <span class="o">=</span> <span class="nx">ecr</span><span class="p">.</span><span class="nx">Repository</span><span class="p">.</span><span class="nx">fromRepositoryName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">MyRepository</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">myrepository</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="k">new</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">DockerImageDeployment</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ExampleImageDeploymentWithTag</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">source</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Source</span><span class="p">.</span><span class="nx">directory</span><span class="p">(</span><span class="dl">'</span><span class="s1">path/to/directory</span><span class="dl">'</span><span class="p">),</span>
+  <span class="na">destination</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Destination</span><span class="p">.</span><span class="nx">ecr</span><span class="p">(</span><span class="nx">repo</span><span class="p">,</span> <span class="p">{</span> 
+    <span class="na">tag</span><span class="p">:</span> <span class="dl">'</span><span class="s1">myspecialtag</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">}),</span>
+<span class="p">});</span>
+</code></pre></div>
+<h2>AppRunner と連携でデプロイする</h2>
+
+<p><code>@aws-cdk/aws-apprunner-alpha</code> というまだα版ですが、CDK のコンストラクタがあるので、これを利用します。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">ecr</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-cdk-lib/aws-ecr</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="k">new</span> <span class="nx">apprunner</span><span class="p">.</span><span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">Service</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">source</span><span class="p">:</span> <span class="nx">apprunner</span><span class="p">.</span><span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+    <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span> <span class="na">port</span><span class="p">:</span> <span class="mi">80</span> <span class="p">},</span>
+    <span class="na">repository</span><span class="p">:</span> <span class="nx">ecr</span><span class="p">.</span><span class="nx">Repository</span><span class="p">.</span><span class="nx">fromRepositoryName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">NginxRepository</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">nginx</span><span class="dl">'</span><span class="p">),</span>
+    <span class="na">tagOrDigest</span><span class="p">:</span> <span class="dl">'</span><span class="s1">latest</span><span class="dl">'</span><span class="p">,</span>
+  <span class="p">}),</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>あとは CDK でいい感じにつなぎこんで、みたいな感じです。</p>
+
+<h2>やってみたがエラーになる</h2>
+
+<p>はい、エラーになりました。</p>
+
+<blockquote>
+<p>The deployment will wait until the CodeBuild Project completes successfully before finishing.</p>
+</blockquote>
+
+<p>というメッセージが出て失敗します。
+メッセージどおり受け取ると、ECR のデプロイが終わってないので AppRunner にデプロイできないということです。</p>
+
+<h2>どうやって解決したか</h2>
+
+<p>実はアプリケーションのソースコードリポジトリと、AWSのリソース構成をデプロイするインフラリポジトリは分けていたので、アプリケーションコード側の CI/CD で <code>DockerImageDeployment</code> を使って ECR までデプロイ。
+ECR までデプロイされている状況で、インフラリポジトリ側の CI/CD で ECR と AppRunner の関連付けをやるようにしました。</p>
+
+<p>では最初はなんで両方を一緒にやっていたかというと、アプリケーションが外部サービスに連携しているため、開発環境ではモックサーバーを使っているのですが、それは Dockerfile 1つだけなんでそのファイルをインフラリポジトリ側において AppRunner にデプロイしようとしていたという感じでした。</p>
+
+<p>他の解決策としては、カスタムリソースを使って ECR へのデプロイを待ち合わせてデプロイするという方法があります。モノレポなどを使っているときにアプリケーションとインフラを同時にデプロイしたいときなどは有効な方法だと思います。
+カスタムリソースも Lambda を作らないといけないというわけではなく、 AWS の API を実行する程度なら Lambda が不要なので、そういった選択肢も検討できます。</p>
+
+<p>参考記事: <a href="https://dev.classmethod.jp/articles/create-custom-resources-with-aws-cdk-without-using-lambda-functions/">[AWS CDK] APIを呼び出すだけのカスタムリソースならLambda関数は不要な件</a></p>
+
+<h2>さいごに</h2>
+
+<p>AppRunner を cdk を使ってデプロイしたい、というときに参考になれば幸いです。
+<code>@aws-cdk/aws-apprunner-alpha</code> がαじゃなくなるときには、もう少し便利に（ちゃんと待ち合わせてくれるみたいな）ことができるようになるのかもしれないので期待はしたいですね。</p>
+
+<p>ちなみにモックサーバーは <a href="https://mockoon.com/">Mockoon</a> を使ってます。とても便利で助かる。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">
+          <a class="twitter" data-title="AppRunner へのデプロイは cdk でサクッとできるのか？"></a>
+          <a class="facebook" data-title="AppRunner へのデプロイは cdk でサクッとできるのか？"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a></h1>
   <p class="postdate"><a href="/2024/06/23.html" title="Permanent link">Sunday, June 23, 2024 11:35:00 AM</a></p>
   <p class="tags">
@@ -1099,104 +1211,6 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a></h1>
-  <p class="postdate"><a href="/2024/05/01.html" title="Permanent link">Wednesday, May 01, 2024 06:32:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/gae.html" rel="tag">GAE</a>
-      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は <a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> の続編となります。</p>
-
-<h3>GAEにデプロイして動作確認しながら修正</h3>
-
-<p>前回で Slim4 へ移行でき、少し動く様になってきたので動作確認しながら微修正していきます。</p>
-
-<h4>GAE 2nd gen 用の設定変更</h4>
-
-<p><code>app.yml</code> ファイルに定義していたデプロイ対象外ファイルの一覧 <code>skip_files</code> は別のファイル <code>.gcloudignore</code> に記述するように変更になったので、定義を移行しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/98ec0f6157778a1b37807664193d1ee0afc56ec1">コミット</a>。</p>
-
-<h4>Carbon のバージョンアップ</h4>
-
-<p>8.2 環境で動くように Carbon を 1.21 から 2.72 にアプデしました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f33a78013a00996a30de76849abe76d40e404b1b">コミット</a>。</p>
-
-<h4>composer ファイルをデプロイ対象に追加</h4>
-
-<p>GAE 2nd gen からは composer での依存関係はGAEデプロイ時に解決されるので、デプロイ対象ファイルに composer.json と composer.lock ファイルを追加しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/33bfe6f232d1b4794a6a27cfc0ceed139159615b">コミット</a>。</p>
-
-<h4>ミドルウェアの定義を変更</h4>
-
-<p>ミドルウェアがうまく動作していないことがわかったので、調べていると書き方が変わっていることに気づきました。すでにパラメータは変更していたのですが、実行メソッド名も変更になっていました。</p>
-
-<p>そこでt PHP5.5 のときは interface を実装するコードになっていなかったので、ちゃんと <code>MiddlewareInterface</code> を実装するようなコードに修正。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Psr\Http\Server\MiddlewareInterface</span><span class="p">;</span>
-
-<span class="kd">class</span> <span class="nc">AllowedProvidersMiddleware</span>
-<span class="kd">class</span> <span class="nc">AllowedProvidersMiddleware</span> <span class="kd">implements</span> <span class="nc">MiddlewareInterface</span>
-<span class="p">{</span>
-</code></pre></div>
-<p>そうすると、以前は <code>__invoke</code> メソッドで定義していたところを <code>process</code> に変更する必要があることがわかりました。
-その修正<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e737549267d4f231cc5894f88f00bd91cbf9862">コミット</a>。</p>
-
-<h4>セッションの処理も修正</h4>
-
-<p>さきほどのコミットでは、セッション保持の Memcache がうまく動作していなかったので、いったん <code>session_set_save_handler</code> はコメントアウトして、デフォルトの tmp 管理にしています。ただ複数インスタンス起動するとうまく動作しなくなるので、いったん動作確認を進める上での暫定対応です。</p>
-
-<p>またセッションミドルウェアも全体に対して有効にするのでなく、セッションが必要なAPI（ここでいうと管理画面のログイン周辺）についてだけ有効にするようにルーティングを変更しています。</p>
-
-<p>その後、Google Cloud の Cloud Datastore に <code>DatastoreSessionHandler</code> というものがあるのがわかり、以下のように設定を変更しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/d85b82286d6ec844c6e73144cbcd889d3ae8ff52">コミット</a>。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Google\Cloud\Datastore\DatastoreClient</span><span class="p">;</span>
-<span class="kn">use</span> <span class="nc">Google\Cloud\Datastore\DatastoreSessionHandler</span><span class="p">;</span>
-
-    <span class="nv">$datastore</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DatastoreClient</span><span class="p">();</span>
-    <span class="nv">$handler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DatastoreSessionHandler</span><span class="p">(</span><span class="nv">$datastore</span><span class="p">);</span>
-    <span class="nb">session_set_save_handler</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-    <span class="nb">session_save_path</span><span class="p">(</span><span class="s1">'sessions'</span><span class="p">);</span>
-</code></pre></div>
-<h4>POST のボディに JSON を渡す場合の対応</h4>
-
-<p>Slim4 では <code>addBodyParsingMiddleware</code> を利用する必要があったので、修正しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/376485104e1ac12a28b749dfc911506f57bcc27d">コミット</a>。</p>
-
-<p>併せて BASIC 認証時の before 処理も不要であることがわかったので削除しています。</p>
-
-<h3>GAE へのデプロイ方法を README に追記</h3>
-
-<p>GAE 2nd gen からはビルド結果を以下のコマンドでデプロイします。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>gcloud app deploy --project toiletevolution --version 2 --no-promote --appyaml=app.yml
-</code></pre></div>
-<p><code>version</code> を指定して新しいバージョンで動作確認を可能にして、 <code>--no-promote</code> をつけることで従来のURLからのアクセスは、新しいバージョンに振り分けられない様にします。</p>
-
-<h3>そしてどうなったか</h3>
-
-<p>この記事は PHP のバージョンアップをメインにしているのですが、実際には WebComponents 側も修正しています。</p>
-
-<p>そしてシュミレータで一ヶ月ぐらいの稼働テストを実施して、問題なさそうだったので某日に正式リリースを実施しました。
-その後、新しいバージョンでの問題も発生せず順調に動いています。</p>
-
-<p>これでしばらくは落ち着くのと、バージョンアップ追従もどんどんできるようになっていくので安心です。</p>
-
-<p>ブログの記事にまとめてみると、そんなに大変な修正でもなかったな？という感じですが、当時は久々に PHP 触ったりするのもあり、結構大変でした。</p>
-
-<p>今後は phpstan とか入れたりして、コードの品質も上げていければなと思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">
-          <a class="twitter" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5"></a>
-          <a class="facebook" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1221,6 +1235,7 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -1230,7 +1245,6 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -1238,14 +1252,14 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -1347,6 +1361,7 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

@@ -272,6 +272,88 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a></h1>
+  <p class="postdate"><a href="/2018/07/28.html" title="Permanent link">Saturday, July 28, 2018 01:27:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+      <a href="/tags/wot.html" rel="tag">WoT</a>
+      <a href="/tags/mftokyo2018.html" rel="tag">MFTokyo2018</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="http://makezine.jp/event/mft2018/">Maker Faire Tokyo 2018</a>に<a href="http://makezine.jp/event/mft2018/">CHIRIMEコミュニティ</a>で参加するためのデモをセットアップしたときのメモ。</p>
+
+<h2>購入したもの</h2>
+
+<ul>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-4KC6">Raspberry Pi 3 model B+</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-55ZD">Adafruit PiTFT Plus 480x320 3.5インチTFT</a></li>
+<li><a href="https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-56B6">Adafruit GPIOリボンケーブル - 26ピン</a></li>
+<li><a href="https://www.amazon.co.jp/dp/B078JKJP8D">TOSHIBA microSDHC 16GB</a></li>
+</ul>
+
+<h2>インストール</h2>
+
+<h3>イメージファイルのダウンロード</h3>
+
+<p><a href="http://download.chirimen.org/release/raspberry_pi_3/">CHIRIMEN公式サイトのダウンロードページ</a>から、<a href="http://download.chirimen.org/release/raspberry_pi_3/CHIRIMEN_Raspberry_pi_3_20180716.zip">CHIRIMEN<em>Raspberry</em>pi<em>3</em>20180716.zip</a>をダウンロードします。
+Raspberry Pi 3 model B+ で利用できる CHIRIMEN のイメージファイルは現時点では評価版です。</p>
+
+<h3>イメージファイルの書き込み</h3>
+
+<p><a href="https://www.1ft-seabass.jp/memo/2018/07/23/raspbian-install-201807-memo/">最近のRaspberry Piイメージ（Raspbian）をインストールするメモ</a>が参考になります。
+<a href="https://etcher.io/">Etcher</a>を使って、ダウンロードしたイメージファイルをmicroSDカードに書き込みます。</p>
+
+<h3>SSHの有効化</h3>
+
+<p>Raspbianはセキュリティを考慮してデフォルトではSSHが無効になっているので、
+SDカードをマウントして、以下のコマンドを実行しておきます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">touch</span> /Volumes/boot/ssh
+</code></pre></div>
+<h2>起動</h2>
+
+<p>microSDカードをRaspberry Pi 本体に挿して、起動します。
+Raspberry Piにsshで入るため、有線LANをMacと接続しました。
+<a href="https://qiita.com/fumishitan/items/88bb832cb08fe8016f66">MacとRaspberry piをインターネット共有でつないでみる</a>が参考になります。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>ssh pi@192.168.2.2
+</code></pre></div>
+<p>初期パスワードは <code>rasp</code> になっています。</p>
+
+<p>3.5TFTを有効にするため、<a href="https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi/easy-install-2">公式サイトのEASY INSTALL</a>を参考に、ドライバーをインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nb">cd</span> ~
+wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
+<span class="nb">chmod</span> +x adafruit-pitft.sh
+<span class="nb">sudo</span> ./adafruit-pitft.sh
+</code></pre></div>
+<p>で、このままでは X を利用できないので <a href="https://qiita.com/hishi/items/bdd630666277e4f8162a#x-windows%E3%81%AE%E6%8F%8F%E7%94%BB">Raspberry Pi Zero(W)でPiTFTを使う - X Windowsの描画</a>を参考に、設定の変更とタッチスクリーンの調整を行います。</p>
+
+<h2>ソフトウェアキーボードのインストール</h2>
+
+<p><a href="https://darmus.net/raspberry-pi-matchbox-keyboard-install/">Raspberry Piでソフトウェアキーボードをインストール&amp;起動する方法</a>を参考に、Matchbox Keyboardをインストールします。</p>
+
+<h2>デモプログラムの作成</h2>
+
+<p>Web Components(Polymer) meets REAL WORLD ということで、2年連続 HTML のパーツを組み合わせることで WoT を体験できるようなデモを実施予定です。
+昨年は WebGpio タグを作ったので、今年は WebI2c タグを予定しています。
+近日コードは公開予定！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/07/28/chirimen-raspi-setup.html">
+          <a class="twitter" data-title="CHIRIMEN Raspi setup"></a>
+          <a class="facebook" data-title="CHIRIMEN Raspi setup"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/07/02/polymer-co-edo-meetup-15.html">Polymer.co-edo meetup ＃15 を開催しました</a></h1>
   <p class="postdate"><a href="/2018/07/02.html" title="Permanent link">Monday, July 02, 2018 03:22:00 PM</a></p>
   <p class="tags">
@@ -532,47 +614,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2018/05/30/vivaldi-kaeremasen.html">Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました</a></h1>
-  <p class="postdate"><a href="/2018/05/30.html" title="Permanent link">Wednesday, May 30, 2018 12:39:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/vivaldi.html" rel="tag">Vivaldi</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://vivaldi2018tokyo.peatix.com/">5/29に開催された Vivaldiジャパンツアー2018 #Vivaldi帰れま千 に参加しました</a></p>
-
-<p><img src="https://s3-ap-northeast-1.amazonaws.com/peatix-files/event/381967/cover-O8QmxcnsXjNd9jFXEZqEXum1KIL5qaQc.png" alt="" /></p>
-
-<p>古くからのOperaユーザーがほとんどでした。
-中には母親から与えられたPCにOperaが入っていたという若手もいて、年齢を感じましたがw</p>
-
-<p>Peatixのオフィスは恵比寿の、月に2度以上は目の前を通る場所でした（そこに入っているの知らなかった）。</p>
-
-<p>みんないろんなTIPSを持っていて、すごいなーと思う反面、私はヘビータブ使い（500タブとか当たり前）なので、タブの話（要望）を。
-標準でタブスタックできて、検索もできるんだけど、ウィンドウ横断でタブ検索できるようにしてほしい！というLTでした。</p>
-
-<blockquote class="twitter-tweet" data-lang="ja"><p lang="ja" dir="ltr">昨夜、東京でのミートアップも大盛り上がりでした。登壇いただいた方、ご参加いただいた方、みなさまありがとうございました！！<a href="https://twitter.com/hashtag/Vivaldi%E5%B8%B0%E3%82%8C%E3%81%BE%E5%8D%83?src=hash&amp;ref_src=twsrc%5Etfw">#Vivaldi帰れま千</a> <a href="https://t.co/OL4qSbIzHo">pic.twitter.com/OL4qSbIzHo</a></p>&mdash; Vivaldiブラウザー (@vivaldi_jp) <a href="https://twitter.com/vivaldi_jp/status/1001713776117370886?ref_src=twsrc%5Etfw">2018年5月30日</a></blockquote>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<p>1年に一回ぐらいなのかな、ユーザーの集いがあるブラウザって良いですね。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/05/30/vivaldi-kaeremasen.html">
-          <a class="twitter" data-title="Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました"></a>
-          <a class="facebook" data-title="Vivaldiジャパンツアー2018 ＃Vivaldi帰れま千 Vivaldiユーザープレゼン・交流会 in Tokyo 〜東京の中心で愛を叫ぶ〜 に参加してLTしました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -602,6 +643,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
@@ -611,7 +653,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a> <span>2024/02/18</span></li>
               </ul>
             </div>
           </section>
@@ -619,14 +660,14 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size1">
                       <a href="/tags/javascript.html" rel="tag">JavaScript</a>
@@ -728,6 +769,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025.html">2025</a> (1)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
