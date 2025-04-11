@@ -272,6 +272,99 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2016/11/05/phpconference-2016.html">PHPカンファレンス2016に参加してLTをしました</a></h1>
+  <p class="postdate"><a href="/2016/11/05.html" title="Permanent link">Saturday, November 05, 2016 03:50:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+      <a href="/tags/phpcon2016.html" rel="tag">PHPcon2016</a>
+      <a href="/tags/toilet-evolution.html" rel="tag">toilet-evolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2016/11/03 に行われた<a href="http://phpcon.php.gr.jp/2016/">PHPカンファレンス2016</a>に参加してきました。</p>
+
+<p><img src="/images/blog/phpcon2016.png" alt="" /></p>
+
+<h3>呪われる体調</h3>
+
+<p>昨年のカンファレンスでは直前に右肩を亜脱臼し、肩を釣っているという痛々しい姿でした（公演中は三角巾をはずしてましたが）。
+こちらのレポート<a href="http://www.s-arcana.co.jp/blog/2015/10/01/2899">「第94回 PHP勉強会＠東京〜PHPカンファレンス2015開催直前スペシャル〜」に参加してきました。</a>には痛々しい姿が写っています。</p>
+
+<p>で、今年は万全の体調で、と思っていたのに前日に急性胃炎という診察。普段はかなり健康な方なんですが、東京のカンファレンスの時期になると体調を崩すんですかね&hellip;</p>
+
+<p>診断を受けた当日はスピーカーディナーだったのですが、ウーロン茶しか飲めず雰囲気に飲まれていました。
+幸い薬が効いていたので体調自体は悪くなく、当日も問題なく過ごすことはできました（懇親会でもお茶ばかりでしたが）。</p>
+
+<h3>NEXT</h3>
+
+<p>今年のカンファレンスのテーマは <code>NEXT</code> ということで、PHPに関係なくWebの未来について8トラックでのイベントが開催されました。
+このセッションが、という話をしたかったのですが、当日思いがけないトラブルに見舞われ、あまりセッションを見ることができませんでした。</p>
+
+<p>ただPHPカンファレンスでは、参加していたセッションの裏番組も後から見れるように動画が公開されていますので、時間のあるときに参加できなかったセッションを体験することができます。スライドも続々公開されているので、手元にスライド、サブモニターに動画といった贅沢な1人PHPカンファレンスも良し、自分の所属チーム全員でPHPカンファレンスの雰囲気を共有し、セッションで感じたことを <code>ふりかえり</code> してみるのも良いでしょう。</p>
+
+<h3>LT しました</h3>
+
+<p>今年は「トイレ空き状況サービスから学んだ、GAEで構築したPHPerによるIoTサービス」というタイトルでライトニングトークをしました。</p>
+
+<script async class="speakerdeck-embed" data-id="43a31d273961475d844b50cf21ba24c5" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>先日こっそり <code>Toilet Evolution</code> というサービスを公開したのですが、それを Polymer + PHP + GAE という環境で作って学んだことの発表です。</p>
+
+<ul>
+<li><a href="https://github.com/toiletevolution">GitHub</a></li>
+<li><a href="https://toiletevolution.space/">公開サイト</a></li>
+</ul>
+
+<p>このサービスは個人で作っているので、最初はなるべく無料で始め、うまくいったらスケールしてみたいという野望を叶えるための構成を考えました。</p>
+
+<h3>まだまだ課題は多い</h3>
+
+<p>いったん公開できるレベルになったので、サービスを（こっそり）公開して、今回LTするということになったのですが、まだ最低限必要そうなドキュメントなどが整備されていなかったり、機能的に不足していたりする部分もあるので、少しずつ成長させていきたいと思っています。</p>
+
+<p>また、LT後にいくつかいただいた声で多かったのは、「トイレ監視デバイスを設置するのが難しい」という意見です。
+確かに大きいテナントや人とトイレの数のバランスが悪いといった課題を持っているところをターゲットにしていても、テナント管理会社であったり、会社の管理部門など、設置にはいくつかの手順が必要であるというのは認識しています。</p>
+
+<h3>今後の展開</h3>
+
+<p>現在は自社および馴染みのコワーキングスペースを中心に、上記の課題に直面しているところへの試験導入を目指しています。</p>
+
+<p>モデルケースで想定するデバイスとしては</p>
+
+<ul>
+<li>ESPr Developer(2,600円程度)</li>
+<li>センサー類
+
+<ul>
+<li>PIRモーションセンサ(800円程度)</li>
+<li>超音波距離センサ(2,000円程度)</li>
+</ul></li>
+</ul>
+
+<p>などに加え100円ショップなどで購入できるものを使ったケースに入れて 3,500円ぐらいで、1トイレ(複数個室)を監視できるようにしたいと思っています。
+これはWifiが届く前提なのですが、Wifiが入らないとするとSIMが必要になります。
+現在日本ではSIMを使おうとすると、モジュール（SIMを挿すボードのようなもの）だけで2万円を超えてしまいます。SORACOMなど安いSIMだったり通信回線があっても初期費用を抑えることが難しいので、当面はWifi接続を前提に進めるつもりです。</p>
+
+<p>もし興味がある場合は <code>Twitter</code> などで <code>@sizuhiko</code> 宛てにメッセージをいただければと思います。</p>
+
+<p>最後に&hellip; <a href="http://iotlt.connpass.com/">IoTLT</a>でも、LTしたいなー</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2016/11/05/phpconference-2016.html">
+          <a class="twitter" data-title="PHPカンファレンス2016に参加してLTをしました"></a>
+          <a class="facebook" data-title="PHPカンファレンス2016に参加してLTをしました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2016/07/18/phpkansai2016.html">PHPカンファレンス関西2016に参加して講演をしました</a></h1>
   <p class="postdate"><a href="/2016/07/18.html" title="Permanent link">Monday, July 18, 2016 02:50:00 PM</a></p>
   <p class="tags">
@@ -925,108 +1018,6 @@ requireやrequire-devは必要ないので、<code>no</code>を入力すれば�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2015/09/21/hexpress-ported-from-ruby-world.html">複雑な正規表現を簡単に作れるようにした</a></h1>
-  <p class="postdate"><a href="/2015/09/21.html" title="Permanent link">Monday, September 21, 2015 01:28:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は先日の<a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a>の続編になります。</p>
-
-<p>前回、RFC3986のような複雑な正規表現をVerbal Expressionの既存実装でやろうとすると、うまくできないという問題に直面しました。
-そこでRubyで実装されていた<a href="http://www.kurtisrainboltgreene.name/hexpress/">HEXPRESS</a>をPHPへ移植しようという流れです。</p>
-
-<h3>PHP版Hexpressを作った</h3>
-
-<p>さっそく移植してみました。</p>
-
-<p><a href="https://github.com/sizuhiko/hexpress">hexpress</a></p>
-
-<p>PSR-2の対応が実施中なのですが、Ruby側の機能とテストはすべて移植し、PHP版でいくつか機能追加をしています。</p>
-
-<h3>どんな感じか</h3>
-
-<p>READMEに書いてあるとおりインストールはcomposer経由でできます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer require sizuhiko/hexpress
-</code></pre></div>
-<p>具体的な利用方法は以下のサンプルのとおりです。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Hexpress\Hexpress</span><span class="p">;</span>
-
-<span class="nv">$pattern</span> <span class="o">=</span> <span class="p">(</span><span class="k">new</span> <span class="nc">Hexpress</span><span class="p">())</span>
-    <span class="o">-&gt;</span><span class="nf">start</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)</span>
-    <span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
-    <span class="o">-&gt;</span><span class="nf">with</span><span class="p">(</span><span class="s2">"://"</span><span class="p">)</span>
-    <span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="nv">$hex</span><span class="p">)</span> <span class="p">{</span> <span class="nv">$hex</span><span class="o">-&gt;</span><span class="nf">words</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">with</span><span class="p">(</span><span class="s2">"."</span><span class="p">);</span> <span class="p">})</span>
-    <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="nv">$hex</span><span class="p">)</span> <span class="p">{</span> <span class="nv">$hex</span><span class="o">-&gt;</span><span class="nf">matching</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="nv">$hex</span><span class="p">)</span> <span class="p">{</span><span class="nv">$hex</span><span class="o">-&gt;</span><span class="nf">word</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">with</span><span class="p">(</span><span class="s2">"-"</span><span class="p">);})</span><span class="o">-&gt;</span><span class="nf">many</span><span class="p">();</span> <span class="p">})</span>
-    <span class="o">-&gt;</span><span class="nf">has</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
-    <span class="o">-&gt;</span><span class="nf">either</span><span class="p">([</span><span class="s2">"com"</span><span class="p">,</span> <span class="s2">"org"</span><span class="p">])</span>
-    <span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
-    <span class="o">-&gt;</span><span class="nf">ending</span><span class="p">();</span>
-
-<span class="k">echo</span> <span class="nv">$pattern</span><span class="p">;</span>             <span class="c1">#=&gt; "^https?\:\/\/(?:(?:\w)+\.)?([\w\-]+)\.(?:com|org)\/?$"</span>
-<span class="k">echo</span> <span class="nv">$pattern</span><span class="o">-&gt;</span><span class="nf">toRegExp</span><span class="p">();</span> <span class="c1">#=&gt; "/^https?\:\/\/(?:(?:\w)+\.)?([\w\-]+)\.(?:com|org)\/?$/"</span>
-</code></pre></div>
-<p><code>Hexpress</code>クラスのインスタンスを生成して、メソッドチェインで正規表現を組み立てます。
-ネストしたい場合は、コールバック関数を指定すると、新しい<code>Hexpress</code>のインスタンスがパラメータで渡ってくるので、
-それに対してメソッドチェインでつないていきます。</p>
-
-<p><code>Hexpress</code>は<code>__toString()</code>を実装しており、文字列表現を取得すると指定された定義を展開します。
-実際に正規表現として利用するには<code>toRegExp()</code>を呼び出すと、左右にデリミタを挿入した文字列が取得できるので、<code>preg_match</code>などの関数で利用可能になります。
-例えば以下のような利用方法です。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="nb">preg_match</span><span class="p">(</span><span class="s2">"http://example.com/"</span><span class="p">,</span> <span class="nv">$pattern</span><span class="o">-&gt;</span><span class="nf">toRegExp</span><span class="p">());</span>
-</code></pre></div>
-<h3>複雑な正規表現は定義できたのか？</h3>
-
-<p>できました！！</p>
-
-<p>テストコードとして<a href="https://github.com/sizuhiko/hexpress/blob/master/tests/Case/Hexpress/RFC3986Test.php">RFC3986Test.php</a>を作成しました。
-実装は結構長いので、こちらに添付することは省略しますが、RFCの定義に書いてあるとおりそのままメソッドをつないでいくだけで、
-RFCに対応した正規表現を構築することができました。（※IPv6の定義は未実装です、ご了承ください）</p>
-
-<p>PHPUnitのデータプロバイダ<code>exampleUriProvider</code>でマッチさせるパターンをftp,www,mail,news,tel,telnet,urnについて定義してすべて通過しています。</p>
-
-<p>PHP版では、マッチするとき<code>find</code>メソッドで名前付きサブパターンを利用できるようにしました。
-以下の例のように、<code>find</code>の第二引数に<code>port</code>を指定できます。</p>
-<div class="highlight"><pre class="highlight php"><code>    <span class="k">private</span> <span class="k">function</span> <span class="n">port</span><span class="p">()</span>
-    <span class="p">{</span>
-        <span class="k">return</span> <span class="p">(</span><span class="k">new</span> <span class="nc">Hexpress</span><span class="p">())</span><span class="o">-&gt;</span><span class="nf">has</span><span class="p">(</span><span class="s1">':'</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="k">function</span> <span class="p">(</span><span class="nv">$hex</span><span class="p">)</span> <span class="p">{</span> <span class="nv">$hex</span><span class="o">-&gt;</span><span class="nf">digits</span><span class="p">();</span> <span class="p">},</span> <span class="s1">'port'</span><span class="p">);</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p>上記を含むパターンを<code>preg_match</code>で処理すると、マッチング結果に名前付きで値を取得できるようになります。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="nb">preg_match</span><span class="p">(</span><span class="s2">"http://example.com:80/"</span><span class="p">,</span> <span class="nv">$pattern</span><span class="o">-&gt;</span><span class="nf">toRegExp</span><span class="p">(),</span> <span class="nv">$matches</span><span class="p">);</span>
-<span class="k">echo</span> <span class="nv">$matches</span><span class="p">[</span><span class="s1">'port'</span><span class="p">];</span>   <span class="c1">#=&gt; '80'</span>
-</code></pre></div>
-<h3>どうなのか？</h3>
-
-<p>たとえば今回作成したRFC3986の定義を正規表現としてダンプすると、以下のようになります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>/^(?P&lt;scheme&gt;[a-zA-Z](?:[a-zA-Z0-9\+\-\.])*)\:(?P&lt;hierPart&gt;(?:\/\/(?P&lt;authority&gt;(?:(?P&lt;userinfo&gt;(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:))*)@)?(?P&lt;host&gt;(?:(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)\.(?:0-9|1-90-9|10-90-9|20-40-9|250-5)|(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]))+))(?:\:(?P&lt;port&gt;(?:\d)+))?)(?P&lt;pathAbempty&gt;(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)*)|(?P&lt;pathAbsolute&gt;\/(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))+(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)+)?)|(?P&lt;pathRootless&gt;(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))+(?:\/(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))*)*)|(?P&lt;pathEmpty&gt;^(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@))))(?:\?(?P&lt;query&gt;(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@)|\/|\?))*))?(?:#(?P&lt;fragment&gt;(?:(?:(?:[a-zA-Z0-9\-\._~]|%(?:[0-9A-Z]){2}|[\!\$&amp;'\(\)\*\+,;\=]|\:|@)|\/|\?))*))?$/
-</code></pre></div>
-<p>私はいきなりこれを空手形で実装することはできそうにないので、今回<code>hexpress</code>を移植して良かったなと思っています。
-何か複雑な正規表現を定義したい場合などに役立てば幸いです。</p>
-
-<h3>さいごに</h3>
-
-<p><a href="http://phpcon.php.gr.jp/2015/">日本PHPカンファレンス2015</a>が10/3(土)に行われます。
-当日のプログラムも公開され、私はトラック3で10:50から11:20まで「Composerではじめるアプリケーション開発」というセッションを担当します。
-他の番組が強力なため私の会場は比較的空いているのではないかと思うので、もしご都合がつく方はよろしくお願いします。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2015/09/21/hexpress-ported-from-ruby-world.html">
-          <a class="twitter" data-title="複雑な正規表現を簡単に作れるようにした"></a>
-          <a class="facebook" data-title="複雑な正規表現を簡単に作れるようにした"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1056,6 +1047,7 @@ RFCに対応した正規表現を構築することができました。（※IP
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -1065,7 +1057,6 @@ RFCに対応した正規表現を構築することができました。（※IP
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -1182,7 +1173,7 @@ RFCに対応した正規表現を構築することができました。（※IP
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

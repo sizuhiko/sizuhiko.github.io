@@ -272,6 +272,78 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a></h1>
+  <p class="postdate"><a href="/2019/05/01.html" title="Permanent link">Wednesday, May 01, 2019 08:15:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/psr.html" rel="tag">PSR</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>令和最初の記事も、PHP。
+この記事は<a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a>の続編です。</p>
+
+<p>前回のサンプルプログラムでは <a href="https://github.com/zendframework/zend-diactoros">zendframework/zend-diactoros</a> の <a href="https://docs.zendframework.com/zend-diactoros/v2/factories/">HTTP Message Factories</a> を使って PSR-7のHTTPレスポンス(<code>Psr\Http\Message\ResponseInterface</code>)を作っていました。</p>
+
+<p>今回は、他のライブラリを使っても大丈夫か考えてみたいと思います。</p>
+
+<h3>PHP-17 の HTTP Factories に対応したライブラリ</h3>
+
+<p><a href="https://packagist.org/?query=factory&amp;tags=psr-17">PackagistでPSR-17を検索</a>してみました。
+PSR-15ほどはないようです。ということで独断と偏見（ダウンロード数が多いもの）を選んで比較してみたいと思います。
+なお「フレームワーク」と書いてあるものや、特定のPSR-7ライブラリ <strong>だけ</strong> に依存したもの（たとえば<code>http-factory-guzzle</code>など）は除外しています。</p>
+
+<ul>
+<li><a href="https://github.com/tuupola/http-factory">tuupola/http-factory</a></li>
+<li><a href="https://github.com/tbreuss/http-factory">tebe/http-factory</a></li>
+</ul>
+
+<p>それぞれのライブラリの説明を読んで気づくでしょう。</p>
+
+<p><code>PSR-17 HTTP-Factory with auto-discovery support</code></p>
+
+<p>そう先ほど「特定のPSR-7ライブラリ <strong>だけ</strong> に依存したもの」と書きましたが、実は特定のライブラリに依存します。
+それはそうですよね。PSR-7のHTTPレスポンスインターフェースの実装インスタンスを <strong>生成</strong> しないといけないので、何かしらに依存します。</p>
+
+<p>ただ、こういった <code>auto-discovery</code> してくれるライブラリを使っておくと、PSR-7のライブラリを変更したときも影響が少ないですね。
+でもそれ、さっきのサンプルで DI してたから、それで良くない？というのは、まさにそのとおりです。</p>
+
+<h3>で、結局どうすると良いの？</h3>
+
+<ul>
+<li>PSR-7/PSR-11/PSR-15/PSR-17 を使うアーキテクチャにするなら、FactoryInterfaceをDIすれば影響範囲は設定箇所だけになります</li>
+<li>PSR-7/PSR-15/PSR-17 を使う(PSR-11を使わない)アーキテクチャにするなら、上記のような PSR-7 を自動判定してくれるライブラリを使うと良い</li>
+</ul>
+
+<p>ということになると思います。</p>
+
+<p>それならPSR-7のライブラリも使い分けたサンプルが見たかった！とかあるかもしれませんが、それはまた今度！（機会があれば）</p>
+
+<h3>おまけ</h3>
+
+<p>さて、PSR-7/PSR-15/PSR-17 の話は面白かったですか？
+これに加えて、フロントエンドも含めてフレームワークに依存しないアプリケーションとは？
+みたいな話を<a href="http://phpcon.fukuoka.jp/2019">PHPカンファレンス福岡2019</a>でします。
+午後一のセッション。また <a href="https://twitter.com/soudai1025">@soudai1025</a> の裏になりましたが、私の方がマニアックな話なのかな。</p>
+
+<p>では6月に福岡でお会いしましょう！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/01/psr-17-libraries.html">
+          <a class="twitter" data-title="PSR-17 HTTP Factories のライブラリ"></a>
+          <a class="facebook" data-title="PSR-17 HTTP Factories のライブラリ"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/04/30/psr-15-libraries.html">PSR-15リクエストハンドラーのライブラリ比較</a></h1>
   <p class="postdate"><a href="/2019/04/30.html" title="Permanent link">Tuesday, April 30, 2019 09:28:00 PM</a></p>
   <p class="tags">
@@ -652,145 +724,6 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a></h1>
-  <p class="postdate"><a href="/2019/04/26.html" title="Permanent link">Friday, April 26, 2019 04:47:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a>の続編です。</p>
-
-<p>今回からは<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
-
-<p>うまく動作させるために試行錯誤して変更したファイル、実に110。1回では書ききれない予感が&hellip;</p>
-
-<h3>不要になったファイルを削除</h3>
-
-<p><code>bower.json</code> や <code>.bowerrc</code> ファイルは、Polymer3でnpmに移行したので、削除します。</p>
-
-<h3>linterを追加</h3>
-
-<p>lintは <code>polymer-cli</code> にも付いているのですが、エディタで編集中にも状況は知りたいので、eslintを導入します。
-Polymer1のころはHTMLファイルだったので、特に不要でしたね。</p>
-
-<h3>ビルドを変更</h3>
-
-<p>これまでbuildは独自にgulpで実装していたのですが、Polymer3対応をするに伴い<a href="https://www.npmjs.com/package/polymer-build">polymer-build</a>を使うようにしました。
-これは <code>polymer CLI</code> でも使っているビルドライブラリです。ビルドについては、この連載で触れていきます。</p>
-
-<h3>polymer.jsonの変更</h3>
-
-<p><code>shell</code> や <code>fragments</code> で指定したファイルの拡張子を <code>html</code> から <code>js</code> に変更します。
-これは自動的に変換されないので注意しましょう。
-<code>extraDependencies</code> や、そのほかの定義も変わっていますが、このあたりは<a href="https://polymer-library.polymer-project.org/3.0/docs/tools/polymer-json">polymer.json specification</a>を参考にPolymer3形式に1から記述するぐらいの気持ちでいましょう。</p>
-
-<h3>変換された自作のカスタムエレメントを修正する</h3>
-
-<p>まずmodulizerで変換すると、Polymer本体のimportが </p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">../bower_components/polymer/polymer-legacy.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>のようになっているので、これを </p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@polymer/polymer/polymer-legacy.js</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span><span class="nx">Polymer</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/polymer/lib/legacy/polymer-fn.js</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span><span class="nx">html</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/polymer/lib/utils/html-tag.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>のように変更しました。</p>
-
-<p>なお、公式ドキュメントによると </p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span><span class="nx">PolymerElement</span><span class="p">,</span> <span class="nx">html</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/polymer/polymer-element.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>にしていますが、これは <code>PolymerElement</code> 使っている場合なので、ハイブリッドモードの書き方の場合は、私のようにlegacyを使ってください。</p>
-
-<p>続いてテンプレートが以下のように <code>Polymer.html</code> を参照するようになっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
-  <span class="na">_template</span><span class="p">:</span> <span class="nx">Polymer</span><span class="p">.</span><span class="nx">html</span><span class="s2">`
-</span></code></pre></div>
-<p>この記述は利用できないので、以下のように <code>import</code> した <code>html</code> を利用するように変更します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
-  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="s2">`
-</span></code></pre></div>
-<h3>bower_components を使わないようにする</h3>
-
-<p>変換されたjsファイルは、bower_components上に変換されたモジュールを参照しにいきます。
-そこで各々のパッケージがnpmに公開されているか調べて、npmに移行していきます。</p>
-
-<p>すでに上記で <code>bower_components/polymer</code> を変更していますが、これを例に説明します。</p>
-
-<ol>
-<li>まず<a href="https://www.webcomponents.org">webcomponents.org</a>のサイトでWebComponentsを検索します。</li>
-<li>この例では <code>polymer</code> を入力して検索すると、該当のものが見つかるので、<a href="https://www.webcomponents.org/element/@polymer/polymer">詳細ページ</a>を開きます。<img src="/images/blog/2019-04-27-www.webcomponents.org-78097a3d36c6.png" alt="" /></li>
-<li>もし <code>ES Modiles</code> に対応していれば、左側に <code>View on NPM</code> が表示されます。</li>
-<li><code>INSTALLED VIA NPM</code> のリンクをクリックすると <code>npm install --save Polymer/polymer</code> のように表示されるので、CLIからインストールします。</li>
-<li>bower_componentsから、参照しなくなったjsファイルを削除します。</li>
-</ol>
-
-<h3>WebComponents V1対応に追従する</h3>
-
-<p>自分が記述したCustomElementsには利用していなかった <code>&lt;content&gt;</code> も、依存関係のタグでは利用している場合があります。
-例えば<a href="https://www.webcomponents.org/element/@polymer/app-layout">@polymer/app-layout</a>は、レイアウトないのコンポーネントを識別するときに利用しているので、slot対応を行います。たとえば以下のドロワー記述は</p>
-<div class="highlight"><pre class="highlight html"><code>      <span class="nt">&lt;app-drawer&gt;</span>
-</code></pre></div>
-<p>次のように <code>slot</code> 識別を追加します。</p>
-<div class="highlight"><pre class="highlight html"><code>      <span class="nt">&lt;app-drawer</span>  <span class="na">slot=</span><span class="s">"drawer"</span><span class="nt">&gt;</span>
-</code></pre></div>
-<p>このあたりの修正ポイントは、タグが表示されなくなることで気がつきますが、アップデートしたら最新のドキュメントを一読することをオススメします。
-他にも修正箇所があるかもしれませんので。</p>
-
-<h3>importHref を修正する</h3>
-
-<p><code>iron-pages</code> でページを切り替えるとき、Polymer1では動的に HTML import を実行していました。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">_pageChanged</span><span class="p">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">importHref</span><span class="p">(</span><span class="dl">'</span><span class="s1">/elements/te-</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">page</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">.html</span><span class="dl">'</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
-</code></pre></div>
-<p><code>ES Module</code>を使うPolymer3では以下のように書き換えます。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="k">switch</span> <span class="p">(</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">case</span> <span class="dl">'</span><span class="s1">admin</span><span class="dl">'</span><span class="p">:</span>
-        <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./te-admin.js</span><span class="dl">'</span><span class="p">);</span>
-        <span class="k">break</span><span class="p">;</span>
-      <span class="k">case</span> <span class="dl">'</span><span class="s1">devices</span><span class="dl">'</span><span class="p">:</span>
-        <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./te-devices.js</span><span class="dl">'</span><span class="p">);</span>
-        <span class="k">break</span><span class="p">;</span>
-      <span class="k">case</span> <span class="dl">'</span><span class="s1">login</span><span class="dl">'</span><span class="p">:</span>
-        <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./te-login.js</span><span class="dl">'</span><span class="p">);</span>
-        <span class="k">break</span><span class="p">;</span>
-      <span class="k">case</span> <span class="dl">'</span><span class="s1">about</span><span class="dl">'</span><span class="p">:</span>
-        <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./te-about.js</span><span class="dl">'</span><span class="p">);</span>
-        <span class="k">break</span><span class="p">;</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p><code>import</code> の引数には変数が利用できないので注意してください。</p>
-
-<h3>Polyfillを変更する。</h3>
-
-<p>HTMLファイルではpolyfillLをインポートしています。
-Polymer1では <code>/bower_components/webcomponentsjs/webcomponents-lite.min.js</code> を使いましたが、Polymer3では以下のpolyfillに変更します。
-これもnpmを使ってインストールするように変更します。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>このように修正を重ねていくことで、徐々に動作するエレメントが増えてきます。
-ここまでは多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所です。
-Toilet Evolutionでは、まだまだ修正箇所がありましたので、続きは<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">次回</a>で。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/04/26/toilet-evolution-polymer3-vol2.html">
-          <a class="twitter" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(2)"></a>
-          <a class="facebook" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(2)"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -820,6 +753,7 @@ Toilet Evolutionでは、まだまだ修正箇所がありましたので、続�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -829,7 +763,6 @@ Toilet Evolutionでは、まだまだ修正箇所がありましたので、続�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -946,7 +879,7 @@ Toilet Evolutionでは、まだまだ修正箇所がありましたので、続�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

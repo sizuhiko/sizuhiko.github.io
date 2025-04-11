@@ -272,6 +272,105 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h1>
+  <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 02:40:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
+      <a href="/tags/actions.html" rel="tag">Actions</a>
+      <a href="/tags/packages.html" rel="tag">Packages</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>以前に <a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a> という記事を書きましたが
+それから状況は変わり CI は drone.io から GHE の Actions を使うように、プロジェクト内のプライベートパッケージは Packages に入れるようになりました。</p>
+
+<p>すべて GHE のプラットフォームに寄せられたのは良かったのですが、現時点まだ Dependabot はβ版のようなので、ひとまずセルフホストランナーを使って実行できるようにしてみました。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">dependabot</span>
+<span class="na">on</span><span class="pi">:</span>
+  <span class="na">workflow_dispatch</span><span class="pi">:</span>
+  <span class="na">schedule</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">cron</span><span class="pi">:</span> <span class="s1">'</span><span class="s">お好みのスケジュールで'</span>
+<span class="na">jobs</span><span class="pi">:</span>
+  <span class="na">dependabot</span><span class="pi">:</span>
+    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">self-hosted</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">PROJECT_PATH</span><span class="pi">:</span> <span class="s">${{ github.repository }}</span>
+      <span class="na">BRANCH</span><span class="pi">:</span> <span class="s">develop</span>
+      <span class="na">PACKAGE_MANAGER</span><span class="pi">:</span> <span class="s">npm_and_yarn</span>
+      <span class="na">GITHUB_ACCESS_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ACCESS_TOKEN }}</span>
+      <span class="na">GITHUB_ENTERPRISE_ACCESS_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ENTERPRISE_ACCESS_TOKEN }}</span>
+      <span class="na">GITHUB_ENTERPRISE_HOSTNAME</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ENTERPRISE_HOSTNAME }}</span>
+      <span class="na">NPM_REGISTRY_URL</span><span class="pi">:</span> <span class="s">npm.github.hoge.com</span>
+      <span class="na">NPM_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.PACKAGES_DOWNLOAD_TOKEN }}</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">docker pull dependabot/dependabot-core</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">run dependabot</span>
+        <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
+          <span class="s">rm -rf dependabot-script</span>
+          <span class="s">git clone https://foo:${GITHUB_ACCESS_TOKEN}@github.com/sizuhiko/dependabot-script.git</span>
+          <span class="s">cd dependabot-script</span>
+          <span class="s">docker run -v "$(pwd):/home/dependabot/dependabot-script" \</span>
+          <span class="s">-w /home/dependabot/dependabot-script dependabot/dependabot-core bundle install -j 3 --path vendor</span>
+          <span class="s">docker run --rm -v "$(pwd):/home/dependabot/dependabot-script" \</span>
+          <span class="s">-w /home/dependabot/dependabot-script \</span>
+          <span class="s">-e PROJECT_PATH=${PROJECT_PATH} \</span>
+          <span class="s">-e BRANCH=${BRANCH} \</span>
+          <span class="s">-e PACKAGE_MANAGER=${PACKAGE_MANAGER} \</span>
+          <span class="s">-e GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \</span>
+          <span class="s">-e GITHUB_ENTERPRISE_ACCESS_TOKEN=${GITHUB_ENTERPRISE_ACCESS_TOKEN} \</span>
+          <span class="s">-e GITHUB_ENTERPRISE_HOSTNAME=${GITHUB_ENTERPRISE_HOSTNAME} \</span>
+          <span class="s">-e NPM_REGISTRY_URL=${NPM_REGISTRY_URL} \</span>
+          <span class="s">-e NPM_TOKEN=${NPM_TOKEN} \</span>
+          <span class="s">dependabot/dependabot-core bundle exec ruby ./generic-update-script.rb</span>
+</code></pre></div>
+<p>GHE では <code>self-hosted</code> ランナーを使うのが一般的なのですが、そこに dependabot を入れるのではなく、 <code>dependabot-core</code> の Docker イメージを使って実行できるようにします。
+これは以前の記事と同じ実行方法ですね。</p>
+
+<p>で、drone.io の場合と異なり Actions で該当のリポジトリで cron ビルドするようにしています。
+cron のスケジュールは日次なり、週次なりで良いでしょう。</p>
+
+<h3>設定する環境変数</h3>
+
+<p>以下の環境変数でコントロールしています。</p>
+
+<ul>
+<li>BRANCH PRの向き先のブランチ名。git flow の場合は develop</li>
+<li>PACKAGE<em>MANAGER パッケージマネージャ名。npmやyarnの場合は npm</em>and_yarn</li>
+<li>GITHUB<em>ACCESS</em>TOKEN GitHubのアクセストークン。GHEのシークレットに入れておくと良いです</li>
+<li>GITHUB<em>ENTERPRISE</em>ACCESS_TOKEN GHEのアクセストークン。GHEのシークレットに入れておくと良いです</li>
+<li>GITHUB<em>ENTERPRISE</em>HOSTNAME GHEのホスト名。GHEのシークレットに入れておくと良いです</li>
+<li>NPM<em>REGISTRY</em>URL プライベートレジストリのURL</li>
+<li>NPM_TOKEN パッケージダウンロード権限のあるPAT(GHEのPersonal Access Token)。GHEのシークレットに入れておくと良いです</li>
+</ul>
+
+<h3>dependabot-script を fork してみた</h3>
+
+<p>さて、あとは <code>dependabot-core</code> のイメージ内で <code>dependabot-script</code> を動かせば良いのですが、 <code>dependabot-script</code> が Github Pakages への参照ができないため、 fork して少し修正をしています。</p>
+
+<p><code>dependabot-core</code> はプライベートレジストリの認証に対応しているので、 <a href="https://github.com/sizuhiko/dependabot-script/commit/ac81dc8bbeb6538344c73a28795f8c4513d1a818">scriptを少し修正して</a>対応しています。</p>
+
+<p>なお、 <code>dependabot-script</code> にも同様の対応のPR <a href="https://github.com/dependabot/dependabot-script/pull/632/files">Read private repository credentials from environment</a> が出ているので、いずれ公式に対応されるかもしれないです。</p>
+
+<p>とくに GitHub Packages みたいなプライベートレジストリを使っていないのであれば、公式の <code>dependabot-script</code> を使ってもらえば良いと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/03/dependabot-on-ghe-actions-with-packages.html">
+          <a class="twitter" data-title="DependabotをGHEのActionsとPackagesで利用する"></a>
+          <a class="facebook" data-title="DependabotをGHEのActionsとPackagesで利用する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a></h1>
   <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 11:07:00 AM</a></p>
   <p class="tags">
@@ -763,161 +862,6 @@ Twitter に書き込みをされている方がいました
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2020/02/17/m5stack-soracom-felica.html">M5stack の Soracom 拡張ボードを使って FeliCa リーダーで読み取った値を送信する</a></h1>
-  <p class="postdate"><a href="/2020/02/17.html" title="Permanent link">Monday, February 17, 2020 04:52:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/m5stack.html" rel="tag">M5Stack</a>
-      <a href="/tags/soracom.html" rel="tag">Soracom</a>
-      <a href="/tags/gcp.html" rel="tag">GCP</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>昨年 <a href="/2019/08/12/google-cloud-next-tokyo.html">Google Cloud Next Tokyo&#39;19 に出展しました</a> でも書いた
-勤怠システムを打刻するシステムですが、どこでも簡単に使えるようなデバイスを作ることにしました。</p>
-
-<ul>
-<li><a href="https://www.switch-science.com/catalog/3647/">M5Stack</a></li>
-<li><a href="https://soracom.jp/products/kit/3g_module_m5stack/">SORACOM M5Stack用 3G 拡張ボード</a></li>
-<li><a href="https://www.switch-science.com/catalog/3650/">M5Stackプロトモジュール</a></li>
-<li><a href="https://www.switch-science.com/catalog/353/">FeliCa リーダー・ライター RC-S620S</a></li>
-<li><a href="https://www.switch-science.com/catalog/1029/">FeliCa RC-S620S/RC-S730 ピッチ変換基板のセット(フラットケーブル付き)</a></li>
-</ul>
-
-<p>あたりを使います。FeliCaに関連する部材は、WiFi版のプロト開発でも使っていたので新しいのはM5StackとSORACOM拡張ボードあたりになります。
-プロトモジュールはピッチ変換基板を取り付けるのに利用します。</p>
-
-<p>Cloud Nextで展示したWiFi版からの変更として、以下のような作業を行いました。</p>
-
-<ul>
-<li>M5Stackでの出退勤画面UI作成</li>
-<li>M5StackとFeliCaリーダーの疎通</li>
-<li>M5StackとSORACOM拡張ボードの疎通とインターネット接続確認</li>
-</ul>
-
-<p>まぁこれだけやれば、あとは組み合わせるだけですね！</p>
-
-<h3>ハードウェアシリアルをどのように利用するか</h3>
-
-<p>3G拡張ボードも、FeliCaリーダーもUARTのポートを使って通信するので、リソースの割り当てを考えないといけません。
-3G拡張ボードは <a href="https://qiita.com/ma2shita/items/e6f84f1d2e8c94e12e31">M5Stack用3G拡張ボードを使う際、PIN(16,17)を利用するデバイスの対応</a> の記事でも紹介されているように、16,17固定で
-それ以外を使うのは困難なため、FeliCa側を</p>
-<div class="highlight"><pre class="highlight c"><code><span class="n">M5StackGPS</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">9600</span><span class="p">,</span> <span class="n">SERIAL_8N1</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
-</code></pre></div>
-<p>みたいにして対応予定にしていました。</p>
-
-<h3>なぜかうまく動かない</h3>
-
-<p>M5Stackのプログラムのコンパイルも通過し、</p>
-
-<ul>
-<li>3G拡張ボードの初期化</li>
-<li>IPアドレスの取得</li>
-<li>FeliCaリーダーの初期化</li>
-<li>FeliCaカードの読み取り</li>
-</ul>
-
-<p>まで動作したのですが、ここでSORACOM Beamに接続しようとするとエラーになりました。</p>
-
-<p>で、ここからATコマンドのデバッグをONにしたり、さまざまなログ出力をしてみたのですが、
-さっぱりわからず、2日間ほどかけてしまって心が折れたところで愚痴Tweetしてしまったのです&hellip;</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">M5でSORACOMの拡張ボード使って、HTTPだと通信できるのに、BEAM に接続しようと思うと、何やっても接続できなくて、何でこんなの買ったのかな&hellip; という気分になる。<br>まぁBEAM通さず直接MQTTSやれば接続できてるんだけど、なんだかなー</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1225009444737564673?ref_src=twsrc%5Etfw">February 5, 2020</a></blockquote>
-
-<p>そしたら <a href="https://twitter.com/ma2shita">Max@ソラコムさん</a> からレスもらってしまって、大変申し訳なくデバッグを続けることに。</p>
-
-<h3>結論としては解決</h3>
-
-<p>で、結論としては解決しました。</p>
-
-<p>dakoku-m5.ino というファイルにメイン処理を書いていて、そこで3G拡張ボードの初期化をしていました。</p>
-<div class="highlight"><pre class="highlight c"><code><span class="n">TinyGsm</span> <span class="nf">modem</span><span class="p">(</span><span class="n">Serial2</span><span class="p">);</span> <span class="cm">/* 3G board modem */</span>
-<span class="n">TinyGsmClient</span> <span class="nf">ctx</span><span class="p">(</span><span class="n">modem</span><span class="p">);</span>
-</code></pre></div>
-<p>次に RCS620S.cpp という <code>FeliCa リーダー・ライター RC-S620S</code> のArduinoライブラリのコードをローカルに展開するのですが、そこで以下のようにしていました。</p>
-<div class="highlight"><pre class="highlight c"><code><span class="cm">/* --------------------------------
- * Variable
- * -------------------------------- */</span>
-
-<span class="n">HardwareSerial</span> <span class="nf">RCS620SSerial</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
-
-<span class="c1">// 省略...</span>
-
-<span class="kt">int</span> <span class="n">RCS620S</span><span class="o">::</span><span class="n">initDevice</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">response</span><span class="p">[</span><span class="n">RCS620S_MAX_RW_RESPONSE_LEN</span><span class="p">];</span>
-    <span class="kt">uint16_t</span> <span class="n">responseLen</span><span class="p">;</span>
-
-    <span class="n">RCS620SSerial</span><span class="p">.</span><span class="n">begin</span><span class="p">(</span><span class="mi">115200</span><span class="p">,</span> <span class="n">SERIAL_8N1</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">21</span><span class="p">);</span>      <span class="c1">// for RC-S620/S</span>
-</code></pre></div>
-<p>FeliCaリーダーはコンフリクトを避けるために21/22番ポートを利用しています。</p>
-
-<p>懸命な読者の皆様はすぐに気づきますかね。
-まぁこの場所だけ抜き出すとすぐ気づくかもしれないのですが、たくさんのコードからこの問題に気づくのにはとても時間がかかりました。</p>
-
-<h3>時間がかかった原因</h3>
-
-<p>まず</p>
-
-<ul>
-<li>3G拡張ボードの初期化</li>
-<li>IPアドレスの取得</li>
-<li>FeliCaリーダーの初期化</li>
-<li>FeliCaカードの読み取り</li>
-</ul>
-
-<p>の動作が正常に動いたことで、どこが悪いのか検討もつかなくなったというのがあります。
-たとえばFeliCaリーダーの初期化が失敗したり、IPアドレスが取得できなかったら、
-もっと早く気がついたかも。</p>
-
-<p>処理順番としては、まず3G拡張ボードの初期化が動いて、IPアドレス取得まで成功します。
-その後でFeliCaリーダーの初期化が動くので、ここでシリアル2の接続を上書きしてしまいます。</p>
-
-<p>最初はシリアル2は16/17番を向いているのですが、途中で21/22番に切り替わります。
-なんですべての通信命令はFeliCaリーダーに送信されて、動かないと&hellip;</p>
-
-<p>こんな感じでATコマンドのデバッグを入れていたのですが、まぁATコマンドとしてFeliCaリーダーに送信しているので、原因調査の切り口も良くなかった&hellip;</p>
-<div class="highlight"><pre class="highlight c"><code><span class="cp">#define TINY_GSM_DEBUG Serial
-#define TINY_GSM_MODEM_UBLOX
-#include</span> <span class="cpf">&lt;TinyGsmClient.h&gt;</span><span class="cp">
-</span></code></pre></div>
-<h3>言い訳</h3>
-
-<p>M5Stackはスタックの名前のとおりボードを積み上げていくので、各ボードのポートに電気信号が流れているのか検知が難しいですね。
-テスター使ったり、LED光らせるわけにもいかない。</p>
-
-<p>ということで、自分で拡張ボード作るときはM5Stackの穴（ネジ穴？）みたいなところにLED入れて、利用状況を可視化したいなと思いました。</p>
-
-<h3>さいごに</h3>
-
-<p>RCS620S.cpp のシリアル番号を1に変更してうまく動作しました。
-SORACOM BeamからGoogle IoT Coreにもうまく連携できた。これは簡単！（苦労は忘れました</p>
-<div class="highlight"><pre class="highlight c"><code><span class="cm">/* --------------------------------
- * Variable
- * -------------------------------- */</span>
-
-<span class="n">HardwareSerial</span> <span class="nf">RCS620SSerial</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</code></pre></div>
-<p>これでどこでもSIMを使った通信で勤怠打刻できるようになった。</p>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2020/02/17/m5stack-soracom-felica.html">
-          <a class="twitter" data-title="M5stack の Soracom 拡張ボードを使って FeliCa リーダーで読み取った値を送信する"></a>
-          <a class="facebook" data-title="M5stack の Soracom 拡張ボードを使って FeliCa リーダーで読み取った値を送信する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -947,6 +891,7 @@ SORACOM BeamからGoogle IoT Coreにもうまく連携できた。これは簡�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -956,7 +901,6 @@ SORACOM BeamからGoogle IoT Coreにもうまく連携できた。これは簡�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -1073,7 +1017,7 @@ SORACOM BeamからGoogle IoT Coreにもうまく連携できた。これは簡�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

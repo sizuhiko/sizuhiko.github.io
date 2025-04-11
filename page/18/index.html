@@ -272,6 +272,211 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/01/07/gcp-bitnami-memcached-server.html">GCPにBitnamiでmemcachedサーバーを作る</a></h1>
+  <p class="postdate"><a href="/2019/01/07.html" title="Permanent link">Monday, January 07, 2019 11:26:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/gcp.html" rel="tag">GCP</a>
+      <a href="/tags/memcached.html" rel="tag">memcached</a>
+      <a href="/tags/bitnami.html" rel="tag">Bitnami</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年最初の記事はmemcachedのサーバーを作ることからです。</p>
+
+<h3>なんで今さらサーバーを？</h3>
+
+<p>私は現在<a href="https://toiletevolution.space/">Toilet Evolution</a>というサービスを作っていて、まぁ特に流行ってもいないのですが、トイレ監視のIoTプラットフォームをやっています。
+これはGAE(Google App Engine)で動いていて、PHP5.5で作られています。</p>
+
+<p>GAEには<a href="https://github.com/google/gvisor">gVisor</a>というコンテナ技術をベースにした第二世代( <code>2nd Gen</code> と呼ばれている )があるのですが、PHP7.2が使えるようになります。
+しかしこれに伴い、これまで使えていたmemcachedサーバーが使えなくなります。
+通常のGCPアプリと一緒となり、<a href="https://cloud.google.com/memorystore/?hl=ja">Cloud Memorystore</a>を使えということですね。
+ただ、これには無料枠がなくて、（なんとか低額でやっていきたい層だけが）ぬーんとなるので、今回 GCP の無料インスタンス <code>f1-micro</code> にmemcachedサーバー(SASL付き)を構築してみようという試みです（<code>f1-micro</code> が無料で使えるのは米国リージョンだけです）。</p>
+
+<h3>Bitnami</h3>
+
+<p><a href="https://bitnami.com">Bitnami</a>とは、アプリケーションをインストールするのを支援するサービスで、クラウドにも対応しています。
+memcachedサーバーをGCP上に構築するのも、GUIからポチポチと実行できます。
+もちろん自力でやっても問題はないので、<a href="https://blog.couchbase.com/sasl-memcached-now-available/">SASL memcached now available!</a>みたいな記事を読んでやってもOKです。</p>
+
+<p>Bitnamiの画面遷移とかざっくりした説明は書きません。
+<a href="https://stpost.net/se/web-se/server/gcp-redmine-environment">GCPにRedmine環境を作ってみた</a>というBlogが、Bitnamiを使ってGCPにRedmine環境を作るという内容で、スクショもたくさんあってわかりやすいです。
+まぁ使ってみてそんなにハマりどころはないので、読まなくてもだいたい大丈夫です（ただし英語アレルギーとかない人）。</p>
+
+<h3>プロジェクトを作る</h3>
+
+<p>GCPでプロジェクトを作って（もしくは既存のプロジェクトで）以下のAPIを有効化しておくと、Bitnamiからのデプロイが簡単に進みます。</p>
+
+<ul>
+<li><a href="https://console.cloud.google.com/apis/api/compute.googleapis.com/overview">Compute Engine API</a></li>
+<li><a href="https://console.cloud.google.com/apis/api/deploymentmanager.googleapis.com/overview">Google Cloud Deployment Manager V2 API</a></li>
+</ul>
+
+<p>あとは課金の設定。</p>
+
+<h3>memcachedサーバーを作る</h3>
+
+<p>米国リージョンを選択するのですが、App Engine と同じリージョンに配置したいので、 <code>gcloud app regions list</code> で利用できるリージョンを確認しておきましょう（GAEからはインターネット越しになるので、それほど意味があるかはわかりませんが、気分的な問題ですw）。</p>
+
+<p>memcachedを選択して、プロジェクトを選んでいくと <code>us-xxxx</code> のリージョンで <code>f1-micro</code> を選択したのに、料金が表示（$4.28ぐらい）されるかもしれませんが、
+<a href="https://cloud.google.com/free/docs/always-free-usage-limits">f1-micro インスタンス使用量は、最初の 744 時間分が無料</a> なので、744時間 == 31日 ということで実質月額無料です。</p>
+
+<p><code>Application Info</code> にユーザー名 <code>user</code> とパスワードがあるので、PHPから接続する情報として記録しておきます。
+<code>Server Info</code> にアクセスするときのIPアドレスがあるので記録しておきます。また、SSHするときのキーがあるので、何かのときのためにダウンロードしておきます。</p>
+
+<p><a href="https://console.cloud.google.com/compute/instances">Cloud ConsoleのVMインスタンス</a>に、memcachedサーバーができているのを確認しておきます。</p>
+
+<h4>App Engine からアクセスできるようにする</h4>
+
+<p>このままでは App Engine からアクセスできない（App Engine はインターネット経由でGCPのVMにアクセスするため）ので、ファイヤーウォールの設定を行います。
+Bitnamiのドキュメント<a href="https://docs.bitnami.com/google/infrastructure/memcached/administration/connect-remotely/">Connect To Memcached From A Different Machine</a>によると、ポート <code>11211</code> を解放するよう書いてあります。
+BitnamiからインストールされるmemcachedはデフォルトでSASL認証がonになっているので、PaaSのようにIP制限できない環境からクラウド越しに利用するときは安心ですね。</p>
+
+<p>もし、GCPでのファイヤーウォール設定のやり方がわからない場合は、上記ページの <code>the FAQ</code> の遷移先 <a href="https://docs.bitnami.com/google/faq/administration/use-firewall/">Open Or Close Server Ports</a>が参考になります。</p>
+
+<h3>サンプルプログラム</h3>
+
+<p><a href="https://github.com/sizuhiko/gae-php7-memcache-sample">GAE 2nd Gen で動くPHP7.2のサンプルプログラム</a>を用意しました。</p>
+
+<p><code>app.yaml</code> ファイルの環境変数を3つ設定します。</p>
+
+<ul>
+<li>MEMCACHED<em>SERVER</em>ADDR: memcached サーバーのIP</li>
+<li>MEMCACHED_USERNAME: ユーザー名。これはデフォルトで <code>user</code> になっているので、変更不要</li>
+<li>MEMCACHED_PASSWORD: <code>Application Info</code> で表示できるパスワード</li>
+</ul>
+
+<p>以下のコマンドでプロジェクトにApp Engineを作ります。例えば <code>us-west2</code> に memcached サーバーを構築したら以下のような感じです。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gcloud app create --region=us-west2
+</code></pre></div>
+<p>続いて、アプリケーションをデプロイします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gcloud app deploy
+</code></pre></div>
+<h3>実行してみる</h3>
+
+<p>GAEのエンドポイントに接続すると、以下のように表示され、memcached と接続し読み書きできていることがわかります。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Array
+(
+    [xxx.xxx.xxx.xxx:11211] =&gt; Array
+        (
+            [pid] =&gt; 1786
+            [uptime] =&gt; 4689
+            [time] =&gt; 1546843636
+            [version] =&gt; 1.5.12
+            [libevent] =&gt; 2.0.17-stable
+            [pointer_size] =&gt; 64
+            [rusage_user] =&gt; 0.46
+            [rusage_system] =&gt; 0.188
+            [max_connections] =&gt; 1024
+            [curr_connections] =&gt; 2
+            [total_connections] =&gt; 5
+            [rejected_connections] =&gt; 0
+            [connection_structures] =&gt; 3
+            [reserved_fds] =&gt; 20
+            [cmd_get] =&gt; 2
+            [cmd_set] =&gt; 2
+            [cmd_flush] =&gt; 0
+            [cmd_touch] =&gt; 0
+            [get_hits] =&gt; 2
+            [get_misses] =&gt; 0
+            [get_expired] =&gt; 0
+            [get_flushed] =&gt; 0
+            [delete_misses] =&gt; 0
+            [delete_hits] =&gt; 0
+            [incr_misses] =&gt; 0
+            [incr_hits] =&gt; 0
+            [decr_misses] =&gt; 0
+            [decr_hits] =&gt; 0
+            [cas_misses] =&gt; 0
+            [cas_hits] =&gt; 0
+            [cas_badval] =&gt; 0
+            [touch_hits] =&gt; 0
+            [touch_misses] =&gt; 0
+            [auth_cmds] =&gt; 3
+            [auth_errors] =&gt; 0
+            [bytes_read] =&gt; 607
+            [bytes_written] =&gt; 6855
+            [limit_maxbytes] =&gt; 67108864
+            [accepting_conns] =&gt; 1
+            [listen_disabled_num] =&gt; 0
+            [time_in_listen_disabled_us] =&gt; 0
+            [threads] =&gt; 4
+            [conn_yields] =&gt; 0
+            [hash_power_level] =&gt; 16
+            [hash_bytes] =&gt; 524288
+            [hash_is_expanding] =&gt; 0
+            [slab_reassign_rescues] =&gt; 0
+            [slab_reassign_chunk_rescues] =&gt; 0
+            [slab_reassign_evictions_nomem] =&gt; 0
+            [slab_reassign_inline_reclaim] =&gt; 0
+            [slab_reassign_busy_items] =&gt; 0
+            [slab_reassign_busy_deletes] =&gt; 0
+            [slab_reassign_running] =&gt; 0
+            [slabs_moved] =&gt; 0
+            [lru_crawler_running] =&gt; 0
+            [lru_crawler_starts] =&gt; 3060
+            [lru_maintainer_juggles] =&gt; 4979
+            [malloc_fails] =&gt; 0
+            [log_worker_dropped] =&gt; 0
+            [log_worker_written] =&gt; 0
+            [log_watcher_skipped] =&gt; 0
+            [log_watcher_sent] =&gt; 0
+            [bytes] =&gt; 69
+            [curr_items] =&gt; 1
+            [total_items] =&gt; 2
+            [slab_global_page_pool] =&gt; 0
+            [expired_unfetched] =&gt; 0
+            [evicted_unfetched] =&gt; 0
+            [evicted_active] =&gt; 0
+            [evictions] =&gt; 0
+            [reclaimed] =&gt; 0
+            [crawler_reclaimed] =&gt; 0
+            [crawler_items_checked] =&gt; 0
+            [lrutail_reflocked] =&gt; 0
+            [moves_to_cold] =&gt; 2
+            [moves_to_warm] =&gt; 0
+            [moves_within_lru] =&gt; 0
+            [direct_reclaims] =&gt; 0
+            [lru_bumps_dropped] =&gt; 0
+        )
+
+)
+Hello World
+</code></pre></div>
+<p>数回アクセスしてみると、以下のようなスペックになります。</p>
+
+<ul>
+<li>99 パーセンタイル: 90.24ms</li>
+<li>95 パーセンタイル: 89.18ms</li>
+<li>50 パーセンタイル: 77.25ms</li>
+</ul>
+
+<h3>さいごに</h3>
+
+<p>私のサービスは <code>Cloud Datastore</code> のキャッシュとしてmemcacheを使っているので、キャッシュになければ、
+永続化しているところから直接ロードするだけなので、堅牢さはそれほど必要ないです。
+できれば <code>Cloud Datastore</code> へのI/O回数を減らして低額でやりたいなぁという程度なので、<code>f1-micro</code> に1つサーバーを起動する程度で良いという割り切りです。</p>
+
+<p>あとは<a href="https://redislabs.com">redislabs</a>が30MBまでなら無料で使えるので、そういうのも選択肢としてあるかもしれないですね（実際に<a href="https://cloud.google.com/appengine/docs/standard/python3/using-redislabs-redis?hl=ja">GAE Python3のドキュメント</a>からはリンクされていたりする）。</p>
+
+<p>もし同様にやってみたいなぁと思う方がいたら参考になれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/01/07/gcp-bitnami-memcached-server.html">
+          <a class="twitter" data-title="GCPにBitnamiでmemcachedサーバーを作る"></a>
+          <a class="facebook" data-title="GCPにBitnamiでmemcachedサーバーを作る"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/12/31/final-2018.html">2018年を締めくくる最後の投稿</a></h1>
   <p class="postdate"><a href="/2018/12/31.html" title="Permanent link">Monday, December 31, 2018 02:36:00 PM</a></p>
   <p class="tags">
@@ -497,80 +702,6 @@ PolymerチームはVS Code使っているし、<a href="https://github.com/Polym
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2018/12/09/kddi-digital-gate-hacks.html">KDDI DIGITAL GATE HACKSのお手伝いをしてきました</a></h1>
-  <p class="postdate"><a href="/2018/12/09.html" title="Permanent link">Sunday, December 09, 2018 06:11:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>KDDI学生向けハッカソン<a href="https://www.kdghacks.com/">KDDI DIGITAL GATE HACKS 2018</a>でチューターとしてお手伝いをしてきました。
-どんなハッカソンなのかは<a href="https://techplay.jp/event/697271">TECH PLAYのイベントサイト</a>の方がわかりやすいかも。</p>
-
-<p><a href="https://soracom.jp/products/module/wio_lte_m1_nb1/">SORACOMのWio LTE M1/NB1</a>を使って、家での生活をワクワクさせるIoTサービスを創るイベントです。</p>
-
-<p>たくさんの大学生/大学院生が参加されて、みなさん優秀だったのでチューターとしては特にやることも少なくて、とにかく楽しいという感想が残るイベントでした。</p>
-
-<p>詳細はイベント主催であるKDDIさんからブログが公開されるのではないかと思うので、準備秘話というか「Wio LTE M1/NB1」(以後WioLTE青)のつらさを書いておきます。</p>
-
-<p>WioLTEとはSeeedが開発しSORACOMで販売しているボードです。
-これまでに</p>
-
-<ul>
-<li><a href="https://soracom.jp/products/module/wio_lte">Wio LTE JP Version</a> 以降WioLTE赤</li>
-<li><a href="https://soracom.jp/products/module/wio_3g_soracom_edition">Wio 3G SORACOM Edition</a></li>
-</ul>
-
-<p>が発売されています。WioLTE青はKDDIのSIMが利用できるのが特徴です。</p>
-
-<p>ということで、チューターはサンプルプログラムを作ったりといった準備をしていました。
-私は個人的にWioLTE赤を購入して使っていたので、その感覚でWioLTE青を使い始めたのですが、似ているのですが、だいぶ違うものなので、これから触る人は少し注意が必要です。</p>
-
-<h3>WioLTE青の良いところ</h3>
-
-<ul>
-<li>KDDIのSIMが使える</li>
-<li>DFUモードが不要なので、Arduino IDEからのプログラムの書き込みが簡単</li>
-</ul>
-
-<h3>WioLTE青の困ったところ</h3>
-
-<ul>
-<li>サンプルが少ない。でも今回たくさん作ったので<a href="https://github.com/kdg-hacks/kdg-hacks-examples">kdg-hacks-examples</a>が役に立つと良いな、と思っています。</li>
-<li>I2C通信にWireが使えない。WireI2Cを使うので既存のArduino向けライブラリを簡単に使えない。</li>
-<li>WioLTE赤と違って使っている人が少ないのでノウハウが少ない</li>
-<li>WioLTE赤は5Vセンサーでも電源だけ5Vを給電すれば5Vセンサー値も読み取れたが、どうもそれはできないっぽい</li>
-<li>interrupts/noInterruptsメソッドがArduino-Coreに実装されていないので、タイミング重要なNeoPixelといったテープLEDが使えなかった（ライブラリ使うとコンパイルとおらない）</li>
-<li><a href="https://github.com/SeeedJP/stm32f4ArduinoCore">STM32F405/407のArduinoCore</a>の実装がプアなので、Arduinoだと思うとハマる</li>
-</ul>
-
-<p>ということでGroveのセンサーだいたい使える、と思っていると5V必要だったりするセンサーが絶望的に動きません。</p>
-
-<h3>でも良いボード</h3>
-
-<p>IoTでWiFiとかかなりつらいし、LTE使えるだけでも魅力てきなので、例えば苦手な部分はArduinoで実装してI2Cスレーブとして、WioLTEから操作するのはアリかな、というか、そういう使い方が良いと思っています。悩まなくて良いし、開発スピードも増します。</p>
-
-<h3>まとめ</h3>
-
-<p>学生向けハッカソンへの参加はとても新鮮で楽しかったです。
-また機会があればイベントに協力していきたいなと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/12/09/kddi-digital-gate-hacks.html">
-          <a class="twitter" data-title="KDDI DIGITAL GATE HACKSのお手伝いをしてきました"></a>
-          <a class="facebook" data-title="KDDI DIGITAL GATE HACKSのお手伝いをしてきました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -600,6 +731,7 @@ PolymerチームはVS Code使っているし、<a href="https://github.com/Polym
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -609,7 +741,6 @@ PolymerチームはVS Code使っているし、<a href="https://github.com/Polym
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -726,7 +857,7 @@ PolymerチームはVS Code使っているし、<a href="https://github.com/Polym
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

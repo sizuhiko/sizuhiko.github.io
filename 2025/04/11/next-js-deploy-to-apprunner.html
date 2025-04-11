@@ -1,0 +1,586 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - Next.js で作ったアプリケーションを AppRunner にデプロイする</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js" defer init></script>    
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <header id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </header>
+
+    <main id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          <article>
+            <h1>Next.js で作ったアプリケーションを AppRunner にデプロイする</h1>
+            <p class="postdate"><a href="/2025/04/11.html" title="Permanent link">Friday, April 11, 2025 05:59:00 PM</a></p>
+            <p class="tags">
+                <a href="/tags/next-hs.html" rel="tag">Next.hs</a>
+                <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                <a href="/tags/cdk.html" rel="tag">CDK</a>
+            </p>
+
+          <p>こちらの記事は <a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。</p>
+
+<p>まず前編でも触れてますが、アプリケーションのリポジトリ構成は以下のようになっています。</p>
+
+<ul>
+<li>Next.js のアプリケーションリポジトリ</li>
+<li>AWSのリソースを管理するインフラリポジトリ</li>
+</ul>
+
+<p>アプリのリポジトリでは、ECR へのデプロイまでやってます。
+インフラのリポジトリで、AppRunner など AWS リソースを CDK で構築しています。</p>
+
+<h2>AppRunner で Next.js アプリケーションを動かすには</h2>
+
+<p>Next.js を standalone モードでビルドして、Docker コンテナで起動する。これだけで ok です。</p>
+
+<h3>ECR に Next.js の standalone モードビルドしたコンテナイメージを push する</h3>
+
+<p>まずは Next.js のアプケーションリポジトリの CI/CD で ECR に Docker イメージを push します。
+アプリケーションリポジトリ側にも CDK を入れてあるので、以下のようなコードで ECR にデプロイしています。
+タグは <code>package.json</code> の <code>version</code> から入手します。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">imagedeploy</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">cdk-docker-image-deployment</span><span class="dl">'</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">ecr</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-cdk-lib/aws-ecr</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">DeployStack</span> <span class="kd">extends</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">Stack</span> <span class="p">{</span>
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="p">:</span> <span class="nx">Construct</span><span class="p">,</span> <span class="nx">id</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">props</span><span class="p">?:</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">StackProps</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span>
+
+    <span class="kd">const</span> <span class="nx">projectRoot</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">'</span><span class="s1">../..</span><span class="dl">'</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="p">{</span> <span class="nx">version</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">projectRoot</span><span class="p">,</span> <span class="dl">'</span><span class="s1">package.json</span><span class="dl">'</span><span class="p">)).</span><span class="nx">toString</span><span class="p">())</span>
+    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ecr</span><span class="p">.</span><span class="nx">Repository</span><span class="p">.</span><span class="nx">fromRepositoryName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">webapp-ect</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">webapp</span><span class="dl">'</span><span class="p">)</span>
+    <span class="k">new</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">DockerImageDeployment</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">DockerImageDeployment</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Source</span><span class="p">.</span><span class="nx">directory</span><span class="p">(</span><span class="nx">projectRoot</span><span class="p">),</span>
+      <span class="na">destination</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Destination</span><span class="p">.</span><span class="nx">ecr</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">tag</span><span class="p">:</span> <span class="nx">version</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>Dockerfile は Next.js の公式サンプル<a href="https://github.com/vercel/next.js/tree/canary/examples/with-docker">With Docker</a> を参考に（というかほぼそのまま流用）すれば大丈夫です。
+ベースイメージの Node.js バージョンが古かったりするので、そこは自分たちが使うバージョンに変更しておきましょう。</p>
+
+<h3>AppRunner で ECR からデプロイする</h3>
+
+<p>こちらは前編でも触れた <code>@aws-cdk/aws-apprunner-alpha</code> が使えるので簡単にデプロイできます。
+以下のような感じで書けば良いでしょう。ヘルスチェックを何でやるかは、いろいろだと思いますが、ここではいったん <code>favicon</code> にしています。
+CDK で作成した ECR のリポジトリと、デプロイ対象のアプリケーションバージョンはコンストラクタの引数で渡せるようにしています。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Service</span><span class="p">,</span> <span class="nx">Source</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-cdk/aws-apprunner-alpha</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">WebAppConstruct</span> <span class="kd">extends</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">Stack</span> <span class="p">{</span>
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="p">:</span> <span class="nx">Construct</span><span class="p">,</span> <span class="nx">id</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">props</span><span class="p">?:</span> <span class="nx">WebAppConstructProps</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span>
+
+    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span> <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span> <span class="p">},</span>
+        <span class="na">repository</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">ecrRepository</span><span class="p">,</span>
+        <span class="na">tagOrDigest</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">webAppVersion</span><span class="p">,</span>
+      <span class="p">}),</span>
+      <span class="na">serviceName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-service</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">autoDeploymentsEnabled</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">healthCheck</span><span class="p">:</span> <span class="nx">HealthCheck</span><span class="p">.</span><span class="nx">http</span><span class="p">({</span>
+        <span class="na">healthyThreshold</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="na">interval</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/favicon.ico</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">timeout</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">unhealthyThreshold</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<h4>コラム: ヘルスチェックについて、いろいろと参考になった記事</h4>
+
+<p>実はヘルスチェックはちょっといろいろあって実際も <code>favicon</code> にしたんですけど、そのときに参考になった記事があるので、載せておきます</p>
+
+<ul>
+<li><a href="https://zenn.dev/seelog/articles/next_js_health_check">Next.js App Router でヘルスチェックをする</a></li>
+<li><a href="https://stackoverflow.com/questions/57956476/how-to-set-up-an-endpoint-for-health-check-on-next-js">How to set up an endpoint for Health check on Next.js?</a></li>
+<li><a href="https://repost.aws/questions/QUq9Sqy5hKQrSZdIuDgEJoSw/heath-check-failing-only-after-enabling-vpc-connector">Heath check failing only after enabling VPC connector</a></li>
+</ul>
+
+<h2>デプロイできたので動かしてみるが動かない</h2>
+
+<blockquote>
+<p>Error: listen EADDRNOTAVAIL: address not available 10.0.1.2:3000</p>
+</blockquote>
+
+<p>何か動きません。</p>
+
+<p>あれ、Dockerfile に <code>HOSTNAME=0.0.0.0</code> 入ってるのに何でだろう？
+ローカルで build したイメージ動かしたときは大丈夫だったんだけど？と思ったら、1つ罠があります。</p>
+
+<p>こちらの記事がとても参考になりました。
+<a href="https://zenn.dev/kojipole/articles/7e0472e71dc19b">AWS App RunnerでNext.jsのstandaloneモードを動かす時のTips(ないしは失敗談)</a></p>
+
+<blockquote>
+<p>App Runnerの環境では環境変数HOSTNAMEに対して、暗黙的にアタッチされているENIのprivate DNSが指定されるようです。</p>
+</blockquote>
+
+<p>なんですって？
+AppRunner が環境変数にセットしてくるの？？</p>
+
+<p>だから <code>10.0.1.2:3000</code> みたいな ENI の private アドレスになるんですね。Dockerfile では</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="k">ENV</span><span class="s"> HOSTNAME="0.0.0.0"</span>
+<span class="k">CMD</span><span class="s"> ["node",  "server.js"]</span>
+</code></pre></div>
+<p>のように指定されていても、コンテナ起動時に HOSTNAME を指定されるので環境変数が上書きされてセットされます。</p>
+
+<h2>CDK で HOSTNAME を設定する</h2>
+
+<p>ということで、AppRunner のサービスを作るときに環境変数 <code>HOSTNAME</code> を指定してあげます。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span>
+            <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span><span class="p">,</span>
+            <span class="na">environmentVariables</span><span class="p">:</span> <span class="p">{</span>
+                <span class="na">HOSTNAME</span><span class="p">:</span> <span class="dl">'</span><span class="s1">0.0.0.0</span><span class="dl">'</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+</code></pre></div>
+<p>これでデプロイしたら無事起動しました。👏👏</p>
+
+<p>少しでも AppRunner で Next.js アプリを動かす人の役にたてばと思います。</p>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/11/next-js-deploy-to-apprunner.html">
+                  <a class="twitter" data-title="Next.js%20%E3%81%A7%E4%BD%9C%E3%81%A3%E3%81%9F%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20AppRunner%20%E3%81%AB%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B"></a>
+                  <a class="facebook" data-title="Next.js%20%E3%81%A7%E4%BD%9C%E3%81%A3%E3%81%9F%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%92%20AppRunner%20%E3%81%AB%E3%83%87%E3%83%97%E3%83%AD%E3%82%A4%E3%81%99%E3%82%8B"></a>
+                </div>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+
+      <aside id="sidewrap">
+        <div id="side">
+          <section class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
+                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
+                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
+                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
+                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
+                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
+                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2024.html">2024</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" data-lang="ja" href="https://twitter.com/sizuhiko?ref_src=twsrc%5Etfw">Tweets by sizuhiko</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>            
+          </section>
+        </div>
+      </aside>
+
+      <footer id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </footer>
+  </body>
+</html>

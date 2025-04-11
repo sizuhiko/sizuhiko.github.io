@@ -272,6 +272,114 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/05/06/bump-middleman-4-4-2-from-3-x.html">Middleman を 3系から 4系にアップグレードした</a></h1>
+  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 10:59:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/middleman.html" rel="tag">Middleman</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>GWどこ行っても混んでそうなんで、月-金はブログを書くと決めた今年。
+ここ2年コロナでコミュニティ活動やらもできず、ブログを書くのもモチベ下がりまくりだったけど、良いきっかけになりました。
+さて、久々にブログやるのだから、せっかくなんで執筆環境もアップデートしようということで、確認すると Middleman は 4系にアップデートされていました。</p>
+
+<p>Middleman公式のアップデートガイド<a href="https://middlemanapp.com/jp/basics/upgrade-v4/">v4 へのアップグレード</a>をまずはチェック。</p>
+
+<p>ふむふむ、 config には影響ありそうだけど、それ以外は外部ライブラリやテンプレート関係っぽいので、まずはビルドしてみてかな、という感じ。
+そういえば Middleman で使ってる Ruby のバージョンも古いなーと思って、 Middleman v4 で対応している Ruby バージョンは何だろう？と調べました。</p>
+
+<p>特に記述がないので Ruby 3系でも動くのかなーと思っていたら、<a href="https://github.com/middleman/middleman/issues/2539">Cannot start server ( or use cli) with Ruby 3.0 and Middleman 4</a>なんて issue がありました。</p>
+
+<blockquote>
+<p>Which 4.4.0 tried to add some support for Ruby 3, I would not suggest relying on it. It is far too much work to support projects as old as 2008 and a language released in 2020 at the same time.</p>
+
+<p>Patches welcome or if you want to live dangerously the master branch and 5.0x series will be Ruby 3.1+ only</p>
+</blockquote>
+
+<p>とのこと。Middleman 5系になると Ruby 3.1以上のみになるんですね。まぁそれまでは Ruby 2系かぁということで、とはいえ2系も古いバージョンが手元に入っていたので、これを最新にすることにしました。</p>
+
+<h3>Ruby 2.7.6 へのアップデート</h3>
+
+<p>Ruby のバージョン管理には rbenv + ruby-build を使っているので、まずはそれ自体のアップデートを。
+brew 使っても良いのですが、僕は git から clone して使っているので、 pull して最新に。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>rbenv <span class="nb">install </span>2.7.6
+Downloading openssl-...
+
+BUILD FAILED 
+</code></pre></div>
+<p>あれ？なんかopensslダウンロードしようとして、失敗するな&hellip;</p>
+
+<p><code>rbenv brew openssl</code> でググるとありました。<a href="https://qiita.com/kazutosato/items/9c4ff7711ca992dd67e5">rbenv installがopensslで失敗する</a>、そして解決策をみて「あーこれ昔もハマった記憶があるような、ないような」という気分に。</p>
+
+<p>ということで、以下のコマンドを実行して無事アップデートできました。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">RUBY_CONFIGURE_OPTS</span><span class="o">=</span><span class="s2">"--with-openssl-dir=/opt/local/bin/openssl"</span> rbenv <span class="nb">install </span>2.7.6
+</code></pre></div>
+<h3>Middleman 4.4.2 へのアップデート</h3>
+
+<p>まず <code>bundle outdated</code> で、アップデート可能なバージョンがあるか確認します。
+Gemfileは以下のようになっていました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code># the following line to use "https"
+source 'http://rubygems.org'
+
+gem "middleman", "~&gt; 3.2.2"
+gem "middleman-blog", "~&gt; 3.5.1"
+gem "middleman-deploy"
+
+# For feed.xml.builder
+gem "builder", "~&gt; 3.0"
+gem "middleman-syntax"
+gem "redcarpet"
+</code></pre></div>
+<p>すると、 <code>middleman</code> と <code>middleman-blog</code> には、ともに 4系のアップデートがあったので、 <code>Gemfile</code> のバージョンを更新して <code>bundle update</code> を実行しました。</p>
+
+<h3>middleman-deploy の更新</h3>
+
+<p>ライブラリのバージョンも無事アップデートできたので、 <code>bundle exec middleman server</code> を実行してみたところ、 <code>middleman-deploy</code> でエラーが出ます。
+このライブラリは <code>outdated</code> で調べたとき更新がなかったので、何でだろう？と思い、まずは issue を調べてみることに。
+そうしたら、ありました。
+<a href="https://github.com/karlfreeman/middleman-deploy/issues/132">Error with Middleman 4.2 and middleman-deploy 1.0</a></p>
+
+<p>なるほど、まだステーブルではない <a href="https://rubygems.org/gems/middleman-deploy/versions/2.0.0.pre.alpha">2.0.0.pre.alpha</a> バージョンを利用しないといけないようです。これだと <code>outdated</code> には出ないですね。
+それに伴い condfig も変更になっていました。</p>
+<div class="highlight"><pre class="highlight ruby"><code><span class="n">activate</span> <span class="ss">:deploy</span> <span class="k">do</span> <span class="o">|</span><span class="n">deploy</span><span class="o">|</span>
+  <span class="n">deploy</span><span class="p">.</span><span class="nf">build_before</span> <span class="o">=</span> <span class="kp">true</span> <span class="c1"># default: false</span>
+  <span class="c1"># deploy.method = :git 1系の指定方法</span>
+  <span class="n">deploy</span><span class="p">.</span><span class="nf">deploy_method</span> <span class="o">=</span> <span class="ss">:git</span> <span class="c1"># 2系の指定方法</span>
+</code></pre></div>
+<p>しかし、alpha から 7年経過&hellip;。Middleman も一時期は流行ったのですが、SSG(Static Site Generator)の移り変わりも速いですね。
+今は何が流行っているのだろうか？</p>
+
+<h3>さいごに</h3>
+
+<p><a href="https://github.com/sizuhiko/sizuhiko.github.io/commit/cbcec8474610850da2bca9f61ef46ed9b0a019ec">これらを修正した commit はこちら</a>になります。</p>
+
+<p>実は古い記事の demo コードもブログに混ぜていたのですが、これを入れると何故か UTF-8 じゃないファイルがある、みたいなエラーになってしまいました。
+エラー箇所は、バイナリー判定してバイナリーでないファイルだったら、みたいなコードもあったりするので、 html が置いてあるといけないのかな。なんでとりあえず demo はディレクトリごと削除することに。
+まぁ古い jQuery 関係の demo なんで、そのうちそれらはライブラリ側の github pages に移そうと思います（もう需要ないだろうけど）。</p>
+
+<p>あと middleman コマンド実行すると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Deprecation warning: Expected string default value for '--instrument'; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+</code></pre></div>
+<p>みたいなワーニングが出ているので、時間があったらこちらも調査したいなと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/06/bump-middleman-4-4-2-from-3-x.html">
+          <a class="twitter" data-title="Middleman を 3系から 4系にアップグレードした"></a>
+          <a class="facebook" data-title="Middleman を 3系から 4系にアップグレードした"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/05/05/uvu-test-double.html">uvu での Test Double</a></h1>
   <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 06:10:00 PM</a></p>
   <p class="tags">
@@ -904,105 +1012,6 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/05/03/dependabot-on-ghe-actions-with-packages.html">DependabotをGHEのActionsとPackagesで利用する</a></h1>
-  <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 02:40:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
-      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
-      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
-      <a href="/tags/actions.html" rel="tag">Actions</a>
-      <a href="/tags/packages.html" rel="tag">Packages</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>以前に <a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a> という記事を書きましたが
-それから状況は変わり CI は drone.io から GHE の Actions を使うように、プロジェクト内のプライベートパッケージは Packages に入れるようになりました。</p>
-
-<p>すべて GHE のプラットフォームに寄せられたのは良かったのですが、現時点まだ Dependabot はβ版のようなので、ひとまずセルフホストランナーを使って実行できるようにしてみました。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">dependabot</span>
-<span class="na">on</span><span class="pi">:</span>
-  <span class="na">workflow_dispatch</span><span class="pi">:</span>
-  <span class="na">schedule</span><span class="pi">:</span>
-    <span class="pi">-</span> <span class="na">cron</span><span class="pi">:</span> <span class="s1">'</span><span class="s">お好みのスケジュールで'</span>
-<span class="na">jobs</span><span class="pi">:</span>
-  <span class="na">dependabot</span><span class="pi">:</span>
-    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">self-hosted</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">PROJECT_PATH</span><span class="pi">:</span> <span class="s">${{ github.repository }}</span>
-      <span class="na">BRANCH</span><span class="pi">:</span> <span class="s">develop</span>
-      <span class="na">PACKAGE_MANAGER</span><span class="pi">:</span> <span class="s">npm_and_yarn</span>
-      <span class="na">GITHUB_ACCESS_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ACCESS_TOKEN }}</span>
-      <span class="na">GITHUB_ENTERPRISE_ACCESS_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ENTERPRISE_ACCESS_TOKEN }}</span>
-      <span class="na">GITHUB_ENTERPRISE_HOSTNAME</span><span class="pi">:</span> <span class="s">${{ secrets.GITHUB_ENTERPRISE_HOSTNAME }}</span>
-      <span class="na">NPM_REGISTRY_URL</span><span class="pi">:</span> <span class="s">npm.github.hoge.com</span>
-      <span class="na">NPM_TOKEN</span><span class="pi">:</span> <span class="s">${{ secrets.PACKAGES_DOWNLOAD_TOKEN }}</span>
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">docker pull dependabot/dependabot-core</span>
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">run dependabot</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
-          <span class="s">rm -rf dependabot-script</span>
-          <span class="s">git clone https://foo:${GITHUB_ACCESS_TOKEN}@github.com/sizuhiko/dependabot-script.git</span>
-          <span class="s">cd dependabot-script</span>
-          <span class="s">docker run -v "$(pwd):/home/dependabot/dependabot-script" \</span>
-          <span class="s">-w /home/dependabot/dependabot-script dependabot/dependabot-core bundle install -j 3 --path vendor</span>
-          <span class="s">docker run --rm -v "$(pwd):/home/dependabot/dependabot-script" \</span>
-          <span class="s">-w /home/dependabot/dependabot-script \</span>
-          <span class="s">-e PROJECT_PATH=${PROJECT_PATH} \</span>
-          <span class="s">-e BRANCH=${BRANCH} \</span>
-          <span class="s">-e PACKAGE_MANAGER=${PACKAGE_MANAGER} \</span>
-          <span class="s">-e GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \</span>
-          <span class="s">-e GITHUB_ENTERPRISE_ACCESS_TOKEN=${GITHUB_ENTERPRISE_ACCESS_TOKEN} \</span>
-          <span class="s">-e GITHUB_ENTERPRISE_HOSTNAME=${GITHUB_ENTERPRISE_HOSTNAME} \</span>
-          <span class="s">-e NPM_REGISTRY_URL=${NPM_REGISTRY_URL} \</span>
-          <span class="s">-e NPM_TOKEN=${NPM_TOKEN} \</span>
-          <span class="s">dependabot/dependabot-core bundle exec ruby ./generic-update-script.rb</span>
-</code></pre></div>
-<p>GHE では <code>self-hosted</code> ランナーを使うのが一般的なのですが、そこに dependabot を入れるのではなく、 <code>dependabot-core</code> の Docker イメージを使って実行できるようにします。
-これは以前の記事と同じ実行方法ですね。</p>
-
-<p>で、drone.io の場合と異なり Actions で該当のリポジトリで cron ビルドするようにしています。
-cron のスケジュールは日次なり、週次なりで良いでしょう。</p>
-
-<h3>設定する環境変数</h3>
-
-<p>以下の環境変数でコントロールしています。</p>
-
-<ul>
-<li>BRANCH PRの向き先のブランチ名。git flow の場合は develop</li>
-<li>PACKAGE<em>MANAGER パッケージマネージャ名。npmやyarnの場合は npm</em>and_yarn</li>
-<li>GITHUB<em>ACCESS</em>TOKEN GitHubのアクセストークン。GHEのシークレットに入れておくと良いです</li>
-<li>GITHUB<em>ENTERPRISE</em>ACCESS_TOKEN GHEのアクセストークン。GHEのシークレットに入れておくと良いです</li>
-<li>GITHUB<em>ENTERPRISE</em>HOSTNAME GHEのホスト名。GHEのシークレットに入れておくと良いです</li>
-<li>NPM<em>REGISTRY</em>URL プライベートレジストリのURL</li>
-<li>NPM_TOKEN パッケージダウンロード権限のあるPAT(GHEのPersonal Access Token)。GHEのシークレットに入れておくと良いです</li>
-</ul>
-
-<h3>dependabot-script を fork してみた</h3>
-
-<p>さて、あとは <code>dependabot-core</code> のイメージ内で <code>dependabot-script</code> を動かせば良いのですが、 <code>dependabot-script</code> が Github Pakages への参照ができないため、 fork して少し修正をしています。</p>
-
-<p><code>dependabot-core</code> はプライベートレジストリの認証に対応しているので、 <a href="https://github.com/sizuhiko/dependabot-script/commit/ac81dc8bbeb6538344c73a28795f8c4513d1a818">scriptを少し修正して</a>対応しています。</p>
-
-<p>なお、 <code>dependabot-script</code> にも同様の対応のPR <a href="https://github.com/dependabot/dependabot-script/pull/632/files">Read private repository credentials from environment</a> が出ているので、いずれ公式に対応されるかもしれないです。</p>
-
-<p>とくに GitHub Packages みたいなプライベートレジストリを使っていないのであれば、公式の <code>dependabot-script</code> を使ってもらえば良いと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/03/dependabot-on-ghe-actions-with-packages.html">
-          <a class="twitter" data-title="DependabotをGHEのActionsとPackagesで利用する"></a>
-          <a class="facebook" data-title="DependabotをGHEのActionsとPackagesで利用する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1032,6 +1041,7 @@ cron のスケジュールは日次なり、週次なりで良いでしょう。
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -1041,7 +1051,6 @@ cron のスケジュールは日次なり、週次なりで良いでしょう。
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -1158,7 +1167,7 @@ cron のスケジュールは日次なり、週次なりで良いでしょう。
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

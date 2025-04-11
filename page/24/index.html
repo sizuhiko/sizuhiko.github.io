@@ -272,6 +272,166 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/01/30/polymer-co-edo-meetup-10.html">Polymer.co-edo meetup ＃10 を開催しました</a></h1>
+  <p class="postdate"><a href="/2018/01/30.html" title="Permanent link">Tuesday, January 30, 2018 10:46:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年最初の <a href="https://polymercoedo.doorkeeper.jp/events/69689">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>今月のテーマは、どうやって Web Components を作りはじめたら良いか？です。
+自分たちが作ってみたい Web Components はあるものの、どうやって作り始めて良いかわからないといった悩みを解消できる会になれば良いと思っています。</p>
+</blockquote>
+
+<p>ということで、まずは最近のPolymer/Web Componentsを取り巻く動向から解説しました。</p>
+
+<ul>
+<li>Custom Elements が HTML5.3に入る見込み</li>
+<li>Polymer で Custom Elements を作るとき、どのスタイル（バージョン）で記述するか</li>
+</ul>
+
+<h3>最近のPolymer/Web Components を取り巻く状況</h3>
+
+<p>まずHTML5.3に入るかどうかについては <a href="https://wiki.suikawiki.org/n/HTML%205.3$27802">suikawiki - HTML 5.3</a> からリンクされている2つのissueに注目してみることができます。</p>
+
+<ul>
+<li><a href="https://github.com/w3c/dom/issues/14">Custom Elements in DOM · Issue #14 · w3c/dom</a></li>
+<li><a href="https://github.com/w3c/html/issues/955">Incorporate Custom Elements in HTML directly? · Issue #955 · w3c/html</a></li>
+</ul>
+
+<p>Web Components を支える技術（仕様）のうち HTML Import でなく Script Module になる Polymer 3.0 からは、3つ以上のブラウザーが実装を持っている状況になるので標準仕様の後押しになっていると考えられます。</p>
+
+<p>Polymer での記述スタイルについては、先日Polymer公式ブログに掲載された <a href="https://www.polymer-project.org/blog/2017-11-27-future-of-elements">The future of elements / What we&rsquo;re doing with Polymer elements, what we aren&rsquo;t doing, and why.</a> が参考になります。</p>
+
+<p>現時点で Polymer が提供しているコアエレメントのソースコードを見てみてください。ほとんどは Polymer 1 の形式（ES6クラスを利用しない）です。これは Polymer 2 でも利用可能なハイブリッド形式と呼ばれるものです。一方 Polymer 3 用には <code>3.0 preview</code> のようなブランチが用意されていて、現時点 Polymer 3 preview 版はこちらを参照するようになっています。</p>
+
+<p>例えば <code>paper-input</code> エレメントでは</p>
+
+<ul>
+<li>https://github.com/PolymerElements/paper-input はハイブリッド形式</li>
+<li>https://github.com/PolymerElements/paper-input/tree/3.0-preview は3.0形式</li>
+</ul>
+
+<p>になっています。</p>
+
+<p>上記ブログにも書かれているとおり、なぜ ES6 形式を提供しないのか？という問いに関しては</p>
+
+<blockquote>
+<p>Polymerのユーザーに、Polymer 1.0からPolymer 2.0と3.0へのスムーズなアップグレードパスを提供する必要がありました。</p>
+</blockquote>
+
+<p>と書かれています。これは互換性や移行可用性について、フレームワーク開発者がとても配慮してくれていることがわかります。</p>
+
+<blockquote>
+<p>2.0のエレメントは、Polymer 1.0と2.0をブリッジする最小限の変更となるように設計されており、ユーザーがアプリケーションを簡単に2.0へアップグレードできるようにしました。
+同じ理由から、3.0のエレメントは、既存エレメントを自動変換したES6モジュールで提供されます。
+引き続き 2.xと3.xのエレメントはサポートされ、次世代のエレメントを計画しています。</p>
+</blockquote>
+
+<p>3系の自動変換については、次のセクションでも詳しく書かれています。</p>
+
+<blockquote>
+<p>エレメントのメンテナンスは、チームにとって重要な作業です。現行のエレメントはハイブリッド形式とし、Polymer modulizerを使用して3.x形式に自動変換することで、
+単一のコードベースからPolymerの3つのバージョン(1.x, 2.x, 3.x)をサポートできます。これによりチームの時間を新しいエレメントの開発に割り当てることができます。</p>
+</blockquote>
+
+<p>つまり私たちが Custom Elements を作るときも同様に、ハイブリッド形式で開発し、3.0へは modulizer を使って変換したコードを用意することでコードベースを1つに保つことができます。</p>
+
+<h3>私たちは何を作るのか？</h3>
+
+<p>Custom Elements の作成は旧来でいうと jQuery のプラグインや UI ウィジェットを作る作業に似ていると思います。
+そこで今回参加したメンバーからは以下のようなアイデアが出ました</p>
+
+<ul>
+<li>郵便番号から住所を検索する入力ボックス
+
+<ul>
+<li>これについては <code>gold-zip-input</code> というエレメントがありますが、 <code>An input element that only allows US zip codes</code> なのでそれの日本版になります</li>
+</ul></li>
+<li>天気予報ウィジェット
+
+<ul>
+<li>これについても <code>paper-weather</code> というエレメントがありますが、マテリアルデザインでない <code>Yahoo天気予報</code> みたいな見た目の天気予報が日本っぽいという意見がありました</li>
+</ul></li>
+<li>DatePicker
+
+<ul>
+<li>あるあるなんですが、なぜかどのプロジェクトでも作ってしまうエレメントがこれですね</li>
+</ul></li>
+<li>フォーマット表示
+
+<ul>
+<li>日付／金額など日本でよく使う表示形式に対応したエレメントがあったら良いよね、という意見がありました。これも既存のエレメントにもありますが、より日本の開発者が使い易いスタイルだと良いよねという意見がありました</li>
+</ul></li>
+</ul>
+
+<p>また Custom Elements は、エレメント名にプレフィックスが必要となります。これについては</p>
+
+<ul>
+<li><code>jp-</code></li>
+<li><code>coedo-</code></li>
+<li><code>edo-</code></li>
+</ul>
+
+<p>みたいなアイデアが出ているので、実際のエレメントを作る段階で決めたいなと思っています。</p>
+
+<h3>How To</h3>
+
+<p>ちょっと時間がなくなってしまったので、簡単におさらいしました。</p>
+
+<ul>
+<li>GitHubにリポジトリを作る</li>
+<li>エレメントを作る</li>
+<li>webcomponents.org に登録する
+
+<ul>
+<li>手順は <a href="https://www.webcomponents.org/publish">Publish element</a> を参考にする</li>
+</ul></li>
+</ul>
+
+<h3>次回は</h3>
+
+<p>2/26(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>今後は、実際に今回アイデア出ししたエレメントを作っていきたいと思います。
+また Custom Elements を作るのに大事な</p>
+
+<ul>
+<li>単体テスト</li>
+<li>デモページ</li>
+</ul>
+
+<p>の作り方もワークショップ形式で進めていきたいと思うので、ぜひ参加ください。
+新しいエレメントのアイデアも募集しています。</p>
+
+<h3>さいごに</h3>
+
+<p>写真撮り忘れたので、次回からは最初に撮ろう&hellip;</p>
+
+<p>あと、コミュニティとイベントの拡散用に <a href="https://polymer-co-edo.connpass.com/event/77884/">connpassのインベントページ</a>も作ったのですが、これがconnpassのイベントカレンダーや検索結果に出ないので、解決方法知っている人がいたら教えてください&hellip;</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/01/30/polymer-co-edo-meetup-10.html">
+          <a class="twitter" data-title="Polymer.co-edo meetup ＃10 を開催しました"></a>
+          <a class="facebook" data-title="Polymer.co-edo meetup ＃10 を開催しました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/01/23/the-solution-if-your-mac-crashed-due-to-overheating.html">MACが熱暴走したときの原因と対応策</a></h1>
   <p class="postdate"><a href="/2018/01/23.html" title="Permanent link">Tuesday, January 23, 2018 10:15:00 AM</a></p>
   <p class="tags">
@@ -703,45 +863,6 @@ CakePHPに関連するインフラがどのようになっているのか。お�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2017/05/28/jsfes.html">初夏のJavaScript祭りに参加して、PolymerのアップデートについてLTをしました</a></h1>
-  <p class="postdate"><a href="/2017/05/28.html" title="Permanent link">Sunday, May 28, 2017 04:53:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/jsfes.html" rel="tag">JsFes</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://javascript-fes.doorkeeper.jp/events/60189">5/27に開催されたJavaScript祭りに参加しました</a></p>
-
-<p><img src="/images/blog/jsfes_2017.png" alt="" /></p>
-
-<p>ためになるセッションが多く、とても良いイベントでした。
-私は前回（秋のJavaScript祭　in mixi 〜秋のJavaScript収穫祭〜）と同様にLT枠へ申し込み、この半年でおきたPolymerのアップデートを発表しました。</p>
-
-<p>前回のスライドは、<a href="/2017/01/01/2016-2017.html">2016年まとめ記事</a>よりリンクがあります。</p>
-
-<p>ちょうど、Google I/O 2017が終わった後だったということもあり、その発表をふまえた内容にできたのが良かったです。</p>
-
-<script async class="speakerdeck-embed" data-id="a8487bdd948048db96f6505ca1676645" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>これから、どんどん2.0も触っていきたいですね！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2017/05/28/jsfes.html">
-          <a class="twitter" data-title="初夏のJavaScript祭りに参加して、PolymerのアップデートについてLTをしました"></a>
-          <a class="facebook" data-title="初夏のJavaScript祭りに参加して、PolymerのアップデートについてLTをしました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -771,6 +892,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -780,7 +902,6 @@ CakePHPに関連するインフラがどのようになっているのか。お�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -897,7 +1018,7 @@ CakePHPに関連するインフラがどのようになっているのか。お�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

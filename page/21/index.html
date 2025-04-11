@@ -272,6 +272,174 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/07/29/polymer-co-edo-meetup-16.html">Polymer.co-edo meetup ＃16 を開催しました</a></h1>
+  <p class="postdate"><a href="/2018/07/29.html" title="Permanent link">Sunday, July 29, 2018 11:31:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>今年7回目となる <a href="https://polymercoedo.doorkeeper.jp/events/77462">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>今回の議題は</p>
+
+<blockquote>
+<p>PWA Starter Kit でも使われていた lit-element を使って、カスタムエレメントを作る体験</p>
+</blockquote>
+
+<p>ということで、codelabsにある、Polymer1系のエレメント作成では定番の <a href="https://codelabs.developers.google.com/codelabs/polymer-first-elements/index.html">Build your first Polymer element</a> です。
+当日は、<a href="https://github.com/googlecodelabs/polymer-first-elements/tree/master/icon-toggle-finished">上記チュートリアルの完成系のコード</a> を見ながら <a href="https://github.com/Polymer/lit-element">lit-element</a> で作ってみました。</p>
+
+<p>このブログでは、当日やったことの履歴として、今後やってみたい人のために、手順を書いておきます。</p>
+
+<h3>Polymer CLI をインストールする</h3>
+
+<p>まず <a href="https://github.com/Polymer/lit-element">lit-element</a> の README に書かれているように Polymer CLI をインストールします。
+READMEではグローバルにインストールしていますが、今回はローカルに入れてみましょう。</p>
+
+<p><code>icon-toggle</code> というディレクトリを作ってから、CLIをインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">mkdir </span>icon-toggle
+<span class="nv">$ </span><span class="nb">cd </span>icon-toggle
+<span class="nv">$ </span>npm i polymer-cli@next
+</code></pre></div>
+<p>念のため、インストールできたか確認してみます。
+<code>help</code> コマンドが表示できていれば大丈夫です。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>./node_modules/.bin/polymer <span class="nb">help</span>
+
+
+
+   /<span class="se">\˜</span>˜/   /<span class="se">\˜</span>˜/<span class="se">\</span>
+  /__<span class="se">\/</span>   /__<span class="se">\/</span>__<span class="se">\ </span>   Polymer-CLI
+ /<span class="se">\ </span> /   /<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\</span>
+/__<span class="se">\/</span>   /__<span class="se">\/</span>  <span class="se">\/</span>__<span class="se">\ </span> The multi-tool <span class="k">for </span>Polymer projects
+<span class="se">\ </span> /<span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+ <span class="se">\/</span>__<span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>   Usage: <span class="sb">`</span>polymer &lt;<span class="nb">command</span><span class="o">&gt;</span> <span class="o">[</span>options ...]<span class="sb">`</span>
+  <span class="se">\ </span> /<span class="se">\ </span> /   /<span class="se">\ </span> /
+   <span class="se">\/</span>__<span class="se">\/</span>   /__<span class="se">\/</span>
+
+</code></pre></div>
+<h3>icon-toggle エレメントのスケルトンを作る</h3>
+
+<p>codelabs にあるコードは、すでにディレクトリ構造やファイルが準備されている状態から始まりますが、今回は CLI から作成します。</p>
+
+<p>以下のコマンドを実行してみましょう。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>./node_modules/.bin/polymer init
+</code></pre></div>
+<p>何を作成するのか質問されるので、 <code>polymer-3-element</code> を選択します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>? Which starter template would you like to use? 
+❯ polymer-3-element - A simple Polymer 3.0 element template 
+</code></pre></div>
+<p>エレメント名はそのまま <code>Enter</code> で進むと、 <code>.gitignoreがないよ</code> というエラーになってしまいます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>info: [init]    Running template polymer-3-element...
+? Element name icon-toggle
+? Brief description of the element 
+error: [cli.main]   Uncaught exception: AssertionError [ERR_ASSERTION]: Trying to copy from a source that does not exist: xxx/icon-toggle/node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+e
+</code></pre></div>
+<p>これは、<a href="https://github.com/Polymer/polymer-cli/issues/999">Polymer3のエレメントテンプレートがミスっている</a>ということで、ファイルを作ってからリトライします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span><span class="nb">touch</span> ./node_modules/polymer-cli/templates/element/polymer-3.x/.gitignore
+<span class="nv">$ </span>./node_modules/.bin/polymer init
+</code></pre></div>
+<p>質問には、上記と同じように回答してください。そうすると、以下のように表示されて完了します。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Setup Complete!
+Check out your new project README for information about what to do next.
+</code></pre></div>
+<h3>必要なパッケージをインストールする</h3>
+
+<p>まずインストールされている PolymerElement を削除します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm uninstall @polymer/polymer
+</code></pre></div>
+<p>つづいて、LitElement をインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @polymer/lit-element
+</code></pre></div>
+<p>icon-toggle では <code>iron-icon</code> と <code>iron-icons</code> を利用する（codelabsでは最初からbower.jsonに入っている）ので、これらのCustomElementsもインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @polymer/iron-icon
+<span class="nv">$ </span>npm i @polymer/iron-icons
+</code></pre></div>
+<p>最後にもう一度 Polymer CLI をインストールしておきます。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i <span class="nt">-D</span> polymer-cli@next
+</code></pre></div>
+<h3>LitElement で書き換えてみる</h3>
+
+<p>ソースコードを GitHub に置きました。
+<a href="https://github.com/sizuhiko/lit-element-icon-toggle">sizuhiko/lit-element-icon-toggle</a></p>
+
+<p>Polymer CLIで作った Polymer3.0 element を LitElement に書き換える箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>import</code> を <code>LitElement</code> に変更</li>
+<li>親クラスを <code>LitElement</code> に変更</li>
+<li><code>static get template()</code> を <code>_render({必要な引数})</code> に変更</li>
+</ul>
+
+<p>codelabs は Polymer1 で書かれているので、Polymer3 形式に変更するときに気をつける箇所は以下のとおりです。</p>
+
+<ul>
+<li><code>listeners</code> は使わずに <code>addEventListener</code> でクリックイベントを受け取る</li>
+</ul>
+
+<p>あと、デモのコードのアップした内容を見て確認してください。
+LitElementとは関係ないですが、Polyfillのインポートが以下のように変わっています。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<h3>LitElement と PolymerElement の違い</h3>
+
+<p>PolymerElementはHtmlElementに以下のような機能が追加されて構成されています。
+<a href="https://www.polymer-project.org/3.0/docs/api/">公式ドキュメントのAPI doc</a>の <code>polymer-element.js</code> を参照してください。</p>
+
+<blockquote>
+<p>Base class that provides the core API for Polymer&rsquo;s meta-programming features including template stamping, data-binding, attribute deserialization, and property change observation.</p>
+</blockquote>
+
+<p>また、このドキュメントに書いてある様々な機能を利用できます（たとえば tap イベントを処理するための <code>gesture-event-listeners.js</code> とか）。</p>
+
+<p>対して、LitElementではPolymerElementのつもりでいると、以下のようなポイントで躓きます。</p>
+
+<ul>
+<li>プロパティで <code>reflectToAttribute</code> が使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/10">Adding reflectToAttribute to the demo doesn&rsquo;t work #10</a> に解決するサンプルコードが書いてあります。lit-element-icon-toggleではそのまま利用しています。</li>
+</ul></li>
+<li>プロパティで2ウェイデータバインディングが使えない
+
+<ul>
+<li>LitElement の issue <a href="https://github.com/Polymer/lit-element/issues/14">2 way data binding not working #14</a> や <a href="https://github.com/Polymer/lit-element/issues/81">Implement property change notification events (notify) #81</a> が参考になります。</li>
+</ul></li>
+<li>プロパティで <code>observer</code> が使えない</li>
+</ul>
+
+<p>ということで、codelabs のPolymer1版ではあった、データバインディングの箇所は実装されていません。
+現時点は上記 issue を参考に、値に変更があったときにイベント <code>pressed-changed</code> イベントを投げるところまでは実装しています。
+受け取り側の <code>demo/index.html</code> で以下のようなJavaScriptを書くと変更イベントを受け取れます。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="dl">'</span><span class="s1">icon-toggle[toggleicon="favorite"]</span><span class="dl">'</span><span class="p">).</span> <span class="nx">addEventListener</span><span class="p">(</span><span class="dl">'</span><span class="s1">pressed-changed</span><span class="dl">'</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">e</span><span class="p">));</span>
+</code></pre></div>
+<p>プロパティの値が変化したときには、データバインディングでなく redux などを使おう、というのは PWA-Starter-Kit のコードからも伝わってくるので、まぁそうなのかなーと思います。
+ただ、アプリでなく、エレメントを作って公開したい場合は、 redux なのか？という気もするので、change イベントなどを投げるのが良いのだろうな、とは思っています。</p>
+
+<h3>次回は</h3>
+
+<p>8/20(月) の予定です。<a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a>に今年の予定も書いてあるので参考にしてください。</p>
+
+<p>そろそろ、edoエレメントの開発をしないとなー、なんて思っています&hellip;</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/07/29/polymer-co-edo-meetup-16.html">
+          <a class="twitter" data-title="Polymer.co-edo meetup ＃16 を開催しました"></a>
+          <a class="facebook" data-title="Polymer.co-edo meetup ＃16 を開催しました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/07/28/chirimen-raspi-setup.html">CHIRIMEN Raspi setup</a></h1>
   <p class="postdate"><a href="/2018/07/28.html" title="Permanent link">Saturday, July 28, 2018 01:27:00 PM</a></p>
   <p class="tags">
@@ -584,36 +752,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html">Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました</a></h1>
-  <p class="postdate"><a href="/2018/06/09.html" title="Permanent link">Saturday, June 09, 2018 01:00:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/co-edo.html" rel="tag">co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Polymerそのものと、Polumer.co-edoでの活動（取り組み）について、LTをしました。</p>
-
-<p>co-edoに集う人の中から参加者が増えると良いなーと思っています。</p>
-
-<p>今月は6/25に PWA starter kit のハンズオンを予定しています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/06/09/co-edo-engineer-designer-meetup-2018-06.html">
-          <a class="twitter" data-title="Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました"></a>
-          <a class="facebook" data-title="Co-Edoでエンジニア・Webデザイナー飲み会 『梅雨も初夏もばっちこい！恒例のケンタッキー🍗とビール🍺で疲れを吹き飛ばそうの会』 に参加してLTしました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -643,6 +781,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
@@ -652,7 +791,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -769,7 +907,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (1)</li>
+                  <li><a href="/2025.html">2025</a> (2)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
