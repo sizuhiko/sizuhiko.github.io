@@ -272,6 +272,82 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a></h1>
+  <p class="postdate"><a href="/2018/08/03.html" title="Permanent link">Friday, August 03, 2018 03:41:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+      <a href="/tags/gae.html" rel="tag">GAE</a>
+      <a href="/tags/googlecloudcontainerbuilder.html" rel="tag">GoogleCloudContainerBuilder</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2018/7/14 に行われた<a href="https://2018.kphpug.jp/">PHPカンファレンス関西2018</a>に参加してきました。</p>
+
+<h3>今年も参加</h3>
+
+<p>昨年と同じく<a href="http://www.gfo-sc.jp">GRAND FRONT OSAKA</a>で開催されました。</p>
+
+<p>夜はスピーカーとスタッフの前夜祭から、コミュニティ前夜祭と合流しての2次会へと流れ、タクシーでホテルに戻りました。その後、3次会、4次会があったとかないとか&hellip;（これ毎年のコピペですwww）</p>
+
+<h3>PHPカンファレンス関西2018</h3>
+
+<p>PHPカンファレンス関西は3トラック+スポンサーブースです。朝一番の講演に参加者が多いのも特徴ですね。
+今年はあまりセッションは聞かずに参加者と話したり、アンカンファレンスでPHPの非同期処理について話を聞いていたりしました。</p>
+
+<p>私の発表はGAEへの継続的デプロイだったのですが、なんとタイムテーブルを見ると、私の前に</p>
+
+<ul>
+<li>Amazonの中の人が <code>PHPアプリケーションのコンテナ化入門</code> というタイトルで CI/CD の話をするらしい</li>
+<li>Herokuの中の人が <code>HerokuでPHPアプリ開発速度を倍にする</code> というタイトルで 継続的デリバリー機能 の話をするらしい</li>
+</ul>
+
+<p>ということでネタ丸かぶり？とか、私だけ中の人じゃないよ！とか心配になったので、この2つのセッションはしっかり前の席で聞きました。</p>
+
+<h3>GAEにPHPアプリを継続的デプロイする方法について発表しました</h3>
+
+<p>昨年に引き続きPHPネタですが、主にはDockerとGoogle Cloud Container Builderの話でした。</p>
+
+<script async class="speakerdeck-embed" data-id="1bf79bdf3f264135868d28194fcab3a5" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>GAEを使っていて当然コードがPUSHされたらデプロイしたくなるのですが、何が良いのかよくわからない時期があって、調べて試した結果を発表するに至りました。
+調べた過程で、まぁどんなツールを使っていても gcloud コマンドさえ動けば、あとはGAEと接続するための認証情報をそのCI/CDツールに最適な方法で管理するだけで、どんなものでも良いということがわかりました。
+ただ、Cloud Container Builder使うとプライベートな空間を使えるわりには結構安いし、良いのではないかと思ったわけです。</p>
+
+<p>デプロイのデモもギリギリ間に合って、ほっとしました。リポジトリの README に詳しい説明が書いてあるので、そちらを見ながらコードを動かしてみてください。</p>
+
+<p><a href="https://github.com/sizuhiko/gccb-php-se-sample">PHPカンファレンス関西2018デモプログラム</a></p>
+
+<p>今回の発表をするのに<a href="https://qiita.com/ryutah/items/663f97feb87571f972cc">30分でできる(当社比) Google Cloud Container Builderを利用した AppEngine SE環境への自動デプロイ</a>という記事が大変参考になったのですが、
+GCPのコンソール（画面）から操作するのは、環境の再現性がなくて嫌だなーと思ったので、 gcloud コマンドを駆使して自動構築できるようにしました。
+これは今回、かなり頑張ったところです。そしてデモ環境を何度も壊して作り直すことができたので、リハーサルも捗りました。</p>
+
+<h3>大阪を堪能</h3>
+
+<p>最終日は恒例の <code>ねぎ焼き やまもと</code> へ。
+今年はPHPerを4人(昨年は3人)引き連れ、梅田エスト店にやってきました。
+そのあと有志で明石焼き/たこ焼きを食べに行って、聖地タイガースショップで買い物をして帰京しました。</p>
+
+<h3>さいごに</h3>
+
+<p>また来年も参加／発表したいので、1年の努力を惜しまずに&hellip;</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/08/03/phpcon-kansai-2018.html">
+          <a class="twitter" data-title="PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました"></a>
+          <a class="facebook" data-title="PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2018/07/29/polymer-co-edo-meetup-16.html">Polymer.co-edo meetup ＃16 を開催しました</a></h1>
   <p class="postdate"><a href="/2018/07/29.html" title="Permanent link">Sunday, July 29, 2018 11:31:00 AM</a></p>
   <p class="tags">
@@ -717,41 +793,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">cakephp-fabricate-adaptor を CakePHP3.6 対応しました</a></h1>
-  <p class="postdate"><a href="/2018/06/10.html" title="Permanent link">Sunday, June 10, 2018 12:51:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/fabricate.html" rel="tag">Fabricate</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><img src="/images/blog/cakephp-fabricate-adaptor-3.6.png" alt="" /></p>
-
-<p>CakePHPのコア開発のメンバーでもある dakota が南アからPRをくれました。
-最近は普段からCakePHP使っていないので、PRはとても助かります。
-テストコードなかったので、たくさんビルドエラーになっていましたが、マージして、私の方で対応しておきました。</p>
-
-<p>デフォルトの<a href="https://github.com/sizuhiko/cakephp-fabricate-adaptor">developブランチ</a>から取得すると、CakePHP3.6の開発でも利用できます。</p>
-
-<p>まだリリース切ってないけど、3.6以前と互換性なくなるので、バージョン番号の規則から言うと 0.x → 1.x にするしかないのかな。
-もう少し見直してから（結果として何も変わらないかもしれないけど）1.0にしたいと思っていますので、しばらくお待ちください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2018/06/10/cakephp-fabricate-adaptor-support-3-6.html">
-          <a class="twitter" data-title="cakephp-fabricate-adaptor を CakePHP3.6 対応しました"></a>
-          <a class="facebook" data-title="cakephp-fabricate-adaptor を CakePHP3.6 対応しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -781,6 +822,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
@@ -790,7 +832,6 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -907,7 +948,7 @@ vs-code にも atom にも拡張があるので、Bracketsでも誰か作って�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2025.html">2025</a> (3)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

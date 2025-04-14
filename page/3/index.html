@@ -272,6 +272,113 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a></h1>
+  <p class="postdate"><a href="/2024/03/20.html" title="Permanent link">Wednesday, March 20, 2024 02:58:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/gae.html" rel="tag">GAE</a>
+      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は <a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a> の続編となります。</p>
+
+<h3>単体テストを通過するようにアップグレード</h3>
+
+<p>やることは多そうだなというのは想像していたのですが、いざ取り掛かろうとしたとき頼りになるのは単体テストだな、ということでPHPUnitとPHPのバージョンを上げて、テストが通過するように修正していきます。</p>
+
+<p>テストが通過するようになったコミットが<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/0a73d2d12bd05bd4a67e80a60e9f64f682416529">こちら</a> 。</p>
+
+<h4>composer の依存バージョンを変更</h4>
+
+<ul>
+<li>PHPのバージョンを8.2以上へ</li>
+<li>PHPUnitのバージョンを10.1.3（当時最新）へ</li>
+</ul>
+
+<p>その関連で合わせてあげないといけない依存もバージョンup。</p>
+
+<h4>PHPUnit の実行方法を変更</h4>
+
+<p>以前は GAE の内部コンポーネントに依存していたので、PHPUnitを実行するのも dev_appserver.py を起動してからそのインスタンス内の PHPUnit 実行スクリプトを経由して実行していたのですが、GAE gen2 ではPHPスクリプトの起動自体が <code>php -S</code> に変わったりしたこともあり、PHPUnitもComposer スクリプトから直接実行するように変更しました。</p>
+
+<p>以前は dev_appserver 経由で起動されていたデータストアとキャッシュについては、docker と gcloud emulator で起動してから PHPUnit を実行するように変更しました。</p>
+
+<p>実行手順をREADMEにも記述。</p>
+
+<p>ここで、レガシーランタイム脱却のため Memcache を Redis に変更する対応も入っています。
+当初は Memcache を変更せずに PHPUnit が通過してから移行する予定だったのですが、 <code>GeckoPackages\MemcacheMock</code> が終了していて、最新のPHP/PHPUnitで動作しないことがわかったのでこのタイミングで一緒に移行を決断しました。</p>
+
+<h4>簡単なアーキテクチャと既存テストコード</h4>
+
+<p>Toilet Evolution は PHP Slim Framework に、Google Datastore を使用（<a href="https://cloud.google.com/appengine/docs/standard/using-firestore-in-datastore-mode?hl=ja&amp;tab=php">DatastoreモードのFirestoreを使用</a>）しています。
+REST API を通じてデバイスからトイレの利用状況をデータストアやキャッシュに格納したり、Webアプリから利用状況を閲覧できるAPI が用意されています。</p>
+
+<p>テストコードは、データストアとキャッシュのI/O、PSRのミドルウェア部分にあって、主なロジックはこのあたりに集中しています。</p>
+
+<h4>テストコードの記述を修正</h4>
+
+<p>PHPUnit のテストケース（クラス）の宣言を修正</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
+<span class="kd">class</span> <span class="nc">DeviceTest</span> <span class="k">extends</span> <span class="err">\</span><span class="n">PHPUnit_Framework_TestCase</span> <span class="p">{}</span>
+
+<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
+<span class="kn">use</span> <span class="nc">PHPUnit\Framework\TestCase</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">DeviceTest</span> <span class="kd">extends</span> <span class="nc">TestCase</span> <span class="p">{}</span>
+</code></pre></div>
+<p>setUp を before に変更</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
+<span class="k">public</span> <span class="k">function</span> <span class="n">setUp</span><span class="p">()</span>
+
+<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
+<span class="cd">/**
+ * @before
+ */</span>
+<span class="kt">public</span> <span class="k">function</span> <span class="n">before</span><span class="p">()</span>
+</code></pre></div>
+<p>assert を <code>$this</code> 経由で呼び出すように変更</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// PHP5.5 / PHPUnit 4.8</span>
+<span class="nf">assertEquals</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="nv">$results</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+
+<span class="c1">// PHP8.2 / PHPUnit 10.1.3</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertEquals</span><span class="p">(</span><span class="s1">'username'</span><span class="p">,</span> <span class="nv">$results</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+</code></pre></div>
+<h4>Memcache から Redis への記述を修正</h4>
+
+<p>インスタンスはDIしているので、変数名を memcache から redis に変更した。
+メソッドは get / set で同じになるけど、データがオブジェクト形式から文字列に変わるので以下のような対応となった</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// GAE gen1</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="n">memcache</span><span class="o">-&gt;</span><span class="nf">set</span><span class="p">(</span><span class="s2">"device:id:</span><span class="si">{</span><span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">getKeyId</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nv">$device</span><span class="p">);</span>
+
+<span class="c1">// GAE gen2</span>
+<span class="nv">$this</span><span class="o">-&gt;</span><span class="n">redis</span><span class="o">-&gt;</span><span class="nf">set</span><span class="p">(</span><span class="s2">"device:id:</span><span class="si">{</span><span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">getKeyId</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">serialize</span><span class="p">(</span><span class="nv">$device</span><span class="p">));</span>
+</code></pre></div>
+<p>データを set するときは <code>serialize</code> して、 get するときは <code>unserialize</code> するように変更している。</p>
+
+<h4>このぐらいで PHPUnit がうごくようになった</h4>
+
+<p>Warining は出てるんですが、PHPUnit がエラーで落ちることはなくなりました。
+これはバージョンアップ意外と楽チンなのでは？！と勘違いしたのは言うまでもなく、この連載もまだ続きます。</p>
+
+<p>ここで勘違いしたので、心も折れず続けられたというのはあるかもしれないと振り返り思うのでした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">
+          <a class="twitter" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2"></a>
+          <a class="facebook" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a></h1>
   <p class="postdate"><a href="/2024/03/20.html" title="Permanent link">Wednesday, March 20, 2024 12:34:00 PM</a></p>
   <p class="tags">
@@ -787,78 +894,6 @@ PRがマージされて、すぐリリースされるんじゃないか？と思
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a></h1>
-  <p class="postdate"><a href="/2023/04/19.html" title="Permanent link">Wednesday, April 19, 2023 04:12:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/localstack.html" rel="tag">LocalStack</a>
-      <a href="/tags/test.html" rel="tag">test</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> の中でも書いたように、aws-sdk v3 を使ったコードを UnitTest するには <a href="https://github.com/m-radzikowski/aws-sdk-client-mock">AWS SDK v3 Client mock</a> を利用してモックした方が簡単です。</p>
-
-<p>一方で少し IntegrationTest をしたいと思うこともあるでしょう。そうしたときは LocalStack の利用が便利です。
-手元も環境なら Docker の Extension で動きます。
-CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動すれば大丈夫です。</p>
-
-<h3>インテグレーションテストでのエンドポイント</h3>
-
-<p>こんな感じでテストコードで endpoint を切り替えられるようにしておくとローカルとCI環境のどちらでもテストを実行しやすくなります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">credentials</span><span class="p">:</span> <span class="p">{</span> <span class="na">accessKeyId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">dummy</span><span class="dl">'</span><span class="p">,</span> <span class="na">secretAccessKey</span><span class="p">:</span> <span class="dl">'</span><span class="s1">summy</span><span class="dl">'</span> <span class="p">},</span>
-  <span class="na">endpoint</span><span class="p">:</span> <span class="s2">`http://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">TEST_AWS_HOSTNAME</span> <span class="o">??</span> <span class="dl">'</span><span class="s1">localhost</span><span class="dl">'</span><span class="p">}</span><span class="s2">:4566`</span><span class="p">,</span>
-  <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span><span class="p">,</span>
-<span class="p">};</span>
-<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-</code></pre></div>
-<p>手元では localhost で良いし、CI環境（たとえば GitHub Actions ） なら、以下のようにしておくと良いです。</p>
-<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
-    <span class="na">services</span><span class="pi">:</span>
-      <span class="na">localstack</span><span class="pi">:</span>
-        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">TEST_AWS_HOSTNAME</span><span class="pi">:</span> <span class="s">localstack</span>
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm t</span>
-</code></pre></div>
-<h3>LocalStack v2.0 以降での変更点</h3>
-
-<p>最近バージョンが 2.0 になった LocalStack ですが Lambda 関連で大きな変更がありました。
-基本的に Lambda を利用しなければ問題はありませんが、特に問題なければ localstack サービスを以下のように設定しておくと安心です。</p>
-<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
-    <span class="na">services</span><span class="pi">:</span>
-      <span class="na">localstack</span><span class="pi">:</span>
-        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
-        <span class="na">env</span><span class="pi">:</span>
-          <span class="na">LAMBDA_SYNCHRONOUS_CREATE</span><span class="pi">:</span> <span class="m">1</span>
-        <span class="na">volumes</span><span class="pi">:</span>
-          <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
-</code></pre></div>
-<p>Actions のホストコントローラの docker.sock をマウントすることで LocalStack の中で Lambda が起動できるようになります。</p>
-
-<p>詳しくは<a href="https://github.com/localstack/localstack/releases/tag/v2.0.0">公式の v2.0.0 リリースノート</a> の <code>Lambda</code> 部分に書いてありますので、読んでみてください。</p>
-
-<h3>さいごに</h3>
-
-<p>単体テストで LocalStack 使うのはやりすぎだと思いますが、部分的にインテグレーションテストしたい、といった場合には有用な方法かな、と思いますので、用途に応じて使い分けられると良いですね。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/19/integration-test-using-localstack.html">
-          <a class="twitter" data-title="LocalStack を使って aws-sdk の Integration Test を実行する"></a>
-          <a class="facebook" data-title="LocalStack を使って aws-sdk の Integration Test を実行する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -886,6 +921,7 @@ CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
@@ -895,7 +931,6 @@ CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動�
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -1012,7 +1047,7 @@ CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2025.html">2025</a> (3)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

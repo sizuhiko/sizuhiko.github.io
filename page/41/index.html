@@ -272,6 +272,38 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2008/07/04/cakephp1-2-rc2.html">CakePHP1.2がRC2になった</a></h1>
+  <p class="postdate"><a href="/2008/07/04.html" title="Permanent link">Friday, July 04, 2008 02:07:13 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/create.html" rel="tag">create</a>
+      <a href="/tags/drop.html" rel="tag">drop</a>
+      <a href="/tags/fixture.html" rel="tag">fixture</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;投げていたパッチが全て取り込まれていた版になったけど、fixtureのcreateとdropにはまだ対応していないようだ。  </p>
+
+<p>オレオレ解決策はみつけたのだけれど、コードがかなり汚くなるし、思想的に微妙なので、これではパッチにはできない・・・  </p>
+
+<p>でもあのチケット見つからないので、自動create機能は将来のバージョンアップ項目になったのかしらね？</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/07/04/cakephp1-2-rc2.html">
+          <a class="twitter" data-title="CakePHP1.2がRC2になった"></a>
+          <a class="facebook" data-title="CakePHP1.2がRC2になった"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2008/06/28/cake-test.html">CakeにTestがやってきた</a></h1>
   <p class="postdate"><a href="/2008/06/28.html" title="Permanent link">Saturday, June 28, 2008 04:06:20 PM</a></p>
   <p class="tags">
@@ -591,181 +623,6 @@ transformImage関数では、図のように６つの点を計算しています
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2008/04/28/flex2-coverflow-4.html">Flex2でCoverFlowクローンを作る (４) ～鏡面加工する</a></h1>
-  <p class="postdate"><a href="/2008/04/28.html" title="Permanent link">Monday, April 28, 2008 05:04:40 PM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/crossdomain-xml.html" rel="tag">crossdomain.xml</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第四回は、画像を鏡面加工して表示する手順を整理します。  </p>
-
-<h3>■今回サンプルの完成イメージ</h3>
-
-<p>前回はカスタムコントロールを使って、画像を表示するサンプルを紹介しました。今回はその画像を加工して表示します。画像の加工はいろいろありますが、Macユーザとしては外せない鏡面効果を付けてみましょう。今回は、カスタムコントロール(ImageReflector.as)を修正してい
-きます。  </p>
-
-<h3>■ファイルの準備</h3>
-
-<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_4/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。</p>
-
-<ul>
-<li>reflector.as3proj</li>
-<li>reflector.mxml</li>
-<li>ImageReflector.as</li>
-</ul>
-
-<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
-
-<h3>■commitProperties()の修正</h3>
-
-<p>以下のようなコードに修正となります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>override protected function commitProperties():void
-{
-    if (_imageLoader == null) {
-        initLoader();
-    }
-    invalidateDisplayList();
-}
-</code></pre></div>
-<p>具体的な変更イメージが掴めないと思うので、initLoader関数の処理も見てみましょう。  </p>
-
-<p>前回のサンプルでは、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_content = UIComponent(new Image());
-</code></pre></div>
-<p>の部分で、Image.dataに値をセットすることで画像を出していましたが、今回はかなり異なります。これはオリジナルの画像を鏡面加工するには、元の画像の読み込みが完了していなければならないためです。Imageを使って画像を表示する方法は便利なのですが、読み込み状況まで制御することができません。このような場合は、Loaderクラスを使って画像を読み込むことができます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_imageLoader.load(new URLRequest("http://ec1.images-amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"));
-</code></pre></div>
-<p>で画像の読み込みを命令すると、完了イベント(Event.COMPLETE)を受け取れます。イベントを受け取ると、addEventListenerに記述された内容を実行します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_imageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function():void {
-     // ここに記述された内容を実行
-}
-</code></pre></div>
-<p>次に、</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_imageShape = new Shape();
-_content.addChild(_imageShape);
-</code></pre></div>
-<p>のようにして描画領域を作成します。描画領域はShapeと呼ばれる単純な描画コンポーネントを使います。Flex本ではSpriteを使うケースも多いのですが、使い分けとしては、さらに子供の要素を追加する場合はSprite。単純な描画枠ならShapeという理解でよいでしょう。Shapeの方がSpriteよりも使用メモリが少ないという利点もあります。  </p>
-
-<p>取得した画像をビットマップデータに変換しておきます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_imageShapeBitmap = new BitmapData(_imageLoader.width, _imageLoader.height, true, 0x000000);
-_imageShapeBitmap.draw(_imageLoader);
-</code></pre></div>
-<p>のように書くと、ロードした画像を簡単にビットマップとして扱えるようになります。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>var reflectionBitmap:Bitmap = createReflectionBitmap(_imageShapeBitmap);
-</code></pre></div>
-<p>で鏡面画像を作成して、_contentの子オブジェクトの更新イベントでinvalidateReflection()が呼ばれるようにしておきます。</p>
-
-<h3>■鏡面画像を作成する createReflectionBitmap()</h3>
-
-<p>この関数のポイントはグラデーションパターンを作成するところです。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>var alphaGradientBitmap:BitmapData = new BitmapData(tw, th, true, 0x00000000);
-var gradientMatrix: Matrix = new Matrix();
-var gradientShape: Shape = new Shape();
-gradientMatrix.createGradientBox(tw, th * kFalloff, Math.PI/2, 0, th * (1.0 - kFalloff));
-gradientShape.graphics.beginGradientFill(GradientType.LINEAR, [0xFFFFFF, 0xFFFFFF], [0, 1], [0, 255], gradientMatrix);
-gradientShape.graphics.drawRect(0, th * (1.0 - kFalloff), tw, th * kFalloff);
-gradientShape.graphics.endFill();
-alphaGradientBitmap.draw(gradientShape, new Matrix());
-</code></pre></div>
-<p>Math.PIとは、円周率を表していて、Math.PI/2は90度を意味します。通常の座標軸は、左から右にむかうので、Math.PI/2を適用した場合は、時計回りに90度つまり上から下に向かって描画するように制御できます。またグラデーションには、線状(LINEAR)と放射線状(RADIAL)があり、段々薄くなっていく鏡面効果の場合は、線状を使います。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>var reflectionData:BitmapData = new BitmapData(tw, th, false, 0x00000000);
-reflectionData.fillRect(rect, 0x00000000);
-reflectionData.copyPixels(target, rect, new Point(), alphaGradientBitmap);
-</code></pre></div>
-<p>のように引数で渡されたオリジナル画像と、グラデーションパターンの画像を重ね合わせますが、copyPixelsを使うと、重ね合わせる透過ビットマップを指定できるので、便利です。
-最後に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>reflectionBitmap = new Bitmap(reflectionData);
-reflectionBitmap.alpha = .85;
-</code></pre></div>
-<p>で使いやすいようにBitmapDataに変換し、透過度を指定しておきます。背景を白に変更した場合など、透過度を調整すると、お好みの鏡面効果にすることができます。 </p>
-
-<h3>■鏡面効果を開始する</h3>
-
-<p>initLoaderで設定した、Imageの描画が完了したときに呼ばれるメソッドを以下のように定義します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>private function invalidateReflection(event:Event):void
-{
-    _invalidatedReflection = true;
-    invalidateSize();
-    invalidateDisplayList();
-}
-</code></pre></div>
-<p>このタイミングでようやく鏡面画像を書いてよし、というタイミングになるので_invalidatedReflectionフラグをオン(true)に設定します。
-その後、画面の再描画を即すために、invalidateDisplayList()を呼び出します。</p>
-
-<h3>■実際に描画する</h3>
-
-<p>updateDisplayListを修正して、ビットマップの描画を行います。  </p>
-
-<p>ビットマップを描画領域に書き出すには、graphicsオブジェクトを使用します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>_imageShape.graphics
-</code></pre></div>
-<p>graphicsオブジェクトはShape上にベクター描画するためのプロパティです。beginBitmapFillはビットマップで塗りつぶしを開始する、という宣言で、描画範囲をdrawRectで決定します。graphicsオブジェクトで描画を終了する場合は、描画の種類に関係なくendFillで終了します。  </p>
-
-<p>鏡面画像はそのままだと、オリジナル画像にグラデーションが重なっているだけの画像です。実際に鏡面効果に見せるためには、反転させて、位置を下げる必要があります。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>var m:Matrix = new Matrix();
-m.scale(1.0, -1.0);
-m.ty = 2 * _imageShapeBitmap.height;
-_imageShape.graphics.beginBitmapFill(_reflectionShapeBitmap, m);
-_imageShape.graphics.drawRect(0, _imageShapeBitmap.height, _reflectionShapeBitmap.width, _reflectionShapeBitmap.height);
-_imageShape.graphics.endFill();
-</code></pre></div>
-<p>本サンプルではMatrixクラスを使って反転させています。画像の反転など3D効果を出すのには、行列計算を行う必要があります。Matrixは表示オブジェクトの回転、拡大縮小、平行移動を行列を使って計算することができます。今回のケースは単純に反転するだけなので、拡大縮小(scale)メソッドを使います。なぜ反転するのに拡大縮小？という疑問があるかもしれません。なぜなら鏡面効果を考えてください。画像を180度回転させると左右が逆になります。するとその後左右反転を呼ばなければなりません。これでは二度手間ですね。  </p>
-
-<p>つまり単純に反転させる効果はscaleメソッドを使い実施します。上下反転はscale(1.0, -1.0)、左右反転は scale(-1.0, 1.0)で実現できます。行列計算というと難しいイメージしかありませんが、100x200画像を拡大縮小させる場合は、四点[(0,0)(200,0)(0,100)(200,100)]で、x,yそれぞれをscaleで指定された値でかけるだけです。つまりscale(1.0,-1.0)の結果は[(0,0)(200,0)(0,-100)(200,-100)]となるので、y軸0の値を中心に画像が上方向
-に向いていることがわかると思います。結果として上下反転したように見えるのです。</p>
-
-<h3>■クロスドメインの罠</h3>
-
-<p>amazonではAPI用にFlashから接続可能なcrossdomain.xmlが定義されています。例えば<a href="http://xml.amazon.com/">http://xml.amazon.com/</a>などのルートにはcrossdomain.xmlが設置されています。ところが、画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
-
-<p>そこで、PHPスクリプトなどを使って回避することができます。なお本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
-
-<p>まずPHPのコードは以下のようになります。例えば、crossdomain.phpとしておきましょう。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="k">if</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">"file"</span><span class="p">]){</span>
-    <span class="nb">header</span><span class="p">(</span><span class="s2">"Content-Type:image/jpeg;"</span><span class="p">);</span>
-    <span class="nb">readfile</span><span class="p">(</span><span class="nv">$_GET</span><span class="p">[</span><span class="s2">"file"</span><span class="p">]);</span>
-<span class="p">}</span>
-<span class="cp">?&gt;</span>
-</code></pre></div>
-<p>次にcrossdomain.xmlをドキュメントルートに配置します。</p>
-<div class="highlight"><pre class="highlight xml"><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
-<span class="cp">&lt;!DOCTYPE cross-domain-policy SYSTEM "http://www.adobe.com/xml/dtds/cross-domain-policy.dtd"&gt;</span>
-<span class="nt">&lt;cross-domain-policy&gt;</span>
-    <span class="nt">&lt;allow-access-from</span> <span class="na">domain=</span><span class="s">"*"</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;/cross-domain-policy&gt;</span>
-</code></pre></div>
-<p>後は、ImageReflector.asのload部分を以下のように書き換えます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>var context:LoaderContext = new LoaderContext(true);
-_imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://images.amazon.com/images/P/4839923221.09._SL200_SCLZZZZZZZ_.jpg"), context);
-</code></pre></div>
-<p>すると、PHPサイトがプロキシとなってくれ、PHPサイトのcrossdomain.xmlをFlashは解釈して、SWFから画像が表示できるようになります。  </p>
-
-<p>クロスドメイン対応の記述は、添付のプロジェクトに含まれないので注意してください。  </p>
-
-<p>※なおローカルで試す分には、クロスドメインの対策を入れなくても動作します。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/04/28/flex2-coverflow-4.html">
-          <a class="twitter" data-title="Flex2でCoverFlowクローンを作る (４) ～鏡面加工する"></a>
-          <a class="facebook" data-title="Flex2でCoverFlowクローンを作る (４) ～鏡面加工する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -792,6 +649,7 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
@@ -801,7 +659,6 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -918,7 +775,7 @@ _imageLoader.load(new URLRequest("http://hoge.com/crossdomain.php?file=http://im
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2025.html">2025</a> (3)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

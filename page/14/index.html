@@ -272,6 +272,42 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a></h1>
+  <p class="postdate"><a href="/2019/05/19.html" title="Permanent link">Sunday, May 19, 2019 07:26:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/google-i-o.html" rel="tag">Google I/O</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回の記事でも書いた<a href="https://gdg-tokyo.connpass.com/event/128867/">I/O Extended 2019 Tokyo@GDG</a>で話してきました。</p>
+
+<p>Twitterでも、イベントサイトの資料でも共有しましたが、スライドを添付しておきます。</p>
+
+<script async class="speakerdeck-embed" data-id="a26c79df0da54af285994d93bc6288a1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>朝から夕方まで、とても幅広い話題がたくさんあり、勉強になりました。</p>
+
+<p>Room1の様子は動画がありますので、こちらからどうぞ。
+私はRoom2だったので、ありませんがw</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LOiFe7ztZCo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/19/i-o-extended-2019-tokyo-gdg.html">
+          <a class="twitter" data-title="I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました"></a>
+          <a class="facebook" data-title="I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/05/15/google-i-o-2019.html">Google I/O 2019ふりかえり</a></h1>
   <p class="postdate"><a href="/2019/05/15.html" title="Permanent link">Wednesday, May 15, 2019 06:57:00 PM</a></p>
   <p class="tags">
@@ -1670,102 +1706,6 @@ JSON定義を自動生成するスクリプトが出ないか期待したいで�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a></h1>
-  <p class="postdate"><a href="/2019/05/02.html" title="Permanent link">Thursday, May 02, 2019 09:12:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2019年4回目となる <a href="https://polymercoedo.doorkeeper.jp/events/91049">Polymer.co-edo ミートアップ</a> を開催しました。</p>
-
-<p><a href="https://github.com/Edo-Elements/edo-blogcard/">edo-blogcard</a>に最初のコードをアップしました。
-<a href="https://github.com/Edo-Elements/edo-blogcard/tree/develop">developブランチ</a>にpushしています。</p>
-
-<p>まだ何も動きはないのですが、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a> を使ってビルドするところまで実装しています。</p>
-
-<h3>ES Module import との戦い</h3>
-
-<p>Web Components はHTMLファイルからだと以下のように読み込みます。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/xx-element/xx-element.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>独自のカスタムエレメントから別のエレメントを利用する場合は、以下のように記述します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@polymer/iron-ajax/iron-ajax.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>ここでブラウザは <code>@polymer/iron-ajax/iron-ajax.js</code> のようなパスを解決できないため、webpackでコンパイルすることが必要になります。
-この話は、以前の記事<a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a>でも書いているとおり、<a href="https://github.com/WICG/import-maps">import maps</a>待ちな状況です。</p>
-
-<h3>2つのビルド結果</h3>
-
-<p>そこで、2つのビルド結果を保持するようにしました。</p>
-
-<h4>/dist/edo-blogcard.js</h4>
-
-<p>これは</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@edo-elements/edo-blogcard/dist/edo-blogcard.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>のように利用するためのビルド結果で、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>形式で記述された <code>.lit</code> ファイルを <code>.js</code> にコンパイルしたものです。</p>
-
-<h4>/dist/edo-blogcard.bundle.js</h4>
-
-<p>これは</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@edo-elements/edo-blogcard/dist/edo-blogcard.bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>のように利用するためのビルド結果で、HTMLからブログパーツとして利用したい（webpackなどを実行しないWebページで使いたい）場合のためにコンパイルしたものです。
-<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使ってHTMLから利用可能な状態になっています。</p>
-
-<h3>工夫したところ</h3>
-
-<p>後者の <code>bundle.js</code> については、普通に<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使うやり方なので、特にはありません。
-<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>はwebpackのloaderとして実装されているので、configに設定を追加するだけです。</p>
-
-<p>一方前者はwebpackのloaderようにできている<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>を、webpack使わずにどうやって呼び出すか？というところを工夫しました。</p>
-
-<p>それが <a href="https://github.com/Edo-Elements/edo-blogcard/blob/develop/build.js">build.js</a> です。
-そして <a href="https://github.com/webpack/loader-runner#readme">loader-runner</a> という webpack のモジュールを使っています。
-このモジュールは <code>Runs (webpack) loaders</code> という説明のとおり、loaderを実行することに特化しています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">fs</span><span class="dl">"</span><span class="p">);</span>
-<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">path</span><span class="dl">"</span><span class="p">);</span>
-<span class="kd">const</span> <span class="p">{</span> <span class="nx">runLoaders</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">loader-runner</span><span class="dl">"</span><span class="p">);</span>
-
-<span class="nx">runLoaders</span><span class="p">(</span>
-  <span class="p">{</span>
-    <span class="na">resource</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">"</span><span class="s2">edo-blogcard.lit</span><span class="dl">"</span><span class="p">),</span>
-    <span class="na">loaders</span><span class="p">:</span> <span class="p">[</span><span class="nx">require</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">"</span><span class="s2">lit-loader</span><span class="dl">"</span><span class="p">)]</span>
-  <span class="p">},</span>
-  <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
-    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="dl">"</span><span class="s2">dist/edo-blogcard.js</span><span class="dl">"</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
-  <span class="p">}</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>これだけで <code>.lit</code> ファイルを <code>.js</code> ファイルに(webpackなしで)コンパイルできます。</p>
-
-<h3>次回</h3>
-
-<p>通常どおりの、もくもく会として開催予定しています。
-皆様の参加をお待ちしております。</p>
-
-<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html">
-          <a class="twitter" data-title="Polymer.co-edo day 2019 春を開催しました"></a>
-          <a class="facebook" data-title="Polymer.co-edo day 2019 春を開催しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1795,6 +1735,7 @@ JSON定義を自動生成するスクリプトが出ないか期待したいで�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
@@ -1804,7 +1745,6 @@ JSON定義を自動生成するスクリプトが出ないか期待したいで�
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -1921,7 +1861,7 @@ JSON定義を自動生成するスクリプトが出ないか期待したいで�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2025.html">2025</a> (3)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

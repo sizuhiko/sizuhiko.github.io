@@ -272,6 +272,100 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/06/30/polymer-co-edo-meetup-26.html">Polymer.co-edo  meetup ＃26を開催しました</a></h1>
+  <p class="postdate"><a href="/2019/06/30.html" title="Permanent link">Sunday, June 30, 2019 11:36:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年5回目となる <a href="https://polymercoedo.doorkeeper.jp/events/93071">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p>まず最初に私から、先日の<a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a>について共有しました。
+<a href="https://github.com/Edo-Elements/edo-karakuri">edo-karakuri</a>の仕組みやできることなど、edo-blogcardとの関連など。</p>
+
+<h3>lit-loaderのコンパイルがエラーになる？</h3>
+
+<p>で、そのあとはedo-blogcardとedo-karakuriをつないで、動かそうとしたところ、<a href="https://github.com/PolymerX/lit-loader">lit-loader</a>というかBabelでエラーになります。
+どうもコンストラクターがダメらしい。lit-loaderの公式では以下のような例です。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">CounterElement</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">get</span> <span class="nx">properties</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span>
+      <span class="na">clicks</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span>
+      <span class="na">value</span><span class="p">:</span> <span class="nb">Number</span>
+    <span class="p">}};</span>
+
+    <span class="kd">constructor</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">super</span><span class="p">();</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>これを見てパッとは気づかなかったのですが、よく考えると <code>extends</code> してない（親クラスない）のに、 <code>constructor</code> で <code>super</code> 呼んだらダメじゃね？と。
+まぁ厳密には <code>lit-loader</code> を使ってコンパイルされると、以下のように <code>LitElement</code> を継承するので、コンパイル後であれば問題はないです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="k">export</span> <span class="k">default</span> <span class="kd">class</span> <span class="nx">CounterElement</span> <span class="kd">extends</span> <span class="nx">LitElement</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">get</span> <span class="nx">properties</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span>
+      <span class="na">clicks</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span>
+      <span class="na">value</span><span class="p">:</span> <span class="nb">Number</span>
+    <span class="p">}};</span>
+
+    <span class="kd">constructor</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">super</span><span class="p">();</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>あれ？でもこれ <a href="https://github.com/PolymerX/lit-loader-example">lit-loader-example</a>でうまく動作していなかったっけ？と思ったわけです。
+そして、確かにリポジトリをcloneしてから <code>yarn install</code> して <code>yarn build</code> してもエラーになりません。</p>
+
+<h3>そのときと現状</h3>
+
+<p>当時のパッケージバージョンと、現在のパッケージバージョンを比較してみました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$ npm outdated
+Package               Current      Wanted  Latest  Location
+@babel/core             7.2.2       7.2.2   7.4.5  lit-loader-example
+@babel/preset-env       7.3.0       7.3.0   7.4.5  lit-loader-example
+babel-loader            7.1.5       7.1.5   8.0.6  lit-loader-example
+lit-element        2.0.0-rc.3  2.0.0-rc.3   2.2.0  lit-loader-example
+webpack                4.16.1      4.16.1  4.35.0  lit-loader-example
+webpack-cli             3.0.8       3.0.8   3.3.5  lit-loader-example
+xo                     0.21.1      0.21.1  0.24.0  lit-loader-example
+</code></pre></div>
+<p>babel新しくなってるな。確かに新しくするとES6のチェックが厳密になっている。
+まぁあるべき姿なんですけどね。</p>
+
+<h3>どうするか？</h3>
+
+<p>ただしく解決するなら <code>constructor</code> が定義されている場合のみ、最初の行に <code>super()</code> を差し込むような <code>lit-loader</code> にすれば良いのかなと。
+で、 <code>lit-loader</code> は <a href="https://github.com/facebook/jscodeshift">jscodeshift</a> を使っているので、JavaScriptのASTとか調べながら、jscodeshiftでどうやってソースコードを変換できるかを調べました。
+で、修正コードは作れたので、PR出すかなーと思っています。
+今のところ通過するようにするためには Babel のバージョンを <code>7.2.2</code> にしておくと良いです。</p>
+
+<h3>次回</h3>
+
+<p>Polymer Japanのイベントが同じ週に計画されているので、次回は8月の予定です。</p>
+
+<p>引き続きEdoエレメントの開発ともくもくを進めていきます。
+皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/06/30/polymer-co-edo-meetup-26.html">
+          <a class="twitter" data-title="Polymer.co-edo  meetup ＃26を開催しました"></a>
+          <a class="facebook" data-title="Polymer.co-edo  meetup ＃26を開催しました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/06/16/interop-2019-w3c-chirimen.html">InteropでW3Cブースの出展に参加してきました</a></h1>
   <p class="postdate"><a href="/2019/06/16.html" title="Permanent link">Sunday, June 16, 2019 03:26:00 PM</a></p>
   <p class="tags">
@@ -421,42 +515,6 @@
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/05/19/i-o-extended-2019-tokyo-gdg.html">I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました</a></h1>
-  <p class="postdate"><a href="/2019/05/19.html" title="Permanent link">Sunday, May 19, 2019 07:26:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/google-i-o.html" rel="tag">Google I/O</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回の記事でも書いた<a href="https://gdg-tokyo.connpass.com/event/128867/">I/O Extended 2019 Tokyo@GDG</a>で話してきました。</p>
-
-<p>Twitterでも、イベントサイトの資料でも共有しましたが、スライドを添付しておきます。</p>
-
-<script async class="speakerdeck-embed" data-id="a26c79df0da54af285994d93bc6288a1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>朝から夕方まで、とても幅広い話題がたくさんあり、勉強になりました。</p>
-
-<p>Room1の様子は動画がありますので、こちらからどうぞ。
-私はRoom2だったので、ありませんがw</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LOiFe7ztZCo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/19/i-o-extended-2019-tokyo-gdg.html">
-          <a class="twitter" data-title="I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました"></a>
-          <a class="facebook" data-title="I/O Extended 2019 Tokyo@GDG で、Web技術に関するLTを話してきました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -486,6 +544,7 @@
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
@@ -495,7 +554,6 @@
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> <span>2024/03/20</span></li>
               </ul>
             </div>
           </section>
@@ -612,7 +670,7 @@
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (2)</li>
+                  <li><a href="/2025.html">2025</a> (3)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
