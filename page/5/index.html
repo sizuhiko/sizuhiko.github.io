@@ -272,6 +272,69 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a></h1>
+  <p class="postdate"><a href="/2023/04/06.html" title="Permanent link">Thursday, April 06, 2023 06:24:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-v2.html" rel="tag">aws-sdk@v2</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>aws-sdk v2 を使っている CLI ツールで aws 環境を操作していたら、見慣れないメッセージが出てきました。</p>
+
+<blockquote>
+<p>(node:9129) NOTE: The AWS SDK for JavaScript (v2) will be put into maintenance mode in 2023.</p>
+</blockquote>
+
+<p>AWS SDK v2 ってメンテナンスモードに入るんだ&hellip;</p>
+
+<p>Twitter でも書いている人がいました</p>
+
+<p><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Anyone else seeing this new error from <a href="https://twitter.com/awscloud?ref_src=twsrc%5Etfw">@awscloud</a> sdk? <br><br>This is showing to our CLI users and is&hellip; annoying to say the least. <a href="https://t.co/KabEtFDKnl">pic.twitter.com/KabEtFDKnl</a></p>&mdash; David Wells (@DavidWells) <a href="https://twitter.com/DavidWells/status/1626321488742862848?ref_src=twsrc%5Etfw">February 16, 2023</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
+
+<p>これまでも複数回にわたって aws-sdk v3 の記事を書いてきましたが、これは Lambda にデプロイするアプリだから v3 に移行したのであって、CLIツールとかなら v3 に移行するモチベがあるかな&hellip;.</p>
+
+<p>ぶっちゃけ Lambda とかだとランタイムに追従すると sdk も上げないといけないので対応したけど、ツールなら対応しないですよね。</p>
+
+<p>公式のリポジトリにも、サポートについて書かれています。</p>
+
+<p>https://github.com/aws/aws-sdk-js#version-2x-support</p>
+
+<p>そこにリンクされている <a href="https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html">メンテナンスポリシーページ</a> にいくと、以下のような内容が記入されていました。</p>
+
+<blockquote>
+<p>メンテナンス (フェーズ 3) -メンテナンス モードの間、AWS は SDK リリースを制限して、重大なバグ修正とセキュリティ問題のみに対処します。SDK は、新規または既存のサービスの API 更新を受け取ることも、新しいリージョンをサポートするために更新されることもありません。特に指定がない限り、メンテナンス モードのデフォルト期間は 12 か月です。</p>
+
+<p>サポート終了 (フェーズ 4) - SDK がサポート終了に達すると、更新またはリリースを受け取ることができなくなります。以前に公開されたリリースは引き続きパブリック パッケージ マネージャーから入手でき、コードは GitHub に残ります。GitHub リポジトリはアーカイブされる場合があります。サポートが終了した SDK の使用は、ユーザーの判断で行われます。ユーザーが新しいメジャー バージョンにアップグレードすることをお勧めします。</p>
+</blockquote>
+
+<p>v2 自体がリポジトリから無くなることはなさそうですが、膨大にありそうな v2 を使った CLI ツール群はどうするのかなぁ&hellip;</p>
+
+<p>ちなみに Serverless Framerwork は PR <a href="https://github.com/serverless/serverless/pull/11769">Suppress AWS SDK v2 deprecation message</a> でいったんメッセージ出力を OFF にしていますが、 v3 移行は大変だろうなぁ、という感想しかないです。</p>
+
+<p>AWS SDK v3 は、これまでの記事でも書いてますが、結構パッケージ管理が残念な感じだったりするのと、書き方もめっちゃ変わっているので Serverless Framework 規模になると書き換えもかなり工数かかりそうだなぁと（いつかはやるんだろうけど）。</p>
+
+<p>AWS さんが簡易にコンバートできるツールを作ってくれると良いんだろうけど、オプションの書き方も変わっているところがあったりするので、単純な変換も大変そうですね。</p>
+
+<p>上記の引用ツイートのレスの中にもあるけど、v3 のドキュメントが不親切だというのは事実だし、良い解決策が 2023 年中に見つかると良いですね。
+なんか感想ブログになっちゃいましたが、僕らのプロジェクトも v2 依存している CLI ツールは移行対象にしてなかったので、これから移行計画作らないとな、と思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">
+          <a class="twitter" data-title="aws-sdk v2 が 2023 年中にメンテナンスモードになる"></a>
+          <a class="facebook" data-title="aws-sdk v2 が 2023 年中にメンテナンスモードになる"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a></h1>
   <p class="postdate"><a href="/2023/04/05.html" title="Permanent link">Wednesday, April 05, 2023 05:08:00 PM</a></p>
   <p class="tags">
@@ -740,176 +803,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a></h1>
-  <p class="postdate"><a href="/2023/01/04.html" title="Permanent link">Wednesday, January 04, 2023 11:00:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/lambda.html" rel="tag">Lambda</a>
-      <a href="/tags/node-js.html" rel="tag">Node.js</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>先日も紹介したクラメソさんの <a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/">[アップデート] AWS Lambdaが Node.js 18をサポートしました</a> 記事でもふれられていましたが、Node.js が 18 になるのに伴い、イメージ内の aws-sdk が v3 になりました。
-Node.js 16 までは v2 系だったのですが、ここでは多くの変更が発生しています。</p>
-
-<ul>
-<li>npm install する対象が <code>aws-sdk</code> から <code>@aws-sdk/client-xxx</code> のように AWS のサービスごとのクライアントライブラリになった</li>
-<li>書き方が、各クライアントを <code>new</code> して <code>send</code> でコマンドを送信する記述に統一された</li>
-</ul>
-
-<p>大きくはこの2点でしょうか。
-私たちは aws-sdk の利用に関してリポジトリパターンの中に閉じ込めているので、基本的にそこだけ対応すれば良いのですが、API で同期実行だったものが非同期実行に変更となっているので、そこだけはインターフェースを Promise に変更する必要があります。
-これは実際のコマンド内部は同期で問題ないけど、 <code>Client.send(command)</code> が基本的に Promise を返却するようになったための副作用だと思ってください。
-（ aws-sdk v2 のときは <code>command().promise()</code> のようにすると、非同期コマンドは Promise を返却するようになっていたのですが、この <code>promise()</code> 部分がなくなり、基本的な戻りは Promise になっています）</p>
-
-<h2>具体的なコードで見る v2 と v3 の違い</h2>
-
-<p>StepFuntions を実行するコードで違いをみてみましょう。</p>
-
-<h3>v2 のコード</h3>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">StepFunctions</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">StepFunctions</span><span class="p">();</span>
-<span class="kd">const</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">stepFunctions</span><span class="p">.</span><span class="nx">startExecution</span><span class="p">({</span>
-  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span>
-  <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">),</span>
-<span class="p">}).</span><span class="nx">promise</span><span class="p">();</span>
-</code></pre></div>
-<h3>v3 のコード</h3>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">build</span><span class="p">,</span> <span class="nx">parse</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/util-arn-parse</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">const</span> <span class="p">{</span> <span class="nx">region</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">parse</span><span class="p">(</span><span class="nx">arn</span><span class="p">);</span>
-<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">({</span> <span class="nx">region</span> <span class="p">});</span>
-<span class="kd">const</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">stepFunctions</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="k">new</span> <span class="nx">StartExecutionCommand</span><span class="p">({</span>
-  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span>
-  <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">),</span>  
-<span class="p">}));</span>
-</code></pre></div>
-<p>StepFunctions では、利用するライブラリ名が <code>aws-sdk/client-sfn</code> になりました。
-ほとんどの場合は、サービス名を使っています（たとえば S3 なら aws-sdk/client-s3 だし、 S3Client です）が、StepFunctions の場合は <code>sfn</code> に省略されているので注意が必要です。（僕はこの略名に気付くまでメチャクチャ探したことを告白しておきます）</p>
-
-<p>クライアントライブラリを探すときは <a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/">AWS SDK for JavaScript v3</a> の公式ドキュメントを参照すると良いのですが、ぱっとみてサービス名からクライアントライブラリが見つけられない場合は、それっぽい略名から探してみると良いでしょう。</p>
-
-<p>v2 と v3 を比較するとわかりますが、大きな変更でないことはわかると思います。</p>
-
-<h2>v3 移行するときに役立つドキュメント</h2>
-
-<p>次に v3 移行するときに役立つドキュメントを紹介していきます。</p>
-
-<ul>
-<li><a href="https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/">AWS SDK for JavaScript v3</a> </li>
-<li><a href="https://aws.amazon.com/jp/blogs/news/service-error-handling-modular-aws-sdk-js/">AWS SDK for JavaScript (v3) モジュールでのエラー処理</a></li>
-<li><a href="https://github.com/aws/aws-sdk-js-v3/blob/main/UPGRADING.md">Upgrading Notes (2.x to 3.x)</a></li>
-</ul>
-
-<p>1つ目は公式のSDKドキュメントですね。クライアントライブラリを探すときも、コマンド名を確認するときにも良く参照します。</p>
-
-<p>2つ目はエラーハンドリングのやり方の違いについてです。詳しくはドキュメントを読めばわかるのですが、従来はエラーの判定方法が 
-<code>(&lt;AWSError&gt;e).code === &#39;ExecutionDoesNotExist&#39;</code> みたいにしていたのを <code>e instanceof ExecutionDoesNotExist</code> のように例外クラスのインスタンスとして判定できるようになっています。これも v3 に移行するときに注意したいポイントです。</p>
-
-<p>3つ目はSDKのv3へのアップグレードガイドで、主に破壊的変更があった部分について解説されています。単純に XxxxClient と XxxxCommand に変更したときに型エラーが出たときは、このドキュメントを読んで破壊的変更（変数名の変更や、JSON構造の変更など）がないか確認すると解決への近道になります。</p>
-
-<p>ただし、先ほどの例で書いた StepFunctions のコンストラクタのように</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">({</span> <span class="nx">region</span> <span class="p">});</span>
-</code></pre></div>
-<p>リージョンが v3 から必須パラメータになったのですが、こういった変更は動かしてみるまでわからないことが多いので、ユニットテストを書いておくことは重要です。</p>
-
-<h2>ユニットテスト</h2>
-
-<p>私たちは以下のサービスについては、モックせずにローカルで代替ライブラリを使って結合テストを行なっています。</p>
-
-<ul>
-<li>S3 : <a href="https://www.npmjs.com/package/s3rver">S3rver</a></li>
-<li>SQS: <a href="https://github.com/softwaremill/elasticmq">ElasticMQ</a></li>
-<li>RDS: <a href="https://www.npmjs.com/package/better-sqlite3">better-sqlite3</a></li>
-</ul>
-
-<h3>v2 でのユニットテスト</h3>
-
-<p>上記以外について、v2 のときは以下のようにモックしていました。ここでは Jest での書き方を紹介します。
-sfn の start というメソッドで StepFunctions を呼び出していると想定してください。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">startExecutionMock</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span> <span class="c1">// startExecution の引数チェック用</span>
-<span class="kd">const</span> <span class="nx">startExecution</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span> <span class="c1">// startExecution の戻り値モック用</span>
-<span class="nx">jest</span><span class="p">.</span><span class="nx">mock</span><span class="p">(</span><span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span>
-    <span class="na">StepFunctions</span><span class="p">:</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">().</span><span class="nx">mockImplementation</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">{</span>
-        <span class="na">startExecution</span><span class="p">:</span> <span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mockImplementation</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="p">{</span> <span class="na">promise</span><span class="p">:</span> <span class="nx">startExecution</span> <span class="p">};</span>
-        <span class="p">}),</span>
-      <span class="p">};</span>
-    <span class="p">});</span>
-  <span class="p">};</span>
-<span class="p">});</span>
-
-<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mockReset</span><span class="p">();</span>
-  <span class="nx">startExecution</span><span class="p">.</span><span class="nx">mockReset</span><span class="p">();</span>
-<span class="p">});</span>
-
-<span class="nx">startExecution</span><span class="p">.</span><span class="nx">mockResolvedValue</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
-<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
-
-<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">startExecutionMock</span><span class="p">.</span><span class="nx">mock</span><span class="p">.</span><span class="nx">calls</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">([</span>
-  <span class="p">[{</span> <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">}]</span>
-<span class="p">]);</span>
-</code></pre></div>
-<p>v2 でのモックは面倒でしたね。</p>
-
-<h3>v3 でのユニットテスト</h3>
-
-<p>v3 で aws-sdk をモックするときは <a href="https://github.com/m-radzikowski/aws-sdk-client-mock">AWS SDK v3 Client mock</a> を利用します。</p>
-
-<blockquote>
-<p>Library recommended by the AWS SDK for JavaScript team - see the introductory post on the AWS blog.</p>
-</blockquote>
-
-<p>ということで公式にもオススメされるライブラリということで良いですね。</p>
-
-<p>上記の v3 でのテストコードは以下のようになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock-jest</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">mockClient</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">const</span> <span class="nx">SFNClientMock</span> <span class="o">=</span> <span class="nx">mockClient</span><span class="p">(</span><span class="nx">SFNClient</span><span class="p">);</span>
-<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">reset</span><span class="p">());</span>
-
-<span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">StartExecutionCommand</span><span class="p">).</span><span class="nx">resolves</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
-<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
-
-<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">SFNClientMock</span><span class="p">).</span><span class="nx">toHaveReceivedNthCommanddWith</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>モックライブラリを使うと、v2 のときより可読性も良くわかりやすくなっています。</p>
-
-<h2>さいごに</h2>
-
-<p>ここまで aws-sdk を v2 から v3 にする方法をまとめてみました。
-<code>aws-sdk-client-mock</code> 便利ですね。
-しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
-sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 <code>mockClient</code> の結果で得られたモックを使っているわけでもありません。
-そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">
-          <a class="twitter" data-title="AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）"></a>
-          <a class="facebook" data-title="AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -939,6 +832,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
@@ -948,7 +842,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -956,6 +849,9 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -1065,7 +961,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (3)</li>
+                  <li><a href="/2025.html">2025</a> (4)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

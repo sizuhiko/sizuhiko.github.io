@@ -272,6 +272,83 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/05/03/brackets-coming-lsp.html">BracketsにLSPがやってきた</a></h1>
+  <p class="postdate"><a href="/2019/05/03.html" title="Permanent link">Friday, May 03, 2019 10:45:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/brackets.html" rel="tag">Brackets</a>
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/lsp.html" rel="tag">LSP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>やぁやぁやぁ、LSPがやってきたよ！</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">Brackets 1.14 has landed!<br><br>With v 1.14, Brackets now supports LSP. If you&rsquo;re writing PHP code, take advantage of code hinting, jump to def, parameter hints, and more. More info here: <a href="https://t.co/0qvLhYbG8l">https://t.co/0qvLhYbG8l</a><br><br>Download now!<a href="https://twitter.com/hashtag/PHP?src=hash&amp;ref_src=twsrc%5Etfw">#PHP</a> <a href="https://twitter.com/hashtag/Web?src=hash&amp;ref_src=twsrc%5Etfw">#Web</a> <a href="https://twitter.com/hashtag/LSP?src=hash&amp;ref_src=twsrc%5Etfw">#LSP</a></p>&mdash; Brackets (@brackets) <a href="https://twitter.com/brackets/status/1123897524618657792?ref_src=twsrc%5Etfw">2 May 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p><a href="http://blog.brackets.io/2019/05/02/brackets-1-14-has-landed/">Brackets 1.14 has landed!</a>というブログ記事にも書かれているように、今回のリリースの目玉はLSP(Language Server Protocol)のサポートです。</p>
+
+<p>ついにBracketsにもLSP対応が入りましたね。これまでAtomとはVS Codeに遅れをとっていましたが、これで色々なプログラミング言語でも利用しやすくなるはずです。
+詳しくは<a href="https://github.com/adobe/brackets/wiki/Release-Notes:-1.14">リリースノート</a>にも書かれています。</p>
+
+<p>対応したissueを見ると、 <code>Move vscode-languageserver-protocol to Thirdparty</code> と書いて有るので、vscodeの実装を参考にしたようです。</p>
+
+<p><a href="https://github.com/adobe/brackets/wiki/Language-Server-Protocol-Support-in-Brackets">Language Server Protocol Support in Brackets</a>のページにアーキテクチャの解説や、LSP拡張を実装する場合の方法について解説があるので現時点 PHP, Python, TypeScript だけのサポートのようなので、それ以外の言語にも対応させようと思ったときに役立ちそうです。</p>
+
+<p>私の手元のBracketsもさっそくアップデートしました。</p>
+
+<h3>さっそく使ってみよう</h3>
+
+<p>アップデートをインストールしたら、環境設定を開きます。
+すると、2ペイン表示になるので、左側(defaultPreferences.json)から <code>php</code> で検索します。
+以下のようなデフォルト設定になっているはずなので、コピーして右のペイン(brackets.json)に貼り付けます。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="c1">// PHP ツールのデフォルト設定</span>
+    <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1">// デフォルト: true</span>
+        <span class="dl">"</span><span class="s2">enablePhpTooling</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: php</span>
+        <span class="dl">"</span><span class="s2">executablePath</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: 4095M</span>
+        <span class="dl">"</span><span class="s2">memoryLimit</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">4095M</span><span class="dl">"</span><span class="p">,</span>
+
+        <span class="c1">// デフォルト: false</span>
+        <span class="dl">"</span><span class="s2">validateOnType</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">false</span><span class="dl">"</span>
+    <span class="p">},</span>
+</code></pre></div>
+<p>右ペインにコピーしたらコメント行は削除してくださいね。忘れるとJSONのパースエラーになります。</p>
+
+<p>ここで重要なのは <code>executablePath</code> の設定です。
+もしシステム(OS)に入っているPHPが7以上であれば問題ないのですが、デフォルトが7以上でない場合は、ここを書き換える必要があります。</p>
+
+<p>たとえば私はphpbrewで複数バージョン切り替えているので、たまにPHP5.5とかに変更しますので、以下のように固定パスを指定するように変更します。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="dl">"</span><span class="s2">php</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="dl">"</span><span class="s2">enablePhpTooling</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">executablePath</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">/Users/sizuhiko/.phpbrew/php/php-7.3.1/bin/php</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">memoryLimit</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">4095M</span><span class="dl">"</span><span class="p">,</span>
+        <span class="dl">"</span><span class="s2">validateOnType</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">false</span><span class="dl">"</span>
+    <span class="p">}</span>
+</code></pre></div>
+<p>これからは、Bracketsを使ったPHPアプリケーション開発も快適になりますね！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/03/brackets-coming-lsp.html">
+          <a class="twitter" data-title="BracketsにLSPがやってきた"></a>
+          <a class="facebook" data-title="BracketsにLSPがやってきた"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a></h1>
   <p class="postdate"><a href="/2019/05/02.html" title="Permanent link">Thursday, May 02, 2019 09:12:00 PM</a></p>
   <p class="tags">
@@ -601,118 +678,6 @@ PSR-7のライブラリが違うと、どのような記述の違いがあるの
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a></h1>
-  <p class="postdate"><a href="/2019/04/28.html" title="Permanent link">Sunday, April 28, 2019 05:13:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a>の続編です。</p>
-
-<p>前回までの対応で、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなりました。
-ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
-これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところだったのですが、これらの対応を解説していきます。</p>
-
-<h3>dom-module has style outside template というワーニングが出る</h3>
-
-<p>ブラウザのコンソールを確認していると <code>dom-module has style outside template</code> といったワーニングが表示されます。
-これは <code>&lt;dom-module&gt;</code> の中で <code>&lt;template&gt;</code> と <code>&lt;style&gt;</code> が並列に記述されている場合に発生します。</p>
-
-<p>なので、すべて <code>&lt;template&gt;</code> の子要素に <code>&lt;style&gt;</code> を移動しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/57ac6537723ead18bf953cbe4577a69c990bafe1">コミット</a>）。</p>
-
-<h3>動かすようにするための微調整</h3>
-
-<p>続いて1つずつの修正はそれぞれ大きくないものの、動作するまでの調整をたくさん実施しました（<a href="https://github.com/toiletevolution/toiletevolution-server/commit/c1cb2e9fa4d12cc049dac8abc996cb3be0057155">コミット</a>）。</p>
-
-<h4>クリック処理が動かない</h4>
-
-<p>これは1から2の段階で廃止になった <code>listeners</code> を使っていたためで、利用箇所を <code>addEventListener</code> や、 <code>on-tap</code>, <code>on-click</code> に変更しました。</p>
-
-<h4>moment でロケールを利用しようとするとエラーになる</h4>
-
-<p>Toilet Evolution では、トイレの利用状況を表示するときに <code>10分前</code> のような表示をしているのですが、これに <code>moment.js</code> の機能(<code>toDate()</code>)を使っています。
-<code>moment</code> だけ(ロケールを使わない)なら npm でインストールして</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">moment</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">moment</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p>と記述すればよかった(動いた)のですが、どうしてもロケールの解決がうまくいかない（Webpackするとエラーになる）ので、今回はあきらめてHTML側でグローバルに利用できる形にしました。</p>
-<div class="highlight"><pre class="highlight html"><code>  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/ja.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>いくつかWebpackとmomentのissueも見つけて解決策もありそうだったのですが、とりあえず困らないのでこの方法で。</p>
-
-<h4>style や slot が解決されない</h4>
-
-<p>modulizerで自動変換された <code>&lt;google-map-marker&gt;</code> エレメントは以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">$_documentContainer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="dl">'</span><span class="s1">template</span><span class="dl">'</span><span class="p">);</span>
-
-<span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">innerHTML</span> <span class="o">=</span> <span class="s2">`&lt;dom-module id="google-map-marker"&gt;
-  &lt;style&gt;
-    :host {
-      display: none;
-    }
-  &lt;/style&gt;
-  &lt;template&gt;&lt;slot&gt;&lt;/slot&gt;&lt;/template&gt;
-&lt;/dom-module&gt;`</span><span class="p">;</span>
-
-<span class="nb">document</span><span class="p">.</span><span class="nx">head</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">$_documentContainer</span><span class="p">.</span><span class="nx">content</span><span class="p">);</span>
-</code></pre></div>
-<p>もとのHTMLでの記述は以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;dom-module</span> <span class="na">id=</span><span class="s">"google-map-marker"</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;template&gt;</span>
-    <span class="nt">&lt;style&gt;</span>
-      <span class="nd">:host</span> <span class="p">{</span>
-        <span class="nl">display</span><span class="p">:</span> <span class="nb">none</span><span class="p">;</span>
-      <span class="p">}</span>
-    <span class="nt">&lt;/style&gt;</span>
-
-    <span class="nt">&lt;slot&gt;&lt;/slot&gt;</span>
-  <span class="nt">&lt;/template&gt;</span>
-  <span class="nt">&lt;script&gt;</span>
-</code></pre></div>
-<p>自分が作ったカスタムエレメントでは、 <code>Polymer</code> の <code>_template</code> に <code>html</code> を使うように変換されていたのですが、bowerでインストールしたコンポーネントの多くは上記のように変換されていました。これを <code>html</code> を使うようにしてみたところ解決しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">Polymer</span><span class="p">({</span>
-
-  <span class="na">_template</span><span class="p">:</span> <span class="nx">html</span><span class="s2">`
-  &lt;style&gt;
-    :host {
-      display: none;
-    }
-  &lt;/style&gt;
-  &lt;slot&gt;&lt;/slot&gt;
-`</span><span class="p">,</span>
-</code></pre></div>
-<p><code>&lt;google-map&gt;</code> エレメントも同様にうまく動作しなかったので、 <code>html</code> をつけて <code>_template</code> で返却するように対応しました。</p>
-
-<h3>さいごに</h3>
-
-<p>4回にわたって、Polymer1のプロジェクトをPolymer3に移行した解説をしてきました。
-この連載がPolymer1からアップグレードする他の方の手助けになれば幸いです。</p>
-
-<p>基本的な部分は、ほとんどmodulizerで変換できるので、これは便利だなーと思うのでした。
-Polymer3対応した依存エレメントは、どこかのタイミングでPRを出してフィードバックしたいなと思っています。</p>
-
-<p>では良いWeb Componentsライフを！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/04/28/toilet-evolution-polymer3-vol4.html">
-          <a class="twitter" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(4)"></a>
-          <a class="facebook" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(4)"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -742,6 +707,7 @@ Polymer3対応した依存エレメントは、どこかのタイミングでPR�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
@@ -751,7 +717,6 @@ Polymer3対応した依存エレメントは、どこかのタイミングでPR�
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -759,6 +724,9 @@ Polymer3対応した依存エレメントは、どこかのタイミングでPR�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -868,7 +836,7 @@ Polymer3対応した依存エレメントは、どこかのタイミングでPR�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (3)</li>
+                  <li><a href="/2025.html">2025</a> (4)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

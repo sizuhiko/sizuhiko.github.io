@@ -1,0 +1,675 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8" />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge;chrome=1' />
+    <title>sizuhiko - Technote - Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</title>
+    <link rel="shortcut icon" href="/imgages/favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/stylesheets/main.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js" defer init></script>    
+    <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie.css" type="text/css">
+      <script src="/javascripts/browsers/ie8.js"></script>
+      <script defer src="/javascripts/browsers/ie-css3.js"></script>
+    <![endif]-->
+    <!--[if IE 6]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie6.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 7]>
+      <link rel="stylesheet" href="/styleseets/browsers/ie7.css" type="text/css">
+    <![endif]-->
+    <!--[if IE 8]>
+      <link rel="stylesheet" href="/stylesheets/browsers/ie8.css" type="text/css">
+    <![endif]-->
+    <style type="text/css">
+      @media all and (max-width:680px) {
+        #blogtools a, #blogtools a:link, #blogtools a:visited { position:relative; top:0; margin:0 0 5px 10px; float:left; background:#f1f1f1; color:#111; border:1px solid #888; }
+        #postcontent, #posttitle { width:100%; }
+        #qppreview { display:none; }
+        #qpsubmit { width:auto !important; float:none; line-height:1.4; height:auto; margin:7px 0; }
+        #postform b { display:block; }
+        #sharing { float:none; padding-top:3px; }
+        }
+    </style>
+    <style type="text/css">
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .cm {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cp {
+  color: #999999;
+  font-weight: bold;
+}
+.highlight .c1 {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .cs {
+  color: #999999;
+  font-weight: bold;
+  font-style: italic;
+}
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cpf {
+  color: #999988;
+  font-style: italic;
+}
+.highlight .err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+.highlight .gd {
+  color: #000000;
+  background-color: #ffdddd;
+}
+.highlight .ge {
+  color: #000000;
+  font-style: italic;
+}
+.highlight .gr {
+  color: #aa0000;
+}
+.highlight .gh {
+  color: #999999;
+}
+.highlight .gi {
+  color: #000000;
+  background-color: #ddffdd;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+  font-weight: bold;
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .gt {
+  color: #aa0000;
+}
+.highlight .kc {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kd {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kn {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kp {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kr {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .kt {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kv {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .mf {
+  color: #009999;
+}
+.highlight .mh {
+  color: #009999;
+}
+.highlight .il {
+  color: #009999;
+}
+.highlight .mi {
+  color: #009999;
+}
+.highlight .mo {
+  color: #009999;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #009999;
+}
+.highlight .sa {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .sb {
+  color: #d14;
+}
+.highlight .sc {
+  color: #d14;
+}
+.highlight .sd {
+  color: #d14;
+}
+.highlight .s2 {
+  color: #d14;
+}
+.highlight .se {
+  color: #d14;
+}
+.highlight .sh {
+  color: #d14;
+}
+.highlight .si {
+  color: #d14;
+}
+.highlight .sx {
+  color: #d14;
+}
+.highlight .sr {
+  color: #009926;
+}
+.highlight .s1 {
+  color: #d14;
+}
+.highlight .ss {
+  color: #990073;
+}
+.highlight .s, .highlight .dl {
+  color: #d14;
+}
+.highlight .na {
+  color: #008080;
+}
+.highlight .bp {
+  color: #999999;
+}
+.highlight .nb {
+  color: #0086B3;
+}
+.highlight .nc {
+  color: #445588;
+  font-weight: bold;
+}
+.highlight .no {
+  color: #008080;
+}
+.highlight .nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+.highlight .ni {
+  color: #800080;
+}
+.highlight .ne {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nf, .highlight .fm {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nl {
+  color: #990000;
+  font-weight: bold;
+}
+.highlight .nn {
+  color: #555555;
+}
+.highlight .nt {
+  color: #000080;
+}
+.highlight .vc {
+  color: #008080;
+}
+.highlight .vg {
+  color: #008080;
+}
+.highlight .vi {
+  color: #008080;
+}
+.highlight .nv, .highlight .vm {
+  color: #008080;
+}
+.highlight .ow {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .o {
+  color: #000000;
+  font-weight: bold;
+}
+.highlight .w {
+  color: #bbbbbb;
+}
+.highlight {
+  background-color: #f8f8f8;
+}
+    </style>
+  </head>
+  <body id="myopera" data-twttr-rendered="true">
+    <!--[if IE 6]><div class="ie6"><![endif]-->
+    <!--[if IE 7]><div class="ie7"><![endif]-->
+    <!--[if IE 8]><div class="ie8"><![endif]-->
+    <!--[if IE 9]><div class="ie9"><![endif]-->
+    <div id="wrap0"><div id="wrap1"><div id="wrap2"><div id="wrap3"><div id="wrap4">
+
+    <header id="top" class="top-blog">
+      <div id="top2">
+        <h1><a href="/" title="home"><span>Technote</span></a></h1>
+        <p id="subtitle"><span>by sizuhiko</span></p>
+      </div>
+    </header>
+
+    <main id="content" class="blogfront">
+      <div id="mainwrap">
+        <div id="main">
+          <article>
+            <h1>Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</h1>
+            <p class="postdate"><a href="/2025/04/15.html" title="Permanent link">Tuesday, April 15, 2025 10:36:00 AM</a></p>
+            <p class="tags">
+                <a href="/tags/next-js.html" rel="tag">Next.js</a>
+                <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                <a href="/tags/newrelic.html" rel="tag">NewRelic</a>
+            </p>
+
+          <p>こちらの記事は <a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。</p>
+
+<p>前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。</p>
+
+<p>そのアプリでテスト環境のとき New Relic エージェントを入れたいということでやってみたんですが、ものすごいハマりどころが多かったので誰かの役に立てばと思い記事にします。</p>
+
+<h3>エージェントのインストールと起動方法</h3>
+
+<p>New Relic の Node.js エージェントは <a href="https://github.com/newrelic/node-newrelic">node-newrelic</a> というリポジトリにある OSS ライブラリです。
+利用するときは以下のように <a href="https://nodejs.org/api/cli.html#-r---require-module">Node.js の &ndash;require module</a> オプションを使って起動するようです。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>node <span class="nt">-r</span> newrelic your-program.js
+</code></pre></div>
+<p>Next.js で利用する場合の例として <a href="https://github.com/newrelic/node-newrelic/tree/main?tab=readme-ov-file#nextjs-instrumentation">Next.js example projects</a> というのも用意されていますが、今回は standalone モードでビルドされてますので、 <code>Custom Next.js servers</code> というところのやり方と一緒で結局 <code>--require module</code> モードで起動することになります。</p>
+
+<h3>やってみる</h3>
+
+<p>まず <code>npm install newrelic</code> でパッケージを追加しておいて、 Next.js のリポジトリにある standalone ビルドの Dockerfile で起動スクリプトを以下のように変更します。</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="c"># server.js is created by next build from the standalone output</span>
+<span class="c"># https://nextjs.org/docs/pages/api-reference/config/next-config-js/output</span>
+<span class="k">ENV</span><span class="s"> HOSTNAME="0.0.0.0"</span>
+<span class="k">CMD</span><span class="s"> ["node", "-r", "newrelic", "server.js"]</span>
+</code></pre></div>
+<p>はい、起動しません。</p>
+
+<blockquote>
+<p>Error: Cannot find module &lsquo;/app/node<em>modules/lodash/lodash.js&rsquo;. Please verify that the package.json has a valid &ldquo;main&rdquo; entry
+at Object.<anonymous> (/app/node</em>modules/@newrelic/security-agent/lib/nr-security-agent/lib/core/commonUtils.js:20:16)</p>
+</blockquote>
+
+<h3>調べよう</h3>
+
+<p><a href="https://github.com/newrelic/csec-node-agent/blob/main/package.json">newrelic/csec-node-agent という依存モジュールの package,json</a> の中に <code>lodash</code> があるのを見つけました。</p>
+
+<p>で、使っている場所は<a href="https://github.com/newrelic/csec-node-agent/blob/main/lib/nr-security-agent/lib/core/commonUtils.js#L20">この行</a>なんですが、いやな使い方をしていますね。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">lodash</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">lodash</span><span class="dl">'</span><span class="p">)</span>
+<span class="c1">// ここを</span>
+<span class="kd">const</span> <span class="nx">isEmpty</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">lodash/isEmpty</span><span class="dl">'</span><span class="p">)</span>
+</code></pre></div>
+<p>下のように記述してくれていれば良い（実際 <code>isEmpty</code> しか使ってない）のですけど&hellip;
+まぁとはいえ動きません。</p>
+
+<p>まず何でかっていうと、そもそも Next.js は standalone モードでビルドされていて、コンテナサイズを小さくするために Next.js から依存関係にないパッケージは入りません。
+つまり New Relic のエージェントを <code>--require module</code> モードで起動すると、依存しているパッケージがないので動かないという、まぁ至極その通りな感じであります。</p>
+
+<p>で、いろいろネットの情報を調べていたら、サーバー起動する直前で <code>npm i newrelic</code> すると良いよというのを見つけました。
+<a href="https://gist.github.com/bizob2828/0fa170a9194838cab5dc8fbb00109425">以下のソース</a></p>
+<div class="highlight"><pre class="highlight docker"><code><span class="c"># Install the next.js plugin after it copies the standalone server and static bits to workdir</span>
+<span class="c"># I cannot figure out why If I just install `@newrelic/next` and add to project's package.json</span>
+<span class="c"># why it does not copy them over but it does not for some reason so we will add it after all the copying</span>
+<span class="c"># occurs</span>
+<span class="k">RUN </span>npm i newrelic
+
+<span class="k">USER</span><span class="s"> nextjs</span>
+
+<span class="k">EXPOSE</span><span class="s"> 3000</span>
+
+<span class="k">ENV</span><span class="s"> PORT 3000</span>
+
+<span class="c"># server.js is created by next build from the standalone output</span>
+<span class="c"># https://nextjs.org/docs/pages/api-reference/next-config-js/output</span>
+<span class="k">ENV</span><span class="s"> HOSTNAME="0.0.0.0"</span>
+
+<span class="k">CMD</span><span class="s"> ["node", "-r", "newrelic", "server.js"]</span>
+</code></pre></div>
+<p>なるほどねー、ってことでやってみました。</p>
+
+<p>&hellip;. 動かない&hellip;.</p>
+
+<p>なんでかって言うと、僕らのアプリでは、依存関係で（厳密にいうと依存の依存に）すでに lodash があったんですね。つまりこの状況( <code>/app/node_modules/lodash/</code> が存在する )で依存の依存で lodash 入れようと思ってもすでに入っているので、追加(上書き)では入りません。
+まぁそうですよね。npm とはそういうものです。で、その lodash は standalone モードで使ってないモジュールは消されているので <code>lodash.js</code> という一等地の全部インポートファイルはありません。せめて <code>require(&#39;lodash/isEmpty&#39;)</code> なっていれば&hellip;（isEmptyはあった）。
+とはいえ、他にも依存モジュールあったんで、lodash だけの問題とも言い切れませんね。</p>
+
+<h3>先人が通った道</h3>
+
+<p><a href="https://zenn.dev/collabostyle/articles/c13ca438a37874">Next.js に New Relic 導入し、docker コンテナの起動に失敗した話</a> に出会いました。
+<code>node_modules</code> の下のファイルをコピーする&hellip;.。まぁ動きそうな気はするけど、コピーはいやだなぁ&hellip;.ということで違う方法を模索します。</p>
+
+<p>過去には、Next.js 用のライブラリがあったようで、そのときの issue も見つけました。</p>
+
+<ul>
+<li><a href="https://forum.newrelic.com/s/hubtopic/aAX8W0000008d6sWAA/node-nextjs-with-newrelicnext-and-outputstandalone">[Node] Next.js with @newrelic/next and outputStandalone</a></li>
+</ul>
+
+<p>でそのときの対応が <code>node-newrelic</code> リポジトリになるときのマイグレーション issue も見つけました。</p>
+
+<ul>
+<li><a href="https://github.com/newrelic/node-newrelic/issues/2127#issuecomment-2125591318">Migrate @newrelic/next into repo</a></li>
+</ul>
+
+<p>ということで、何だか standalone モードへの対応は考慮されているようですが、前述のとおり Web アプリ側でも依存関係にあってエージェント側でも使っているみたいなケースでは失敗してしまうこともありえます。
+僕がソースコードを見回った結果は lodash だけっぽかったので、そこだけ修正すれば大丈夫なのかもですけど。</p>
+
+<h3>グローバルインストールという脇道（ハック）</h3>
+
+<p>アプリケーションの下の node_modules だと入らないので、別のところでクリーンインストールすれば良いのでは？という結論に至りました。
+とりあえずアプリと別のディレクトリを掘ってやってもよかったんですけど、面倒だったのでグローバルインストールを使います。</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="c"># Install dependencies only when needed</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">base</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">deps</span>
+
+<span class="c"># 長いので省略 一番下に追加</span>
+<span class="k">RUN </span>npm i <span class="nt">-g</span> newrelic
+</code></pre></div>
+<p>マルチステージビルドの  <code>deps</code> の最後でグローバルインストールします。
+続いて standalone ビルドしたファイルをコピーした後で、グローバルインストールフォルダを丸っとコピーして持ってきます。
+で、そこに <code>NODE_PATH</code> 環境変数を通すというハックを入れました。</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="c"># Automatically leverage output traces to reduce image size</span>
+<span class="c"># https://nextjs.org/docs/advanced-features/output-file-tracing</span>
+<span class="k">COPY</span><span class="s"> --from=builder --chown=nextjs:nodejs /app/.next/standalone ./</span>
+<span class="k">COPY</span><span class="s"> --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static</span>
+
+<span class="k">COPY</span><span class="s"> --from=deps /usr/local/lib/node_modules /usr/local/lib/node_modules</span>
+<span class="k">ENV</span><span class="s"> NODE_PATH=/usr/local/lib/node_modules</span>
+</code></pre></div>
+<p>おそらく gist の例とかは newrelic が依存しているライブラリを Next.js のアプリが使っていない前提で書かれていると思われる。</p>
+
+<p>結局 newrelic が依存しているものを Next が良い感じに standalone ビルドすると当然 newrelic なんぞ？みたいになって動かないからな。ライブラリ作者はそこまで気が回ってないのだろう</p>
+
+<p>グローバルはハックな方法だと思うけど、正しいやり方をサポートは対応してくれるんかな&hellip;.</p>
+
+<p>ライブラリは OSS なんで issue 書いてよ、というのは、まぁそのとおり（まだやってません、すみません）。</p>
+
+<h3>やってみる（2回目）</h3>
+
+<p>動きません&hellip;.. 😭</p>
+
+<blockquote>
+<p>Cannot find module &lsquo;@newrelic/native-metrics&rsquo;\nRequire stack:\n- /usr/local/lib/node<em>modules/newrelic/lib/sampler.js\n- /usr/local/lib/node</em>modules/newrelic/lib/agent.js\n- /usr/local/lib/node_modules/newrelic/index.js\n- internal/preload</p>
+</blockquote>
+
+<p><code>Cannot find module</code> ？？なんですって？</p>
+<div class="highlight"><pre class="highlight json"><code><span class="nl">"optionalDependencies"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"@contrast/fn-inspect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^4.2.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@newrelic/native-metrics"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^11.0.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"@prisma/prisma-fmt-wasm"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^4.17.0-16.27eb2449f178cd9fe1a4b892d732cc4795f75085"</span><span class="w">
+</span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p>なんか <a href="https://github.com/newrelic/node-newrelic/blob/main/package.json#L221-L224">optionalDependencies</a> があるんですけど、 <code>npm i newrelic</code> だけじゃないの？ドキュメントに書いてあった？</p>
+
+<h3>調べよう（2回目）</h3>
+
+<p>ありましたよ、ドキュメント。
+<a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/extend-your-instrumentation/nodejs-vm-measurements/#install-modules">Node.jsのVM測定</a></p>
+
+<blockquote>
+<p>New Relic Node.js エージェントの v2.0.0 以降、ネイティブモジュールはオプションの依存関係となり、自動的にインストールされるようになりました。</p>
+</blockquote>
+
+<p>じゃぁインストールされんのかな？と思うじゃないですか。ダメです。</p>
+
+<blockquote>
+<p>展開プラットフォームでネイティブ モジュールをコンパイルするには、 node-gypパッケージの手順に従います。ネイティブ Node.js モジュールをインストールするための前提条件は次のとおりです。
+プラットフォーム 前提条件
+Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コンパイラ（GCCなど）</p>
+</blockquote>
+
+<p>いやいや、 Python 必要なん？ （<code>node-gyp</code> だから当然だけど）。
+つまり自動インストールしようとした結果、インストールに必要なもの（今回でいうとgccとかPytnonとか）がインストールされてないので、自動インストール自体が失敗するということになります。</p>
+
+<p><a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent/">Node.jsエージェントのインストール</a> という公式ドキュメントをみると</p>
+
+<blockquote>
+<p>オプション：追加のNode.jsランタイムレベル統計情報を取得するため、@newrelic/native-metricsパッケージがインストールされていることを確認してください。</p>
+</blockquote>
+
+<p>ってことで、まぁこれは必要なようです。</p>
+
+<p>結局のところの <code>deps</code> は以下のようになりました。</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="c"># Install dependencies only when needed</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">base</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">deps</span>
+<span class="c"># Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.</span>
+<span class="c"># RUN apk add --no-cache libc6-compat</span>
+<span class="k">RUN </span>apk update <span class="o">&amp;&amp;</span> <span class="se">\
+</span>  apk upgrade <span class="o">&amp;&amp;</span> <span class="se">\
+</span>  apk add <span class="nt">--no-cache</span> libc6-compat make gcc g++ python3
+<span class="k">WORKDIR</span><span class="s"> /app</span>
+
+<span class="c"># Install dependencies based on the preferred package manager</span>
+<span class="k">COPY</span><span class="s"> package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./</span>
+<span class="k">RUN </span><span class="se">\
+</span>  <span class="k">if</span> <span class="o">[</span> <span class="nt">-f</span> yarn.lock <span class="o">]</span><span class="p">;</span> <span class="k">then </span>yarn <span class="nt">--frozen-lockfile</span><span class="p">;</span> <span class="se">\
+</span>  <span class="k">elif</span> <span class="o">[</span> <span class="nt">-f</span> package-lock.json <span class="o">]</span><span class="p">;</span> <span class="k">then </span>npm ci<span class="p">;</span> <span class="se">\
+</span>  <span class="k">elif</span> <span class="o">[</span> <span class="nt">-f</span> pnpm-lock.yaml <span class="o">]</span><span class="p">;</span> <span class="k">then </span>corepack <span class="nb">enable </span>pnpm <span class="o">&amp;&amp;</span> pnpm i <span class="nt">--frozen-lockfile</span><span class="p">;</span> <span class="se">\
+</span>  <span class="k">else </span><span class="nb">echo</span> <span class="s2">"Lockfile not found."</span> <span class="o">&amp;&amp;</span> <span class="nb">exit </span>1<span class="p">;</span> <span class="se">\
+</span>  <span class="k">fi</span>
+
+<span class="k">RUN </span>npm i <span class="nt">-g</span> newrelic
+<span class="k">RUN </span>npm i <span class="nt">-g</span> @newrelic/native-metrics
+</code></pre></div>
+<h3>やってみる（3回目）</h3>
+
+<p>動いたー🎉</p>
+
+<h3>まとめ</h3>
+
+<p>以下、苦労したところ</p>
+
+<ul>
+<li>ドキュメントが分散していてわかりずらい（最初から github でなく公式 Docs みておいた方が良かったかも）</li>
+<li>Next.js の standalone モードとは驚くほど相性が悪い</li>
+</ul>
+
+<p>前者は改善の余地ありそうだけど、後者は何ともならなそうですね。
+今回は別の場所で入れて <code>NODE_PATH</code> するというハックを使いましたが、結局エージェントとWebアプリで依存関係の競合が起きたときに困ると言うことには違いないです。たとえば違うバージョン使っていたら？とかそれが原因で動かなかったら？ということは今後容易に起きそうです。
+希望としてはエージェントは1ファイルにパッキングしておいて欲しいということですね。というか <code>require module</code> で動くんだから自分が必要なパッケージは固めておいて欲しいですよね。Node.js のアプリだったらみんながみんなフルセットの node_modules を使っていないことがあるのは Node.js 使っている人ならわかりそうなのになぁという気分です。</p>
+
+<p>ちゃんと時間が取れて、良い感じの英文が書けたら issue 出そうかな。それも OSS への貢献ですね。
+この記事で同じような境遇になった人が、解決の助けになったら、と思います。</p>
+
+
+            <div class="row">
+              <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+                <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/15/next-js-standalone-build-with-iast-agent.html">
+                  <a class="twitter" data-title="Next.js%20%E3%82%92%20standalone%20%E3%83%93%E3%83%AB%E3%83%89%E3%81%97%E3%81%9F%E3%82%A2%E3%83%97%E3%83%AA%E3%81%A7%20New%20Relic%20%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E5%8B%95%E3%81%8B%E3%81%99"></a>
+                  <a class="facebook" data-title="Next.js%20%E3%82%92%20standalone%20%E3%83%93%E3%83%AB%E3%83%89%E3%81%97%E3%81%9F%E3%82%A2%E3%83%97%E3%83%AA%E3%81%A7%20New%20Relic%20%E3%82%A8%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%B3%E3%83%88%E3%82%92%E5%8B%95%E3%81%8B%E3%81%99"></a>
+                </div>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+
+      <aside id="sidewrap">
+        <div id="side">
+          <section class="sidebox sidelinx">
+            <h2>Recent Articles</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
+                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
+                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
+                  <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
+                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
+                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
+                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
+                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
+                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
+                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox" id="tagcloud">
+            <h2>Tags</h2>
+            <div class="pad">
+              <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/gae.html" rel="tag">GAE</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/jest.html" rel="tag">Jest</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/gcp.html" rel="tag">GCP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/asucon.html" rel="tag">asucon</a>
+                    </li>
+                    <li class="size3">
+                      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/chirimen.html" rel="tag">CHIRIMEN</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/iot.html" rel="tag">IoT</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/wot.html" rel="tag">WoT</a>
+                    </li>
+                    <li class="size4">
+                      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakefest.html" rel="tag">CakeFest</a>
+                    </li>
+                    <li class="size2">
+                      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/web-components.html" rel="tag">Web Components</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/bdd.html" rel="tag">BDD</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/behat.html" rel="tag">Behat</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/fixture.html" rel="tag">fixture</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/test.html" rel="tag">Test</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpmatsuri.html" rel="tag">phpmatsuri</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
+                    </li>
+                    <li class="size1">
+                      <a href="/tags/flex.html" rel="tag">Flex</a>
+                    </li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox sidelinx">
+            <h2>By Year</h2>
+            <div class="pad">
+              <ul>
+                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2024.html">2024</a> (10)</li>
+                  <li><a href="/2023.html">2023</a> (12)</li>
+                  <li><a href="/2022.html">2022</a> (14)</li>
+                  <li><a href="/2021.html">2021</a> (1)</li>
+                  <li><a href="/2020.html">2020</a> (6)</li>
+                  <li><a href="/2019.html">2019</a> (41)</li>
+                  <li><a href="/2018.html">2018</a> (31)</li>
+                  <li><a href="/2017.html">2017</a> (7)</li>
+                  <li><a href="/2016.html">2016</a> (5)</li>
+                  <li><a href="/2015.html">2015</a> (13)</li>
+                  <li><a href="/2014.html">2014</a> (14)</li>
+                  <li><a href="/2013.html">2013</a> (6)</li>
+                  <li><a href="/2012.html">2012</a> (7)</li>
+                  <li><a href="/2011.html">2011</a> (11)</li>
+                  <li><a href="/2010.html">2010</a> (3)</li>
+                  <li><a href="/2009.html">2009</a> (10)</li>
+                  <li><a href="/2008.html">2008</a> (16)</li>
+              </ul>
+            </div>
+          </section>
+          <section class="sidebox sidelinx">
+            <h2>Twitter</h2>
+            <a class="twitter-timeline" data-lang="ja" href="https://twitter.com/sizuhiko?ref_src=twsrc%5Etfw">Tweets by sizuhiko</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>            
+          </section>
+        </div>
+      </aside>
+
+      <footer id="footer">
+        <div id="footer2">
+          <div class="clear"></div>
+        </div>
+    </footer>
+  </body>
+</html>

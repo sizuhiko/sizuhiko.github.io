@@ -5,10 +5,229 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2025-04-14T14:31:00+09:00</updated>
+  <updated>2025-04-15T10:36:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</title>
+    <link rel="alternate" href="http://blog.url.com/2025/04/15/next-js-standalone-build-with-iast-agent.html"/>
+    <id>http://blog.url.com/2025/04/15/next-js-standalone-build-with-iast-agent.html</id>
+    <published>2025-04-15T10:36:00+09:00</published>
+    <updated>2025-04-15T18:45:39+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;こちらの記事は &lt;a href="/2025/04/11/next-js-deploy-to-apprunner.html"&gt;Next.js で作ったアプリケーションを AppRunner にデプロイする&lt;/a&gt; の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。&lt;/p&gt;
+
+&lt;p&gt;前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。&lt;/p&gt;
+
+&lt;p&gt;そのアプリでテスト環境のとき New Relic エージェントを入れたいということでやってみたんですが、ものすごいハマりどころが多かったので誰かの役に立てばと思い記事にします。&lt;/p&gt;
+
+&lt;h3&gt;エージェントのインストールと起動方法&lt;/h3&gt;
+
+&lt;p&gt;New Relic の Node.js エージェントは &lt;a href="https://github.com/newrelic/node-newrelic"&gt;node-newrelic&lt;/a&gt; というリポジトリにある OSS ライブラリです。
+利用するときは以下のように &lt;a href="https://nodejs.org/api/cli.html#-r---require-module"&gt;Node.js の &amp;ndash;require module&lt;/a&gt; オプションを使って起動するようです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight shell"&gt;&lt;code&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;node &lt;span class="nt"&gt;-r&lt;/span&gt; newrelic your-program.js
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next.js で利用する場合の例として &lt;a href="https://github.com/newrelic/node-newrelic/tree/main?tab=readme-ov-file#nextjs-instrumentation"&gt;Next.js example projects&lt;/a&gt; というのも用意されていますが、今回は standalone モードでビルドされてますので、 &lt;code&gt;Custom Next.js servers&lt;/code&gt; というところのやり方と一緒で結局 &lt;code&gt;--require module&lt;/code&gt; モードで起動することになります。&lt;/p&gt;
+
+&lt;h3&gt;やってみる&lt;/h3&gt;
+
+&lt;p&gt;まず &lt;code&gt;npm install newrelic&lt;/code&gt; でパッケージを追加しておいて、 Next.js のリポジトリにある standalone ビルドの Dockerfile で起動スクリプトを以下のように変更します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# server.js is created by next build from the standalone output&lt;/span&gt;
+&lt;span class="c"&gt;# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output&lt;/span&gt;
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
+&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node", "-r", "newrelic", "server.js"]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;はい、起動しません。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Error: Cannot find module &amp;lsquo;/app/node&lt;em&gt;modules/lodash/lodash.js&amp;rsquo;. Please verify that the package.json has a valid &amp;ldquo;main&amp;rdquo; entry
+at Object.&lt;anonymous&gt; (/app/node&lt;/em&gt;modules/@newrelic/security-agent/lib/nr-security-agent/lib/core/commonUtils.js:20:16)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3&gt;調べよう&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://github.com/newrelic/csec-node-agent/blob/main/package.json"&gt;newrelic/csec-node-agent という依存モジュールの package,json&lt;/a&gt; の中に &lt;code&gt;lodash&lt;/code&gt; があるのを見つけました。&lt;/p&gt;
+
+&lt;p&gt;で、使っている場所は&lt;a href="https://github.com/newrelic/csec-node-agent/blob/main/lib/nr-security-agent/lib/core/commonUtils.js#L20"&gt;この行&lt;/a&gt;なんですが、いやな使い方をしていますね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;lodash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lodash&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="c1"&gt;// ここを&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;isEmpty&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lodash/isEmpty&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;下のように記述してくれていれば良い（実際 &lt;code&gt;isEmpty&lt;/code&gt; しか使ってない）のですけど&amp;hellip;
+まぁとはいえ動きません。&lt;/p&gt;
+
+&lt;p&gt;まず何でかっていうと、そもそも Next.js は standalone モードでビルドされていて、コンテナサイズを小さくするために Next.js から依存関係にないパッケージは入りません。
+つまり New Relic のエージェントを &lt;code&gt;--require module&lt;/code&gt; モードで起動すると、依存しているパッケージがないので動かないという、まぁ至極その通りな感じであります。&lt;/p&gt;
+
+&lt;p&gt;で、いろいろネットの情報を調べていたら、サーバー起動する直前で &lt;code&gt;npm i newrelic&lt;/code&gt; すると良いよというのを見つけました。
+&lt;a href="https://gist.github.com/bizob2828/0fa170a9194838cab5dc8fbb00109425"&gt;以下のソース&lt;/a&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install the next.js plugin after it copies the standalone server and static bits to workdir&lt;/span&gt;
+&lt;span class="c"&gt;# I cannot figure out why If I just install `@newrelic/next` and add to project's package.json&lt;/span&gt;
+&lt;span class="c"&gt;# why it does not copy them over but it does not for some reason so we will add it after all the copying&lt;/span&gt;
+&lt;span class="c"&gt;# occurs&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;npm i newrelic
+
+&lt;span class="k"&gt;USER&lt;/span&gt;&lt;span class="s"&gt; nextjs&lt;/span&gt;
+
+&lt;span class="k"&gt;EXPOSE&lt;/span&gt;&lt;span class="s"&gt; 3000&lt;/span&gt;
+
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; PORT 3000&lt;/span&gt;
+
+&lt;span class="c"&gt;# server.js is created by next build from the standalone output&lt;/span&gt;
+&lt;span class="c"&gt;# https://nextjs.org/docs/pages/api-reference/next-config-js/output&lt;/span&gt;
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
+
+&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node", "-r", "newrelic", "server.js"]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;なるほどねー、ってことでやってみました。&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;. 動かない&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;なんでかって言うと、僕らのアプリでは、依存関係で（厳密にいうと依存の依存に）すでに lodash があったんですね。つまりこの状況( &lt;code&gt;/app/node_modules/lodash/&lt;/code&gt; が存在する )で依存の依存で lodash 入れようと思ってもすでに入っているので、追加(上書き)では入りません。
+まぁそうですよね。npm とはそういうものです。で、その lodash は standalone モードで使ってないモジュールは消されているので &lt;code&gt;lodash.js&lt;/code&gt; という一等地の全部インポートファイルはありません。せめて &lt;code&gt;require(&amp;#39;lodash/isEmpty&amp;#39;)&lt;/code&gt; なっていれば&amp;hellip;（isEmptyはあった）。
+とはいえ、他にも依存モジュールあったんで、lodash だけの問題とも言い切れませんね。&lt;/p&gt;
+
+&lt;h3&gt;先人が通った道&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href="https://zenn.dev/collabostyle/articles/c13ca438a37874"&gt;Next.js に New Relic 導入し、docker コンテナの起動に失敗した話&lt;/a&gt; に出会いました。
+&lt;code&gt;node_modules&lt;/code&gt; の下のファイルをコピーする&amp;hellip;.。まぁ動きそうな気はするけど、コピーはいやだなぁ&amp;hellip;.ということで違う方法を模索します。&lt;/p&gt;
+
+&lt;p&gt;過去には、Next.js 用のライブラリがあったようで、そのときの issue も見つけました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://forum.newrelic.com/s/hubtopic/aAX8W0000008d6sWAA/node-nextjs-with-newrelicnext-and-outputstandalone"&gt;[Node] Next.js with @newrelic/next and outputStandalone&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;でそのときの対応が &lt;code&gt;node-newrelic&lt;/code&gt; リポジトリになるときのマイグレーション issue も見つけました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/newrelic/node-newrelic/issues/2127#issuecomment-2125591318"&gt;Migrate @newrelic/next into repo&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ということで、何だか standalone モードへの対応は考慮されているようですが、前述のとおり Web アプリ側でも依存関係にあってエージェント側でも使っているみたいなケースでは失敗してしまうこともありえます。
+僕がソースコードを見回った結果は lodash だけっぽかったので、そこだけ修正すれば大丈夫なのかもですけど。&lt;/p&gt;
+
+&lt;h3&gt;グローバルインストールという脇道（ハック）&lt;/h3&gt;
+
+&lt;p&gt;アプリケーションの下の node_modules だと入らないので、別のところでクリーンインストールすれば良いのでは？という結論に至りました。
+とりあえずアプリと別のディレクトリを掘ってやってもよかったんですけど、面倒だったのでグローバルインストールを使います。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install dependencies only when needed&lt;/span&gt;
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;deps&lt;/span&gt;
+
+&lt;span class="c"&gt;# 長いので省略 一番下に追加&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; newrelic
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;マルチステージビルドの  &lt;code&gt;deps&lt;/code&gt; の最後でグローバルインストールします。
+続いて standalone ビルドしたファイルをコピーした後で、グローバルインストールフォルダを丸っとコピーして持ってきます。
+で、そこに &lt;code&gt;NODE_PATH&lt;/code&gt; 環境変数を通すというハックを入れました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Automatically leverage output traces to reduce image size&lt;/span&gt;
+&lt;span class="c"&gt;# https://nextjs.org/docs/advanced-features/output-file-tracing&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/.next/standalone ./&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static&lt;/span&gt;
+
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /usr/local/lib/node_modules /usr/local/lib/node_modules&lt;/span&gt;
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; NODE_PATH=/usr/local/lib/node_modules&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;おそらく gist の例とかは newrelic が依存しているライブラリを Next.js のアプリが使っていない前提で書かれていると思われる。&lt;/p&gt;
+
+&lt;p&gt;結局 newrelic が依存しているものを Next が良い感じに standalone ビルドすると当然 newrelic なんぞ？みたいになって動かないからな。ライブラリ作者はそこまで気が回ってないのだろう&lt;/p&gt;
+
+&lt;p&gt;グローバルはハックな方法だと思うけど、正しいやり方をサポートは対応してくれるんかな&amp;hellip;.&lt;/p&gt;
+
+&lt;p&gt;ライブラリは OSS なんで issue 書いてよ、というのは、まぁそのとおり（まだやってません、すみません）。&lt;/p&gt;
+
+&lt;h3&gt;やってみる（2回目）&lt;/h3&gt;
+
+&lt;p&gt;動きません&amp;hellip;.. 😭&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Cannot find module &amp;lsquo;@newrelic/native-metrics&amp;rsquo;\nRequire stack:\n- /usr/local/lib/node&lt;em&gt;modules/newrelic/lib/sampler.js\n- /usr/local/lib/node&lt;/em&gt;modules/newrelic/lib/agent.js\n- /usr/local/lib/node_modules/newrelic/index.js\n- internal/preload&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;code&gt;Cannot find module&lt;/code&gt; ？？なんですって？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="nl"&gt;"optionalDependencies"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="nl"&gt;"@contrast/fn-inspect"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^4.2.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="nl"&gt;"@newrelic/native-metrics"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^11.0.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="nl"&gt;"@prisma/prisma-fmt-wasm"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^4.17.0-16.27eb2449f178cd9fe1a4b892d732cc4795f75085"&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;なんか &lt;a href="https://github.com/newrelic/node-newrelic/blob/main/package.json#L221-L224"&gt;optionalDependencies&lt;/a&gt; があるんですけど、 &lt;code&gt;npm i newrelic&lt;/code&gt; だけじゃないの？ドキュメントに書いてあった？&lt;/p&gt;
+
+&lt;h3&gt;調べよう（2回目）&lt;/h3&gt;
+
+&lt;p&gt;ありましたよ、ドキュメント。
+&lt;a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/extend-your-instrumentation/nodejs-vm-measurements/#install-modules"&gt;Node.jsのVM測定&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;New Relic Node.js エージェントの v2.0.0 以降、ネイティブモジュールはオプションの依存関係となり、自動的にインストールされるようになりました。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;じゃぁインストールされんのかな？と思うじゃないですか。ダメです。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;展開プラットフォームでネイティブ モジュールをコンパイルするには、 node-gypパッケージの手順に従います。ネイティブ Node.js モジュールをインストールするための前提条件は次のとおりです。
+プラットフォーム 前提条件
+Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コンパイラ（GCCなど）&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;いやいや、 Python 必要なん？ （&lt;code&gt;node-gyp&lt;/code&gt; だから当然だけど）。
+つまり自動インストールしようとした結果、インストールに必要なもの（今回でいうとgccとかPytnonとか）がインストールされてないので、自動インストール自体が失敗するということになります。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent/"&gt;Node.jsエージェントのインストール&lt;/a&gt; という公式ドキュメントをみると&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;オプション：追加のNode.jsランタイムレベル統計情報を取得するため、@newrelic/native-metricsパッケージがインストールされていることを確認してください。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;ってことで、まぁこれは必要なようです。&lt;/p&gt;
+
+&lt;p&gt;結局のところの &lt;code&gt;deps&lt;/code&gt; は以下のようになりました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install dependencies only when needed&lt;/span&gt;
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;deps&lt;/span&gt;
+&lt;span class="c"&gt;# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.&lt;/span&gt;
+&lt;span class="c"&gt;# RUN apk add --no-cache libc6-compat&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;apk update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  apk upgrade &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  apk add &lt;span class="nt"&gt;--no-cache&lt;/span&gt; libc6-compat make gcc g++ python3
+&lt;span class="k"&gt;WORKDIR&lt;/span&gt;&lt;span class="s"&gt; /app&lt;/span&gt;
+
+&lt;span class="c"&gt;# Install dependencies based on the preferred package manager&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;&lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; yarn.lock &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;yarn &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; package-lock.json &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;npm ci&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; pnpm-lock.yaml &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;corepack &lt;span class="nb"&gt;enable &lt;/span&gt;pnpm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; pnpm i &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;else &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"Lockfile not found."&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;exit &lt;/span&gt;1&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;fi&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; newrelic
+&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; @newrelic/native-metrics
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;やってみる（3回目）&lt;/h3&gt;
+
+&lt;p&gt;動いたー🎉&lt;/p&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;以下、苦労したところ&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ドキュメントが分散していてわかりずらい（最初から github でなく公式 Docs みておいた方が良かったかも）&lt;/li&gt;
+&lt;li&gt;Next.js の standalone モードとは驚くほど相性が悪い&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;前者は改善の余地ありそうだけど、後者は何ともならなそうですね。
+今回は別の場所で入れて &lt;code&gt;NODE_PATH&lt;/code&gt; するというハックを使いましたが、結局エージェントとWebアプリで依存関係の競合が起きたときに困ると言うことには違いないです。たとえば違うバージョン使っていたら？とかそれが原因で動かなかったら？ということは今後容易に起きそうです。
+希望としてはエージェントは1ファイルにパッキングしておいて欲しいということですね。というか &lt;code&gt;require module&lt;/code&gt; で動くんだから自分が必要なパッケージは固めておいて欲しいですよね。Node.js のアプリだったらみんながみんなフルセットの node_modules を使っていないことがあるのは Node.js 使っている人ならわかりそうなのになぁという気分です。&lt;/p&gt;
+
+&lt;p&gt;ちゃんと時間が取れて、良い感じの英文が書けたら issue 出そうかな。それも OSS への貢献ですね。
+この記事で同じような境遇になった人が、解決の助けになったら、と思います。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHPカンファレンス小田原2025に参加しました</title>
     <link rel="alternate" href="http://blog.url.com/2025/04/14/phpcon-odawara-2025.html"/>
@@ -699,167 +918,6 @@ TypeScript で書いていて、 AppSync が指定する ESLint のルールな�
 &lt;p&gt;APPSYNC_JS でそういったトラブルになった記事だったり StackOverflow の投稿だったりはまだ少ないので、問題や回避策がわかったら積極的に記事にしておくと良いかな？というのが今回ブログ記事にするきっかけにもなりました。&lt;/p&gt;
 
 &lt;p&gt;僕は JavaScript で書けるようになってすごく嬉しいので、今後も使っていきたいなと思っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>CodeCommit で Renovate を使う</title>
-    <link rel="alternate" href="http://blog.url.com/2024/05/30/renovate-on-codecommit.html"/>
-    <id>http://blog.url.com/2024/05/30/renovate-on-codecommit.html</id>
-    <published>2024-05-30T17:03:00+09:00</published>
-    <updated>2024-06-06T11:05:19+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://www.mend.io/renovate/"&gt;Renovate&lt;/a&gt;は依存関係の更新を自動化（PRを生成してくれたり、マージしてくれたり） するツールで、dependabot などと並んで有名なツールです。&lt;/p&gt;
-
-&lt;p&gt;CodeCommit で依存関係の更新を公式にサポートしているツールを探していたのですが、Renovate しか見つからなかったので、選択肢を検討することもなく導入してみることにしました。&lt;/p&gt;
-
-&lt;h3&gt;導入方法&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="https://docs.renovatebot.com/modules/platform/codecommit/"&gt;CodeCommit に導入するための公式ドキュメント&lt;/a&gt;があります。&lt;/p&gt;
-
-&lt;p&gt;前回のブログ&lt;a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html"&gt;CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う&lt;/a&gt;で CodeCommit と CodeBuild の環境は設定済みで、かつ PR に対してビルド結果が連携できるようにしてあります。&lt;/p&gt;
-
-&lt;p&gt;Renovate を導入するときもこの手順は重要で、ライブラリをアップデートするときにビルドが通過するかわからないものはマージできないので、まず導入前に連携できるように設定しておきましょう。&lt;/p&gt;
-
-&lt;h4&gt;AWS 環境の設定&lt;/h4&gt;
-
-&lt;p&gt;ドキュメントどおり IAM や Role の設定を行います。
-ここはプロジェクトによってやり方がいろいろあると思いますが、結果として CodeBuild から CodeCommit に PR が出せる様な設定になっていれば良いです。
-必要なポリシーなども列挙されているので、ドキュメントをよく読んで進めれば大丈夫です。&lt;/p&gt;
-
-&lt;h4&gt;AWS 環境ではできないこと&lt;/h4&gt;
-
-&lt;p&gt;これもドキュメントに明記されています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;PR への担当アサイン&lt;/li&gt;
-&lt;li&gt;PRの自動マージ&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;rebaseLabel&lt;/code&gt; オプションの有効化&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;環境設定ファイルを記述する&lt;/h4&gt;
-
-&lt;p&gt;ドキュメントでは &lt;code&gt;config.js&lt;/code&gt; で書かれていますが、 &lt;code&gt;renovate.json&lt;/code&gt; でも大丈夫です。
-このあたりはお好きな&lt;a href="https://docs.renovatebot.com/configuration-options/"&gt;設定ファイル形式&lt;/a&gt;を利用すると良いでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-  &lt;/span&gt;&lt;span class="nl"&gt;"$schema"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"https://docs.renovatebot.com/renovate-schema.json"&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;スキーマ定義やパッケージルールなどを設定しておきます。
-Renovate の対象リポジトリごとにリポジトリルートにファイルを設置します。&lt;/p&gt;
-
-&lt;h4&gt;CodeBuild の設定&lt;/h4&gt;
-
-&lt;h5&gt;導入方法の選択&lt;/h5&gt;
-
-&lt;p&gt;Renovate を導入するときの単位として、2つの選択肢があります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Renovate を複数のリポジトリに対して実行する管理リポジトリを1つと、対になる CodeBuild プロジェクトを作成する&lt;/li&gt;
-&lt;li&gt;Renovate の対象リポジトリごとに CodeBuild のプロジェクトを作成する&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;前者の良いところは、Renovate の対象リポジトリが多数あるとき、管理リポジトリに設定している CodeBuild の buildspec ファイルでリポジトリ名を列挙していき、対象リポジトリ側は、リポジトリルートに設定ファイルを入れておくだけで良いことです。
-ただしリポジトリごとに実行スケジュールを変更するといったことはできないので、すべての対象リポジトリに対して順番に PR が作成されていきます。&lt;/p&gt;
-
-&lt;p&gt;後者の良いところは、リポジトリごとに実行スケジュールを柔軟に変更できることです。ただしリポジトリ数ぶんの CodeBuild プロジェクトが必要になるので対象リポジトリ数が多くなると面倒に感じるかもしれません（IaC で構築していればそうでもないかも？）。&lt;/p&gt;
-
-&lt;h5&gt;buildspec ファイルの設置&lt;/h5&gt;
-
-&lt;p&gt;今回は導入リポジトリ数も少なかったのと、実行スケジュールをリポジトリごとに変更したいという要望があったので、後者の方式で導入してみました。&lt;/p&gt;
-
-&lt;p&gt;どちらの方法でも CodeCommit / CodeBuild では実現可能です。&lt;/p&gt;
-
-&lt;p&gt;前回の記事で build.yml や deploy.yml を作っているので、そこに renovate.yml といった名前で buildspec ファイルを記述します。&lt;/p&gt;
-
-&lt;p&gt;ドキュメントでは Docker を使う方法と CLI を使う方法が紹介されていますが、私たちは CLI の方式を採用しました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;0.2&lt;/span&gt;
-&lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;shell&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;bash&lt;/span&gt;
-  &lt;span class="na"&gt;git-credential-helper&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;yes&lt;/span&gt;
-  &lt;span class="na"&gt;variables&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;RENOVATE_PLATFORM&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;codecommit'&lt;/span&gt;
-    &lt;span class="na"&gt;RENOVATE_REPOSITORIES&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;["repoName1"]'&lt;/span&gt;
-    &lt;span class="na"&gt;RENOVATE_CONFIG&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;{"extends":["config:recommended"]}'&lt;/span&gt;
-    &lt;span class="na"&gt;LOG_LEVEL&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;debug'&lt;/span&gt;
-    &lt;span class="na"&gt;AWS_REGION&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s1"&gt;'&lt;/span&gt;&lt;span class="s"&gt;ap-northeast-1'&lt;/span&gt;
-&lt;span class="na"&gt;phases&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;install&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;runtime-version&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="na"&gt;nodejs&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="m"&gt;20&lt;/span&gt;
-  &lt;span class="na"&gt;build&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;on-failure&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s"&gt;CONTINUE&lt;/span&gt;
-    &lt;span class="na"&gt;commands&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;npm install -g renovate&lt;/span&gt;
-      &lt;span class="pi"&gt;-&lt;/span&gt; &lt;span class="s"&gt;renovate&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;RENOVATE_REPOSITORIES&lt;/code&gt; が違うだけで、各リポジトリに入れておきます。&lt;/p&gt;
-
-&lt;h5&gt;CodeBuild プロジェクトの作成して実行スケジュールを設定する&lt;/h5&gt;
-
-&lt;p&gt;CodeBuild プロジェクトを新規作成してリポジトリを紐づけておきます。
-あとは実行スケジュールを EventBridge に設定して、作成した CodeBuild プロジェクトを実行 ( &lt;code&gt;StartBuild&lt;/code&gt; ) するように設定します。&lt;/p&gt;
-
-&lt;p&gt;ここまでで実行スケジュールに応じて PR が生成できるようになります。&lt;/p&gt;
-
-&lt;h3&gt;セキュリティアップデートに対応する&lt;/h3&gt;
-
-&lt;p&gt;Renovate は標準では CVE などに対応するパッチの PR は生成されません。
-この機能を有効にするためのオプションは2つあります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://docs.renovatebot.com/configuration-options/#vulnerabilityalerts"&gt;vulnerabilityAlerts&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://docs.renovatebot.com/configuration-options/#osvvulnerabilityalerts"&gt;osvVulnerabilityAlerts&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;前者は GitHub のみサポートしており CodeCommit では利用できません。
-後者は実験的な機能という位置付けのようですが、すべてのプラットフォームで動作する様になっています。&lt;/p&gt;
-
-&lt;h4&gt;osvVulnerabilityAlerts を有効にする&lt;/h4&gt;
-
-&lt;p&gt;環境設定ファイル（この記事では renovate.json）に設定を追加します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-  &lt;/span&gt;&lt;span class="nl"&gt;"$schema"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"https://docs.renovatebot.com/renovate-schema.json"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-  &lt;/span&gt;&lt;span class="nl"&gt;"osvVulnerabilityAlerts"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;実は GitHub が必要なんです&lt;/h4&gt;
-
-&lt;p&gt;ドキュメントを読むとこれだけで良いのかと思っていたのですが、実際に Renovate を実行しても CVE の PR は生成されません。&lt;/p&gt;
-
-&lt;p&gt;おや？っと思ってログを確認したりしたのですが、原因がわからず Renovate のソースコード自体を確認してみました。&lt;/p&gt;
-
-&lt;p&gt;すると、なんと OSV のデータソースが GitHub に固定してハードコードされてるじゃないですか。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/renovatebot/renovate/blob/main/lib/workers/repository/process/vulnerabilities.ts#L52"&gt;該当のコード&lt;/a&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;  &lt;span class="kr"&gt;private&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="nx"&gt;initialize&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt; &lt;span class="nb"&gt;Promise&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;void&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="c1"&gt;// hard-coded logic to use authentication for github.com based on the githubToken for api.github.com&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;token&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;findGithubToken&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-      &lt;span class="nx"&gt;find&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;hostType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;github&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;url&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;https://api.github.com/&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-    &lt;span class="p"&gt;);&lt;/span&gt;
-
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;osvOffline&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;OsvOffline&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;create&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;token&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;ドキュメントからリンクされている&lt;a href="https://github.com/renovatebot/renovate/discussions/20542"&gt;ディスカッション&lt;/a&gt;には、&lt;a href="https://github.com/renovatebot/renovate/discussions/20542#discussioncomment-8889250"&gt;違うデータソースを使う場合の書き方&lt;/a&gt;があって、OSVの任意のデータソースを利用する場合は独自にzipファイルをダウンロードしてやるのも良いでしょう。&lt;/p&gt;
-
-&lt;p&gt;で、そのまま GitHub のデータソースを利用する場合は、GitHub の PAT を生成して（権限は &lt;code&gt;public_repo&lt;/code&gt; ぐらいでok） renovate.yml に設定を追加します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight yaml"&gt;&lt;code&gt;&lt;span class="na"&gt;env&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-  &lt;span class="na"&gt;secrets-manager&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt;
-    &lt;span class="na"&gt;GITHUB_COM_TOKEN&lt;/span&gt;&lt;span class="pi"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;"&lt;/span&gt;&lt;span class="s"&gt;[シークレットの名前]:[シークレットのキー]"&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;CodeBuild の buildspec では環境変数に設定する値を SecretsManager から取得できるので、GitHub で生成した PAT はそこに格納しておいて、CodeBuild から参照できるようにしておきましょう。&lt;/p&gt;
-
-&lt;p&gt;プロジェクト都合で GitHub 使えないから CodeCommit 使っているのに！という声はごもっともだと思うので、そういう場合は zip ファイルをダウンロードして実行する手順を試してみることをお勧めします。&lt;/p&gt;
-
-&lt;h3&gt;さいごに&lt;/h3&gt;
-
-&lt;p&gt;できれば CodeCommit も GitHub と Dependabot の関係のように標準で脆弱性の PR 対応して欲しいですよね。
-ビルド結果の通知とか脆弱性の対応とか、Code兄弟の機能として不足しているなーという部分の強化に期待しましょう。&lt;/p&gt;
 </content>
   </entry>
 </feed>

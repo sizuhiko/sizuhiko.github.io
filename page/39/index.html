@@ -272,6 +272,42 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2009/06/04/treebehavior-left-right.html">TreeBehavior の left, right ってそういう事だったのね</a></h1>
+  <p class="postdate"><a href="/2009/06/04.html" title="Permanent link">Thursday, June 04, 2009 04:06:26 PM</a></p>
+  <p class="tags">
+      <a href="/tags/behavior.html" rel="tag">Behavior</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;CakePHP でとっても役に立つビヘイビアに TreeBehavior があるんです。  </p>
+
+<p>このビヘイビアを使うと、商品カテゴリとかディレクトリみたいに、ツリー構造になっているモデルを簡単に扱うことができます。簡単になるのは、ツリー構造を取得したり、階層を１つ上に移動したり、特定の階層の下に追加したり、といった自分で作ったら、チョー面倒な処理ばかりです。  </p>
+
+<p>で、これまで大変お世話になったのに、あんまり意味もわからず parent と left,rightの列があればいいんでしょ、ぐらいにしか思ってませんでした。DB弱者なんで TreeBehavior のソースも追わなかったし・・・・  </p>
+
+<p>で、たまたまSQL関係で調べ物をしていたら、すばらしいページを発見。  </p>
+
+<p>『<a href="http://www.geocities.jp/mickindex/database/db_tree_ns.html">SQLで木と階層構造のデータを扱う（１）―― 入れ子集合モデル</a>』</p>
+
+<p>いや、（自分にとっては）すごく難しい話なんですが、すごくわかり易く解説してあって、left,rightってそういう事だったのね、とわかってきた時は感動します。CakePHPのtreeはparent_idが必要なんですが、この理論で行くといらないですね。たぶん何かの都合でparentを持つことにしたと思うんですけど、TreeBehaviorのコードからそこまで読み取ることはできませんでした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2009/06/04/treebehavior-left-right.html">
+          <a class="twitter" data-title="TreeBehavior の left, right ってそういう事だったのね"></a>
+          <a class="facebook" data-title="TreeBehavior の left, right ってそういう事だったのね"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2009/04/27/42-php.html">第42回PHP勉強会@関東に参加しました。</a></h1>
   <p class="postdate"><a href="/2009/04/27.html" title="Permanent link">Monday, April 27, 2009 10:04:56 AM</a></p>
   <p class="tags">
@@ -436,256 +472,6 @@ if ($isErrorOrTests) {
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2008/11/11/flex2-coverflow-8-amazon.html">Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する</a></h1>
-  <p class="postdate"><a href="/2008/11/11.html" title="Permanent link">Tuesday, November 11, 2008 11:11:39 AM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.objectclub.jp/">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第九回の今回は最終回となります。AmazonWebserviceと連携してタイトルや著者名を表示する手法を整理します。  </p>
-
-<h3>■今回サンプルの完成イメージ</h3>
-
-<p>画像をクリックしながら、左右に動かしたり、勢い良く左右に動かしたりすると、CoverFlowのように動作します。  </p>
-
-<p>前回は画像を重ね合わせることで、写真部分の見栄えは「ほぼ」CoverFlowに近くなりました。今回はAmazonWebserviceと連携して、asinIdのタイトルや著者を表示します。  </p>
-
-<h3>■ファイルの準備</h3>
-
-<p>プロジェクトファイルを<a href="/images/blog/images/flex2_coverflow_9/reflector.zip">ダウンロード</a>して、任意のディレクトリで解凍します。  </p>
-
-<ul>
-<li>reflector.as3proj</li>
-<li>reflector.mxml</li>
-<li>ImageReflector.as</li>
-<li>TransformUtil.as</li>
-<li>CoverFlowLayout.as</li>
-<li>RepeaterHBox.as</li>
-<li>AmazonWebservice.as</li>
-</ul>
-
-<p>新しいファイルAmazonWebservice.asが追加になっています。追加になったファイルは後ほど詳しく解説します。  </p>
-
-<p>reflector.as3projをダブルクリックすると、FlashDevelopが実行されます。  </p>
-
-<h3>■AmazonWebサービスに登録する</h3>
-
-<p>AmazonWebサービスを使うと、今回やろうとしているような、asinIdの商品情報を取得することができます。  </p>
-
-<p>精しくは、こちらのドキュメントが日本語であるので、一読すると良いでしょう。  </p>
-
-<p><a href="http://www.amazon.co.jp/gp/feature.html?docId=451209">http://www.amazon.co.jp/gp/feature.html?docId=451209</a>  </p>
-
-<p>まだアカウントをもっていない方は、  </p>
-
-<p><a href="http://aws.amazon.com">http://aws.amazon.com</a>/  </p>
-
-<p>から登録しましょう。  </p>
-
-<p>登録すると、登録ID(Subscription ID)が取得できます。  </p>
-
-<p>そのIDをAmazonWebservice.asのAWSAccessKeyId変数に入れてください。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>public class AmazonWebservice {
-    private const AWSAccessKeyId:String = "***** あなたの登録ID ******";
-    private const AmazonRegionCode:String = "09"; // 日本は09
-</code></pre></div>
-<h3>■Amazonから商品情報を取得する</h3>
-
-<p>Amazonとのデータのやりとりは、FlashからGETパラメータで必要な情報を送り込み、戻りとしてXMLを受け取るシンプルなRESTインターフェースです。  </p>
-
-<p>AmazonへリクエストするURLをgetAmazonRestUrl関数で作っています。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>private function getAmazonRestUrl(asin:String):String 
-{
-    var url:String = "http://webservices.amazon.co.jp/onca/xml?"
-               + "Service=AWSECommerceService&amp;"
-               + "AWSAccessKeyId="+AWSAccessKeyId+"&amp;"
-               + "Operation=ItemLookup&amp;"
-               + "IdType=ASIN&amp;ItemId=" + asin + "&amp;"
-               + "ResponseGroup=Request,ItemIds,ItemAttributes,Tracks,EditorialReview";
-    return url; 
-}
-</code></pre></div>
-<p>パラメータごとの詳細な解説は、上記ドキュメントを参照して欲しいのですが、ここでは
-IdTypeをASINとして、ItemIdで取得したいasinIdを指定します。  </p>
-
-<p>レスポンスはすべて取得することもできますが、ここではResponseGroupに書いた内容に絞り込んで
-取得します。  </p>
-
-<h3>■Amazonからの戻り値を取得する</h3>
-
-<p>URLを呼び出して、結果を取得するのは、AmazonからCoverFlow用の写真を取得するインターフェースと同じです。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>_amazonLoader = new URLLoader();
-_amazonLoader.addEventListener(Event.COMPLETE, completeAmazonRequest);
-_amazonLoader.load(new URLRequest(getAmazonRestUrl(asin)));
-</code></pre></div>
-<p>のようにして、URLから取得できたらcompleteAmazonRequest関数が呼ばれます。  </p>
-
-<p>受信部分のコードは  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>private function completeAmazonRequest(event:Event):void
-{
-    namespace ns = 'http://webservices.amazon.com/AWSECommerceService/2005-10-05';
-    use namespace ns;
-    _xml = new XML(_amazonLoader.data);
-}
-</code></pre></div>
-<p>と、たったこれだけです。Amazon Webサービスで指定されたネーミングスペースを指定して、XMLオブジェクトを作ります。  </p>
-
-<p>戻ってきたデータはXML形式なので、これでActionScriptから参照しやすい形式となります。  </p>
-
-<h3>■XML内のデータを解析する</h3>
-
-<p>取得したXMLを解析するのはとても簡単です。  </p>
-
-<p>たとえばWeb2.0ビギナーズバイブルのasinIdを指定して戻ってくるXMLは以下のとおりです。  </p>
-<div class="highlight"><pre class="highlight xml"><code><span class="cp">&lt;?xml version="1.0" ?&gt;</span>
-<span class="nt">&lt;ItemLookupResponse</span> <span class="na">xmlns=</span><span class="s">"http://webservices.amazon.com/AWSECommerceService/2005-10-05"</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;OperationRequest&gt;</span>
-    <span class="nt">&lt;HTTPHeaders&gt;</span>
-      <span class="nt">&lt;Header</span> <span class="na">Name=</span><span class="s">"UserAgent"</span> <span class="na">Value=</span><span class="s">"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"</span><span class="nt">&gt;</span>
-      <span class="nt">&lt;/Header&gt;</span>
-    <span class="nt">&lt;/HTTPHeaders&gt;</span>
-    <span class="nt">&lt;RequestId&gt;</span>53c87848-02e3-4317-8136-b49b1d2a0108<span class="nt">&lt;/RequestId&gt;</span>
-    <span class="nt">&lt;Arguments&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Operation"</span> <span class="na">Value=</span><span class="s">"ItemLookup"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"Service"</span> <span class="na">Value=</span><span class="s">"AWSECommerceService"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ItemId"</span> <span class="na">Value=</span><span class="s">"4839923221"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"IdType"</span> <span class="na">Value=</span><span class="s">"ASIN"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"AWSAccessKeyId"</span> <span class="na">Value=</span><span class="s">"********************"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-      <span class="nt">&lt;Argument</span> <span class="na">Name=</span><span class="s">"ResponseGroup"</span> <span class="na">Value=</span><span class="s">"Request,ItemIds,ItemAttributes,Tracks,EditorialReview"</span><span class="nt">&gt;&lt;/Argument&gt;</span>
-    <span class="nt">&lt;/Arguments&gt;</span>
-    <span class="nt">&lt;RequestProcessingTime&gt;</span>0.1317150000000000<span class="nt">&lt;/RequestProcessingTime&gt;</span>
-  <span class="nt">&lt;/OperationRequest&gt;</span>
-  <span class="nt">&lt;Items&gt;</span>
-    <span class="nt">&lt;Request&gt;</span>
-      <span class="nt">&lt;IsValid&gt;</span>True<span class="nt">&lt;/IsValid&gt;</span>
-      <span class="nt">&lt;ItemLookupRequest&gt;</span>
-        <span class="nt">&lt;Condition&gt;</span>New<span class="nt">&lt;/Condition&gt;</span>
-        <span class="nt">&lt;DeliveryMethod&gt;</span>Ship<span class="nt">&lt;/DeliveryMethod&gt;</span>
-        <span class="nt">&lt;IdType&gt;</span>ASIN<span class="nt">&lt;/IdType&gt;</span>
-        <span class="nt">&lt;MerchantId&gt;</span>Amazon<span class="nt">&lt;/MerchantId&gt;</span>
-        <span class="nt">&lt;OfferPage&gt;</span>1<span class="nt">&lt;/OfferPage&gt;</span>
-        <span class="nt">&lt;ItemId&gt;</span>4839923221<span class="nt">&lt;/ItemId&gt;</span>
-        <span class="nt">&lt;ResponseGroup&gt;</span>Request<span class="nt">&lt;/ResponseGroup&gt;</span>
-        <span class="nt">&lt;ResponseGroup&gt;</span>ItemIds<span class="nt">&lt;/ResponseGroup&gt;</span>
-        <span class="nt">&lt;ResponseGroup&gt;</span>ItemAttributes<span class="nt">&lt;/ResponseGroup&gt;</span>
-        <span class="nt">&lt;ResponseGroup&gt;</span>Tracks<span class="nt">&lt;/ResponseGroup&gt;</span>
-        <span class="nt">&lt;ResponseGroup&gt;</span>EditorialReview<span class="nt">&lt;/ResponseGroup&gt;</span>
-        <span class="nt">&lt;ReviewPage&gt;</span>1<span class="nt">&lt;/ReviewPage&gt;</span>
-      <span class="nt">&lt;/ItemLookupRequest&gt;</span>
-    <span class="nt">&lt;/Request&gt;</span>
-    <span class="nt">&lt;Item&gt;</span>
-      <span class="nt">&lt;ASIN&gt;</span>4839923221<span class="nt">&lt;/ASIN&gt;</span>
-      <span class="nt">&lt;DetailPageURL&gt;</span>http://www.amazon.co.jp/Web2-0%E3%83%93%E3%82%AE%E3%83%8A%E3%83%BC%E3%82%BA%E3%83%90%E3%82%A4%E3%83%96%E3%83%AB-%E4%BC%8A%E8%97%A4-%E6%B5%A9%E4%B8%80/dp/4839923221%3FSubscriptionId%3D*******************%26tag%3Dws%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D4839923221<span class="nt">&lt;/DetailPageURL&gt;</span>
-      <span class="nt">&lt;ItemAttributes&gt;</span>
-        <span class="nt">&lt;Author&gt;</span>伊藤 浩一<span class="nt">&lt;/Author&gt;</span>
-        <span class="nt">&lt;Author&gt;</span>大津 真<span class="nt">&lt;/Author&gt;</span>
-        <span class="nt">&lt;Author&gt;</span>岸田 健一郎<span class="nt">&lt;/Author&gt;</span>
-        <span class="nt">&lt;Author&gt;</span>まえだ ひさこ<span class="nt">&lt;/Author&gt;</span>
-        <span class="nt">&lt;Author&gt;</span>安井 力<span class="nt">&lt;/Author&gt;</span>
-        <span class="nt">&lt;Binding&gt;</span>単行本<span class="nt">&lt;/Binding&gt;</span>
-        <span class="nt">&lt;EAN&gt;</span>9784839923228<span class="nt">&lt;/EAN&gt;</span>
-        <span class="nt">&lt;ISBN&gt;</span>4839923221<span class="nt">&lt;/ISBN&gt;</span>
-        <span class="nt">&lt;Label&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Label&gt;</span>
-        <span class="nt">&lt;ListPrice&gt;</span>
-          <span class="nt">&lt;Amount&gt;</span>3990<span class="nt">&lt;/Amount&gt;</span>
-          <span class="nt">&lt;CurrencyCode&gt;</span>JPY<span class="nt">&lt;/CurrencyCode&gt;</span>
-          <span class="nt">&lt;FormattedPrice&gt;</span>￥ 3,990<span class="nt">&lt;/FormattedPrice&gt;</span>
-        <span class="nt">&lt;/ListPrice&gt;</span>
-        <span class="nt">&lt;Manufacturer&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Manufacturer&gt;</span>
-        <span class="nt">&lt;NumberOfPages&gt;</span>927<span class="nt">&lt;/NumberOfPages&gt;</span>
-        <span class="nt">&lt;PackageDimensions&gt;</span>
-          <span class="nt">&lt;Height</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>205<span class="nt">&lt;/Height&gt;</span>
-          <span class="nt">&lt;Length</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>921<span class="nt">&lt;/Length&gt;</span>
-          <span class="nt">&lt;Weight</span> <span class="na">Units=</span><span class="s">"hundredths-pounds"</span><span class="nt">&gt;</span>340<span class="nt">&lt;/Weight&gt;</span>
-          <span class="nt">&lt;Width</span> <span class="na">Units=</span><span class="s">"hundredths-inches"</span><span class="nt">&gt;</span>724<span class="nt">&lt;/Width&gt;</span>
-        <span class="nt">&lt;/PackageDimensions&gt;</span>
-        <span class="nt">&lt;ProductGroup&gt;</span>Book<span class="nt">&lt;/ProductGroup&gt;</span>
-        <span class="nt">&lt;PublicationDate&gt;</span>2007-04<span class="nt">&lt;/PublicationDate&gt;</span>
-        <span class="nt">&lt;Publisher&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Publisher&gt;</span>
-        <span class="nt">&lt;Studio&gt;</span>毎日コミュニケーションズ<span class="nt">&lt;/Studio&gt;</span>
-        <span class="nt">&lt;Title&gt;</span>Web2.0ビギナーズバイブル<span class="nt">&lt;/Title&gt;</span>
-      <span class="nt">&lt;/ItemAttributes&gt;</span>
-    <span class="nt">&lt;/Item&gt;</span>
-  <span class="nt">&lt;/Items&gt;</span>
-<span class="nt">&lt;/ItemLookupResponse&gt;</span>
-</code></pre></div>
-<p>で、本のタイトルは、  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>ItemLookupResponse
- +-- Item
-      +-- ItemAttributes
-           +-- Title
-</code></pre></div>
-<p>という階層にあります。これを取得するにはXMLオブジェクトから  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>_xml.Items.Item.ItemAttributes.child('Title');
-</code></pre></div>
-<p>と書くだけで取得できます。_xmlオブジェクトからXMLの階層をたどるようにタグ名を.(ドット)で区切っていくだけです。簡単ですね。  </p>
-
-<h3>■ImageReflectorから使う</h3>
-
-<p>AmazonWebserviceの実装ができたら、ImageReflectorから呼び出します。  </p>
-
-<p>initLoader()の末尾に、  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>_amazonInfo.callAmazon(asinId);
-</code></pre></div>
-<p>を追加し、asinIdの商品情報を取得します。情報が取得できたか判断して、描画終了という判断にするために、isCompleted関数を  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>public function isCompleted():Boolean {
-    if (!_invalidatedReflection) return false
-    if (_amazonInfo == null) return false
-    if (!_amazonInfo.isLoaded()) return false;
-
-    return true;
-}
-</code></pre></div>
-<p>のように修正して、Amazon Webサービスからのロードが終了していることも判断材料とします。</p>
-
-<h3>■画面に描画する</h3>
-
-<p>最後に画面に描画領域を作成します。  </p>
-
-<p>mxmlにラベルとして、タイトルと著者名を表示する欄を作ります。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>&lt;Label id="title" text="タイトル" color="0xFFFFFF" paddingTop="-180" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
-&lt;Label id="subtitle" text="著者" color="0xFFFFFF" paddingLeft="20" fontWeight="bold" fontSize="11" /&gt;
-</code></pre></div>
-<p>この表示は、特定の本を選択したときに変更したいので、選択が変更されたときのイベントselectedIndex関数で、値を代入します。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>// 選択された項目のタイトルを表示
-title.text = imageReflector[value].titleText;
-subtitle.text = imageReflector[value].authorText;
-</code></pre></div>
-<p>お約束ですが、ImageReflector側では、titleTextとauthorTextはBindableにしておく必要があります。  </p>
-
-<h3>■クロスドメインの注意事項</h3>
-
-<p>amazonの画像サーバのcrossdomain.xmlは画像サーバ内からだけしか参照できないので、ここで作成したSWFファイルをサーバにアップロードしてもうまく表示できません。  </p>
-
-<p>本記事上の完成イメージは、PHPサイトでプロキシしています。  </p>
-
-<p>まずPHPのコードは過去記事を参考にしてください。  </p>
-
-<h3>■さいごに</h3>
-
-<p>これまで読んでくださった皆様、ありがとうございました。こんな機能もFlex版CoverFlowに欲しいぞ！という場合は、ぜひコメントください。
-よろしくお願いします。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/11/11/flex2-coverflow-8-amazon.html">
-          <a class="twitter" data-title="Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する"></a>
-          <a class="facebook" data-title="Flex2でCoverFlowクローンを作る (９) ～Amazonと連携する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -698,6 +484,7 @@ subtitle.text = imageReflector[value].authorText;
         <a href="/page/40/">40</a>
         <a href="/page/41/">41</a>
         <a href="/page/42/">42</a>
+        <a href="/page/43/">43</a>
       <a href="/page/40/">Next »</a>
   </p>
 </nav>
@@ -714,6 +501,7 @@ subtitle.text = imageReflector[value].authorText;
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
@@ -723,7 +511,6 @@ subtitle.text = imageReflector[value].authorText;
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
                   <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -731,6 +518,9 @@ subtitle.text = imageReflector[value].authorText;
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -840,7 +630,7 @@ subtitle.text = imageReflector[value].authorText;
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (3)</li>
+                  <li><a href="/2025.html">2025</a> (4)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
