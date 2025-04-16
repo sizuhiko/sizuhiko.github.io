@@ -272,6 +272,108 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2014/03/08/cakephp-addprefix-here-problem.html">CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること</a></h1>
+  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 05:04:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>あるURLや特定のパラメータ、ユーザでアクセスされたとき、プレフィックスルーティングを付けたかったので、動的に付与したらハマったので小ネタを書いておきます。</p>
+
+<h3>動的にプレフィックスルーティングを追加するには</h3>
+
+<p>公式ドキュメントの解説のとおり、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// routes.php
+Router::connect(
+    "/site-proxy/:controller",
+    array('action' =&gt; 'index', 'prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true)
+);
+
+// core.phpなど
+Configure::write('Routing.prefixes', array('site-proxy'));
+</code></pre></div>
+<p>のように記述します。</p>
+
+<p>RouterTest.phpのテストコードを見たら</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$request = new CakeRequest();
+$request-&gt;addParams(array(
+    'controller' =&gt; 'registrations', 'action' =&gt; 'admin_index',
+    'plugin' =&gt; null, 'prefix' =&gt; 'admin', 'admin' =&gt; true,
+    'ext' =&gt; 'html'
+));
+</code></pre></div>
+<p>みたいなコードがあったので、CakeRequest::addParams() を使って追加できることがわかります。</p>
+
+<p>実際コントローラで</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;request-&gt;addParams(['prefix' =&gt; 'site-proxy', 'site-proxy' =&gt; true]);
+</code></pre></div>
+<p>みたいに書くと、View上で $this-&gt;html-&gt;link() などで出力されるURLにプレフィックスルーティングが追加されます。</p>
+
+<h3>ハマりポイント</h3>
+
+<p>View上でフォームを作成するときに</p>
+<div class="highlight"><pre class="highlight plaintext"><code>echo $this-&gt;Form-&gt;create('Post');
+</code></pre></div>
+<p>のように書くと思うのですが、このようにモデル名だけが指定されているときCakePHPではどのようにURLが生成されるか、というと</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// FormHelper::create() L367付近
+if ($options['action'] === null &amp;&amp; $options['url'] === null) {
+    $options['action'] = $this-&gt;request-&gt;here(false);
+} elseif (empty($options['url']) || is_array($options['url'])) {
+</code></pre></div>
+<p>URLというオプションを指定しない場合は、 action は CakeRequest::here() の値になることがわかります。</p>
+
+<p>で、CakeRequest::here() とはどんなコードか見てみると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>public function here($base = true) {
+    $url = $this-&gt;here;
+    if (!empty($this-&gt;query)) {
+        $url .= '?' . http_build_query($this-&gt;query, null, '&amp;');
+    }
+    if (!$base) {
+        $url = preg_replace('/^' . preg_quote($this-&gt;base, '/') . '/', '', $url, 1);
+    }
+    return $url;
+}
+</code></pre></div>
+<p>のようになっていて、要は現在のURL（$this-&gt;query）から再生成されるだけです。リクエストに入っているプレフィックスルーティングの設定は参照されず、プレフィックスなしのURLがformタグのactionに入ってしまいます。</p>
+
+<h3>まとめ</h3>
+
+<p>解決方法としては</p>
+
+<ul>
+<li>Form::create() で <code>url</code> オプションを追加する</li>
+<li><p>addParams するときに here を変更する</p>
+<div class="highlight"><pre class="highlight plaintext"><code>// 例）
+$request-&gt;addParams(array(
+    'admin' =&gt; true,
+    'prefix' =&gt; 'admin',
+))-&gt;addPaths(array(
+    'here' =&gt; '/admin/this/interesting/index',
+))
+</code></pre></div></li>
+</ul>
+
+<p>あたりが良さそうです。まぁ動的にプレフィックス付けるなんてあんまりやらないのかもしれないですが、何かの参考になれば&hellip;    </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/03/08/cakephp-addprefix-here-problem.html">
+          <a class="twitter" data-title="CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること"></a>
+          <a class="facebook" data-title="CakePHPで動的にプレフィックスルーティングを追加したときに気をつけること"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2014/03/08/composer-phpunit-windows-vagrant.html">VagrantでComposerからPHPUnitをインストールするときに注意したいこと</a></h1>
   <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 04:12:00 PM</a></p>
   <p class="tags">
@@ -718,110 +820,6 @@ HTML5カルタとは</p>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2013/11/04/cakephp-fabricate-sequence.html">CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました</a></h1>
-  <p class="postdate"><a href="/2013/11/04.html" title="Permanent link">Monday, November 04, 2013 06:11:42 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/fabricate.html" rel="tag">fabricate</a>
-      <a href="/tags/fixture.html" rel="tag">fixture</a>
-      <a href="/tags/test.html" rel="tag">Test</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;先日カッとなって作った Fabricate ですが、その後実運用していくうちにいくつかの機能でRuby本家に近づけたくなったので実装を追加しました。  </p>
-
-<p><a href="https://github.com/sizuhiko/Fabricate">GitHub: sizuhiko/Fabricate</a>  </p>
-
-<h3>変更概要</h3>
-
-<ul>
-<li>closure だけでなく、array 形式での属性値変更が可能に</li>
-<li>初期連番をconfigで指定可能に</li>
-<li>sequenceメソッドで柔軟な採番が可能に</li>
-</ul>
-
-<h3>array形式での属性値変更</h3>
-
-<p>これまで属性値を自動生成でなく、自分で決めた値にしたい場合は、無名関数（closure）でarrayを戻す必要がありました。<br>
-これを直接引数でarrayを指定できるようにしました。  </p>
-
-<p>従来の記述方法：  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, function($data){
-    return ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"];
-});
-</code></pre></div>
-<p>新しくサポートした記述方法：  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::create('Post', 10, ["created" =&gt; "2013-10-09 12:40:28", "updated" =&gt; "2013-10-09 12:40:28"]);
-});
-</code></pre></div>
-<p>もちろん、第二引数の生成レコード数を省略して1レコードだけ作ることも可能です。  </p>
-
-<p>$dataの内容見ないのに、とか全部固定なので無名関数じゃなくても良い等のシーンが思いのほか多いもので。  </p>
-
-<h3>初期連番をconfigで指定</h3>
-
-<p>これまで連番（スキーマで数値カラムになっている項目は自動的に連番対象になる）は1から常に始まるようにしていたのですが、こちらもやはり変更したい場合があって、本家同様にconfigで変更できるようにしました。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::config(function($config) {
-    $config-&gt;sequence_start = 100;
-});
-</code></pre></div>
-<p>config関数は、環境定義オブジェクトのインスタンスを引数に取るメソッドを呼び出すので、その中で public 属性値である sequence_start の値を変更してください。<br>
-config関数を使わない場合は、従来通り1から開始されます。  </p>
-
-<h3>sequenceメソッドで柔軟な採番</h3>
-
-<p>これが今回のバージョンアップで最も対応したかった機能で、連番を項目毎に変更したり、独自フォーマットに変更できたりします。<br>
-この機能に対応するために、attributes_for(), build(), create() の各メソッドで属性値を上書きできる無名関数に第二引数を追加しました。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>Fabricate::attributes_for('Post', 10, function($data, $world){
-    return [
-        'id'=&gt; $world-&gt;sequence('id'),
-        'title'=&gt; $world-&gt;sequence('title', 1, function($i){ return "Title {$i}"; })
-    ];
-});
-</code></pre></div>
-<p>上記のように、$world を引数に取るようになりました。もちろん利用しない場合は省略可能です。<br>
-$worldは新しく追加したクラス FabricateContext のインスタンスで sequence メソッドを持っています。  </p>
-
-<p>sequenceメソッドは、3つの利用方法に対応しています。  </p>
-
-<ul>
-<li><p>configで設定された開始値(または1)から開始する連番にする：   </p>
-
-<p>$world-&gt;sequence(&lsquo;id&rsquo;)</p></li>
-<li><p>開始番号を指定して連番にする：  </p>
-
-<p>$world-&gt;sequence(&lsquo;id&rsquo;, 10) // この例では10から開始する</p></li>
-<li><p>独自形式のユニーク文字列を作成する：  </p>
-
-<p>$world-&gt;sequence(&lsquo;title&rsquo;, function($i){ return &ldquo;Title {$i}&rdquo;; }
-// または開始番号を指定して
-$world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$i}&rdquo;; }</p></li>
-</ul>
-
-<p>一番上の利用方法は、DBのスキーマ定義が数値である限りは、sequenceメソッドを使わなくても同じ連番となるので、あまり利用ケースはないと推測されます。  </p>
-
-<p>本家のFabricator では同一プロセス中でのSequenceは常にユニークな値になるようになっていますが、CakePHPプラグイン版ではデータ生成のattributes_for(), build(), create() 各メソッドの呼び出し単位でユニークになります。<br>
-つまり呼び出し毎に開始番号から採番されます。  </p>
-
-<p>もし要望があれば、プロセス単位に連番を管理することも可能なので、Githubのissueなどで連絡ください（日本語でok）。<br>
-おそらく対応としては config で定義でできるようにすると思います&hellip;（併用でなく、プロセスか生成毎かを選択するイメージ）  </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2013/11/04/cakephp-fabricate-sequence.html">
-          <a class="twitter" data-title="CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました"></a>
-          <a class="facebook" data-title="CakePHPのデータジェネレータFabricateにsequenceなどの機能を追加しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -851,6 +849,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
@@ -860,7 +859,6 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -980,7 +978,7 @@ $world-&gt;sequence(&lsquo;title&rsquo;, 1, function($i){ return &ldquo;Title {$
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2025.html">2025</a> (5)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

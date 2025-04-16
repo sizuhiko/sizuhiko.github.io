@@ -272,6 +272,92 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a></h1>
+  <p class="postdate"><a href="/2023/02/02.html" title="Permanent link">Thursday, February 02, 2023 05:05:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-client-mock.html" rel="tag">aws-sdk-client-mock</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回の記事<a href="https://blog.open.tokyo.jp/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a>で</p>
+
+<blockquote>
+<p><code>aws-sdk-client-mock</code> 便利ですね。
+しかし、どうやって SFNClient をモックしているんだろうか？と思いませんか？
+sfn.start の実装側では、普通に aws-sdk から import した SFNClient を使って実装していて、 <code>mockClient</code> の結果で得られたモックを使っているわけでもありません。
+そのあたりは、次回の記事で明らかにしていきたいと思っていますので、ご期待ください。</p>
+</blockquote>
+
+<p>書いたとおり、どうやってモックしているのか、紹介していきます。</p>
+
+<h2>前回のおさらい</h2>
+
+<p>aws-sdk v3 でのテストコードは以下のようになることを紹介しました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock-jest</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">mockClient</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk-client-mock</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">SFNClient</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">SFNClientMock</span> <span class="o">=</span> <span class="nx">mockClient</span><span class="p">(</span><span class="nx">SFNClient</span><span class="p">);</span>
+<span class="nx">beforeEach</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">reset</span><span class="p">());</span>
+
+<span class="nx">SFNClientMock</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="nx">StartExecutionCommand</span><span class="p">).</span><span class="nx">resolves</span><span class="p">({</span> <span class="nx">executionArn</span> <span class="p">});</span>
+<span class="kd">const</span> <span class="nx">resuls</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">start</span><span class="p">(</span><span class="nx">sfnArn</span><span class="p">,</span> <span class="nx">event</span><span class="p">);</span>
+
+<span class="nx">expect</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">executionArn</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">executionArn</span><span class="p">);</span>
+<span class="nx">expect</span><span class="p">(</span><span class="nx">SFNClientMock</span><span class="p">).</span><span class="nx">toHaveReceivedNthCommanddWith</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">StartExecutionCommand</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">stateMachineArn</span><span class="p">:</span> <span class="nx">arn</span><span class="p">,</span> <span class="na">input</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>モックするときは <code>mockClient(SFNClient)</code> とクラスを渡しているだけでしたね。
+生成した <code>SFNClientMock</code> はテストクラスでしか利用していません。</p>
+
+<h2>aws-sdk-client-mock の実装を見てみる</h2>
+
+<p><a href="https://github.com/m-radzikowski/aws-sdk-client-mock/blob/main/packages/aws-sdk-client-mock/src/mockClient.ts">mockClientのコード</a>を見てみましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">mockClient</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">TInput</span> <span class="kd">extends</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">TOutput</span> <span class="kd">extends</span> <span class="nx">MetadataBearer</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nx">client</span><span class="p">:</span> <span class="nx">InstanceOrClassType</span><span class="o">&lt;</span><span class="nx">Client</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+<span class="p">):</span> <span class="nx">AwsClientStub</span><span class="o">&lt;</span><span class="nx">Client</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;&gt;</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">isClientInstance</span><span class="p">(</span><span class="nx">client</span><span class="p">)</span> <span class="p">?</span> <span class="nx">client</span> <span class="p">:</span> <span class="nx">client</span><span class="p">.</span><span class="nx">prototype</span><span class="p">;</span>
+</code></pre></div>
+<p>ふむふむ <code>mockClient</code> の引数がインスタンスかどうか調べて、クラスだったら prototype が利用されるわけですか。
+さらに見てみると</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">sendStub</span> <span class="o">=</span> <span class="nx">stub</span><span class="p">(</span><span class="nx">instance</span><span class="p">,</span> <span class="dl">'</span><span class="s1">send</span><span class="dl">'</span><span class="p">)</span> <span class="k">as</span> <span class="nx">SinonStub</span><span class="o">&lt;</span><span class="p">[</span><span class="nx">Command</span><span class="o">&lt;</span><span class="nx">TInput</span><span class="p">,</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">TOutput</span><span class="p">,</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">any</span><span class="o">&gt;</span><span class="p">],</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">TOutput</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>なるほど <code>send</code> メソッドをスタブしてますね。
+あー、つまりクラスを指定すると、 prototype 定義が置き換わっちゃうわけですね。</p>
+
+<h2>使い分けが必要</h2>
+
+<p>prototype が置き換わることで <code>mockClient</code> に渡したクラスの <code>send</code> はすべてのシーンでスタブに置き換わります。
+テストしたい実装側でクライアントのインスタンスをDIなどで注入していない場合は、この方法で良いですね。
+逆にシーンによっては、実際に send を実行したい場合は困ってしまいます。</p>
+
+<p>localstack などを使って部分的にインテグレーションテストをしたい場合は、なるべくインスタンスをDIできる仕組みにした方が良いでしょう。
+インスタンスを生成するメソッドを作って、それをモックして <code>mockClient</code> の戻り値を返すようにしても良いですね。</p>
+
+<p>とくにイングレーションテストとかなく、すべてのクライアント呼び出しをモックするのであれば、クラス指定が楽ですね。</p>
+
+<p>このように使い分けることで、テストコードを書いていきたいですね。
+簡単ではありますが、aws-sdk-client-mock はどのように aws-sdk をモックしているのか？ を紹介しました。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/02/02/how-mock-aws-sdk-client-mock.html">
+          <a class="twitter" data-title="aws-sdk-client-mock はどのように aws-sdk をモックしているのか？"></a>
+          <a class="facebook" data-title="aws-sdk-client-mock はどのように aws-sdk をモックしているのか？"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a></h1>
   <p class="postdate"><a href="/2023/01/04.html" title="Permanent link">Wednesday, January 04, 2023 11:00:00 AM</a></p>
   <p class="tags">
@@ -766,236 +852,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a></h1>
-  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 11:15:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/bigquery.html" rel="tag">BigQuery</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>BigQuery へクエリするコードを書くとき、どうしていますか？
-ORM を使って RDB を使うコードを書いている場合などは、 SQLite などを使って UnitTest を書いていることもあるでしょう。
-BigQuery についても、何かそういったことができないかな？と思い、調べていました。</p>
-
-<h2>BigQuery Emulator</h2>
-
-<p>そんなとき、ちょうど <a href="https://github.com/goccy/bigquery-emulator">BigQuery Emulator</a> の存在を知り、試してみることにしました。</p>
-
-<p>作者の goccy さんのスライドです。</p>
-
-<iframe class="speakerdeck-iframe" frameborder="0" src="https://speakerdeck.com/player/ef6e21eded3440edafa7a8d59ec6ffef" title="BigQueryエミュレータの作り方" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" style="border: 0px; background: padding-box padding-box rgba(0, 0, 0, 0.1); margin: 0px; padding: 0px; border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.2) 0px 5px 40px; width: 560px; height: 315px;" data-ratio="1.7777777777777777"></iframe>
-
-<p>GitHub の README によると Docker コンテナでも動かせるようですので、私たちはそれを利用することにしました。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker pull ghcr.io/goccy/bigquery-emulator:latest
-</code></pre></div>
-<p>コードのサンプルとしては Python と Golang での書き方は提供されていたので、 Node.js でも何とかなるんじゃない？&hellip;
-と思いやり始めたのです。</p>
-
-<h2>Node.js &ndash; BigQuery Emulator</h2>
-
-<p>Node.js で BigQuery を利用するには、<a href="https://cloud.google.com/nodejs/docs/reference/bigquery/latest">公式のクライアント</a>をインストールします。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @google-cloud/bigquery
-</code></pre></div>
-<p>接続の方法は Python のクライアントを見る限り、</p>
-
-<ul>
-<li>エンドポイント</li>
-<li>プロジェクトID</li>
-<li>匿名接続（AnonymousCredentials）</li>
-</ul>
-
-<p>を指定すれば良さそうです。</p>
-<div class="highlight"><pre class="highlight python"><code><span class="n">client_options</span> <span class="o">=</span> <span class="n">ClientOptions</span><span class="p">(</span><span class="n">api_endpoint</span><span class="o">=</span><span class="s">"http://0.0.0.0:9050"</span><span class="p">)</span>
-<span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="p">.</span><span class="n">Client</span><span class="p">(</span>
-  <span class="s">"test"</span><span class="p">,</span>
-  <span class="n">client_options</span><span class="o">=</span><span class="n">client_options</span><span class="p">,</span>
-  <span class="n">credentials</span><span class="o">=</span><span class="n">AnonymousCredentials</span><span class="p">(),</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Node.js だとこんな感じでしょうか？</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">new</span> <span class="nx">BigQuery</span><span class="p">({</span>
-  <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">credentials</span><span class="p">:</span> <span class="cm">/* 何を指定すれば良いんだ？ */</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>ここで、 <code>credentials</code> の指定に <code>AnonymousCredentials</code> みたいなものが無いことに気がつきます。
-JavaScript 以外のクライアント、上記の Python や Go には、匿名接続のオプションがあるようです。</p>
-
-<p>現時点の credentials に指定できるのは、<a href="https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest/google-auth-library/googleauthoptions">公式ドキュメント</a>によると</p>
-<div class="highlight"><pre class="highlight plaintext"><code>credentials?: CredentialBody | ExternalAccountClientOptions;
-</code></pre></div>
-<p>だけです。
-<code>ExternalAccountClientOptions</code> は外部のアカウント連携を使った認証をする場合のオプションになっています。</p>
-
-<h2>@google-cloud/bigquery のコードを調べる</h2>
-
-<p>クライアントの言語違いで接続が変わるわけではないので、 BigQuery のサーバー側は匿名接続できるようになっているが、クライアント側の実装がサポートしていない、ということは想定できるでしょう。
-こういうときは、クライアントのソースコードを調べるしかありません。
-正面突破は無理でも、何かハックできる方法があるかもしれません。</p>
-
-<h3>BigQuery クラス</h3>
-
-<p>GitHubのリポジトリ<a href="https://github.com/googleapis/nodejs-bigquery">Google BigQuery: Node.js Client</a>です。
-まず、 <a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L305">BigQuery クラスのコンストラクタ</a>を調べます。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L324-L331">このあたり</a>で、オプションを作り直して親クラスのコンストラクタを呼び出すみたいです。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="na">apiEndpoint</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">apiEndpoint</span><span class="o">!</span><span class="p">,</span>
-      <span class="nx">baseUrl</span><span class="p">,</span>
-      <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
-      <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">../../package.json</span><span class="dl">'</span><span class="p">),</span>
-      <span class="na">autoRetry</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">autoRetry</span><span class="p">,</span>
-      <span class="na">maxRetries</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">maxRetries</span><span class="p">,</span>
-    <span class="p">};</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">);</span>
-    <span class="p">}</span>
-
-    <span class="k">super</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</code></pre></div>
-<p><code>credentials</code> は <code>options</code> の中に入ったままなので、 BigQuery 特有のオプションを <code>config</code> に置き換えて親クラスである <code>@google-cloud/common/Service</code> を呼び出す感じでしょうか。</p>
-
-<h3>Service クラス</h3>
-
-<p><code>Service</code> クラスは <code>@google-cloud/common</code> という共有パッケージにあるので、<a href="https://github.com/googleapis/nodejs-common">そこのリポジトリ</a>を調べます。
-<a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts">Serviceクラスのコード</a>です。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L115-L123">このあたり</a>で、リクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出すみたいです。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">reqCfg</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">({},</span> <span class="nx">config</span><span class="p">,</span> <span class="p">{</span>
-      <span class="na">projectIdRequired</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectIdRequired</span><span class="p">,</span>
-      <span class="na">projectId</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectId</span><span class="p">,</span>
-      <span class="na">authClient</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">authClient</span><span class="p">,</span>
-      <span class="na">credentials</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">credentials</span><span class="p">,</span>
-      <span class="na">keyFile</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">keyFilename</span><span class="p">,</span>
-      <span class="na">email</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
-      <span class="na">token</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span>
-    <span class="p">});</span>
-
-    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
-      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">authClient</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">;</span>
-</code></pre></div>
-<p>なるほど、なるほど。</p>
-
-<h3>makeAuthenticatedRequestFactory</h3>
-
-<p>続いて、 <a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L596">makeAuthenticatedRequestFactory</a> を見てみましょう。</p>
-
-<p>コードには関数定義がいろいろあって、最終的には <code>makeAuthenticatedRequest</code> という関数をファクトリメソッドは戻すようです。
-ふむふむ。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">mar</span> <span class="o">=</span> <span class="nx">makeAuthenticatedRequest</span> <span class="k">as</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
-    <span class="nx">mar</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">authClient</span><span class="p">);</span>
-    <span class="nx">mar</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">;</span>
-    <span class="k">return</span> <span class="nx">mar</span><span class="p">;</span>
-</code></pre></div>
-<p>つまり <code>BigQuery</code> クラスのインスタンスを生成すると、認証クライアントまでは生成するけど、接続などにはいかないことがわかります。
-続いて<a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html">ファクトリメソッドの引数</a>を調べてみましょう。</p>
-
-<p>興味深いオプションが2つありますね。</p>
-
-<ul>
-<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#customEndpoint">customEndpoint</a></li>
-<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#useAuthWithCustomEndpoint">useAuthWithCustomEndpoint</a></li>
-</ul>
-
-<p>認証エンドポイントをカスタマイズできるようです。
-では、ファクトリでは、このオプションをどうやって使っているのか見てみましょう。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L766-L777">ここ</a>にありました。</p>
-<div class="highlight"><pre class="highlight javascript"><code>          <span class="kd">const</span> <span class="nx">authorizeRequest</span> <span class="o">=</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-            <span class="k">if</span> <span class="p">(</span>
-              <span class="nx">reqConfig</span><span class="p">.</span><span class="nx">customEndpoint</span> <span class="o">&amp;&amp;</span>
-              <span class="o">!</span><span class="nx">reqConfig</span><span class="p">.</span><span class="nx">useAuthWithCustomEndpoint</span>
-            <span class="p">)</span> <span class="p">{</span>
-              <span class="c1">// Using a custom API override. Do not use `google-auth-library` for</span>
-              <span class="c1">// authentication. (ex: connecting to a local Datastore server)</span>
-              <span class="k">return</span> <span class="nx">reqOpts</span><span class="p">;</span>
-            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-              <span class="k">return</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">authorizeRequest</span><span class="p">(</span><span class="nx">reqOpts</span><span class="p">);</span>
-            <span class="p">}</span>
-          <span class="p">};</span>
-</code></pre></div>
-<p>コメントを読んでください。 </p>
-
-<blockquote>
-<p>ex: connecting to a local Datastore server</p>
-</blockquote>
-
-<p>「例えば、ローカルのサーバーとかに接続するときな」って、今回の用途じゃないですか！</p>
-
-<h2>どうやったら指定できるのか？</h2>
-
-<p>さて、ここまでの調査を振り返りましょう。</p>
-
-<ul>
-<li>BigQuery クラスで Service クラスのコンストラクタを呼び出す</li>
-<li>Service クラスでリクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出す</li>
-</ul>
-
-<p>BigQuery クラスからのオプションでは <code>customEndpoint</code> を指定する方法がない！という結論。</p>
-
-<p>ちょっと待てよ？</p>
-
-<p>サービスクラスで生成したファクトリどこに入れてたっけ？</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
-      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
-</code></pre></div>
-<p><code>this</code> (=== BigQuery クラスのインスタンス) ですね。</p>
-
-<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L83">サービスクラスの定義</a>を見てみましょう。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">makeAuthenticatedRequest</span><span class="p">:</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
-</code></pre></div>
-<p>private じゃないってことは、オーバーライドできるじゃないですか。</p>
-
-<h2>ハックする</h2>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">BigQuery</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/bigquery</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">util</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/common</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="kd">let</span> <span class="nx">bigQuery</span><span class="p">:</span> <span class="nx">BigQuery</span><span class="p">;</span>
-
-<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">baseUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
-    <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">@google-cloud/bigquery/package.json</span><span class="dl">'</span><span class="p">),</span>
-    <span class="na">customEndpoint</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-  <span class="p">};</span>
-  <span class="nx">bigQuery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BigQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-  <span class="nx">bigQuery</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span> <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>options の基本項目は、 BigQuery クラスのコンストラクタで指定されていた項目をそのまま流用しています。
-それに <code>customEndpoint</code> を指定して <code>makeAuthenticatedRequestFactory</code> を呼び出しインスタンス変数の値を上書きします。</p>
-
-<h2>うまくいきましたよね！</h2>
-
-<p>これで Node.js の UnitTest から BigQuery Emulator を使ってクエリのテストコードを書くことができるようになりました。
-BigQuery Emulator があって良かった！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html">
-          <a class="twitter" data-title="Node.js で BigQuery を使ったコードの自動テストを記述する"></a>
-          <a class="facebook" data-title="Node.js で BigQuery を使ったコードの自動テストを記述する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1025,6 +881,7 @@ BigQuery Emulator があって良かった！</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
@@ -1034,7 +891,6 @@ BigQuery Emulator があって良かった！</p>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -1154,7 +1010,7 @@ BigQuery Emulator があって良かった！</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2025.html">2025</a> (5)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

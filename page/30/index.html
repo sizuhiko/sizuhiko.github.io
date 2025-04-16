@@ -272,6 +272,95 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2014/10/13/phpconference2014.html">PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました</a></h1>
+  <p class="postdate"><a href="/2014/10/13.html" title="Permanent link">Monday, October 13, 2014 08:11:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/%E3%82%AA%E3%83%96%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88%E6%8C%87%E5%90%91.html" rel="tag">オブジェクト指向</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2014/10/11 に行われた<a href="http://phpcon.php.gr.jp/w/2014/">PHPカンファレンス2014</a>で発表をしてきました。</p>
+
+<p><img src="/images/blog/phpconference2014.jpg" alt="" /></p>
+
+<p><a href="http://gihyo.jp/news/report/01/phpcon2014/0001?page=2">Photo by gihyo.jp</a></p>
+
+<p>スライドは以下の内容です。</p>
+
+<script async class="speakerdeck-embed" data-id="74562820350401328a4766ded83ef86d" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>PHPカンファレンスでは公募セッションは最大30分のため、なぜ今回このようなタイトルを発表しようと思ったか、という背景については話ことができませんした。こちらのブログでは、スライドの共有と共に、その辺りの経緯について書いておきたいと思います。</p>
+
+<h3>なぜ今オブジェクト指向か？</h3>
+
+<p>オブジェクトデザインは原著から数えると、もう12年になろうとする訳です。これはセッションの中でも話したのですが、2003年当時はまだWebのフレームワークもまだ今日のようなものでなく、多くの会社は各社オレオレフレームワークを作っていた時代です。
+オブジェクト指向が必要ないような使い捨てサイトならまだしも、受託やサービスなどソースコードを維持したり、機能アップをするような場面ではオブジェクト指向が必要だと考え、今のアジャイルムーブメントかそれ以上に語られていたはずです。</p>
+
+<p>オレオレフレームワークを作ったことがある人は、オブジェクト指向やデザインパターンをよく勉強してそのあり方を議論したものです。
+そのような人たちが、現在の入門プログラマーに「オブジェクト指向がわかってない」と言っても、そもそも通じないと思ったのがきっかけでです。</p>
+
+<p>ここ4,5年の間にWebからプログラミングを始めた人（Webフレームワーク世代）は、すでに素晴らしいWebフレームワークがあり、その上でプログラミングをすることを要求されます。言語そのもの、たとえばPHPなら「イラストでよくわかるPHP はじめてのWebプログラミング入門」や「よくわかるPHPの教科書」あたりを読んでから、各フレームワークの本や公式チュートリアルを片手にアプリケーション開発を始めています。
+つまりオレオレフレームワーク世代のオッサンが通過したオブジェクト指向やデザインパターンの経験に基づいてソースコードに手厳しいコメントを付けても、受けた方も辛いだけなのです。</p>
+
+<h3>今どのような弊害が起きているのか</h3>
+
+<p>で、このようなWebフレームワーク世代はCakePHPやその他のWebフレームワーク（MVC的なもの）を使って、MVCの枠に収めようとしてFatコントローラになったりしやすいのです。
+なぜなら特定のディレクトリにフレームワークが指定した方法で書いていれば、良くわかんないけどうまく動いてしまうのです。フレームワークすげーな！という訳です。
+それ以外の書き方は知らないし、どこにも書いてないのです。
+結局、適切にクラス分割ができないため、結果として与えられた範囲の枠組みで問題はない、と考えているような状況を見かけるのです。
+classってPHPの文法です、キリッ！とか言われたことはないですが、まぁ無くはないのかな…と。</p>
+
+<p>じゃぁフレームワークの本に、その概念や考え方を書くべきだという声もあるかもしれません。私もCakePHP本の執筆に携わったことがあり、耳の痛い話です。しかしフレームワークの本では、すべてのフレームワークについての説明もページ数的に困難な中、OOPやMVCの概念のような内容を解説するのは困難なことも事実です。</p>
+
+<h3>そこで話してみようと思った</h3>
+
+<p>もちろん、オブジェクト指向ムーブメント世代のオッサンであってもオブジェクト指向をみんな理解しているかというと、そういう訳ではありません（まぁ少なくともみんな読書会なんかして勉強はしていたような気がします）。
+今時のWebフレームワーク世代だって、しっかり勉強している意識高い人はいっぱいいるし、知っています。
+ただ最近プログラミングを始めた人は、技術の移り変わりが激しいし、言語やフレームワークはどんどんバージョンアップするし、なかなか基礎的な事に対する勉強時間を作るのが難しいのではないかな、と思うのです。
+しかもオブジェクト指向の勉強って難しいし「銀の弾丸」は無いわけです。最近そういった勉強会の話もあまり聞きません。
+ではどのあたりから始めると良いだろう？という当たりを付けられるセッションをしてみたいと思ったのです。</p>
+
+<p>私が技術支援で入った中で良く感じている問題はオブジェクト指向プログラミングというより、そもそものオブジェクト指向がうまく理解されていないと思ったので以下のポイントに絞った内容にしたいと思いました。</p>
+
+<ul>
+<li>オブジェクトとは何なのか</li>
+<li>オブジェクトを導出するにはどうしたら良いのか</li>
+<li>今回のPHPカンファレンスのテーマは「知りたい，があなたを変えていく」</li>
+</ul>
+
+<p>これらの要件に合うのは、責務駆動設計の中心的原理とテクニックを解説した「オブジェクトデザイン」の紹介が最適で、30分という時間に適している（知りたい==何か持ち帰って始めることができる）と思ったのです。</p>
+
+<h3>どうだったか</h3>
+
+<p>セッションをやっている間、いつも盛り上がっていないと不安なので、小ネタを差し込むのですが、皆さん真面目に聞きに来ていただいたので、講演者から見るとダダ滑りでした（個人的な感想です）。ただ<a href="https://joind.in/talk/view/12043">joind.in</a>のコメントを読ませていただいたり、顔見知りの方に確認した範囲では何かしら体験を持ち帰っていただけたようで「知りたい」につながったのかな、と思っています。</p>
+
+<p>もし私の講演を聴いていただいてコメントまだな方は、<a href="https://joind.in/talk/view/12043">コチラに</a>一言いただけると嬉しいです。<a href="https://joind.in/talk/view/12043">joind.in</a>は匿名でのコメントもできますので、ご安心ください。</p>
+
+<p>また、今回の目玉？！セッションであった「ウェブエンジニアに必要なセキュリティスキルとは 徳丸浩 x 大垣靖男」の対談セッションでも思ったのですが、お二人の話の大きな相違点のベースである<code>現実論</code>と<code>理想論</code>のケースはセキュリティだけではなく、オブジェクト指向についても同じだな、と思いました。
+私はすべての人がオブジェクト指向を理解して進めるのが理想だと思うし、アジャイル原則の<code>私たち</code>はオブジェクト指向を理解しているプログラマーであるべき、と思っています。ただすべての人がそうでないというのも理解できるので、理解度はともかくオブジェクト指向と向き合って欲しいなと思っています。そこから何かが変わると良いな、と。</p>
+
+<h3>裏話</h3>
+
+<p>実は、セッションを応募するとき、PHPカンファレンスでは重複して申し込めると聞いていたので、オブジェクト指向超入門（上）と、オブジェクト指向超入門（下）の2セッションにして合わせて60分で申し込もうと思ったのですが、それは通らなそう(www)と思って自重しました。
+またどこかで60分セッションやれる機会があれば、やってみたいなと思うのでした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/10/13/phpconference2014.html">
+          <a class="twitter" data-title="PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました"></a>
+          <a class="facebook" data-title="PHP Conference 2014で「擬人化から始めるPHPerのためのオブジェクト指向超入門」を発表してきました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2014/09/23/cakefest-2014-report.html">CakeFest2014に参加しました</a></h1>
   <p class="postdate"><a href="/2014/09/23.html" title="Permanent link">Tuesday, September 23, 2014 02:19:00 PM</a></p>
   <p class="tags">
@@ -985,292 +1074,6 @@ ruleset.xmlは以下のようにしました。</p>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2014/06/27/cake3-mokumoku-5.html">CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた</a></h1>
-  <p class="postdate"><a href="/2014/06/27.html" title="Permanent link">Friday, June 27, 2014 02:19:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/co-edo.html" rel="tag">Co-Edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2013/6/16(月) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/12132">CakePHP3 もくもく会 #5</a>」に参加しました。</p>
-
-<p>前回のイベントではBakeすることに成功したので、今回は大きく変更となったモデル周辺についてテストコードから把握してみる目標をたてました。</p>
-
-<h3>環境構築する（前回との差分）</h3>
-
-<p>3回目に参加した記事では</p>
-
-<blockquote>
-<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
-すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer -sdev create-project friendsofcake/app-template app dev-cake3
-</code></pre></div></blockquote>
-
-<p>のように記述したのですが、その後devが上がったところでこちらのスケルトンは最新追従していなかったので、CakePHPの公式スケルトンを使っています。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer create-project -s dev cakephp/app dev-cake3
-</code></pre></div>
-<h3>CakePHP3におけるモデル</h3>
-
-<p>CakePHP3では従来モデル（Model）と呼んでいたクラスはなくなり、テーブル（Table）とエンティティ（Entity）という2つのクラスに別れます。従来のモデルがテーブルに変更になりfindなどの責務を持っています。find結果は従来arrayで返却されてきたのですが、CakePHP3からはエンティティと呼ばれるオブジェクトで返却されます。
-CakePHP1から2にかけてbasukeさんが作られた<a href="https://github.com/josegonzalez/cakephp-entity">CakeEntity</a>というプラグインがあります。このプラグインはCakePHP3の新しいモデルのベースになったものでもあり、利用したことがあればそれほど違和感なく移行できるのではないかと思います。</p>
-
-<h3>Bakeされた結果を見てみる</h3>
-
-<p>前回bakeコマンドで生成したモデル層のファイルを見てみると</p>
-
-<p>App/Model/Table/PostsTable.php</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="kn">namespace</span> <span class="nn">App\Model\Table</span><span class="p">;</span>
-
-<span class="kn">use</span> <span class="nc">Cake\ORM\Table</span><span class="p">;</span>
-<span class="kn">use</span> <span class="nc">Cake\Validation\Validator</span><span class="p">;</span>
-
-<span class="cd">/**
- * Posts Model
- */</span>
-<span class="kd">class</span> <span class="nc">PostsTable</span> <span class="kd">extends</span> <span class="nc">Table</span> <span class="p">{</span>
-
-<span class="cd">/**
- * Initialize method
- *
- * @param array $config The configuration for the Table.
- * @return void
- */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">initialize</span><span class="p">(</span><span class="kt">array</span> <span class="nv">$config</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">table</span><span class="p">(</span><span class="s1">'posts'</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">displayField</span><span class="p">(</span><span class="s1">'title'</span><span class="p">);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">primaryKey</span><span class="p">([</span><span class="s1">'id'</span><span class="p">]);</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">addBehavior</span><span class="p">(</span><span class="s1">'Timestamp'</span><span class="p">);</span>
-
-    <span class="p">}</span>
-
-<span class="cd">/**
- * Default validation rules.
- *
- * @param \Cake\Validation\Validator $validator
- * @return \Cake\Validation\Validator
- */</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">validationDefault</span><span class="p">(</span><span class="kt">Validator</span> <span class="nv">$validator</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nv">$validator</span>
-            <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'valid'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'rule'</span> <span class="o">=&gt;</span> <span class="s1">'numeric'</span><span class="p">])</span>
-            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'create'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'title'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">allowEmpty</span><span class="p">(</span><span class="s1">'body'</span><span class="p">);</span>
-
-        <span class="k">return</span> <span class="nv">$validator</span><span class="p">;</span>
-    <span class="p">}</span>
-
-<span class="p">}</span>
-</code></pre></div>
-<p>App/Model/Entity/Post.php</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-<span class="kn">namespace</span> <span class="nn">App\Model\Entity</span><span class="p">;</span>
-
-<span class="kn">use</span> <span class="nc">Cake\ORM\Entity</span><span class="p">;</span>
-
-<span class="cd">/**
- * Post Entity.
- */</span>
-<span class="kd">class</span> <span class="nc">Post</span> <span class="kd">extends</span> <span class="nc">Entity</span> <span class="p">{</span>
-
-<span class="cd">/**
- * Fields that can be mass assigned using newEntity() or patchEntity().
- *
- * @var array
- */</span>
-    <span class="k">protected</span> <span class="nv">$_accessible</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s1">'title'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
-        <span class="s1">'body'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="p">];</span>
-
-<span class="p">}</span>
-</code></pre></div>
-<p>のようになっています。</p>
-
-<p>PostsTable::initialize()は従来publicプロパティとして定義していたテーブル名などの情報です。
-validationDefault()は$validatesで定義していたバリデーション定義です。</p>
-
-<p>Postクラスはエンティティで$<em>accesibleに利用可能なフィールド名を列挙します。これはRailsでattr</em>accessorを定義するとプロパティにアクセス可能になるのと同様の効果を持つようになると推測されますが、現時点では何も実装はされていないようです。</p>
-
-<h3>コアのテストコード見てみる</h3>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testRewind</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
-        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">();</span>
-        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-</code></pre></div>
-<p>とてもザックリしたところを切り抜きましたが、まぁそういうことです。
-これを2系のコードで似せて書くと</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testRewind</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Model</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">);</span>
-        <span class="nv">$first</span> <span class="o">=</span> <span class="nv">$second</span> <span class="o">=</span> <span class="p">[];</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$first</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$results</span> <span class="k">as</span> <span class="nv">$result</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nv">$second</span><span class="p">[]</span> <span class="o">=</span> <span class="nv">$result</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-</code></pre></div>
-<p>えっ！行数3の方が増えてないか？！とかいうツッコミはいらないですよ！！
-なんか聞いている程変わってないですよね。</p>
-
-<p>ではもう少し複雑な例を</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">testFindAllNoFieldsAndNoHydration</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nv">$table</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Table</span><span class="p">([</span>
-            <span class="s1">'table'</span> <span class="o">=&gt;</span> <span class="s1">'users'</span><span class="p">,</span>
-            <span class="s1">'connection'</span> <span class="o">=&gt;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">connection</span><span class="p">,</span>
-        <span class="p">]);</span>
-        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span>
-            <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">where</span><span class="p">([</span><span class="s1">'id IN'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
-            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">toArray</span><span class="p">();</span>
-        <span class="nv">$expected</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">[</span>
-                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'mariano'</span><span class="p">,</span>
-                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
-                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:16:23'</span><span class="p">),</span>
-                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2007-03-17 01:18:31'</span><span class="p">),</span>
-            <span class="p">],</span>
-            <span class="p">[</span>
-                <span class="s1">'id'</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s1">'username'</span> <span class="o">=&gt;</span> <span class="s1">'nate'</span><span class="p">,</span>
-                <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'$2a$10$u05j8FjsvLBNdfhBhc21LOuVMpzpabVXQ9OpC2wO3pSO0q6t7HHMO'</span><span class="p">,</span>
-                <span class="s1">'created'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:18:23'</span><span class="p">),</span>
-                <span class="s1">'updated'</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2008-03-17 01:20:31'</span><span class="p">),</span>
-            <span class="p">],</span>
-        <span class="p">];</span>
-        <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">assertEquals</span><span class="p">(</span><span class="nv">$expected</span><span class="p">,</span> <span class="nv">$results</span><span class="p">);</span>
-    <span class="p">}</span>
-
-</code></pre></div>
-<p>どうもテーブルには findやwhere,orderなどのメソッドがあり、それをチェインさせてクエリを組み立てるようです。これも他のActiveRecord系の記述とほぼ変わらない形式になります。
-hydrate(false)を指定するとエンティティでなく従来の配列形式で値を戻すことができるようになっています。
-メソッドチェインの最後のtoArray()はエンティティを配列形式で取得するという意味ではありません。CakePHP3からはfindの戻りがイテレータになります（配列ではないので注意が必要）。なのでイテレータからすべて配列形式で取得するという意味になります。</p>
-
-<p>ではいくつかそれ以外の例を見てみましょう。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">])</span>
-            <span class="o">-&gt;</span><span class="nf">where</span><span class="p">([</span><span class="s1">'created &gt;='</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">Carbon</span><span class="p">(</span><span class="s1">'2010-01-22 00:00'</span><span class="p">)])</span>
-            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
-</code></pre></div>
-<p>たとえば取得するカラムを絞り込むためにはselect()を利用するようです。従来はfieldsで指定していたカラム名の配列です。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'list'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'fields'</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'username'</span><span class="p">]])</span>
-            <span class="o">-&gt;</span><span class="nf">hydrate</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">order</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
-</code></pre></div>
-<p>とはいえ、従来っぽい書き方もできるようです。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-        <span class="nv">$results</span> <span class="o">=</span> <span class="nv">$table</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'threaded'</span><span class="p">)</span>
-            <span class="o">-&gt;</span><span class="nf">select</span><span class="p">([</span><span class="s1">'id'</span><span class="p">,</span> <span class="s1">'parent_id'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">])</span>
-</code></pre></div>
-<p>！！！！
-findがチェインの中で2回呼ばれています。</p>
-
-<h3>これがCakePHP3のモデルだ！</h3>
-
-<p>findが2回とはどういうことなのか、ソースを調べてみました。
-まずTable::find()とは何者なのか</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">find</span><span class="p">(</span><span class="nv">$type</span> <span class="o">=</span> <span class="s1">'all'</span><span class="p">,</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
-        <span class="nv">$query</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">query</span><span class="p">();</span>
-        <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">select</span><span class="p">();</span>
-        <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nf">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p>どうもクエリオブジェクトを取得して、それにselect()をかけて….. callFinder って何ですか？を返すみたいです。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span> <span class="o">=</span> <span class="p">[])</span> <span class="p">{</span>
-        <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">applyOptions</span><span class="p">(</span><span class="nv">$options</span><span class="p">);</span>
-        <span class="nv">$options</span> <span class="o">=</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">getOptions</span><span class="p">();</span>
-        <span class="nv">$finder</span> <span class="o">=</span> <span class="s1">'find'</span> <span class="mf">.</span> <span class="nb">ucfirst</span><span class="p">(</span><span class="nv">$type</span><span class="p">);</span>          <span class="c1">// ココ</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">method_exists</span><span class="p">(</span><span class="nv">$this</span><span class="p">,</span> <span class="nv">$finder</span><span class="p">))</span> <span class="p">{</span>    <span class="c1">// とココに注目</span>
-            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="p">{</span><span class="nv">$finder</span><span class="p">}(</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span> <span class="o">&amp;&amp;</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span><span class="o">-&gt;</span><span class="nf">hasFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">))</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">_behaviors</span><span class="o">-&gt;</span><span class="nf">callFinder</span><span class="p">(</span><span class="nv">$type</span><span class="p">,</span> <span class="p">[</span><span class="nv">$query</span><span class="p">,</span> <span class="nv">$options</span><span class="p">]);</span>
-        <span class="p">}</span>
-
-        <span class="k">throw</span> <span class="k">new</span> <span class="err">\</span><span class="nf">BadMethodCallException</span><span class="p">(</span>
-            <span class="nb">sprintf</span><span class="p">(</span><span class="s1">'Unknown finder method "%s"'</span><span class="p">,</span> <span class="nv">$type</span><span class="p">)</span>
-        <span class="p">);</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p>find(&lsquo;all&rsquo;) と呼ぶと<code>findAll</code>メソッドがあるかどうか（ビヘイビアも含めて）調べて、なければ例外になる。
-ということはTableにfindAllとかあるの？</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">findAll</span><span class="p">(</span><span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$query</span><span class="p">;</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p>あるよ！</p>
-
-<p>そういうことか、これがCakePHP3のモデルか。</p>
-
-<ul>
-<li>条件やら何やらメソッドチェインである</li>
-<li>旧来の配列形式に変換できる</li>
-<li>findXxxで独自の条件などをメソッドチェインに組み込める（今ココ）</li>
-</ul>
-
-<h3>独自の条件をメソッドチェインに組み込む</h3>
-
-<p>まずPostsテーブルにfindOrderIdDescというIDの降順で検索するメソッドを作成します。</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="k">public</span> <span class="k">function</span> <span class="n">findOrderIdDesc</span><span class="p">(</span><span class="kt">Query</span> <span class="nv">$query</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$options</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nv">$query</span><span class="o">-&gt;</span><span class="nf">order</span><span class="p">([</span><span class="s1">'id'</span><span class="o">=&gt;</span><span class="s1">'desc'</span><span class="p">]);</span>
-    <span class="p">}</span>
-</code></pre></div>
-<p>でそれを使うときは</p>
-<div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
-    <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Posts</span> <span class="o">=</span> <span class="nc">TableRegistry</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="s1">'Posts'</span><span class="p">,</span> <span class="nv">$config</span><span class="p">);</span> 
-    <span class="nv">$posts</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="nc">Posts</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'all'</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s1">'orderIdDesc'</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">();</span>
-</code></pre></div>
-<p>みたいに書けるわけです。
-もちろんいくつチェインしても良いです。
-例えば様々なテーブルで利用できるファインダ（findXxxメソッド）をtraitで共通化するもの面白そうです。</p>
-
-<p>このように新しいモデルはかなり期待の持てる作りにもなっています。
-CakePHP3もAlphaになりました。
-Alphaを使ってみての感想などはまた書きたいと思います</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/06/27/cake3-mokumoku-5.html">
-          <a class="twitter" data-title="CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた"></a>
-          <a class="facebook" data-title="CakePHP3 もくもく会#5 に参加して Model の新機能を試してきた"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1300,6 +1103,7 @@ Alphaを使ってみての感想などはまた書きたいと思います</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
@@ -1309,7 +1113,6 @@ Alphaを使ってみての感想などはまた書きたいと思います</p>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -1429,7 +1232,7 @@ Alphaを使ってみての感想などはまた書きたいと思います</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2025.html">2025</a> (5)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

@@ -272,6 +272,269 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a></h1>
+  <p class="postdate"><a href="/2025/04/16.html" title="Permanent link">Wednesday, April 16, 2025 10:40:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/next-js.html" rel="tag">Next.js</a>
+      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+      <a href="/tags/x-ray.html" rel="tag">X-Ray</a>
+      <a href="/tags/opentelemetry.html" rel="tag">OpenTelemetry</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>こちらの記事は <a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。</p>
+
+<p>前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。
+さらに別の流れで<a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a>という記事も公開しましたが、こちらはテスト環境での IAST 用でした。
+本番の計測は X-Ray を使う（なぜ New Relic でない？とかは置いておいて）ので、 CDK / App Runner / Next.js standalone という構成でどうやって実現したのかを記録していきます。</p>
+
+<h3>App Runner と X-Ray</h3>
+
+<p>AWS のサービスで X-Ray を使うとき、たとえば Lambda や StepFunctions で利用したいなと思ったときは簡単に利用できます。</p>
+
+<p>たとえば StepFunctions では CDK を使って、以下のように <code>tracingEnabled</code> を <code>true</code> すると X-Ray トレーシングが有効になります。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="c1">// Define a second state machine with the Task state above</span>
+<span class="k">new</span> <span class="nx">sfn</span><span class="p">.</span><span class="nx">StateMachine</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ParentStateMachine</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">definition</span><span class="p">:</span> <span class="nx">task</span><span class="p">,</span>
+  <span class="na">tracingEnabled</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Lambda の場合は、以下のように <code>tracing</code> を <code>Active</code> にすると X-Ray トレーシングが有効になります。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">new</span> <span class="nx">lambda</span><span class="p">.</span><span class="nb">Function</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">Function</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">codeSigningConfig</span><span class="p">,</span>
+  <span class="na">runtime</span><span class="p">:</span> <span class="nx">lambda</span><span class="p">.</span><span class="nx">Runtime</span><span class="p">.</span><span class="nx">NODEJS_18_X</span><span class="p">,</span>
+  <span class="na">tracing</span><span class="p">:</span> <span class="nx">Tracing</span><span class="p">.</span><span class="nx">ACTIVE</span><span class="p">,</span>
+  <span class="na">handler</span><span class="p">:</span> <span class="dl">'</span><span class="s1">index.handler</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">code</span><span class="p">:</span> <span class="nx">lambda</span><span class="p">.</span><span class="nx">Code</span><span class="p">.</span><span class="nx">fromAsset</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">'</span><span class="s1">lambda-handler</span><span class="dl">'</span><span class="p">)),</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>簡単ですね。</p>
+
+<p>で、App Runner ではどうするのかな？と思って調べていたら、<a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/">AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)</a> という記事を見つけました。</p>
+
+<p>なるほど、OpenTelemetry 必要なのか。単にフラグをONにするだけではできないんですね。</p>
+
+<p>この時点で役に立ちそうな記事もいくつか読んでおきました。</p>
+
+<ul>
+<li><a href="https://blog.ojisan.io/next-otel/">Next.js の OpenTelemetry サポートを使う方法</a></li>
+<li><a href="https://dev.classmethod.jp/articles/trace-nextjs-with-aws-xray/">Next.jsのサーバーサイド処理をX-Rayでトレースしてみた</a></li>
+</ul>
+
+<h3>参考記事からやり方を検討する</h3>
+
+<p>参考記事を確認して、タスクを整理しました。</p>
+
+<ul>
+<li>CDK で OpenTelemetry 計測を有効にする（最初の参考記事）</li>
+<li>Next.js の OpenTelemetry サポートを有効にする（次の2つの参考記事）</li>
+</ul>
+
+<h4>CDK で OpenTelemetry 計測を有効にする</h4>
+
+<p><a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/">AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)</a> の <code>App Runnerサービスを作成</code> でやっているように、App Runner で OpenTelemetryを有効にするにはコンストラクタではなく、CloudFormation クラスを使って作っていますが、現時点は Service の props に <code>observabilityConfiguration</code> があるので、これにセットすると良さそうです。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">observabilityConfiguration</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ObservabilityConfiguration</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ObservabilityConfiguration</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">observabilityConfigurationName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-observability</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">traceConfigurationVendor</span><span class="p">:</span> <span class="nx">TraceConfigurationVendor</span><span class="p">.</span><span class="nx">AWSXRAY</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span> <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span> <span class="p">},</span>
+        <span class="na">repository</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">ecrRepository</span><span class="p">,</span>
+        <span class="na">tagOrDigest</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">webAppVersion</span><span class="p">,</span>
+      <span class="p">}),</span>
+      <span class="na">serviceName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-service</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">autoDeploymentsEnabled</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="nx">observabilityConfiguration</span><span class="p">,</span>
+      <span class="na">healthCheck</span><span class="p">:</span> <span class="nx">HealthCheck</span><span class="p">.</span><span class="nx">http</span><span class="p">({</span>
+        <span class="na">healthyThreshold</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="na">interval</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/favicon.ico</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">timeout</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">unhealthyThreshold</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>元々の Service に <code>ObservabilityConfiguration</code> で生成した設定を <code>observabilityConfiguration</code> に渡すだけです。ここは簡単ですね。
+ポイントとしては <code>traceConfigurationVendor</code> を <code>AWSXRAY</code> に設定するところぐらいかな。</p>
+
+<h4>Next.js の OpenTelemetry サポートを有効にする</h4>
+
+<p>こちらも参考記事を元に設定していきます。</p>
+
+<p>まず依存ライブラリを追加します。今回はこのあたりを利用しています。</p>
+
+<ul>
+<li>@opentelemetry/api</li>
+<li>@opentelemetry/exporter-trace-otlp-grpc</li>
+<li>@opentelemetry/id-generator-aws-xray</li>
+<li>@opentelemetry/instrumentation-aws-sdk</li>
+<li>@opentelemetry/instrumentation-http</li>
+<li>@opentelemetry/instrumentation-undici</li>
+<li>@opentelemetry/propagator-aws-xray</li>
+<li>@opentelemetry/sdk-node</li>
+<li>@opentelemetry/sdk-trace-node</li>
+<li>@opentelemetry/semantic-conventions</li>
+<li>@opentelemetry/resources</li>
+</ul>
+
+<p><a href="https://nextjs.org/docs/14/app/building-your-application/optimizing/instrumentation">Next.js の公式ドキュメント Instrumentation 章</a> を読むと</p>
+
+<blockquote>
+<p>To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).</p>
+</blockquote>
+
+<p>ということなので <code>instrumentation.ts</code> をルートディレクトリか、<code>src</code> フォルダを使っている場合はその中に入れる必要がありそうなので、<code>src/instrumentation.ts</code> を設置しました。</p>
+
+<p>続きのページに <a href="https://nextjs.org/docs/14/pages/building-your-application/optimizing/open-telemetry">Next.js の公式ドキュメント OpenTelemetry 章</a> があったので、こちらも確認しました。</p>
+
+<p>今回は Vercel を使うわけではないので、 <code>Manual OpenTelemetry configuration</code> の部分を参考にしていきます。</p>
+
+<p>そうすると以下のようにランタイム判定してダイナミックローディングする必要がありそうなので、<code>instrumentation.ts</code> から <code>instrumentation.node.ts</code> を呼ぶように設定します。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="c1">// `instrumentation.ts`</span>
+<span class="k">export</span> <span class="k">async</span> <span class="kd">function</span> <span class="nx">register</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NEXT_RUNTIME</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">nodejs</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">await</span> <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./instrumentation.node.ts</span><span class="dl">'</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>あとは <code>instrumentation.node.ts</code> で X-Ray に出力されるような設定をします。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="c1">// instrumentation.node.ts</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">OTLPTraceExporter</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/exporter-trace-otlp-grpc</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">AWSXRayIdGenerator</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/id-generator-aws-xray</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">AwsInstrumentation</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/instrumentation-aws-sdk</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">HttpInstrumentation</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/instrumentation-http</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">UndiciInstrumentation</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/instrumentation-undici</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">AWSXRayPropagator</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/propagator-aws-xray</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Resource</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/resources</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">NodeSDK</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/sdk-node</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">BatchSpanProcessor</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/sdk-trace-base</span><span class="dl">'</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">ATTR_SERVICE_NAME</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/semantic-conventions</span><span class="dl">'</span>
+
+<span class="kd">const</span> <span class="nx">sdk</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NodeSDK</span><span class="p">({</span>
+  <span class="na">idGenerator</span><span class="p">:</span> <span class="k">new</span> <span class="nx">AWSXRayIdGenerator</span><span class="p">(),</span>  <span class="c1">// AWS X-RayフォーマットのIDを生成</span>
+  <span class="na">textMapPropagator</span><span class="p">:</span> <span class="k">new</span> <span class="nx">AWSXRayPropagator</span><span class="p">(),</span> <span class="c1">// AWS X-Ray Trace ヘッダー伝播プロトコルを利用</span>
+  <span class="na">resource</span><span class="p">:</span> <span class="nx">Resource</span><span class="p">.</span><span class="k">default</span><span class="p">().</span><span class="nx">merge</span><span class="p">(</span><span class="k">new</span> <span class="nx">Resource</span><span class="p">({</span> <span class="p">[</span><span class="nx">ATTR_SERVICE_NAME</span><span class="p">]:</span> <span class="dl">'</span><span class="s1">webapp-service</span><span class="dl">'</span> <span class="p">})),</span> <span class="c1">// App Runner のサービス名を指定</span>
+  <span class="na">instrumentations</span><span class="p">:</span> <span class="p">[</span> <span class="c1">// 利用する拡張機能</span>
+    <span class="k">new</span> <span class="nx">HttpInstrumentation</span><span class="p">(),</span> <span class="c1">// HTTP API をトレース</span>
+    <span class="k">new</span> <span class="nx">AwsInstrumentation</span><span class="p">({</span> <span class="na">suppressInternalInstrumentation</span><span class="p">:</span> <span class="kc">true</span> <span class="p">}),</span> <span class="c1">// aws-sdk をトレース</span>
+    <span class="k">new</span> <span class="nx">UndiciInstrumentation</span><span class="p">(),</span> <span class="c1">// Node fetch API をトレース</span>
+  <span class="p">],</span>
+  <span class="na">spanProcessors</span><span class="p">:</span> <span class="p">[</span><span class="k">new</span> <span class="nx">BatchSpanProcessor</span><span class="p">(</span><span class="k">new</span> <span class="nx">OTLPTraceExporter</span><span class="p">())],</span>
+<span class="p">})</span>
+
+<span class="nx">sdk</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+</code></pre></div>
+<p>こんな感じです。</p>
+
+<h4>ビルドして確認してみたがコードが生成されない</h4>
+
+<p>ここで <code>next build</code> してコードが生成されるか確認してみました。</p>
+
+<p>すると、<code>instrumentation.ts</code> が識別されてないのか？ビルド結果にコードが生成されません。</p>
+
+<p>こういうときはソースコードを読むしかないですね。Next.js のビルドコードは <a href="https://github.com/vercel/next.js/blob/v14.2.28/packages/next/src/build/index.ts">next.js/packages/next/src/build/index.ts</a> にあるようです。</p>
+
+<p>で、それっぽいところを検索していると、これか？という部分</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="c1">// #L882-L886</span>
+      <span class="kd">const</span> <span class="nx">instrumentationHookDetectionRegExp</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span>
+        <span class="s2">`^</span><span class="p">${</span><span class="nx">INSTRUMENTATION_HOOK_FILENAME</span><span class="p">}</span><span class="s2">\\.(?:</span><span class="p">${</span><span class="nx">config</span><span class="p">.</span><span class="nx">pageExtensions</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+          <span class="dl">'</span><span class="s1">|</span><span class="dl">'</span>
+        <span class="p">)}</span><span class="s2">)$`</span>
+      <span class="p">)</span>
+</code></pre></div>
+<p>おやおやおや？拡張子のマッチが <code>pageExtensions</code> なんですけど。少し前の公式ドキュメントに何て書いてありましたっけ？</p>
+
+<blockquote>
+<p>To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).</p>
+</blockquote>
+
+<p>です。<code>ts</code> か <code>js</code> なんでしょ。なんで <code>pageExtensions</code> 使ってんのよ？？このファイルはページなのか？</p>
+
+<p>おそらくほとんどの人は <code>ts</code> のままで動くんでしょうが、僕らはこのコンフィグパラメータに覚えがあります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/** @type {import('next').NextConfig} */</span>
+<span class="kd">const</span> <span class="nx">nextConfig</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">reactStrictMode</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="na">pageExtensions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">tsx</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">api.ts</span><span class="dl">'</span><span class="p">],</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>tsx</code> と <code>api.ts</code> だけにしてるんですわ。今回は PagesRouter 使ってるんですけど、 <code>/pages/api/</code> の下の API コードのテストコードを同じディレクトリに設定したいんですね。
+ルートで src と test を分けたくない。めんどいじゃないですか、そういうの。なんで実装とテストコードは同じディレクトリに入れたいんです。で、テストコードは API ではないので、pageExtensions を設定してページやAPIは
+<code>.tsx</code> か <code>.api.ts</code> としています。たとえばこうすると <code>user.api.ts</code> というのがあったとき、同じディレクトリに <code>user.test.ts</code> というのを入れることができ、これはテストコードなのでビルドに含まれず、API でもないコードという対応ができます。
+あとは API ではないコードとかも入れることができます（それはやってないけど）。</p>
+
+<p>なんで、 <code>instrumentation</code> のファイル名を <code>pageExtensions</code> にするとは、何やってくれてんねん！って感じなんですけど、いったん従うしかないので、 <code>instrumentation.api.ts</code> というファイル名にし&hellip;.ませんでした。</p>
+
+<p>いろいろ理由はあるんですけど、CI/CD でビルドする直前に <code>instrumentation.ts</code> を <code>instrumentation.api.ts</code>  にコピーする対応にしています。
+たとえば、これは <code>pageExtensions</code> じゃおかしい！という issue を僕が出して <code>ts|js</code> になったときファイル名をリネームするのは嫌だなぁというとこで、CI/CDでコピーするところだけなら修正しても良いかなと。</p>
+
+<p>で、手元では手動でファイルをコピーして <code>next build</code> したらファイルがビルドされていることが確認できました👏</p>
+
+<h3>デプロイして動かしてみる</h3>
+
+<p>出ない&hellip;&hellip;</p>
+
+<p>全体的には良さそうなんですが、何でかねー</p>
+
+<p>困ったときは初心に戻って AWS の公式ドキュメントを漁ります。
+<a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/monitor-xray.html">X-Ray を使用した App Runner アプリケーションのトレース</a> というのが App Runner のドキュメントの中にありました。</p>
+
+<blockquote>
+<p>App Runner サービスで X-Ray トレースを使用するには、サービスのインスタンスに X-Ray サービスとやり取りするためのアクセス許可を付与する必要があります。</p>
+</blockquote>
+
+<p>なるほどー、それはそうか。OpenTelemetry 指定で X-Ray のポリシー適用されるかな？と思ったけど、ObservabilityConfiguration の vendor 判断してまではやってくれないようです。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">observabilityConfiguration</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ObservabilityConfiguration</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ObservabilityConfiguration</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">observabilityConfigurationName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-observability</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">traceConfigurationVendor</span><span class="p">:</span> <span class="nx">TraceConfigurationVendor</span><span class="p">.</span><span class="nx">AWSXRAY</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span> <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span> <span class="p">},</span>
+        <span class="na">repository</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">ecrRepository</span><span class="p">,</span>
+        <span class="na">tagOrDigest</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">webAppVersion</span><span class="p">,</span>
+      <span class="p">}),</span>
+      <span class="na">serviceName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-service</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">autoDeploymentsEnabled</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="nx">observabilityConfiguration</span><span class="p">,</span>
+      <span class="na">healthCheck</span><span class="p">:</span> <span class="nx">HealthCheck</span><span class="p">.</span><span class="nx">http</span><span class="p">({</span>
+        <span class="na">healthyThreshold</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="na">interval</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/favicon.ico</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">timeout</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">unhealthyThreshold</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="p">}),</span>
+      <span class="na">instanceRole</span><span class="p">:</span> <span class="k">new</span> <span class="nx">Role</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppServiceXRayWrite</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">assumedBy</span><span class="p">:</span> <span class="k">new</span> <span class="nx">ServicePrincipal</span><span class="p">(</span><span class="dl">'</span><span class="s1">tasks.apprunner.amazonaws.com</span><span class="dl">'</span><span class="p">),</span>
+        <span class="na">managedPolicies</span><span class="p">:</span> <span class="p">[</span><span class="nx">ManagedPolicy</span><span class="p">.</span><span class="nx">fromAwsManagedPolicyName</span><span class="p">(</span><span class="dl">'</span><span class="s1">AWSXRayDaemonWriteAccess</span><span class="dl">'</span><span class="p">)],</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>CDK で Service を作るときのプロパティに <code>instanceRole</code> を追加しました。</p>
+
+<h3>まとめ</h3>
+
+<p>Next.js standalone ビルドしたアプリを App Runner で動かしていたところに、 X-Ray での計測を追加してみました。
+他の AWS サービスと違って X-Ray を有効にするのがちょっと面倒だったり、 <code>pageExtensions</code> いじっているとビルド時に工夫が必要だったりとか、いくつかハマりポイントはありますが、わかってしまえば対策は難しくありませんでした。
+実際はものすごい調べるの時間かかったりするところもあったので、同じような課題になった人の解決に役立てば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">
+          <a class="twitter" data-title="Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する"></a>
+          <a class="facebook" data-title="Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a></h1>
   <p class="postdate"><a href="/2025/04/15.html" title="Permanent link">Tuesday, April 15, 2025 10:36:00 AM</a></p>
   <p class="tags">
@@ -876,128 +1139,6 @@ ECR までデプロイされている状況で、インフラリポジトリ側�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a></h1>
-  <p class="postdate"><a href="/2024/06/23.html" title="Permanent link">Sunday, June 23, 2024 11:35:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
-      <a href="/tags/fukuoka.html" rel="tag">fukuoka</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://phpcon.fukuoka.jp/2024/">PHP カンファレンス福岡2024</a>に参加しました。</p>
-
-<p>2019年以来の PHP カンファレンス福岡。
-そのときの記事が<a href="/2019/06/30/phpconfuk2019.html">PHPカンファレンス福岡2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</a>です。</p>
-
-<p>昨年はチケットを購入できず、先に予約していたフライトやホテルをキャンセルするという形になってしまったので、今年はちゃんとチケット購入してから、フライトとホテルを予約しました。昨年の反省が活かされている。
-昨年の盛り上がりは X で確認していて、うらやましーと思ってました。そこから今年の月刊 PHP con が始まったと言っても過言ではないわけで、とても楽しみにしていました。</p>
-
-<p>ちなみにプロポーザルはブログ記事にもした<a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記</a>と<a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a>について出したのですが、どちらも落選しました。
-プロポーザルの倍率がやばすぎる（僕が普段の仕事 PHP じゃないので、旬な話題じゃないというのは否定できない事実ですがw）。</p>
-
-<p>2019年が3年ぶり2回目だったので、今回は5年ぶり3回目ということになります。</p>
-
-<h2>前日入り</h2>
-
-<p>今回も前日入りしましたが、いきなり飛行機が遅延するというトラブルに。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">福岡行の飛行機が40分遅延。ラウンジで暇つぶし</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1803936271016112448?ref_src=twsrc%5Etfw">June 20, 2024</a></blockquote>
-
-<p>この時点では 9:00 発が 9:40 になっただけだったけど、さらに 15分遅延となって 9:55 発に。
-梅雨時期だし雨の影響もあるのでしかたがないですね。前日入りでよかったとポジティブに捉えましょう。</p>
-
-<p>福岡に到着したら <a href="https://wework.co.jp/location/fukuoka/daimyo">WeWork 大名</a>へ。永和システムマネジメントでは東京支社がWeWork京橋内になったため、今回のように福岡に前日入りしてもWeWork拠点があれば作業できるのでとても便利。夕方からは袋詰めボランティアに申し込んでいたので、それまで作業します。</p>
-
-<p>お昼はWeWork近くにあったウェストへ。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr"><a href="https://twitter.com/hashtag/phpconfuk?src=hash&amp;ref_src=twsrc%5Etfw">#phpconfuk</a><br>つけ忘れた。ウェスト天神にて <a href="https://t.co/qEIf833QCB">https://t.co/qEIf833QCB</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1804015303929795068?ref_src=twsrc%5Etfw">June 21, 2024</a></blockquote>
-
-<p>夕方ぐらいになったらWeWorkに知っている人たちが続々来て？？ってなったんですが<a href="https://prtimes.connpass.com/event/319375/">【非公式】PHPカンファレンス福岡2024・前日Meetup</a> があったようです。気が付いてなかった&hellip;.</p>
-
-<p>そして袋詰めをやってきました。</p>
-
-<blockquote class="twitter-tweet"><p lang="zxx" dir="ltr"><a href="https://t.co/3yToNsWugm">pic.twitter.com/3yToNsWugm</a></p>&mdash; cakephper ichikawa (@cakephper) <a href="https://twitter.com/cakephper/status/1804161620920406368?ref_src=twsrc%5Etfw">June 21, 2024</a></blockquote>
-
-<p>そのあとは特に予定もなかったので、エールズへ。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ウェーイ <a href="https://t.co/gvj1XTXZ5q">pic.twitter.com/gvj1XTXZ5q</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1804110592988582281?ref_src=twsrc%5Etfw">June 21, 2024</a></blockquote>
-
-<p>野生のPHPerにも出会えたり、帰ろうかなーと思ったら店長から市川さん来るよ、って教えてもらったのでビールを追加して合流。
-そのあとは Rummy 行って美味しいラムをいただいて、締めにやまちゃんでラーメンとビールを（3時ちょいに寝ました）。</p>
-
-<h2>当日</h2>
-
-<p>ちゃんと朝起きれて会場へ移動していたのですが、2日続けて朝にトラブルが&hellip;</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">祇園駅で出ようと思ったらSUICAが無い。たぶん天神の駅でポケットに入れる前に落としたっぽい</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1804311768019431566?ref_src=twsrc%5Etfw">June 22, 2024</a></blockquote>
-
-<p>100円均一で売ってるこの手の定期入れを使ってたんですが、初めて中身だけ落ちました。</p>
-
-<p><img src="https://jp.daisonet.com/cdn/shop/products/4549131477177_10_d815145c-9bf2-4c6f-809e-0a7ae83867ef_130x.jpg?v=1619573190" alt="" /></p>
-
-<p>祇園駅で駅員さんに天神駅へ連絡してもらって確認したら、それっぽいのがあるということでUターンして無事戻ってきました。
-日本でよかった。改札通過してすぐポケットに入れた（いつもそう）ので、改札近くに落ちたのではないかと思います。
-ギリギリ開始時間には間に合いました。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">隔月PHPカンファレンスにチェックイン<a href="https://twitter.com/hashtag/phpconfuk?src=hash&amp;ref_src=twsrc%5Etfw">#phpconfuk</a><br><br> <a href="https://t.co/ObAL9Tbeuy">https://t.co/ObAL9Tbeuy</a> <a href="https://t.co/lTfGcPuNX2">pic.twitter.com/lTfGcPuNX2</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1804321244311150838?ref_src=twsrc%5Etfw">June 22, 2024</a></blockquote> 
-
-<p>今回は午前中はメイン会場でセッションに参加してました。PHP養分がたくさん補充されました。</p>
-
-<ul>
-<li><a href="https://fortee.jp/phpcon-fukuoka-2024/proposal/559508e2-68c6-4b59-ab3a-3da6a6cccb0f">PHP コードの実行モデルを理解する by 新原 雅司</a></li>
-<li><a href="https://fortee.jp/phpcon-fukuoka-2024/proposal/7efe2276-f8e0-4610-8586-e3901230e231">Fat Controller は悪か？ ~光のFat Controller・闇のガリController~ by スタヰル</a></li>
-<li><a href="https://fortee.jp/phpcon-fukuoka-2024/proposal/bdf2f1de-82f0-4468-989a-cb1fb70263c1">10社以上のCTO/技術顧問を経験して見えた、技術組織に起こる課題と対策 by 大谷 祐司</a></li>
-<li><a href="https://fortee.jp/phpcon-fukuoka-2024/proposal/c2955129-264c-4807-b840-747c1ba23e08">有効な使い方を正しく理解して実装するPHP8.3の最新機能 by 清家史郎</a></li>
-</ul>
-
-<p>お昼は福岡の人と食べたいなーと思って、<a href="https://x.com/nojimage">@nojimage</a>さんに声をかけてご一緒させてもらいました。</p>
-
-<p>午後はアンカンファレンス会場、スポンサーブース、廊下で交流してました。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">最新版👀<br> <a href="https://twitter.com/hashtag/phpconfuk?src=hash&amp;ref_src=twsrc%5Etfw">#phpconfuk</a> <a href="https://t.co/Ff4dSAI9jI">pic.twitter.com/Ff4dSAI9jI</a></p>&mdash; Kanon (@samurai_se) <a href="https://twitter.com/samurai_se/status/1804393754780184724?ref_src=twsrc%5Etfw">June 22, 2024</a></blockquote>
-
-<p>16:00からはアンカンファレンス会場で、会社で今月2回Webアクセシビリティのワークショップをやったのを発表しました。</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">さきほどアンカンで話したスライドです。<br>Webアクセシビリティワークショップを社内でやってみた<a href="https://t.co/2jjPp9vFx2">https://t.co/2jjPp9vFx2</a><a href="https://twitter.com/hashtag/phpconfuk?src=hash&amp;ref_src=twsrc%5Etfw">#phpconfuk</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1804416464855675307?ref_src=twsrc%5Etfw">June 22, 2024</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>専門家じゃなくても良い教材があるので「みんなで勉強会てきにやってみると良いよ」といったメッセージが伝わったら良いなと思っています。</p>
-
-<p>そのあとは懇親会（当日チケットあって嬉しかった）→ 非公式2次会 → やまちゃん の流れでした。
-初めましての方、お久しぶりの方とたくさん話せました。楽しかった！</p>
-
-<h2>後日</h2>
-
-<p>帰京までの時間は<a href="https://fusic.connpass.com/event/314905/">6/23(日)「（非公式）PHP Conference Fukuoka After Hack!!」</a>に参加して、このブログ記事を書いています。</p>
-
-<p>2019年の記事の最後は</p>
-
-<blockquote>
-<p>PHPカンファレンス福岡、来年も参加できると良いなー。</p>
-</blockquote>
-
-<p>で終えていました。
-しかし翌年それが当たり前の光景でないことがわかったのです。当時はそんなことになると思っていなかったですよね。
-もちろんそういったことだけでなく、当たり前にカンファレンスがある訳でなく、多くの人の努力によって開催されているわけで感謝です。</p>
-
-<p>あとはアンケートとフィードバックを入れてから帰ります。そしてまた参加できるように願っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/06/23/php-conference-fukuoka-2024.html">
-          <a class="twitter" data-title="PHP カンファレンス福岡2024に参加した"></a>
-          <a class="facebook" data-title="PHP カンファレンス福岡2024に参加した"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1022,6 +1163,7 @@ ECR までデプロイされている状況で、インフラリポジトリ側�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
@@ -1031,7 +1173,6 @@ ECR までデプロイされている状況で、インフラリポジトリ側�
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -1151,7 +1292,7 @@ ECR までデプロイされている状況で、インフラリポジトリ側�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2025.html">2025</a> (5)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

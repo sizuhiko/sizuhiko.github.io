@@ -272,6 +272,297 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a></h1>
+  <p class="postdate"><a href="/2024/04/30.html" title="Permanent link">Tuesday, April 30, 2024 01:52:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/gae.html" rel="tag">GAE</a>
+      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は <a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a> の続編となります。</p>
+
+<h3>PHP 8.2 で実行できるように修正していく</h3>
+
+<p>ひとまずロジック部分については 8.2 環境で PHPUnit でテストできるようになり、CI も動作するようになったので、アプリケーションを起動して動くのかを試していきたいと思います。</p>
+
+<h4>Memcache の残りを移行する</h4>
+
+<p>Memcache は Redis に移行したのですが、単体テスト外の部分にも少し残っていたので、<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/febd6d51eea461b5aa44504102fcb10d1d746c29">こちらのコミット</a> で対応しました。</p>
+
+<p>移行方法は <a href="2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-2.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 2</a> でも実施した内容なのですが、DI 部分と設定ファイルのデフォルト値、READMEの説明を修正しました。</p>
+
+<h4>GAE のアプリケーションバージョンを新しく設定する</h4>
+
+<p>GAE では通常のトラフィックを古いバージョンへ向けて、新しいバージョンもデプロイして別のURLから実行できるようにする機能があります。
+dev_appserver.py での実行が困難になっているので、新しいバージョンを GAE にデプロイして動作するのかを検証していくことにしました。</p>
+
+<p>今回はバージョン2として<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e8416cf0bf26c06bce2125e357b16d429bdec4e">修正</a>しました。</p>
+
+<p>GAE で動かすにあたり php.ini も変更が必要だったので、拡張に redis を追加して<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/5b827d53174e8f3c87ea00afcda4e1a6ee21636d">修正</a>しました</p>
+
+<h4>デプロイして動かしてみる</h4>
+
+<p>全然動きませんな  (^^;;</p>
+
+<p>まず問題を切り分けるために、まだビジネスロジックに分岐できていなかったデバイス値の取得処理を Google Cloud Storage から取得する処理をテスト可能なサービスとしてリファクタリングしました。</p>
+
+<p>あとセッションの保存場所を設定する必要があったので、いったん <code>php.ini</code> に <code>session.save_path=Google\AppEngine\Api\Memcache\Memcache</code> を追加しました。</p>
+
+<p>依存のライブラリもいくつか PHP 8.2 環境だと動かないものがあったのでアップデート。</p>
+
+<p>いったんそれらの修正コミットが<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/ba9be14f65cc75fdc6604fde328192a3ec125b57">こちら</a>。</p>
+
+<p>で、いろいろやっていくうちに、そもそも slim3 だと PHP 8系で動かないな&hellip;という基本的なところに気づきました（さいしょから考えておけよという話）。</p>
+
+<h3>Slim3 から Slim4 に移行していく</h3>
+
+<p>幸いなことにこちらに関してはインターネットに移行記事がたくさんあり、とても参考になりました。</p>
+
+<p>今回の移行に関するコミットが<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f0aed649629a24bad6f4dbbf4b0f724415569a33">こちら</a>です。</p>
+
+<h4>依存関係の更新</h4>
+
+<ul>
+<li>slim 3.1 を 4.12 に</li>
+<li>monolog のアプデ</li>
+<li>BASIC認証のライブラリ <code>tuupola/slim-basic-auth</code> のアプデ</li>
+<li>セッションミドルウェア <code>akrabat/rka-slim-session-middleware</code> のアプデ</li>
+<li>PSR7実行が外部依存になったので <code>slim/psr7</code> の追加</li>
+<li>DI が外部依存になったので <code>php-di/php-di</code> の追加</li>
+<li>Google Cloud Storage がランタイム外になったので <code>google/cloud-storage</code> の追加</li>
+</ul>
+
+<h4>php-di への移行</h4>
+
+<p>もともとは Slim3 のアプリケーションコンテナを使っていたので、こんな感じでやっていたのを</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// Instantiate the app</span>
+<span class="nv">$settings</span> <span class="o">=</span> <span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/settings.php'</span><span class="p">;</span>
+<span class="nv">$app</span> <span class="o">=</span> <span class="k">new</span> <span class="err">\</span><span class="nf">Slim\App</span><span class="p">(</span><span class="nv">$settings</span><span class="p">);</span>
+</code></pre></div>
+<p>以下のように変更しました。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">DI\Container</span><span class="p">;</span>
+
+<span class="nv">$settings</span> <span class="o">=</span> <span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/settings.php'</span><span class="p">;</span>
+<span class="nv">$container</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Container</span><span class="p">();</span>
+<span class="nv">$container</span><span class="o">-&gt;</span><span class="nf">set</span><span class="p">(</span><span class="s1">'settings'</span><span class="p">,</span> <span class="nv">$settings</span><span class="p">[</span><span class="s1">'settings'</span><span class="p">]);</span>
+</code></pre></div>
+<p>続いてDIコンテナの初期化処理化を</p>
+<div class="highlight"><pre class="highlight php"><code><span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/dependencies.php'</span><span class="p">;</span>
+</code></pre></div>
+<p>のように指定していたのを</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Slim\Factory\AppFactory</span><span class="p">;</span>
+
+<span class="nv">$dependencies</span> <span class="o">=</span> <span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/dependencies.php'</span><span class="p">;</span>
+<span class="nv">$container</span> <span class="o">=</span> <span class="nv">$dependencies</span><span class="p">(</span><span class="nv">$container</span><span class="p">);</span>
+
+<span class="nc">AppFactory</span><span class="o">::</span><span class="nf">setContainer</span><span class="p">(</span><span class="nv">$container</span><span class="p">);</span>
+<span class="nv">$app</span> <span class="o">=</span> <span class="nc">AppFactory</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
+</code></pre></div>
+<p>このように変更しました。</p>
+
+<ul>
+<li>コンテナを初期化</li>
+<li>環境設定の注入やコンテナの初期化を実行</li>
+<li>AppFactory でアプリケーション初期化</li>
+</ul>
+
+<p>のような実装に変わります。</p>
+
+<h4>Slim4 っぽい書き方に変更</h4>
+
+<p>もともとは</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// Register middleware</span>
+<span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/middleware.php'</span><span class="p">;</span>
+
+<span class="c1">// Register routes</span>
+<span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/routes.php'</span><span class="p">;</span>
+</code></pre></div>
+<p>こんな感じでミドルウェアとルーティングの設定を書いていたのですが、</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">// Register middleware</span>
+<span class="nv">$middleware</span> <span class="o">=</span> <span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/middleware.php'</span><span class="p">;</span>
+<span class="nv">$middleware</span><span class="p">(</span><span class="nv">$app</span><span class="p">);</span>
+
+<span class="c1">// Register routes</span>
+<span class="nv">$routes</span> <span class="o">=</span> <span class="k">require</span> <span class="k">__DIR__</span> <span class="mf">.</span> <span class="s1">'/src/routes.php'</span><span class="p">;</span>
+<span class="nv">$routes</span><span class="p">(</span><span class="nv">$app</span><span class="p">);</span>
+</code></pre></div>
+<p>Slim4アプリを引数で指定して設定するように変更しました。
+<code>$app</code> をグローバル参照から引数参照するコールバック関数に変わったぐらいです。</p>
+
+<h4>Basic認証の修正</h4>
+
+<p>登録済みのデバイスからデータを受信するAPIでは、Basic認証ミドルウェアを設定していて、 <code>callback</code> という処理が呼び出されることになっていました。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="c1">//</span>
+<span class="c1">// For Registered Devices</span>
+<span class="c1">//</span>
+<span class="nv">$app</span><span class="o">-&gt;</span><span class="nf">post</span><span class="p">(</span><span class="s1">'/api/devices/{id}/values'</span><span class="p">,</span> <span class="s1">'\ToiletEvolution\Controllers\DeviceValuesController:add'</span><span class="p">)</span>
+    <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="k">new</span> <span class="err">\</span><span class="nf">Slim\Middleware\HttpBasicAuthentication</span><span class="p">([</span>
+        <span class="s2">"authenticator"</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator</span><span class="p">(</span><span class="nv">$app</span><span class="o">-&gt;</span><span class="nf">getContainer</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'DeviceStore'</span><span class="p">)),</span>
+        <span class="s2">"callback"</span> <span class="o">=&gt;</span> <span class="k">function</span><span class="p">(</span><span class="nv">$request</span><span class="p">,</span> <span class="nv">$response</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nv">$route</span> <span class="o">=</span> <span class="nv">$request</span><span class="o">-&gt;</span><span class="nf">getAttribute</span><span class="p">(</span><span class="s1">'route'</span><span class="p">);</span>
+          <span class="nv">$id</span> <span class="o">=</span> <span class="nv">$route</span><span class="o">-&gt;</span><span class="nf">getArgument</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+          <span class="k">return</span> <span class="nv">$id</span> <span class="o">===</span> <span class="nv">$arguments</span><span class="p">[</span><span class="s1">'user'</span><span class="p">];</span>
+        <span class="p">},</span>
+        <span class="s2">"secure"</span> <span class="o">=&gt;</span> <span class="kc">false</span>
+      <span class="p">]));</span>
+</code></pre></div>
+<p>Slim4でのBasic認証では <code>before</code> が呼び出される様に変わっています。</p>
+<div class="highlight"><pre class="highlight php"><code>  <span class="c1">//</span>
+  <span class="c1">// For Registered Devices</span>
+  <span class="c1">//</span>
+  <span class="nv">$app</span><span class="o">-&gt;</span><span class="nf">post</span><span class="p">(</span><span class="s1">'/api/devices/{id}/values'</span><span class="p">,</span> <span class="s1">'\ToiletEvolution\Controllers\DeviceValuesController:add'</span><span class="p">)</span>
+      <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="k">new</span> <span class="err">\</span><span class="nf">Tuupola\Middleware\HttpBasicAuthentication</span><span class="p">([</span>
+          <span class="s2">"authenticator"</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nc">ToiletEvolution\Middlewares\HttpBasicAuthentication\DeviceAuthenticator</span><span class="p">(</span><span class="nv">$app</span><span class="o">-&gt;</span><span class="nf">getContainer</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'DeviceStore'</span><span class="p">)),</span>
+          <span class="s2">"before"</span> <span class="o">=&gt;</span> <span class="k">function</span><span class="p">(</span><span class="nv">$request</span><span class="p">,</span> <span class="nv">$response</span><span class="p">,</span> <span class="nv">$arguments</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$id</span> <span class="o">=</span> <span class="nv">$arguments</span><span class="p">(</span><span class="s1">'id'</span><span class="p">);</span>
+            <span class="k">return</span> <span class="nv">$id</span> <span class="o">===</span> <span class="nv">$arguments</span><span class="p">[</span><span class="s1">'user'</span><span class="p">];</span>
+          <span class="p">},</span>
+          <span class="s2">"secure"</span> <span class="o">=&gt;</span> <span class="kc">false</span>
+        <span class="p">]));</span>
+</code></pre></div>
+<h4>コントローラーの修正</h4>
+
+<p>APIでJSONを返却するときの処理が標準ではなくなったので、JSON文字列を出力する <code>JsonRenderer</code> のようなクラスを作ります。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">namespace</span> <span class="nn">ToiletEvolution\Renderer</span><span class="p">;</span>
+
+<span class="kn">use</span> <span class="nc">Psr\Http\Message\ResponseInterface</span><span class="p">;</span>
+
+<span class="k">final</span> <span class="kd">class</span> <span class="nc">JsonRenderer</span>
+<span class="p">{</span>
+    <span class="cd">/**
+     * Write JSON to the response body.
+     *
+     * This method prepares the response object to return an HTTP JSON
+     * response to the client.
+     *
+     * @param ResponseInterface $response The response
+     * @param mixed $data The data
+     *
+     * @return ResponseInterface The response
+     */</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">json</span><span class="p">(</span>
+        <span class="kt">ResponseInterface</span> <span class="nv">$response</span><span class="p">,</span>
+        <span class="kt">mixed</span> <span class="nv">$data</span> <span class="o">=</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="p">):</span> <span class="kt">ResponseInterface</span> <span class="p">{</span>
+        <span class="nv">$response</span> <span class="o">=</span> <span class="nv">$response</span><span class="o">-&gt;</span><span class="nf">withHeader</span><span class="p">(</span><span class="s1">'Content-Type'</span><span class="p">,</span> <span class="s1">'application/json'</span><span class="p">);</span>
+
+        <span class="nv">$response</span><span class="o">-&gt;</span><span class="nf">getBody</span><span class="p">()</span><span class="o">-&gt;</span><span class="nf">write</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">string</span><span class="p">)</span><span class="nb">json_encode</span><span class="p">(</span>
+                <span class="nv">$data</span><span class="p">,</span>
+                <span class="no">JSON_UNESCAPED_SLASHES</span> <span class="o">|</span> <span class="no">JSON_PARTIAL_OUTPUT_ON_ERROR</span>
+            <span class="p">)</span>
+        <span class="p">);</span>
+
+        <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>で、それをコントローラのコンストラクタで初期化して、APIメソッドで呼び出します。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kd">class</span> <span class="nc">DevicesController</span>
+<span class="p">{</span>
+  <span class="k">protected</span> <span class="kt">ContainerInterface</span> <span class="nv">$ci</span><span class="p">;</span>
+  <span class="k">private</span> <span class="kt">JsonRenderer</span> <span class="nv">$renderer</span><span class="p">;</span>
+
+  <span class="k">public</span> <span class="k">function</span> <span class="n">__construct</span><span class="p">(</span><span class="kt">ContainerInterface</span> <span class="nv">$ci</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">ci</span> <span class="o">=</span> <span class="nv">$ci</span><span class="p">;</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">renderer</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">JsonRenderer</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="k">public</span> <span class="k">function</span> <span class="n">index</span><span class="p">(</span><span class="kt">ServerRequestInterface</span> <span class="nv">$request</span><span class="p">,</span> <span class="kt">ResponseInterface</span> <span class="nv">$response</span><span class="p">,</span> <span class="kt">array</span> <span class="nv">$args</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="nv">$deviceModel</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">ci</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="nc">Device</span><span class="o">::</span><span class="n">class</span><span class="p">);</span>
+
+    <span class="nv">$data</span> <span class="o">=</span> <span class="nb">array_map</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="nv">$device</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">toArrayWithoutSecret</span><span class="p">();</span>
+    <span class="p">},</span> <span class="nv">$deviceModel</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">());</span>
+
+    <span class="k">return</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">renderer</span><span class="o">-&gt;</span><span class="nf">json</span><span class="p">(</span><span class="nv">$response</span><span class="p">,</span> <span class="nv">$data</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">withStatus</span><span class="p">(</span><span class="k">empty</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span><span class="o">?</span><span class="mi">204</span><span class="o">:</span><span class="mi">200</span><span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Slim3 では以下のようなコードで <code>$response-&gt;withJson</code> でよかったところが変更になっています。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="k">public</span> <span class="k">function</span> <span class="n">index</span><span class="p">(</span><span class="nv">$request</span><span class="p">,</span> <span class="nv">$response</span><span class="p">,</span> <span class="nv">$args</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nv">$deviceModel</span> <span class="o">=</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">ci</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="nc">Device</span><span class="o">::</span><span class="n">class</span><span class="p">);</span>
+
+    <span class="nv">$data</span> <span class="o">=</span> <span class="nb">array_map</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="nv">$device</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nv">$device</span><span class="o">-&gt;</span><span class="nf">toArrayWithoutSecret</span><span class="p">();</span>
+    <span class="p">},</span> <span class="nv">$deviceModel</span><span class="o">-&gt;</span><span class="nf">all</span><span class="p">());</span>
+
+    <span class="k">return</span> <span class="nv">$response</span><span class="o">-&gt;</span><span class="nf">withJson</span><span class="p">(</span><span class="nv">$data</span><span class="p">,</span> <span class="k">empty</span><span class="p">(</span><span class="nv">$data</span><span class="p">)</span><span class="o">?</span><span class="mi">204</span><span class="o">:</span><span class="mi">200</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4>ミドルウェアの修正</h4>
+
+<p>PSR の書き方が変わっているので、それに応じて修正しています。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kd">class</span> <span class="nc">RequireLoginMiddleware</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">function</span> <span class="n">__invoke</span><span class="p">(</span><span class="nv">$request</span><span class="p">,</span> <span class="nv">$response</span><span class="p">,</span> <span class="nv">$next</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="k">empty</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="n">session</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'current_user'</span><span class="p">)))</span>
+    <span class="p">{</span>
+      <span class="nv">$response</span> <span class="o">=</span> <span class="nv">$response</span>
+        <span class="o">-&gt;</span><span class="nf">withStatus</span><span class="p">(</span><span class="mi">302</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">withHeader</span><span class="p">(</span><span class="s1">'Location'</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">redirectIfNotLogin</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+      <span class="nv">$response</span> <span class="o">=</span> <span class="nv">$next</span><span class="p">(</span><span class="nv">$request</span><span class="p">,</span> <span class="nv">$response</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+  <span class="p">}</span>    
+</code></pre></div>
+<p>こんな感じだったのが、以下のように変更になっています。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kd">class</span> <span class="nc">RequireLoginMiddleware</span>
+<span class="p">{</span>
+  <span class="k">public</span> <span class="k">function</span> <span class="n">__invoke</span><span class="p">(</span><span class="kt">Request</span> <span class="nv">$request</span><span class="p">,</span> <span class="kt">RequestHandler</span> <span class="nv">$handler</span><span class="p">):</span> <span class="kt">ResponseInterface</span>
+  <span class="p">{</span>
+    <span class="nv">$response</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Response</span><span class="p">();</span>
+    <span class="k">if</span><span class="p">(</span><span class="k">empty</span><span class="p">(</span><span class="nv">$this</span><span class="o">-&gt;</span><span class="n">session</span><span class="o">-&gt;</span><span class="nf">get</span><span class="p">(</span><span class="s1">'current_user'</span><span class="p">)))</span>
+    <span class="p">{</span>
+      <span class="nv">$response</span> <span class="o">=</span> <span class="nv">$response</span>
+        <span class="o">-&gt;</span><span class="nf">withStatus</span><span class="p">(</span><span class="mi">302</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">withHeader</span><span class="p">(</span><span class="s1">'Location'</span><span class="p">,</span> <span class="nv">$this</span><span class="o">-&gt;</span><span class="n">redirectIfNotLogin</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+      <span class="nv">$response</span> <span class="o">=</span> <span class="nv">$handler</span><span class="o">-&gt;</span><span class="nf">handle</span><span class="p">(</span><span class="nv">$request</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nv">$response</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>引数が変更になっていて、 <code>$response</code> がなくなって、次のミドルウェアへ処理を引き継ぐのが <code>$next</code> から <code>$handler</code>  に変わっています。</p>
+
+<p><code>$response</code> はミドルウェアごとに作成して設定していきます。
+次のミドルウェアに引き継ぐときは、 <code>$handler-&gt;handle</code> で呼び出してレスポンスを取得します。</p>
+
+<h3>さいごに</h3>
+
+<p>Slim3 から Slim4 への移行手順がインターネットに多くあって助かりました。
+また Slim 関連の OSS パッケージも 3 から 4 への移行をドキュメントにしてくれていたので、比較的スムーズに移行できたと思います。</p>
+
+<p>ここではその一部を紹介する感じになりましたが、同じような対応をする人に役立つ内容になっていれば嬉しいです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">
+          <a class="twitter" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4"></a>
+          <a class="facebook" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-3.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 3</a></h1>
   <p class="postdate"><a href="/2024/04/30.html" title="Permanent link">Tuesday, April 30, 2024 01:20:00 PM</a></p>
   <p class="tags">
@@ -654,232 +945,6 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/09/27/converting-multiple-repos-into-a-monorepo.html">マルチプルレポをモノレポへコミットログを残しながら移行する</a></h1>
-  <p class="postdate"><a href="/2023/09/27.html" title="Permanent link">Wednesday, September 27, 2023 05:25:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/github.html" rel="tag">github</a>
-      <a href="/tags/git.html" rel="tag">git</a>
-      <a href="/tags/monorepo.html" rel="tag">monorepo</a>
-      <a href="/tags/npm.html" rel="tag">npm</a>
-      <a href="/tags/workspace.html" rel="tag">workspace</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <h3>背景</h3>
-
-<p>プロジェクトで複数のAPIサーバーや、マイクロサービスなどを展開するのに、OpenAPI の定義を置くリポジトリを個々に作っていたのですが、メンテナンス性を考えてマルチプルレポからモノレポへ移行することにしました。</p>
-
-<p>基本的に OpenAPI の定義（yamlファイル）の内容と、デプロイ先（AWS S3のWebホスティング先バケット）が違うぐらいで、それ以外の内容はまったく一緒であるリポジトリが複数ある感じです。</p>
-
-<ul>
-<li>app-a-apidoc</li>
-<li>app-b-apidoc</li>
-<li>service-account-apidoc</li>
-<li>service-payment-apidoc</li>
-</ul>
-
-<p>みたいなマルチプルレポを <code>apidoc</code> モノレポへまとめていきます。</p>
-
-<p>各 apidoc は <a href="https://www.npmjs.com/package/swagger-ui-dist">swagger-ui-dist</a> に yaml ファイルを入れて、Webホスティングしている S3 バケットにデプロイしています。
-ビルドスクリプトは gulp で、デプロイは serverless framework に serverless-s3-sync プラグインを入れて実行しています。</p>
-
-<h3>リポジトリの移行の準備</h3>
-
-<p>リポジトリを移行するにあたり <a href="https://medium.com/@chris_72272/keeping-git-history-when-converting-multiple-repos-into-a-monorepo-97641744d928">Keeping git history when converting multiple repos into a monorepo</a> という記事がとても役にたったので、こちらの手順を参考にして紹介していきます。</p>
-
-<h4>ディレクトリ構造決定</h4>
-
-<p>まず最初にモノレポ移行後のディレクトリ構造を検討します。
-よくある npm のパッケージをモノレポにしている場合だと</p>
-<div class="highlight"><pre class="highlight plaintext"><code>packages
-  +-- package-a
-  +-- package-b
-</code></pre></div>
-<p>みたいな階層にすることが多いんじゃないかな？と思います。
-参考記事だと <code>projects/*</code> のような感じですね。
-aws-sdk v3 だと clients や lib, packages など目的別にいろいろ分けているようです。</p>
-
-<p>そこで今回私たちは</p>
-<div class="highlight"><pre class="highlight plaintext"><code>apps
-  +-- a
-  +-- b
-services
-  +-- account
-  +-- payment
-</code></pre></div>
-<p>みたいなディレクトリ構造にしました。これはそれぞれのプロジェクトや、まとめたいリポジトリにもよるので、個別に検討しましょう。</p>
-
-<h4>既存リポジトリのディレクトリ変更</h4>
-
-<p>ディレクトリ構造が決まったら、既存リポジトリをそのディレクトリに合わせて階層を変更します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>cd app-a-apidoc
-mkdir -p apps/a
-git mv -k * apps/a
-git mv -k .* apps/a
-git commit -m "chore: move all files into apps/a"
-</code></pre></div>
-<ol>
-<li>既存リポジトリをチェックアウトしたディレクトリに移動</li>
-<li>モノレポにしたときのディレクトリツリーを作成</li>
-<li>2のディレクトリ下にすべてのファイルを移動。移動には <code>git mv</code> コマンドを使う</li>
-<li>コミット</li>
-</ol>
-
-<p>この作業を移行対象のすべての既存リポジトリで実施していきます。</p>
-
-<h4>モノレポの作成</h4>
-
-<p>GitHub上でリポジトリを作ってチェックアウトするか、 <code>git init</code> コマンドでローカルにモノレポのフォルダを準備します。
-続いて、モノレポリポジトリにワークスペースのルートディレクトリを作っておきます。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>mkdir apps
-mkdir services
-</code></pre></div>
-<p><code>git remote add</code> を使ってローカルディレクトリのリポジトリ（既存リポジトリのディレクトリ変更でディレクトリ変更してコミットしたもの）を追加します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>git remote add -f app-a-apidoc ../app-a-apidoc
-git remote add -f app-b-apidoc ../app-b-apidoc
-git remote add -f service-account-apidoc ../service-account-apidoc
-git remote add -f service-payment-apidoc ../service-payment-apidoc
-</code></pre></div>
-<p>で、それらをモノレポの中にマージしていきます。マージするブランチが <code>main</code> であると仮定します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>git merge app-a-apidoc/main --allow-unrelated-histories
-git merge app-b-apidoc/main --allow-unrelated-histories
-git merge service-account-apidoc/main --allow-unrelated-histories
-git merge service-payment-apidoc/main --allow-unrelated-histories
-</code></pre></div>
-<p>最後にリモートを削除しましょう。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>git remote remove app-a-apidoc
-git remote remove app-b-apidoc
-git remote remove service-account-apidoc
-git remote remove service-payment-apidoc
-</code></pre></div>
-<h3>モノレポの設定</h3>
-
-<p>ここまでで既存のリポジトリを1つのモノレポにコミットログ付きで合体できました。
-続いて、モノレポで開発作業ができるように環境整備をしましょう。</p>
-
-<h4>ワークスペースを設定する</h4>
-
-<p>モノレポのルートディレクトリで <code>npm init</code> コマンドを実行して <code>package.json</code> を作ります。
-作成した <code>package.json</code> にワークスペースに関する設定を追加します。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">private</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-  <span class="dl">"</span><span class="s2">workspaces</span><span class="dl">"</span><span class="p">:</span> <span class="p">[</span>
-    <span class="dl">"</span><span class="s2">apps/*</span><span class="dl">"</span><span class="p">,</span>
-    <span class="dl">"</span><span class="s2">services/*</span><span class="dl">"</span>
-  <span class="p">],</span>
-</code></pre></div>
-<h4>依存関係の設定</h4>
-
-<p>続いて、各リポジトリで使っていた <code>devDependencies</code> や <code>dependencies</code> の依存関係をモノレポのルートディレクトリにある <code>package.json</code> に移動します。
-通常は各リポジトリ共通のものだけですが、今回の apidoc ではすべて共通だったので、そのままコピペしました。</p>
-
-<p>ワークスペース（apps や services）にある <code>package.json</code> の <code>devDependencies</code> や <code>dependencies</code> を削除し、 <code>package-lock.json</code> も削除します。</p>
-
-<p>最後にルートディレクトリで <code>npm i</code> を実行して依存関係をインストールします。</p>
-
-<h4>各 apidoc の整理</h4>
-
-<p><code>.npmrc</code> や <code>.gitignore</code> , <code>.editorconfig</code> など必要な設定ファイルをワークスペースからルートディレクトリに移動しておきます。</p>
-
-<p>その他共通になったものはルートディレクトリ下に移動しておくと良いでしょう。</p>
-
-<h4>GitHub Actions の統合</h4>
-
-<p>ワークスペース（apps や services）にある <code>.github</code> をどれかルートディレクトリに移動して、ワークスペース側からは削除します。
-単に全部のワークスペースをビルドしたりデプロイするだけなら <code>-ws</code> オプションを追加するとすべてのワークスペースに対してコマンドを実行するようになります。</p>
-<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
-</code></pre></div>
-<p>まぁでも通常はそんなことなく、以下のパターンを考慮する必要があります。</p>
-
-<ul>
-<li>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</li>
-<li>ワークスペースのファイルが修正された</li>
-</ul>
-
-<p>前者はすべてのワークスペースに対して Action を実行したほうが良いのですが、後者は変更があったワークスペースだけの実行に絞り込みたいところです。</p>
-
-<p>そこで利用できるのが <a href="https://github.com/AlexShukel/get-changed-workspaces-action">Get changed workspaces action</a> です。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">jobs</span><span class="pi">:</span>
-  <span class="na">get-changed-workspaces</span><span class="pi">:</span>
-    <span class="na">outputs</span><span class="pi">:</span>
-      <span class="na">packages</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.packages }}</span>
-      <span class="na">empty</span><span class="pi">:</span> <span class="s">${{ steps.changed-packages.outputs.empty }}</span>
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Check out repository code</span>
-        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Find changed workspaces</span>
-        <span class="na">uses</span><span class="pi">:</span> <span class="s">AlexShukel/get-changed-workspaces-action@v2.0.0</span>
-        <span class="na">id</span><span class="pi">:</span> <span class="s">changed-packages</span>
-  <span class="na">deploy</span><span class="pi">:</span>
-    <span class="na">needs</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">get-changed-workspaces</span><span class="pi">]</span>
-    <span class="na">if</span><span class="pi">:</span> <span class="s">${{ !fromJson(needs.get-changed-workspaces.outputs.empty) }}</span>
-    <span class="na">strategy</span><span class="pi">:</span>
-      <span class="na">matrix</span><span class="pi">:</span>
-        <span class="na">package</span><span class="pi">:</span> <span class="s">${{ fromJson(needs.get-changed-workspaces.outputs.packages) }}</span>  
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} build</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -w ${{ matrix.package.name }} deploy</span>
-</code></pre></div>
-<p>この Action を使うと変更があったワークスペースの名前を配列型式で取得できます。
-ワークスペースに変更がないときは <code>empty</code> でわかるので、 <code>if</code> 文で制御して何もしないように設定も可能です。</p>
-
-<p>で、特定のワークスペースに対して npm コマンドを実行したい場合は <code>-w ワークスペース名</code> オプションを指定します。</p>
-
-<p>そこで、 <code>.github/workflows</code> には以下のファイルを設置することにしました。</p>
-
-<ul>
-<li>build-all.yml</li>
-<li>build.yml</li>
-</ul>
-
-<p>前者は <code>ルートディレクトリの package.json で定義している依存関係にアップデートがあった（dependabotなど）</code> を想定していて、以下のような条件で起動したら、 <code>-ws</code> オプションですべてのワークスペースで実行されるようにしています。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">on</span><span class="pi">:</span>
-  <span class="na">workflow_dispatch</span><span class="pi">:</span>
-  <span class="na">push</span><span class="pi">:</span>
-    <span class="na">paths</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">package.json</span>
-      <span class="pi">-</span> <span class="s">package-lock.json</span>
-    <span class="na">branches</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">master</span>
-<span class="na">jobs</span><span class="pi">:</span>
-  <span class="na">deploy</span><span class="pi">:</span>
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm ci</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws build</span>
-      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm run -ws deploy</span>
-</code></pre></div>
-<p>後者は <code>Get changed workspaces action</code> を使って個別のワークスペースビルドされるように設定しました。</p>
-
-<h3>さいごに</h3>
-
-<p>マルチプルレポ、モノレポ、それぞれに良いところはあると思います。
-必ずモノレポが良いというものでもないでしょう。
-それぞれのプロジェクトやリポジトリの運用を見極めて選択していきたいですね。</p>
-
-<p>マルチプルレポからモノレポへ移行するときに、本記事が参考になれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/09/27/converting-multiple-repos-into-a-monorepo.html">
-          <a class="twitter" data-title="マルチプルレポをモノレポへコミットログを残しながら移行する"></a>
-          <a class="facebook" data-title="マルチプルレポをモノレポへコミットログを残しながら移行する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -907,6 +972,7 @@ git remote remove service-payment-apidoc
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
@@ -916,7 +982,6 @@ git remote remove service-payment-apidoc
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
                   <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
-                  <li><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> <span>2024/04/30</span></li>
               </ul>
             </div>
           </section>
@@ -1036,7 +1101,7 @@ git remote remove service-payment-apidoc
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (4)</li>
+                  <li><a href="/2025.html">2025</a> (5)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

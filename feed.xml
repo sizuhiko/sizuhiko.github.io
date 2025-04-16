@@ -5,10 +5,257 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2025-04-15T10:36:00+09:00</updated>
+  <updated>2025-04-16T10:40:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</title>
+    <link rel="alternate" href="http://blog.url.com/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html"/>
+    <id>http://blog.url.com/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html</id>
+    <published>2025-04-16T10:40:00+09:00</published>
+    <updated>2025-04-16T12:43:57+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;こちらの記事は &lt;a href="/2025/04/11/next-js-deploy-to-apprunner.html"&gt;Next.js で作ったアプリケーションを AppRunner にデプロイする&lt;/a&gt; の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。&lt;/p&gt;
+
+&lt;p&gt;前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。
+さらに別の流れで&lt;a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html"&gt;Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす&lt;/a&gt;という記事も公開しましたが、こちらはテスト環境での IAST 用でした。
+本番の計測は X-Ray を使う（なぜ New Relic でない？とかは置いておいて）ので、 CDK / App Runner / Next.js standalone という構成でどうやって実現したのかを記録していきます。&lt;/p&gt;
+
+&lt;h3&gt;App Runner と X-Ray&lt;/h3&gt;
+
+&lt;p&gt;AWS のサービスで X-Ray を使うとき、たとえば Lambda や StepFunctions で利用したいなと思ったときは簡単に利用できます。&lt;/p&gt;
+
+&lt;p&gt;たとえば StepFunctions では CDK を使って、以下のように &lt;code&gt;tracingEnabled&lt;/code&gt; を &lt;code&gt;true&lt;/code&gt; すると X-Ray トレーシングが有効になります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Define a second state machine with the Task state above&lt;/span&gt;
+&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ParentStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;definition&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;tracingEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Lambda の場合は、以下のように &lt;code&gt;tracing&lt;/code&gt; を &lt;code&gt;Active&lt;/code&gt; にすると X-Ray トレーシングが有効になります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nb"&gt;Function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Function&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;codeSigningConfig&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NODEJS_18_X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;tracing&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Tracing&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACTIVE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;index.handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;code&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Code&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromAsset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lambda-handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
+&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;簡単ですね。&lt;/p&gt;
+
+&lt;p&gt;で、App Runner ではどうするのかな？と思って調べていたら、&lt;a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/"&gt;AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)&lt;/a&gt; という記事を見つけました。&lt;/p&gt;
+
+&lt;p&gt;なるほど、OpenTelemetry 必要なのか。単にフラグをONにするだけではできないんですね。&lt;/p&gt;
+
+&lt;p&gt;この時点で役に立ちそうな記事もいくつか読んでおきました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://blog.ojisan.io/next-otel/"&gt;Next.js の OpenTelemetry サポートを使う方法&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://dev.classmethod.jp/articles/trace-nextjs-with-aws-xray/"&gt;Next.jsのサーバーサイド処理をX-Rayでトレースしてみた&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;参考記事からやり方を検討する&lt;/h3&gt;
+
+&lt;p&gt;参考記事を確認して、タスクを整理しました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CDK で OpenTelemetry 計測を有効にする（最初の参考記事）&lt;/li&gt;
+&lt;li&gt;Next.js の OpenTelemetry サポートを有効にする（次の2つの参考記事）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;CDK で OpenTelemetry 計測を有効にする&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/"&gt;AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)&lt;/a&gt; の &lt;code&gt;App Runnerサービスを作成&lt;/code&gt; でやっているように、App Runner で OpenTelemetryを有効にするにはコンストラクタではなく、CloudFormation クラスを使って作っていますが、現時点は Service の props に &lt;code&gt;observabilityConfiguration&lt;/code&gt; があるので、これにセットすると良さそうです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;observabilityConfigurationName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-observability&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;traceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;TraceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;AWSXRAY&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+        &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecrRepository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;webAppVersion&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+      &lt;span class="na"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;autoDeploymentsEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;healthCheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;HealthCheck&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;healthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;interval&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;/favicon.ico&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;timeout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="na"&gt;unhealthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;元々の Service に &lt;code&gt;ObservabilityConfiguration&lt;/code&gt; で生成した設定を &lt;code&gt;observabilityConfiguration&lt;/code&gt; に渡すだけです。ここは簡単ですね。
+ポイントとしては &lt;code&gt;traceConfigurationVendor&lt;/code&gt; を &lt;code&gt;AWSXRAY&lt;/code&gt; に設定するところぐらいかな。&lt;/p&gt;
+
+&lt;h4&gt;Next.js の OpenTelemetry サポートを有効にする&lt;/h4&gt;
+
+&lt;p&gt;こちらも参考記事を元に設定していきます。&lt;/p&gt;
+
+&lt;p&gt;まず依存ライブラリを追加します。今回はこのあたりを利用しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;@opentelemetry/api&lt;/li&gt;
+&lt;li&gt;@opentelemetry/exporter-trace-otlp-grpc&lt;/li&gt;
+&lt;li&gt;@opentelemetry/id-generator-aws-xray&lt;/li&gt;
+&lt;li&gt;@opentelemetry/instrumentation-aws-sdk&lt;/li&gt;
+&lt;li&gt;@opentelemetry/instrumentation-http&lt;/li&gt;
+&lt;li&gt;@opentelemetry/instrumentation-undici&lt;/li&gt;
+&lt;li&gt;@opentelemetry/propagator-aws-xray&lt;/li&gt;
+&lt;li&gt;@opentelemetry/sdk-node&lt;/li&gt;
+&lt;li&gt;@opentelemetry/sdk-trace-node&lt;/li&gt;
+&lt;li&gt;@opentelemetry/semantic-conventions&lt;/li&gt;
+&lt;li&gt;@opentelemetry/resources&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href="https://nextjs.org/docs/14/app/building-your-application/optimizing/instrumentation"&gt;Next.js の公式ドキュメント Instrumentation 章&lt;/a&gt; を読むと&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;ということなので &lt;code&gt;instrumentation.ts&lt;/code&gt; をルートディレクトリか、&lt;code&gt;src&lt;/code&gt; フォルダを使っている場合はその中に入れる必要がありそうなので、&lt;code&gt;src/instrumentation.ts&lt;/code&gt; を設置しました。&lt;/p&gt;
+
+&lt;p&gt;続きのページに &lt;a href="https://nextjs.org/docs/14/pages/building-your-application/optimizing/open-telemetry"&gt;Next.js の公式ドキュメント OpenTelemetry 章&lt;/a&gt; があったので、こちらも確認しました。&lt;/p&gt;
+
+&lt;p&gt;今回は Vercel を使うわけではないので、 &lt;code&gt;Manual OpenTelemetry configuration&lt;/code&gt; の部分を参考にしていきます。&lt;/p&gt;
+
+&lt;p&gt;そうすると以下のようにランタイム判定してダイナミックローディングする必要がありそうなので、&lt;code&gt;instrumentation.ts&lt;/code&gt; から &lt;code&gt;instrumentation.node.ts&lt;/code&gt; を呼ぶように設定します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// `instrumentation.ts`&lt;/span&gt;
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;register&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NEXT_RUNTIME&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;nodejs&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="k"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;./instrumentation.node.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;あとは &lt;code&gt;instrumentation.node.ts&lt;/code&gt; で X-Ray に出力されるような設定をします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// instrumentation.node.ts&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/exporter-trace-otlp-grpc&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/id-generator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;HttpInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-http&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;UndiciInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-undici&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/propagator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/resources&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-trace-base&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/semantic-conventions&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;sdk&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;idGenerator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;  &lt;span class="c1"&gt;// AWS X-RayフォーマットのIDを生成&lt;/span&gt;
+  &lt;span class="na"&gt;textMapPropagator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// AWS X-Ray Trace ヘッダー伝播プロトコルを利用&lt;/span&gt;
+  &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;merge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;})),&lt;/span&gt; &lt;span class="c1"&gt;// App Runner のサービス名を指定&lt;/span&gt;
+  &lt;span class="na"&gt;instrumentations&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt; &lt;span class="c1"&gt;// 利用する拡張機能&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;HttpInstrumentation&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// HTTP API をトレース&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;suppressInternalInstrumentation&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;}),&lt;/span&gt; &lt;span class="c1"&gt;// aws-sdk をトレース&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;UndiciInstrumentation&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// Node fetch API をトレース&lt;/span&gt;
+  &lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="na"&gt;spanProcessors&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt;&lt;span class="p"&gt;())],&lt;/span&gt;
+&lt;span class="p"&gt;})&lt;/span&gt;
+
+&lt;span class="nx"&gt;sdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;こんな感じです。&lt;/p&gt;
+
+&lt;h4&gt;ビルドして確認してみたがコードが生成されない&lt;/h4&gt;
+
+&lt;p&gt;ここで &lt;code&gt;next build&lt;/code&gt; してコードが生成されるか確認してみました。&lt;/p&gt;
+
+&lt;p&gt;すると、&lt;code&gt;instrumentation.ts&lt;/code&gt; が識別されてないのか？ビルド結果にコードが生成されません。&lt;/p&gt;
+
+&lt;p&gt;こういうときはソースコードを読むしかないですね。Next.js のビルドコードは &lt;a href="https://github.com/vercel/next.js/blob/v14.2.28/packages/next/src/build/index.ts"&gt;next.js/packages/next/src/build/index.ts&lt;/a&gt; にあるようです。&lt;/p&gt;
+
+&lt;p&gt;で、それっぽいところを検索していると、これか？という部分&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// #L882-L886&lt;/span&gt;
+      &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;instrumentationHookDetectionRegExp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;RegExp&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="s2"&gt;`^&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;INSTRUMENTATION_HOOK_FILENAME&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;\\.(?:&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;config&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pageExtensions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+          &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;|&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+        &lt;span class="p"&gt;)}&lt;/span&gt;&lt;span class="s2"&gt;)$`&lt;/span&gt;
+      &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;おやおやおや？拡張子のマッチが &lt;code&gt;pageExtensions&lt;/code&gt; なんですけど。少し前の公式ドキュメントに何て書いてありましたっけ？&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;です。&lt;code&gt;ts&lt;/code&gt; か &lt;code&gt;js&lt;/code&gt; なんでしょ。なんで &lt;code&gt;pageExtensions&lt;/code&gt; 使ってんのよ？？このファイルはページなのか？&lt;/p&gt;
+
+&lt;p&gt;おそらくほとんどの人は &lt;code&gt;ts&lt;/code&gt; のままで動くんでしょうが、僕らはこのコンフィグパラメータに覚えがあります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/** @type {import('next').NextConfig} */&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;nextConfig&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;reactStrictMode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;pageExtensions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tsx&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;api.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;tsx&lt;/code&gt; と &lt;code&gt;api.ts&lt;/code&gt; だけにしてるんですわ。今回は PagesRouter 使ってるんですけど、 &lt;code&gt;/pages/api/&lt;/code&gt; の下の API コードのテストコードを同じディレクトリに設定したいんですね。
+ルートで src と test を分けたくない。めんどいじゃないですか、そういうの。なんで実装とテストコードは同じディレクトリに入れたいんです。で、テストコードは API ではないので、pageExtensions を設定してページやAPIは
+&lt;code&gt;.tsx&lt;/code&gt; か &lt;code&gt;.api.ts&lt;/code&gt; としています。たとえばこうすると &lt;code&gt;user.api.ts&lt;/code&gt; というのがあったとき、同じディレクトリに &lt;code&gt;user.test.ts&lt;/code&gt; というのを入れることができ、これはテストコードなのでビルドに含まれず、API でもないコードという対応ができます。
+あとは API ではないコードとかも入れることができます（それはやってないけど）。&lt;/p&gt;
+
+&lt;p&gt;なんで、 &lt;code&gt;instrumentation&lt;/code&gt; のファイル名を &lt;code&gt;pageExtensions&lt;/code&gt; にするとは、何やってくれてんねん！って感じなんですけど、いったん従うしかないので、 &lt;code&gt;instrumentation.api.ts&lt;/code&gt; というファイル名にし&amp;hellip;.ませんでした。&lt;/p&gt;
+
+&lt;p&gt;いろいろ理由はあるんですけど、CI/CD でビルドする直前に &lt;code&gt;instrumentation.ts&lt;/code&gt; を &lt;code&gt;instrumentation.api.ts&lt;/code&gt;  にコピーする対応にしています。
+たとえば、これは &lt;code&gt;pageExtensions&lt;/code&gt; じゃおかしい！という issue を僕が出して &lt;code&gt;ts|js&lt;/code&gt; になったときファイル名をリネームするのは嫌だなぁというとこで、CI/CDでコピーするところだけなら修正しても良いかなと。&lt;/p&gt;
+
+&lt;p&gt;で、手元では手動でファイルをコピーして &lt;code&gt;next build&lt;/code&gt; したらファイルがビルドされていることが確認できました👏&lt;/p&gt;
+
+&lt;h3&gt;デプロイして動かしてみる&lt;/h3&gt;
+
+&lt;p&gt;出ない&amp;hellip;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;全体的には良さそうなんですが、何でかねー&lt;/p&gt;
+
+&lt;p&gt;困ったときは初心に戻って AWS の公式ドキュメントを漁ります。
+&lt;a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/monitor-xray.html"&gt;X-Ray を使用した App Runner アプリケーションのトレース&lt;/a&gt; というのが App Runner のドキュメントの中にありました。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;App Runner サービスで X-Ray トレースを使用するには、サービスのインスタンスに X-Ray サービスとやり取りするためのアクセス許可を付与する必要があります。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;なるほどー、それはそうか。OpenTelemetry 指定で X-Ray のポリシー適用されるかな？と思ったけど、ObservabilityConfiguration の vendor 判断してまではやってくれないようです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;observabilityConfigurationName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-observability&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;traceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;TraceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;AWSXRAY&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+        &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecrRepository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;webAppVersion&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+      &lt;span class="na"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;autoDeploymentsEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;healthCheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;HealthCheck&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;healthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;interval&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;/favicon.ico&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="na"&gt;timeout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="na"&gt;unhealthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+      &lt;span class="na"&gt;instanceRole&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Role&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppServiceXRayWrite&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;assumedBy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ServicePrincipal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tasks.apprunner.amazonaws.com&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="na"&gt;managedPolicies&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;ManagedPolicy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromAwsManagedPolicyName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;AWSXRayDaemonWriteAccess&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)],&lt;/span&gt;
+      &lt;span class="p"&gt;}),&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;CDK で Service を作るときのプロパティに &lt;code&gt;instanceRole&lt;/code&gt; を追加しました。&lt;/p&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;Next.js standalone ビルドしたアプリを App Runner で動かしていたところに、 X-Ray での計測を追加してみました。
+他の AWS サービスと違って X-Ray を有効にするのがちょっと面倒だったり、 &lt;code&gt;pageExtensions&lt;/code&gt; いじっているとビルド時に工夫が必要だったりとか、いくつかハマりポイントはありますが、わかってしまえば対策は難しくありませんでした。
+実際はものすごい調べるの時間かかったりするところもあったので、同じような課題になった人の解決に役立てば幸いです。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</title>
     <link rel="alternate" href="http://blog.url.com/2025/04/15/next-js-standalone-build-with-iast-agent.html"/>
@@ -661,263 +908,6 @@ ECR までデプロイされている状況で、インフラリポジトリ側�
 もちろんそういったことだけでなく、当たり前にカンファレンスがある訳でなく、多くの人の努力によって開催されているわけで感謝です。&lt;/p&gt;
 
 &lt;p&gt;あとはアンケートとフィードバックを入れてから帰ります。そしてまた参加できるように願っています。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</title>
-    <link rel="alternate" href="http://blog.url.com/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html"/>
-    <id>http://blog.url.com/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html</id>
-    <published>2024-06-03T14:32:00+09:00</published>
-    <updated>2024-06-03T18:12:20+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;a href="https://aws.amazon.com/jp/appsync/"&gt;AppSync&lt;/a&gt; は、AWS上で GraphQL API をサーバーレスに構築できるサービスです。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://aws.amazon.com/jp/amplify/"&gt;Amplify&lt;/a&gt; で利用されていることでも有名ですね。
-Amplify から DynamoDB にアクセスするときや、通常の CRUD だけでなくクエリ条件を指定したい場合などのカスタマイズをするときは、自動生成されたリゾルバーを修正することになります。
-このとき従来は &lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-mapping-template-reference.html"&gt;VTL&lt;/a&gt; というテンプレート言語を学ぶ必要がありましたが、今日ではJavaScript(TypeScript)を利用できます。&lt;/p&gt;
-
-&lt;p&gt;最新の Amplify Gen2 でも TypeScript でリゾルバを指定できます。&lt;a href="https://dev.classmethod.jp/articles/amplify-gen2-nextjs/"&gt;Amplify Gen2でNextJSのアプリケーション作成まで&lt;/a&gt; というクラメソの記事が参考になります。&lt;/p&gt;
-
-&lt;h3&gt;公式ドキュメントで学ぶ&lt;/h3&gt;
-
-&lt;p&gt;AWS のデベロッパーガイドに&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/tutorials-js.html"&gt;リゾルバーチュートリアル (JavaScript)&lt;/a&gt;があるので、これを読めば理解が進みます。
-特に&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/tutorial-dynamodb-resolvers-js.html"&gt;チュートリアル: DynamoDB JavaScript リゾルバー&lt;/a&gt;を読むと、DynamoDB にアクセスする GraphQL API の作り方が理解できるようになるでしょう。&lt;/p&gt;
-
-&lt;h4&gt;TypeScript を使う&lt;/h4&gt;
-
-&lt;p&gt;Amplify Gen2 を使っている場合は、すべて TypeScript で記述していて Amplify プロジェクトで管理されている Lint ルールなどを利用しているので、問題ないと思います。
-一方で AppSync を直接使う（たとえば Terraform や CDK などを使って AppSync の API をデプロイする）場合は、JavaScript リゾルバーの概要の中にある&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#additional-utilities"&gt;バンドル、TypeScript、ソースマップ&lt;/a&gt;を読むと良いです。&lt;/p&gt;
-
-&lt;p&gt;ここを読むと、以下の理解が深まります。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;esbuild を使って TypeScript ファイルをバンドルして 1 つの JavaScript ファイルにする方法&lt;/li&gt;
-&lt;li&gt;リゾルバや関数を作るときの TypeScript 設定や記述方法（主に型定義）&lt;/li&gt;
-&lt;li&gt;GraphQL スキーマ情報から TypeScript  型定義を生成する方法&lt;/li&gt;
-&lt;li&gt;Linter の設定&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;特に Linter の設定は重要になります。
-詳しくは&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#utility-resolvers"&gt;ユーティリティ&lt;/a&gt;の &lt;code&gt;eslint プラグインの設定&lt;/code&gt; で確認できます。&lt;/p&gt;
-
-&lt;h4&gt;APPSYNC_JS の制約&lt;/h4&gt;
-
-&lt;p&gt;リゾルバや関数を JavaScript で記述できるようになったのは(VTLを書くことに比べ)嬉しいことなのですが、あくまでも JavaScript の文法が使える程度と思っていた方が良いです。もちろん単体テストコードが書きやすいなどのメリットはありつつも、制約が非常に多いことを理解しなくてはなりません。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;コードサイズ: 32,000文字&lt;/li&gt;
-&lt;li&gt;外部モジュール: npm でインストールされるようなものは、開発ツールを除いてほぼ使えないと思っていたほうが良い&lt;/li&gt;
-&lt;li&gt;ネットワークアクセス: できない。すべてのリソースへのアクセスはデータソースを使って行う&lt;/li&gt;
-&lt;li&gt;ファイルシステムアクセス: できない&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;どのようなものが向いているかは、&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-reference-overview-js.html#choosing-data-source"&gt;データソースへの直接アクセスと Lambda データソース経由のプロキシのどちらかを選択する&lt;/a&gt;に書かれています。&lt;/p&gt;
-
-&lt;h4&gt;ランタイム制約&lt;/h4&gt;
-
-&lt;p&gt;次の制約を理解するとき読むべきは&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/supported-features.html"&gt;サポートされているランタイム機能&lt;/a&gt;です。&lt;/p&gt;
-
-&lt;p&gt;さきほど&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;あくまでも JavaScript の文法が使える程度と思っていた方が良い&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;と書きましたが、それがこのランタイム機能を理解した上での感想です。&lt;/p&gt;
-
-&lt;p&gt;サポートされていない機能は以下のとおりです。&lt;/p&gt;
-
-&lt;h5&gt;ステートメント&lt;/h5&gt;
-
-&lt;ul&gt;
-&lt;li&gt;try / catch / finally&lt;/li&gt;
-&lt;li&gt;throw
-
-&lt;ul&gt;
-&lt;li&gt;代わりに &lt;code&gt;util.error()&lt;/code&gt; 関数を利用する&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;continue&lt;/li&gt;
-&lt;li&gt;do-while&lt;/li&gt;
-&lt;li&gt;for
-
-&lt;ul&gt;
-&lt;li&gt;ただし for-in および for-of 式は例外でサポートされている。&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;while&lt;/li&gt;
-&lt;li&gt;ラベル付きステートメント&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5&gt;数学&lt;/h5&gt;
-
-&lt;ul&gt;
-&lt;li&gt;次の Math 関数はサポートされていません。
-
-&lt;ul&gt;
-&lt;li&gt;Math.random()&lt;/li&gt;
-&lt;li&gt;Math.min()&lt;/li&gt;
-&lt;li&gt;Math.max()&lt;/li&gt;
-&lt;li&gt;Math.round()&lt;/li&gt;
-&lt;li&gt;Math.floor()&lt;/li&gt;
-&lt;li&gt;Math.ceil()&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5&gt;関数&lt;/h5&gt;
-
-&lt;ul&gt;
-&lt;li&gt;apply、bind call メソッドはサポートされていません。&lt;/li&gt;
-&lt;li&gt;関数コンストラクタはサポートされていません。&lt;/li&gt;
-&lt;li&gt;関数を引数として渡すことはサポートされていません。&lt;/li&gt;
-&lt;li&gt;再帰的な関数呼び出しはサポートされていません。&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h5&gt;promise&lt;/h5&gt;
-
-&lt;p&gt;非同期プロセスはサポートされておらず、Promise もサポートされていません。&lt;/p&gt;
-
-&lt;h4&gt;制約を理解した上で進める&lt;/h4&gt;
-
-&lt;p&gt;と途中まででも読んだ段階で、これは &lt;code&gt;JavaScript の文法が使える程度&lt;/code&gt; になるということが理解できたでしょう。
-外部ライブラリにこれらの記述を使っていないかというと、大抵どれか1つぐらいは該当してしまいます。
-つまり実質的にテストコードを除いてバンドルするコードには、外部モジュールを使うという選択肢はなくなります。
-ただ実際にはそれでは困ることが多いので、組み込むユーティリティや、ヘルパー関数などが揃っています。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/resolver-util-reference-js.html"&gt;リゾルバーおよび関数の JavaScript runtime 機能&lt;/a&gt;のページから、それらのユーティリティやヘルパーへのドキュメントページに遷移できるので、確認してください。&lt;/p&gt;
-
-&lt;p&gt;ただ一部 VTL のドキュメントには書いてあるユーティリティやヘルパーのうち、 JavaScript のリファレンスには記述されていないけど、利用可能なものもあります。
-これらはドキュメントバグと思いますが、TypeScript で作っている場合はインポートで利用する型定義ファイルと、VTLのリファレンスを突き合わせてみると良いでしょう。&lt;/p&gt;
-
-&lt;p&gt;たとえば多くの Math 関数がサポートされていない代わりに、mathヘルパーがあるのですが、これは JavaScript 側のドキュメントからは漏れています。もちろん利用可能なので、どのような機能があるかは VTL 側の&lt;a href="https://docs.aws.amazon.com/ja_jp/appsync/latest/devguide/math-helpers-in-util-math.html"&gt;$util.math の math ヘルパー&lt;/a&gt;を読むことになります。&lt;/p&gt;
-
-&lt;h3&gt;Lambda データソースを使うという選択&lt;/h3&gt;
-
-&lt;p&gt;もちろん、これは AppSync のリゾルバや関数で JavaScript を利用する場合の制約であって、AppSync のリゾルバから Lambda データソースを呼び出してそちらで処理する分には制約はありません。&lt;/p&gt;
-
-&lt;p&gt;AppSync のリゾルバや関数の実行に関する料金が AppSync に全て含まれているのに対し、Lambda データソースで実行される計算リソースは別途 Lambda の料金がかかるので、Lambda でないとできない場合だけとしておくとコストを抑えることができるでしょう。&lt;/p&gt;
-
-&lt;h3&gt;困っていること&lt;/h3&gt;
-
-&lt;p&gt;AppSync の JavaScript ランタイムには様々な制約があるので、AWS のコンソールからソースコードを書いているとリアルタイムで制約違反を教えてくれます。もちろん手元のエディタを使っていても ESLint のルールでチェックできるようになっています。
-とくに TypeScript で記述すると、より厳密に ESLint のルールで確認できるようになっています。&lt;/p&gt;
-
-&lt;p&gt;多くのシンプルなリゾルバや関数では、ここで書く困りごとには遭遇しないかもしれません。
-しかし運良く？その事象を引き当てたのです。&lt;/p&gt;
-
-&lt;h4&gt;サンプルコード&lt;/h4&gt;
-
-&lt;p&gt;例として（実際のケースとほぼ一緒ですが）、DynamoDB データソースに対して、複数のテーブルに跨った TransactWriteItem や BatchWriteItem を実行したいと仮定します。&lt;/p&gt;
-
-&lt;p&gt;サンプルコードとして&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/"&gt;Amazon DynamoDB Item Tagging&lt;/a&gt;という、aws-samples オーガナイゼーションにあるリポジトリを利用します。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/blob/main/src/lambda/create.ts#L49"&gt;DynamoDBに保存するコード例&lt;/a&gt; は Lambda の実装ですが、ここでは書き込みのパターンについて注目してください。
-このコードは、タスクを保存するときにタグ付けされていた場合は、タグの &lt;code&gt;WriteRequest&lt;/code&gt; を配列に追加しています（&lt;a href="https://github.com/aws-samples/amazon-dynamodb-item-tagging/blob/main/src/lambda/create.ts#L88"&gt;L88&lt;/a&gt;）。&lt;/p&gt;
-
-&lt;p&gt;特に何の変哲も無い、DynamoDB で TransactWriteItem や BatchWriteItem を使うときに書きそうなコードですが、ここに落とし穴があります。&lt;/p&gt;
-
-&lt;p&gt;このコードは TypeScript で、配列に追加するとき &lt;code&gt;WriteRequest&lt;/code&gt; 型を指定しています。タグ付けするときも追加する型は &lt;code&gt;WriteRequest&lt;/code&gt; なので、配列に追加される型が一致するためエラーにはなりません。&lt;/p&gt;
-
-&lt;h4&gt;同じようなコードを AppSync のリゾルバや関数で書くと TS2322 になる&lt;/h4&gt;
-
-&lt;p&gt;では同じようなコードを AppSync のリゾルバや関数で書いたとします。
-TypeScript で書いていて、 AppSync が指定する ESLint のルールなどがあっても問題なく通過するとします。
-では結果を esbuild でバンドルしてデプロイしてみましょう。&lt;/p&gt;
-
-&lt;p&gt;なんと、デプロイすると &lt;code&gt;TS2322&lt;/code&gt; エラーになります。&lt;/p&gt;
-
-&lt;p&gt;えっ、AppSync って JavaScript はサポートしているけど、 TypeScript はサポートしてないよね？&lt;/p&gt;
-
-&lt;p&gt;というのが、最初の驚きです。
-またまたー、と思って先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を書くと、デプロイできるようになります。&lt;/p&gt;
-
-&lt;p&gt;ふぁぁっ！何だと、 &lt;code&gt;tsc&lt;/code&gt; が実行されているのか？！という疑惑が生まれてきます。&lt;/p&gt;
-
-&lt;p&gt;いずれにせよ、このままではデプロイできないので、神様/AWSサポート様に問い合わせを行いました。
-この問い合わせ、めっちゃ最終回答まで時間かかったのです&amp;hellip;..&lt;/p&gt;
-
-&lt;p&gt;で、現時点これの回避策は、先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を書く、が正式回答になります。まじかー&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;現時点 AppSync では JavaScript の制約をチェックするため、デプロイ時に JavaScript ファイルを TypeScript コードとしてチェックしているそうです。まじかー&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;先ほどのコードを再度確認してみてください。TypeScript のコードをコンパイルして型情報を取り除くと、以下のようなコードになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;taskDbItem&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;PutRequest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="na"&gt;Item&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="c1"&gt;// we set the pk and sk to the item id. we prefix both with `task#` to allow filtering by task items&lt;/span&gt;
-          &lt;span class="na"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="na"&gt;sk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="c1"&gt;// we are using a gsi to allow listing all items of a certain type, which in this case is task items&lt;/span&gt;
-          &lt;span class="c1"&gt;// task: GSI key sharding&lt;/span&gt;
-          &lt;span class="na"&gt;siKey1&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;task&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="na"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;description&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="c1"&gt;// tags are duplicated here to simplify retrieval&lt;/span&gt;
-          &lt;span class="na"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;
-        &lt;span class="p"&gt;}&lt;/span&gt;
-      &lt;span class="p"&gt;}&lt;/span&gt;
-    &lt;span class="p"&gt;};&lt;/span&gt;
-    &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestItems&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tableName&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;taskDbItem&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-    &lt;span class="c1"&gt;// next we write all the tags as separate DynamoDB items. We use the tag name as the partition key, and the tag value and the TaskItem id as a composite sort key.&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="nb"&gt;Object&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;entries&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tags&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="nx"&gt;forEach&lt;/span&gt;&lt;span class="p"&gt;(([&lt;/span&gt;&lt;span class="nx"&gt;tagName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;tagValue&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;tagDbItem&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-          &lt;span class="na"&gt;PutRequest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="na"&gt;Item&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-              &lt;span class="na"&gt;pk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`tag#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;tagName&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-              &lt;span class="na"&gt;sk&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;tagValue&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;#task#&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;item&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;`&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;
-          &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="p"&gt;};&lt;/span&gt;
-        &lt;span class="nx"&gt;params&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;RequestItems&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;tableName&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;push&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;tagDbItem&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-      &lt;span class="p"&gt;});&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;いうて &lt;code&gt;DocumentClient.WriteRequest&lt;/code&gt; という型情報が消える程度ですが、これが落とし穴です。
-型情報がなくなった &lt;code&gt;params.RequestItems[this.tableName]&lt;/code&gt; の配列は、TypeScript の型推論が働くために、最初の &lt;code&gt;taskDbItem&lt;/code&gt; 構造の型の要素を持つことが期待されます。&lt;/p&gt;
-
-&lt;p&gt;そこに &lt;code&gt;item.tags&lt;/code&gt; があったときに構造が異なる &lt;code&gt;taskDbItem&lt;/code&gt; を配列に追加しようとしたら、どうなるかわかりますね。 &lt;code&gt;TS2322&lt;/code&gt; です。&lt;/p&gt;
-
-&lt;p&gt;おそらく Amplify Gen2 でリゾルバを上書きして書いたときも、同じようなコードを書くとエラーになると推測されます(CDKがesbuildした結果をデプロイするので)。&lt;/p&gt;
-
-&lt;h4&gt;回避策を入れる&lt;/h4&gt;
-
-&lt;p&gt;回避策の、先頭行に &lt;code&gt;// @ts-nocheck&lt;/code&gt; を入れる方法として、esbuild の &lt;code&gt;banner&lt;/code&gt; オプションを利用します。
-バンドルのリンティングで紹介されているサンプルコードに設定を追加します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/* eslint-disable */&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esbuild&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;eslint&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esbuild-plugin-eslint&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="nx"&gt;glob&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;glob&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;glob&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;src/**/*.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-
-&lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;build&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-  &lt;span class="na"&gt;format&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esm&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;target&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;esnext&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;platform&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;external&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-appsync/utils&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-  &lt;span class="na"&gt;outdir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;dist/&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;entryPoints&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;files&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;bundle&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;plugins&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;eslint&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;useEslintrc&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;})],&lt;/span&gt;
-  &lt;span class="na"&gt;banner&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="na"&gt;js&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;// @ts-nocheck&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;この例のままだと、全部のファイルに &lt;code&gt;// @ts-nocheck&lt;/code&gt; が入ってしまうので、特定のファイルだけにしたい場合は、esbuild を2つに分割して特定のリゾルバや関数だけに追加されるようにすると良いでしょう。&lt;/p&gt;
-
-&lt;p&gt;なお、AWSサポートへは TypeScript かつデベロッパーガイドに書いてあるとおり &lt;code&gt;eslint プラグインの設定&lt;/code&gt;  をしてあれば、同じ効果を期待できるそうなので、全ファイルに入っていたとしても大きな問題はないのかな？とも思います。 &lt;code&gt;// @ts-nocheck&lt;/code&gt; を入れたAPIについては念入りに動作確認をするようにコメントが入っていたこともお伝えしておきます。&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;AppSync のリゾルバーや関数を JavaScript (TypeScript) で書けるようになって、VTL を書くよりも生産性があがったり、ユニットテストが書けるようになって品質を維持しやすくなるといった効果が期待できます。&lt;/p&gt;
-
-&lt;p&gt;一方で TS2322 に遭遇するといった落とし穴もあったりするので、注意は必要ですね。&lt;/p&gt;
-
-&lt;p&gt;APPSYNC_JS でそういったトラブルになった記事だったり StackOverflow の投稿だったりはまだ少ないので、問題や回避策がわかったら積極的に記事にしておくと良いかな？というのが今回ブログ記事にするきっかけにもなりました。&lt;/p&gt;
-
-&lt;p&gt;僕は JavaScript で書けるようになってすごく嬉しいので、今後も使っていきたいなと思っています。&lt;/p&gt;
 </content>
   </entry>
 </feed>
