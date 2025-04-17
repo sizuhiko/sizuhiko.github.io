@@ -6,6 +6,7 @@ tags:
 - AppRunner
 - X-Ray
 - OpenTelemetry
+- CDK
 ---
 
 こちらの記事は [Next.js で作ったアプリケーションを AppRunner にデプロイする](/2025/04/11/next-js-deploy-to-apprunner.html) の続編となります。
