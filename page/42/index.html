@@ -272,6 +272,51 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-treebehavior.html">CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった</a></h1>
+  <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:49 PM</a></p>
+  <p class="tags">
+      <a href="/tags/1-2.html" rel="tag">1.2</a>
+      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
+      <a href="/tags/rc1.html" rel="tag">RC1</a>
+      <a href="/tags/treebehavior.html" rel="tag">TreeBehavior</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>&lt;!&ndash; more &ndash;&gt;TreeBehavior自体1.2から追加された機能なのに、変更になるなんて。。。  </p>
+
+<p>1.2βでは</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;setScope(array('company_id'=&gt;'1'));
+$categories = $this-&gt;Category-&gt;children();
+</code></pre></div>
+<p>のように書くと、company_idが1のカテゴリだけ階層構造で取得できていたのだが、RC1ではsetScopeがDeprecatedになってしまった。で、上記方法を使っている画面を表示すると、「(TreeBehavior::setScope) Deprecated - Use BehaviorCollection::attach() to re-attach with new settings」というエラーメッセージが出るが、お世辞にもどう変更していいかわかるメッセージじゃないし、ドキュメントにも書いてない。  </p>
+
+<p>なので、ソースを読み込むことに。まぁソース読めばわかります。結果としては、</p>
+<div class="highlight"><pre class="highlight plaintext"><code>$this-&gt;Category-&gt;$this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;array('company_id'=&gt;'1')));
+$categories = $this-&gt;Category-&gt;children();
+</code></pre></div>
+<p>のように記述するのですが、これを使用箇所で全部変更するのは大変ですね。そこで、Categoryのモデルクラスに以下のようなメソッドを追加してあげました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>function setScope($scope = array()) {
+    return $this-&gt;Behaviors-&gt;attach('Tree', array('scope'=&gt;$scope));
+}
+</code></pre></div>
+<p>ま、AppModelに追加しても良かったんですが、全部がTreeBehavior使っている訳ではないと思うので、その場合は、setTreeScopeのような名前に変更した方が良いかな？と思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/06/09/cakephp-1-2-rc1-treebehavior.html">
+          <a class="twitter" data-title="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった"></a>
+          <a class="facebook" data-title="CakePHP 1.2 RC1でTreeBehaviorの絞込み範囲指定が変更となった"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2008/06/09/cakephp-1-2-rc1-find.html">CakePHP 1.2 RC1からfindの条件指定方法が変更となった</a></h1>
   <p class="postdate"><a href="/2008/06/09.html" title="Permanent link">Monday, June 09, 2008 06:06:17 PM</a></p>
   <p class="tags">
@@ -775,63 +820,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2008/04/22/flex2-coverflow-2-ide.html">Flex2でCoverFlowクローンを作る (2) ～IDEを導入する</a></h1>
-  <p class="postdate"><a href="/2008/04/22.html" title="Permanent link">Tuesday, April 22, 2008 04:04:25 PM</a></p>
-  <p class="tags">
-      <a href="/tags/coverflow.html" rel="tag">CoverFlow</a>
-      <a href="/tags/flashdevelop.html" rel="tag">FlashDevelop</a>
-      <a href="/tags/flex.html" rel="tag">Flex</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>&lt;!&ndash; more &ndash;&gt;現在、<a href="http://www.ObjectClub.jp">オブジェクト倶楽部</a>のメールマガジンで連載している「Flexで体験するリッチクライアント」を補足するTechnoteです。  </p>
-
-<p>第二回は、FlexでFlashコンポーネントを開発するのに便利なIDEを導入する手順を整理します。  </p>
-
-<h3>■FlashDevelopとは</h3>
-
-<p>FlashDevelopは、フリーで利用可能なFlashの統合開発環境です。Flex Builderは有償版なので、タダで開発したいという人は、このツールを使うのがオススメです。Flex2,Flex3に必要なmxmlやActionScriptのコード補完機能などプログラミングをするには十分な機能を持っています。メニューなどすべて英語表記ですが、Eclipse IDEと操作性は似ているので、大きな問題はないでしょう。  </p>
-
-<h3>■ダウンロードする</h3>
-
-<p><a href="http://www.flashdevelop.org/">FlashDevelopのサイト</a>へアクセスします。
-<img src="/images/blog/images/flex2_coverflow_2/download1.jpg" alt="" /> 最新版を入手するには、Releasesを選択します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/download2.jpg" alt="" /> 現時点の最新版は3.0.0 Beta7です。まだBetaですが3系を使うことを推奨します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/download3.jpg" alt="" /> ダウンロードのリンクをクリックすると、ダウンロードが始まります。ダウンロードが終わるまでしばらく待ちましょう。  </p>
-
-<h3>■インストールする</h3>
-
-<p>ダウンロードしたファイル(現時点ではFlashDevelop-3.0.0-Beta7.exe)を実行します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/install1.jpg" alt="" /> 画面の指示にしたがって進んで行くとインストールが始まります。<br>
-<img src="/images/blog/images/flex2_coverflow_2/install2.jpg" alt="" /> こちらはFlex本体と違って、それほど時間もかからずに終了します。  </p>
-
-<h3>■はじめにすること</h3>
-
-<p>FlashDevelopはFlex SDKの環境は含んでいないので、パスを設定する必要があります。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev1.jpg" alt="" /> まずインストールしたFlashDevelopを実行します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev2.jpg" alt="" /> Tools - Program Settings&hellip; （もしくはF10）を選択します。<br>
-<img src="/images/blog/images/flex2_coverflow_2/dev4.jpg" alt="" /> 左側のタブで「AS3Context」を選択し、Flex SDK Locationの値を設定します（デフォルトはc:flex_sdkなどになっています）。もしFlex Builderをデフォルトインストールしたなら、C:Program FilesAdobeFlex Builder 3sdks2.0.1 になってると思うので、Flex2のトップディレクトリを選択します。今回はメルマガがFlex2で先行しているので、Flex2で進めます。設定したらCloseで設定画面を閉じます。特に保存とかないのですが、設定は無事保存されるので気にしないことにします。</p>
-
-<h3>■次回</h3>
-
-<p>Flex2を使って画像を表示する簡単なサンプルからスタートしていきます。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2008/04/22/flex2-coverflow-2-ide.html">
-          <a class="twitter" data-title="Flex2でCoverFlowクローンを作る (2) ～IDEを導入する"></a>
-          <a class="facebook" data-title="Flex2でCoverFlowクローンを作る (2) ～IDEを導入する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -858,6 +846,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -867,7 +856,6 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -875,11 +863,14 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -987,7 +978,7 @@ invalidateDisplayList()を呼び出すと、画像の描画サイズを調整す
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

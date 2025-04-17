@@ -272,6 +272,96 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/04/25/toilet-evolution-polymer3-vol1.html">Toilet EvolutionのフロントエンドをPolymer3対応する(1)</a></h1>
+  <p class="postdate"><a href="/2019/04/25.html" title="Permanent link">Thursday, April 25, 2019 03:42:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+      <a href="/tags/iot.html" rel="tag">IoT</a>
+      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>私が開発運用している<a href="https://toiletevolution.space/">Toilet Evolution</a>は、フロントエンドをPolymer(v1)で構築していました。
+これは古いWebComponentsの仕組みを使っているので、常々アップデートしないとなーと思いながらも、長いこと重い腰があがりませんでした。</p>
+
+<p>しかし以下のツイートを見て「よしやるぞ」という気持ちにスイッチが入り、移行を実施しました。</p>
+
+<blockquote class="twitter-tweet" data-lang="en-gb"><p lang="en" dir="ltr">PSA: The latest Chrome Canary has removed support for web components v0, per the deprecation plan announced last year.<br><br>If you have a site built with Polymer 1.x (or web components v0), check it against Canary now to make sure you&rsquo;re properly serving the polyfills. <a href="https://t.co/IElNjGGZbI">https://t.co/IElNjGGZbI</a></p>&mdash; Polymer Project (@polymer) <a href="https://twitter.com/polymer/status/1102664720891301888?ref_src=twsrc%5Etfw">4 March 2019</a></blockquote>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p>実際<a href="https://toiletevolution.space/">Toilet Evolution</a>のサイトはもう最新に置き換わっております。
+その様子は<a href="https://github.com/toiletevolution/toiletevolution-server">Toilet EvolutionのGitHubリポジトリ</a>のコミットログを追うことでもわかったりしますが、かなり頑張ったので、その過程を連載でブログにまとめようと思いました。</p>
+
+<p>この記事はその1回目です。</p>
+
+<h3>Polymer1プロジェクトをPolymer3へ移行するには</h3>
+
+<p>マイグレーションガイドは1から2、2から3に向けてあります。
+1から3のガイドがあるわけではないので、両方を事前に読んでおくと良いです。</p>
+
+<ul>
+<li><a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade">Polymer1から2へのアップグレードガイド</a>
+
+<ul>
+<li><code>&lt;dom-module&gt;</code> で <code>name</code> を使っていたら <code>id</code> に変更。</li>
+<li><code>styles</code> タグは <code>template</code> タグの内側へ</li>
+<li><code>&lt;content&gt;</code> タグは <code>&lt;slot&gt;</code> タグへ</li>
+<li>CSSの <code>::content</code> セレクタは <code>::slotted()</code> セレクタへ</li>
+<li>CSSの <code>/deep/</code> や <code>::shadow</code> は使えなくなる</li>
+<li>などなど&hellip;</li>
+</ul></li>
+<li><a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade">Polymer2から3へのアップグレードガイド</a>
+
+<ul>
+<li><a href="https://github.com/Polymer/tools/tree/master/packages/modulizer">modulizer</a>使うと簡単にできるよ！</li>
+</ul></li>
+</ul>
+
+<p>Polymer2は1の記法が使えるハイブリッドモードがあるのと、そもそも1から2で変更が必要な記述を使っていないので、実際はmodulizer一発でいけるんでは？と考えました。
+なので、1から2の手順は気にせず、進むことにしました。</p>
+
+<h3>何はともあれアップデート</h3>
+
+<p>npmのライブラリもだいぶ古くなっていたので、まずは<a href="https://github.com/toiletevolution/toiletevolution-server/commit/bfcea2e380d1744012dee064e949a8cced64fe3d">最新に更新しました</a>。
+Gulpを3から4にあげたので <code>gulpfile.js</code> もモリモリと変えていきます。</p>
+
+<p>続いて、bowerに入っているパッケージも新しくしていきます。これは <a href="https://github.com/Polymer/tools/tree/master/packages/modulizer#local-package-mode">modulizerのガイド</a>に書いてあるので、そのまま実施します。</p>
+
+<p>続いてmodulizerを実行しますが、commitログではそこまでの手順で迷走しています。あまり気にしないでくださいw</p>
+
+<h3>modulizerで変換する</h3>
+
+<p><code>modulizer --out .</code> を実行します。すると html で記述していたカスタムエレメントが js ファイルに変更されます。
+<a href="https://github.com/toiletevolution/toiletevolution-server/commit/da5a4aba7f40463731b467e3be7d6c856b6a918c">ここまでのコミット</a></p>
+
+<p>変換するとだいたい良い感じになっています。
+でも変換だけでは動きません。ここで以下のような箇所が変換されないことがわかります。</p>
+
+<ul>
+<li>polymerの公式エレメントなど、変換されたbower_componentsを参照していて、npmに切り替わらない</li>
+<li><a href="https://polymer-library.polymer-project.org/3.0/docs/upgrade#less-common-upgrade-tasks">変換後に手動で書き換えること</a>に書いてある手順の実施</li>
+</ul>
+
+<p>これらの手順は<a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">次回</a>へ続きます。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/04/25/toilet-evolution-polymer3-vol1.html">
+          <a class="twitter" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(1)"></a>
+          <a class="facebook" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(1)"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/04/07/esm-lt-2019-04.html">esm LTでブラウザの最新動向について話しました</a></h1>
   <p class="postdate"><a href="/2019/04/07.html" title="Permanent link">Sunday, April 07, 2019 01:47:00 PM</a></p>
   <p class="tags">
@@ -507,56 +597,6 @@ IRT楽しかったですね。</p>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/02/24/polymer-japan-cafe-4.html">Polymer Japan Cafe ＃4 もくもく会が開催されました</a></h1>
-  <p class="postdate"><a href="/2019/02/24.html" title="Permanent link">Sunday, February 24, 2019 11:32:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/web-components.html" rel="tag">Web Components</a>
-      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>今月のPolymer/Web Components のもくもく会は、Polymer Japan との共催になったので、Co-Edoではなく渋谷にて開催となりました。</p>
-
-<p>Lit Elementが2.0リリースになったので、
-<a href="https://polymer-japan.github.io/litelement-first-element/index.ja.html">はじめての LitElement エレメントの作り方</a>のバージョンを最新に更新しました。</p>
-
-<p>Lit Elementではスタイル定義を以下のように、記述することが推奨されています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">class</span> <span class="nx">MyElement</span> <span class="kd">extends</span> <span class="nx">LitElement</span> <span class="p">{</span>
-  <span class="kd">static</span> <span class="kd">get</span> <span class="nx">styles</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">css</span><span class="s2">`
-    :host {
-        display: block;
-    }`</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>これは<a href="https://wicg.github.io/construct-stylesheets/">Constructable Stylesheets</a>として2019/1/24にGoogleから提出されたアイデアで、
-エレメントのスタイルを <code>static getter</code> で返すことで、ページ内に同一エレメントが複数回あるとき１回だけスタイルを評価するようになるというものです。
-高速化には役立ちそうですが、現時点サポートしているブラウザあるのか？（Chromeはもうサポートしてるかも）という状況です。</p>
-
-<p>なので前述のCodeLabとか、私の好きな<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とかは、まだ<a href="https://wicg.github.io/construct-stylesheets/">Constructable Stylesheets</a>の記法には対応していません
-（もちろん従来の書き方でも動きます）。
-でも注目していきたい仕様の1つではあるので、今後組み込むこともあるかもな、とは思っています。</p>
-
-<p>詳しくは<a href="https://lit-element.polymer-project.org/guide/styles">LitElementの公式ドキュメントのStyles</a>を参照ください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/02/24/polymer-japan-cafe-4.html">
-          <a class="twitter" data-title="Polymer Japan Cafe ＃4 もくもく会が開催されました"></a>
-          <a class="facebook" data-title="Polymer Japan Cafe ＃4 もくもく会が開催されました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -586,6 +626,7 @@ IRT楽しかったですね。</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -595,7 +636,6 @@ IRT楽しかったですね。</p>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -603,11 +643,14 @@ IRT楽しかったですね。</p>
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -715,7 +758,7 @@ IRT楽しかったですね。</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

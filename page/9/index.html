@@ -272,6 +272,116 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/05/03/swc-node-jest.html">@swc-node/jest を使ってテストを高速化する</a></h1>
+  <p class="postdate"><a href="/2022/05/03.html" title="Permanent link">Tuesday, May 03, 2022 11:07:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/swc.html" rel="tag">swc</a>
+      <a href="/tags/swc-node.html" rel="tag">swc-node</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>TypeScriptを使ってサーバーサイドのAPIサーバーなどを作っていて、テスティングフレームワークとして <a href="https://jestjs.io/ja/">Jest</a> を使っているとき
+まずは <a href="https://kulshekhar.github.io/ts-jest/">ts-jest</a> を使いはじめると思います。</p>
+
+<p>ts-jestはTypeScriptのコードをJestでテストするのに大変便利で、とても使いやすいのですが、コード量が多くなってきたときCI/CDにおける
+テスト時間が問題になってきます。</p>
+
+<h2>Jest + TypeScript のテストを高速化するノウハウ</h2>
+
+<p>このあたりはすでに多くのブログ記事が出ているように、ググるとたくさんの情報が出てきます。</p>
+
+<ul>
+<li><a href="https://miyauchi.dev/ja/posts/speeding-up-jest/">JestでTypeScriptを高速化する</a></li>
+<li><a href="https://akfm.dev/blog/2020-09-25/jest.html">Jest高速化の魔法のレシピ</a></li>
+<li><a href="https://kazuhira-r.hatenablog.com/entry/2022/01/10/203844">Jest＋TypeScriptを高速に実行したい（ts-jest、esbuild、SWCを比べる）</a></li>
+</ul>
+
+<p>などなど&hellip;</p>
+
+<p>これらで書かれているもので、共通してくるワードが</p>
+
+<ul>
+<li><a href="https://github.com/aelbore/esbuild-jest">esbuild-jest</a></li>
+<li><a href="https://github.com/swc-project/jest">@swc/jest</a></li>
+</ul>
+
+<p>です。
+どちらも esbuild(Goで書かれている) や swc(Rustで書かれている) といった高速のトランスパイラを使って実行するので、
+Jestのテストが速くなります。</p>
+
+<h2>TypeScript も様々</h2>
+
+<p>では実際に esbuild や swc を簡単に導入できるかということです。
+TypeScript で、特にサーバーサイドの実装の場合、いろいろな機能を使っている場合があります。
+たとえば DI であったり、 ORM であったり。
+私が関わっているプロジェクトでも DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っています。
+これらのライブラリは TypeScript の DI や ORM としては一番に思いつく有名どことで特にマニアックなライブラリではないと思います。</p>
+
+<p>で、これらのライブラリを使う上では、 tsconfig に以下の設定を入れる必要があります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">{</span>
+  <span class="dl">"</span><span class="s2">compilerOptions</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="dl">"</span><span class="s2">experimentalDecorators</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">emitDecoratorMetadata</span><span class="dl">"</span><span class="p">:</span> <span class="kc">true</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>さて、そこで問題になるのが esbuild です。
+esbuild ではデコレータのサポートがないので、まず候補から外しました
+（もちろん <a href="https://github.com/anatine/esbuildnx/tree/main/packages/esbuild-decorators">esbuild-decorators</a> 
+という拡張があるのも知ってはいますが、公式ではないうえ、これ自体がTypeScriptで書かれているので実行速度的に結局美味しくないというのがあります）。</p>
+
+<p>そうすると、 swc を使うことになるのです。 swc はデコレータにも対応しており、理想的です。</p>
+
+<h2>@swc/jest の使い勝手</h2>
+
+<p><code>@swc/jest</code> を使って速くなったという記事のソースコードは単純なサンプルであることが多く、実際に単純に導入するだけではうまくいきません。
+もちろんうまく動作するプロジェクトもそれなりにはあるでしょうが。</p>
+
+<p>swc では　tsconfig を解釈してくれるわけではないので、 <a href="https://swc.rs/docs/configuration/swcrc">.swcrc</a> でコンフィグを書く必要があります。
+これが微妙に tsconfig と違うので、ビルドでは swc を使わず webback と serverless framework で AWS Lambda にデプロイするような
+APIサーバーでは設定を合わせるのが面倒です。</p>
+
+<h2>@swc-node/jest という解決策</h2>
+
+<p>そこで調べていくと、 <a href="https://github.com/swc-project/swc-node">@swc-node</a> という swc をより node.js 環境に特化したラッパーがあることを知りましt。</p>
+
+<p>で、 <code>@swc-node</code> には <a href="https://github.com/swc-project/swc-node/tree/master/packages/jest">@swc-node/jest</a> というパッケージがあり、
+これは <code>@swc/jest</code> と対になっている関係ですね。</p>
+
+<p><code>@swc-node</code> も tsconfig を解釈してくれるわけではないのですが、オプションの項目は tsconfig を一致しているので特に迷いなく設定できます。</p>
+
+<p>ちなみに 1.5系からは tsconfig を読み込むように変更されているのですが、現時点私たちのプロジェクトではビルドが失敗するので、まだ 1.4 系を利用しています。
+問題はすでに issue <a href="https://github.com/swc-project/swc-node/issues/626">TypeScript path mapping is not working.</a> になっており、
+パスエイリアスを使っているときに、うまくファイルが import できないところなのですが、これが解決されれば transformer の設定も不要になるので、
+とても便利になるはずです。</p>
+
+<p>ところで、この <code>@swc-node</code> ですが、当初(私たちが採用を決めたとき)は <a href="https://github.com/Brooooooklyn">@Brooooooklyn</a> さんの個人リポジトリにあったと思うのですが、現在は <code>@swc-project</code> 配下に移動しています。
+プロジェクトの一部になったというのは、一つ安心材料ですね。</p>
+
+<p><code>@swc-node</code> も TypeScript で書かれていて、 <code>esbuild-decorators</code> と同じじゃないのか？という話はあるかもしれませんが、 <code>@swc-node</code> に関していうと、これは tsconfig の設定値を swcrc にマッピングするラッパーという感じなので、動作時は swc 相当となります（実際に測定値もGitHubに出ている）。</p>
+
+<p>もし、サーバーサイドのTypeScriptプロジェクトで同様の課題を持っている人がいたら、 <code>@swc-node</code> の利用を試してもらえると良いかなと思っています。
+私たちはCIの時間を劇的に改善することができました。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/03/swc-node-jest.html">
+          <a class="twitter" data-title="@swc-node/jest を使ってテストを高速化する"></a>
+          <a class="facebook" data-title="@swc-node/jest を使ってテストを高速化する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/05/02/pong-swoosh-updates.html">pong-swoosh のアップデートまとめ</a></h1>
   <p class="postdate"><a href="/2022/05/02.html" title="Permanent link">Monday, May 02, 2022 04:39:00 PM</a></p>
   <p class="tags">
@@ -808,54 +918,6 @@ SORACOM BeamからGoogle IoT Coreにもうまく連携できた。これは簡�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2020/02/16/serverless-alias.html">Serverless Framework 1.61.3 以上で Alias プラグインが利用できない</a></h1>
-  <p class="postdate"><a href="/2020/02/16.html" title="Permanent link">Sunday, February 16, 2020 04:07:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/serverless-framework.html" rel="tag">Serverless Framework</a>
-      <a href="/tags/alias-plugin.html" rel="tag">Alias Plugin</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Serverless Frameworkのバージョンも dependabot で追従してあげているのですが、
-あるとき <code>sls deploy</code> がエラーになってしまいました。</p>
-
-<p>Aliasのエラーが出ていたので、<a href="https://www.npmjs.com/package/serverless-aws-alias">serverless-aws-alias</a>
-を調査しようとしたら、ビンゴなissueを見つけました。</p>
-
-<p><a href="https://github.com/serverless-heaven/serverless-aws-alias/issues/181">ServerlessError: Export &lsquo;project-name-ServerlessAliasReference&rsquo; does not exist. #181</a></p>
-
-<p><a href="https://github.com/serverless/serverless/commit/f1cc3a899856a12ed251ea4a0947a331861cd8b3">Serverless Framework 1.61.3 のコミット</a>でAliasプラグインがうまく動かなくなることがあるようです。</p>
-
-<p>私たちのプロジェクトでは 1.61.2 に戻して、dependabotから来るPRにはWIPをつけるようにしました。</p>
-
-<p>どのようなときに問題がおきるかというと、</p>
-
-<ul>
-<li>1つのServerlessアプリケーションに複数のハンドラがある</li>
-<li>新しいハンドラが追加になった</li>
-</ul>
-
-<p>ケースです。</p>
-
-<p>複数のハンドラがあるけど、追加がないケースでは新しいバージョンを使っても問題は発生していません。
-Aliasプラグイン便利なので、はやく修正されると良いなー（困った人はPRを出そうというのはわかるが、これは難しい問題のようだった</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2020/02/16/serverless-alias.html">
-          <a class="twitter" data-title="Serverless Framework 1.61.3 以上で Alias プラグインが利用できない"></a>
-          <a class="facebook" data-title="Serverless Framework 1.61.3 以上で Alias プラグインが利用できない"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -885,6 +947,7 @@ Aliasプラグイン便利なので、はやく修正されると良いなー（
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -894,7 +957,6 @@ Aliasプラグイン便利なので、はやく修正されると良いなー（
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -902,11 +964,14 @@ Aliasプラグイン便利なので、はやく修正されると良いなー（
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1014,7 +1079,7 @@ Aliasプラグイン便利なので、はやく修正されると良いなー（
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

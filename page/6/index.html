@@ -272,6 +272,93 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a></h1>
+  <p class="postdate"><a href="/2023/04/03.html" title="Permanent link">Monday, April 03, 2023 03:47:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <h3>dependabot で @aws-sdk/client のバージョンアップがコンパイルエラーになる</h3>
+
+<p>少し久しぶりの記事になってしまいましたが、この間も Node.js v18 / aws-sdk v3 への移行を行なっています。
+一部のリポジトリではコードの移行は終わって、 dependabot でライブラリの最新追従を行なっているのですが、以下のようなコンパイルエラーが出るようになりました。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>error TS2345: Argument of type 'typeof LambdaClient' is not assignable to parameter of type 'InstanceOrClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
+  Type 'typeof LambdaClient' is not assignable to type 'ClassType&lt;Client&lt;ServiceInputTypes, MetadataBearer, any&gt;&gt;'.
+</code></pre></div>
+<p>aws-sdk v3 では複数の aws サービスを使っていると複数のパッケージに依存するようになるのですが、複数のバージョンアップが dependabot によって PR されるうち、一部のアプデだけ上記のようなエラーになります。</p>
+
+<h3>issue を探してみる</h3>
+
+<p>aws-sdk の issue を調べていくと、それっぽいものがありました。</p>
+
+<p><a href="https://github.com/aws/aws-sdk-js-v3/issues/3390">Typescript compilation problems since 3.52.0 in lib-dynamodb</a></p>
+
+<p>この issue 自体はクローズされていないのですが、コメントのスレッドの中に有用な情報がありました。</p>
+
+<ul>
+<li><code>@aws-sdk/types</code> が依存に入っていて、異なるバージョンの client-xxx があるとエラーになる（なんで package-lock.json を消してから npm i しなおすとうまくいくよ -&gt; そんなんやるか！）</li>
+<li><code>@aws-sdk/client-xxxx</code> の各クライアントはすべて最新バージョンに追従してください</li>
+</ul>
+
+<p>のようなものです（要約してあります）。</p>
+
+<p>aws-sdk@v3 はサービスごとにパッケージを分割することで v2 と比べて良い、というのがウリなはずなんですが、これではパッケージ管理崩壊しているのでは？と思わなくもないですが、まぁ各クライアントのバージョンを合わせれば良いだけなので、従うことにしました。
+ちなみにこの時点では複数の <code>@aws-sdk/client-xxx</code> を全て最新版に追従することで解消されました。</p>
+
+<h3>この問題が発生する状況</h3>
+
+<p>この問題が発生する状況は以下のとおりです。</p>
+
+<ul>
+<li>すでに1つ以上の <code>@aws-sdk/client-xxxx</code> を入れていて、後日機能追加によって別のクライアントをインストールするとき</li>
+<li>dependabot でパッケージごとにバージョンアップの PR が発動する</li>
+</ul>
+
+<h3>おすすめの対応</h3>
+
+<p>なので、現時点でのオススメの対応は以下のとおりです。</p>
+
+<ul>
+<li>新しく <code>@aws-sdk/client-xxxx</code> を追加するときは、既存のクライアントも含めてすべて同じバージョンに変更する</li>
+<li>dependabot による更新を <code>@aws-sdk/*</code> については無効にする</li>
+</ul>
+
+<p>Github Actions の dependabot でアプデを無効にするには、 dependabot.yml を以下のように記述すれば良いです。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">version</span><span class="pi">:</span> <span class="m">2</span>
+<span class="na">updates</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">package-ecosystem</span><span class="pi">:</span> <span class="s1">'</span><span class="s">npm'</span>
+    <span class="na">directory</span><span class="pi">:</span> <span class="s1">'</span><span class="s">/'</span>
+    <span class="na">ignore</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">dependency-name</span><span class="pi">:</span> <span class="s1">'</span><span class="s">@aws-sdk/*'</span>
+        <span class="c1"># aws-sdk に対するすべての更新を無視</span>
+</code></pre></div>
+<p>私たちは AWS Lambda の Node.js v18 ランタイムを使っているので、aws-sdk はランタイムにグローバルインストールされているから、あえて最新版に追従しなくても問題ないというのが主な理由です。
+新しいクライアント追加のときに最新に追従すれば十分という判断です。</p>
+
+<h3>さいごに</h3>
+
+<p>aws-sdk@v3 を使ったアプリのナレッジが少ないので、何か小さなことでも記事にしていこうと思います。
+同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/03/aws-sdk-v3-ts2345.html">
+          <a class="twitter" data-title="aws-sdk v3 で TS2345 が出てコンパイルエラーになる"></a>
+          <a class="facebook" data-title="aws-sdk v3 で TS2345 が出てコンパイルエラーになる"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2023/02/02/how-mock-aws-sdk-client-mock.html">aws-sdk-client-mock はどのように aws-sdk をモックしているのか？</a></h1>
   <p class="postdate"><a href="/2023/02/02.html" title="Permanent link">Thursday, February 02, 2023 05:05:00 PM</a></p>
   <p class="tags">
@@ -737,121 +824,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a></h1>
-  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 02:53:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/jest.html" rel="tag">Jest</a>
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/sqs.html" rel="tag">SQS</a>
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回の<a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a>と同じように外部サービスを使った部分の自動テストについてです。
-今回は AWS SQS を使ったコードの自動テストを書く場合です。</p>
-
-<p>BigQuery と違い、 AWS SQS のエミュレータは検索するとすぐに見つかりました。
-たとえば <a href="https://hub.docker.com/r/roribio16/alpine-sqs/">roribio16/alpine-sqs</a> というもの。
-こちらは日本語の使ってみた記事もいくつか出ています。</p>
-
-<ul>
-<li><a href="https://k5-n.com/elasticmq/">ローカルDocker環境でSQSのモックElasticMQを利用する</a></li>
-<li><a href="https://zenn.dev/tady/articles/cccbc4d11bf19a">AWS SQSのローカル開発環境をDockerで構築する</a></li>
-</ul>
-
-<h2>roribio16/alpine-sqs</h2>
-
-<p>さっそく上記の記事や、公式ドキュメントを参考に動かしてみます。</p>
-
-<p>Dockerコンテナをあげて aws cli から実行してみると、簡単に利用することができたので、 Node.js + Jest のテストコードを書いて試してみます。
-すると ECONNRESET エラーとなって動きません。おやぁ？</p>
-
-<p>GitHub のリポジトリを見てみると、関連する <a href="https://github.com/roribio/alpine-sqs/issues/49">issue</a> が出てました。
-どうも Apple Silicon (いわゆるM1とかM2とか)からだとエラーになるようです。
-解決するための <a href="https://github.com/roribio/alpine-sqs/pull/50">Pull Request</a> も出てるんですが、マージされる気配がないようです。
-現在、開発用の端末は M1 MacBook Pro を使っているので、困ってしまいました。</p>
-
-<p><a href="https://github.com/roribio/alpine-sqs/blob/master/Dockerfile">alpine-sqs の Dockerfile</a> を見ると <code>elasticmq-server</code> を使っているようなので、それを調べてみます。</p>
-
-<h2>elasticmq-server</h2>
-
-<p><a href="https://github.com/softwaremill/elasticmq">ElasticMQ</a> の GitHub を見てみると、普通に </p>
-
-<blockquote>
-<p>Amazon SQS-compatible interface</p>
-</blockquote>
-
-<p>って書いてありました。
-これだけで良いのでは？という感じです。
-（alpine-sqs の利点は何だったんだろう？）</p>
-
-<p>で、それっぽいキーワードで検索すると、記事もありました。</p>
-
-<ul>
-<li><a href="https://kazuhira-r.hatenablog.com/entry/2021/09/18/164425">Amazon SQS互換のElasticMQを使って、Temoporary Queue＋RPCを試してみる</a></li>
-<li><a href="https://techgrowup.net/2021/08/17/amazon-sqs/">Amazon SQSをDockerを使ってローカルで実行</a></li>
-<li><a href="https://note.com/shift_tech/n/n5954af51eaaf">LocalでSQS(ElasticMQ)を動かしてみた</a></li>
-<li><a href="http://takaaki.info/2014/05/05/elasticmq-sqs/">ElasticMQでAmazon SQSのローカルテスト環境を作る</a></li>
-</ul>
-
-<p>調べ方の問題ですかね？キーワードの指定の方法によっては、こっちの方がたくさん出てきました。</p>
-
-<p>さてこちらも Docker コンテナがあるので、それを使って起動します。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="nt">-rm</span> <span class="nt">-p</span> 9324:9324 <span class="nt">-p</span> 9325:9325 softwaremill/elasticmq-native
-</code></pre></div>
-<p>起動時にキューを作っておくには config ファイルを記述してファイルをマウントします。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker run <span class="nt">-d</span> <span class="nt">-rm</span> <span class="nt">-p</span> 9324:9324 <span class="nt">-p</span> 9325:9325 <span class="nt">-v</span> <span class="sb">`</span><span class="nb">pwd</span><span class="sb">`</span>/custom.conf:/opt/elasticmq.conf softwaremill/elasticmq-native
-</code></pre></div>
-<p>config の書き方は、 GitHub に例が書いてあるので、そちらを参考にしてください。</p>
-
-<h2>Node.js からの接続</h2>
-
-<p>まず aws-sdk のクレデンシャルに適当な値を設定しておきます。
-あとは SQS クラスのインスタンスを生成するだけです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">AWS</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">SQS</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-sdk</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">credentials</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">secretAccessKey</span><span class="p">:</span> <span class="dl">'</span><span class="s1">secretAccessKey</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">accessKeyId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">accessKeyId</span><span class="dl">'</span><span class="p">,</span>
-  <span class="na">sessionToken</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sessionToken</span><span class="dl">'</span><span class="p">,</span>
-<span class="p">};</span>
-
-<span class="kd">let</span> <span class="nx">sqs</span><span class="p">:</span> <span class="nx">SQS</span><span class="p">;</span>
-
-<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="nx">sqs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SQS</span><span class="p">({</span>
-    <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">endpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://localhost:9324</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">})</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>キューのURLはデフォルト設定だと <code>http://localhost:9324/000000000000/キュー名</code> のようになります。
-このあたりは aws-cli などでキュー一覧を取得してもわかるので、そこから情報を取得しても大丈夫でしょう。</p>
-
-<h2>さいごに</h2>
-
-<p>はい。
-これで AWS SQS を使ったコードの UnitTest も書けるようになりますね。
-どんどん UnitTest を充実させていきましょう。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/12/18/sqs-test-on-node-js.html">
-          <a class="twitter" data-title="Node.js で AWS SQS を使ったコードの自動テストを記述する"></a>
-          <a class="facebook" data-title="Node.js で AWS SQS を使ったコードの自動テストを記述する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -881,6 +853,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -890,7 +863,6 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -898,11 +870,14 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1010,7 +985,7 @@ sfn.start の実装側では、普通に aws-sdk から import した SFNClient 
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

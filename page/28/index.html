@@ -272,6 +272,120 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2015/09/13/verbal-expression-php.html">正規表現を簡単に作るには</a></h1>
+  <p class="postdate"><a href="/2015/09/13.html" title="Permanent link">Sunday, September 13, 2015 04:11:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>皆さんは正規表現好きですか？そして得意ですか？
+私は好きですが、得意とは言えません。</p>
+
+<h3>VerbalExpressionという選択肢</h3>
+
+<p>そこでVervalExpressionという正規表現を簡単に組むことができる仕組みがあります。</p>
+
+<p><a href="http://verbalexpressions.github.io/">http://verbalexpressions.github.io/</a></p>
+
+<p>サイトに「Regular Expressions made easy」と書いてあるように、簡単に正規表現が作れることを表明しています。
+様々な言語にポートされていますが、もちろんPHP版もあります。</p>
+
+<p><a href="https://github.com/VerbalExpressions/PHPVerbalExpressions">https://github.com/VerbalExpressions/PHPVerbalExpressions</a></p>
+
+<p>サイトのサンプルにも書いてあるとおり、以下のようなURLにマッチする正規表現が記述できます。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">VerbalExpressions\PHPVerbalExpressions\VerbalExpressions</span><span class="p">;</span>
+
+<span class="nv">$regex</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VerbalExpressions</span><span class="p">;</span>
+<span class="nv">$regex</span>  <span class="o">-&gt;</span><span class="nf">startOfLine</span><span class="p">()</span>
+        <span class="o">-&gt;</span><span class="nf">then</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">then</span><span class="p">(</span><span class="s2">"://"</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"www."</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">anythingBut</span><span class="p">(</span><span class="s2">" "</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">endOfLine</span><span class="p">();</span>
+
+<span class="k">echo</span> <span class="nv">$regex</span><span class="o">-&gt;</span><span class="nf">getRegex</span><span class="p">()</span> <span class="mf">.</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nb">preg_match</span><span class="p">(</span><span class="nv">$regex</span><span class="p">,</span> <span class="s1">'http://github.com'</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">"valid url</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">echo</span> <span class="s2">"invalud url</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>1つ目のechoの結果は <code>/^(?:http)(?:s)?(?:\:\/\/)(?:www\.)?(?:[^ ]*)$/m</code> で、2つ目のechoは <code>valid url</code> を表示します。
+VerbalExpressionsクラスに <code>toString</code> メソッドが実装されているので、 <code>preg_match</code> 関数でそのまま使えます。</p>
+
+<h3>複雑なことはできるか？</h3>
+
+<p>例えばRFC3986に書いてあるURLパターンをマッチさせようとすると、どうなるでしょうか？
+一旦スキーマ部分だけ記述してみます。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="nv">$rfc3986</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VerbalExpressions</span><span class="p">;</span>
+<span class="c1">// scheme</span>
+<span class="nv">$scheme</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VerbalExpressions</span><span class="p">;</span>
+<span class="nv">$scheme</span><span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="s2">"http"</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">_or</span><span class="p">(</span><span class="s2">"ftp"</span><span class="p">);</span>
+
+<span class="nv">$rfc3986</span><span class="o">-&gt;</span><span class="nf">startOfLine</span><span class="p">()</span>
+        <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="nv">$scheme</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">add</span><span class="p">(</span><span class="s2">"://"</span><span class="p">);</span>
+<span class="k">echo</span> <span class="nv">$rfc3986</span><span class="o">-&gt;</span><span class="nf">getRegex</span><span class="p">()</span> <span class="mf">.</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+</code></pre></div>
+<p>結果は <code>/^(?:\(\?\:http\)\(\?\:s\)\?\)\|\(\?\:ftp)(?:\:\/\/)/m</code> のようになってしまい、期待通りではありません。
+この実装は入れ子には対応していないようです。</p>
+
+<h3>もう１つのVerbalExpression実装</h3>
+
+<p>PHPにはもう１つ別のVerbalExpression実装があります。</p>
+
+<p><a href="https://github.com/markwilson/VerbalExpressionsPhp">https://github.com/markwilson/VerbalExpressionsPhp</a></p>
+
+<p>こちらの実装はREADMEに入れ子について記述されているように、入れ子の対応はされているようです。
+では早速RFC3986の定義を試してみましょう。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="nv">$rfc3986</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VerbalExpression</span><span class="p">;</span>
+<span class="c1">// scheme</span>
+<span class="nv">$scheme</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VerbalExpression</span><span class="p">;</span>
+<span class="nv">$scheme</span><span class="o">-&gt;</span><span class="nf">then</span><span class="p">(</span><span class="s2">"http"</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">maybe</span><span class="p">(</span><span class="s2">"s"</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span><span class="o">-&gt;</span><span class="nf">orPipe</span><span class="p">(</span><span class="s2">"ftp"</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+
+<span class="nv">$rfc3986</span><span class="o">-&gt;</span><span class="nf">startOfLine</span><span class="p">()</span>
+        <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="nv">$scheme</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">find</span><span class="p">(</span><span class="s2">"://"</span><span class="p">)</span>
+        <span class="o">-&gt;</span><span class="nf">endOfLine</span><span class="p">();</span>
+<span class="k">echo</span> <span class="nv">$rfc3986</span><span class="o">-&gt;</span><span class="nf">compile</span><span class="p">()</span> <span class="mf">.</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">;</span>
+</code></pre></div>
+<p>結果は <code>^((?:http)(?:s)?()|()(ftp))(\:\/\/)$</code> のようになってしまい、まぁ不正ではないのですが、かなり無駄があります。</p>
+
+<h3>現時点結局のところ</h3>
+
+<p>どちらの実装も簡単なパターンをやるときには良いのですが、ちょっと複雑なパターンを実装しようと思うと微妙です。
+大体、簡単なパターンはそのまま正規表現書けば良いじゃん&hellip; という話ですしね。</p>
+
+<h3>目指したいところ</h3>
+
+<p>RubyのVerbalExpressions実装には <a href="http://www.kurtisrainboltgreene.name/hexpress/">HEXPRESS</a> があります。
+これはVerbalExpressionsよりさらに便利なヘルパーを備えて <code>Human Expressions, a human way to define regular expressions</code> という標語のとおりより簡単に実装できるように見えます。</p>
+
+<p>これをPHPに移植して使えるようにしようというのが、直近やろうとしていることです。</p>
+
+<h3>さいごに</h3>
+
+<p><a href="http://phpcon.php.gr.jp/2015/">日本PHPカンファレンス2015</a>が10/3(土)に行われます。
+私もスピーカーとして登壇しますので、もしご都合がつく方はよろしくお願いします。   </p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2015/09/13/verbal-expression-php.html">
+          <a class="twitter" data-title="正規表現を簡単に作るには"></a>
+          <a class="facebook" data-title="正規表現を簡単に作るには"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2015/06/14/htmlday-2015.html">htmldayのイベントに参加してきた</a></h1>
   <p class="postdate"><a href="/2015/06/14.html" title="Permanent link">Sunday, June 14, 2015 06:33:00 PM</a></p>
   <p class="tags">
@@ -1013,171 +1127,6 @@ CakePHP3になって、メソッドやクラスが一部変わりましたが、
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a></h1>
-  <p class="postdate"><a href="/2015/05/02.html" title="Permanent link">Saturday, May 02, 2015 03:51:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
-      <a href="/tags/gulp.html" rel="tag">gulp</a>
-      <a href="/tags/gulp-rev.html" rel="tag">gulp-rev</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>JavaScriptでモダンな開発をするとき、<a href="http://gulpjs.com/">gulp</a>というビルドシステムを使うと、簡単にビルド過程を自動化できます。
-さらに、JavaScriptでアプリケーションを作ったとき、ライブラリはCDNなどから取得するとして、自分で作ったスクリプトファイルは１つのファイルにまとめてミニファイズする、ということをgulpのタスクで書くでしょう。
-一般的にJavaScriptやCSSをHTML上に記述するとき、以下のようにします。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/app.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"/css/app.css"</span> <span class="na">type=</span><span class="s">"text/css"</span><span class="nt">&gt;</span>
-</code></pre></div>
-<h3>リリースしたのにファイルの変更が読み込まれない</h3>
-
-<p>良くあるシーンとして、JavaScriptファイルやCSSファイルを差し替えたのに、変更がブラウザに反映されない、というケースです。
-これはブラウザのキャッシュが有効になっていて、JavaScriptやCSSのファイルをWebサーバへ取得しに行かないために発生します。</p>
-
-<p>そこで、この課題に対応するため、以下のどちらかの方法を採用すると思います。</p>
-
-<ul>
-<li>ファイル名のGETパラメータに、乱数を付加して <code>/js/app.js?_リビジョン番号</code> のようにする</li>
-<li>ファイル名にリビジョン番号を入れて <code>/js/app-リビジョン番号.js</code> のようにする</li>
-</ul>
-
-<p>こうすると、リビジョンが変更になった（リリースした）ときにファイルが必ず読み込まれるようになります。</p>
-
-<h3>GETパラメータの付加は推奨されない</h3>
-
-<p>前記の対応のうち、GETパラメータにリビジョン番号を追加する方法はあまり推奨されません(参照:<a href="http://www.amazon.co.jp/High-Performance-Web-Sites-Essential/dp/0596529309/ref=tmm_pap_title_0?ie=UTF8&amp;qid=1430550831&amp;sr=8-1"><code>High Performance Web Sites</code></a>)。
-この方法は、ブラウザやWebサーバがキャッシュを利用しないため、サイトの負荷につながります。</p>
-
-<p>もちろん毎回リクエストが来ても問題ないサイトや、利用者が想定されていれば問題ないかもしれないですが、利用できるのであればキャッシュが有効になっていてページが速く表示できた方が良いことはいうまでもありません。</p>
-
-<p>gulp-revを使ってGETパラメータにリビジョン番号を入れたい場合は、<a href="https://github.com/bustardcelly/gulp-rev-append">gulp-rev-append</a>を使うとクエリ文字列としてハッシュ値を入れられるようになります。</p>
-
-<h3>ビルド時にファイル名を変更する</h3>
-
-<p>推奨される方法は  <code>/js/app-リビジョン番号.js</code> のように、ファイル名を変更することです。
-gulpのタスク上に、<code>gulp-rev</code>のREADMEに書いてあるとおりの方法で対応します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp</span><span class="dl">'</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">rev</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp-rev</span><span class="dl">'</span><span class="p">);</span>
-
-<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// by default, gulp would pick `assets/css` as the base, </span>
-    <span class="c1">// so we need to set it explicitly: </span>
-    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="dl">'</span><span class="s1">assets/css/*.css</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">assets/js/*.js</span><span class="dl">'</span><span class="p">],</span> <span class="p">{</span><span class="na">base</span><span class="p">:</span> <span class="dl">'</span><span class="s1">assets</span><span class="dl">'</span><span class="p">})</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">))</span>  <span class="c1">// copy original assets to build dir </span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">())</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">))</span>  <span class="c1">// write rev'd assets to build dir </span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">.</span><span class="nx">manifest</span><span class="p">())</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">));</span> <span class="c1">// write manifest to build dir </span>
-<span class="p">});</span>
-</code></pre></div>
-<p>プロジェクトによっては、このように単純な構成ではなく、複数のストリームを使ってビルドすることもあるでしょう。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">build_js</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">'</span><span class="s1">src/*.js</span><span class="dl">'</span><span class="p">)</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">init</span><span class="p">())</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">concat</span><span class="p">({</span><span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">bundle.js</span><span class="dl">'</span><span class="p">,</span> <span class="na">cwd</span><span class="p">:</span> <span class="dl">''</span><span class="p">}))</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">())</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="dl">'</span><span class="s1">.</span><span class="dl">'</span><span class="p">))</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">))</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">.</span><span class="nx">manifest</span><span class="p">())</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">));</span>
-</code></pre></div>
-<p>たとえばjsとcssを分けてビルドしなくてはいけないようなケースですね。
-元ファイル名と、置き換えられたファイル名のマッピングを出力するために、<code>rev.manifest()</code>というAPIを呼び出します。
-出力先は、そのあとの<code>dest</code>API呼び出しで指定します。ファイル名は省略時には <code>manifest.json</code> というファイル名になります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">{</span>
-    <span class="dl">"</span><span class="s2">app.css</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">app-098f6bcd.css</span><span class="dl">"</span><span class="p">,</span>
-    <span class="dl">"</span><span class="s2">app.js</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">app-273c2cin.js</span><span class="dl">"</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3>ファイル名の変更を反映する</h3>
-
-<p>HTMLファイルのjsやcssのファイル名を書き換えるのに使うのが、<a href="https://github.com/jamesknelson/gulp-rev-replace">gulp-rev-replace</a>です。
-マニフェストファイルを入力として、HTMLファイルのビルド（コピー）過程で差し込むことができるようになっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">"</span><span class="s2">revreplace</span><span class="dl">"</span><span class="p">,</span> <span class="p">[</span><span class="dl">"</span><span class="s2">revision</span><span class="dl">"</span><span class="p">],</span> <span class="kd">function</span><span class="p">(){</span>
-  <span class="kd">var</span> <span class="nx">manifest</span> <span class="o">=</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">"</span><span class="s2">./</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">/rev-manifest.json</span><span class="dl">"</span><span class="p">);</span>
-
-  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">/index.html</span><span class="dl">"</span><span class="p">)</span>
-    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">revReplace</span><span class="p">({</span><span class="na">manifest</span><span class="p">:</span> <span class="nx">manifest</span><span class="p">}))</span>
-    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span><span class="p">));</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>revReplace()</code> というAPIを使って、指定したマニフェストの内容と一致する部分を置換します。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/app-273c2cin.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"/css/app-098f6bcd.css"</span> <span class="na">type=</span><span class="s">"text/css"</span><span class="nt">&gt;</span>
-</code></pre></div>
-<h3>とても便利、でも&hellip;</h3>
-
-<p>私が遭遇したケースで説明しましょう。
-ビルド済みファイル名が <code>domain.js</code> というファイル名でそれにリビジョン番号を追加する必要がありました。
-さらにドメイン名のチェック用に、<a href="https://github.com/miguelmota/is-valid-domain">is-valid-domain.js</a>というライブラリも読み込んでいました。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>ここでビルドしたところ</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain-リビジョン番号.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/domain-リビジョン番号.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>のようになってしまいました。<code>domain.js</code> だけでなく、<code>is-valid-domain.js</code> も変わってしまいます。
-なぜこうなるか、ソースを見てみました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">renames</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="nx">replaceOnce</span><span class="p">(</span><span class="nx">rename</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">contents</span> <span class="o">=</span> <span class="nx">contents</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">rename</span><span class="p">.</span><span class="nx">unreved</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">rename</span><span class="p">.</span><span class="nx">reved</span><span class="p">);</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">contents</span> <span class="o">=</span> <span class="nx">contents</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">'</span><span class="s1">/</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">/</span><span class="dl">'</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>まぁですよね。ファイルを読み込んで <code>domain.js</code> に一致するところで分割、<code>domain-リビジョン番号.js</code> を追加して繰り返す、という実装です。
-ファイルのどこに入っているか厳密に識別するのは困難（正規表現を使えばできなくはないかもしれないけど）です。</p>
-
-<p>で、このようなケースにならなそうなら、そのまま gulp-rev-replace を使ってもらえば問題ないと思います。
-ライブラリの挙動がわかっていれば利用するのも安心ですね。</p>
-
-<h3>私は gulp-template を使いました</h3>
-
-<p>で、私は gulp-rev-replace 使うのやめました。</p>
-
-<p>ちょっと予期しない動作をするのは怖かったので、リビジョン番号が入って欲しいところを明示するようにしたかったのです。
-そこで使ったのが <a href="https://github.com/sindresorhus/gulp-template">gulp-template</a> です。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;h1&gt;</span>Hello <span class="nt">&lt;</span><span class="err">%=</span> <span class="na">name</span> <span class="err">%</span><span class="nt">&gt;&lt;/h1&gt;</span>
-</code></pre></div>
-<p><code>&lt;%= =&gt;</code> で囲んだ部分に値を差し込むことができるので、以下のように記述します。</p>
-<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/&lt;%= data['domain.js'] %&gt;"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>そこにマニフェストJSONを<code>fs-extra</code>で読み込んで、<code>template</code>APIに流し込むようにします。
-そのままだと、変換前JSファイル名が変数名になって取り出しずらいので、<code>variable</code>オプションを指定して<code>data</code>という変数名にバインドするようにします。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp</span><span class="dl">'</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">template</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp-template</span><span class="dl">'</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">fs-extra</span><span class="dl">'</span><span class="p">);</span>
-
-<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">build_html</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">manifest</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readJsonSync</span><span class="p">(</span><span class="dl">'</span><span class="s1">./</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">/rev-manifest.json</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">throws</span><span class="p">:</span> <span class="kc">false</span><span class="p">})</span>
-    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">'</span><span class="s1">src/*.html</span><span class="dl">'</span><span class="p">)</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">template</span><span class="p">(</span><span class="nx">manifest</span><span class="p">,</span> <span class="p">{</span><span class="na">variable</span><span class="p">:</span> <span class="dl">'</span><span class="s1">data</span><span class="dl">'</span><span class="p">}))</span>
-        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">));</span>
-<span class="p">});</span>
-</code></pre></div>
-<h3>まとめ</h3>
-
-<p>静的ファイルのリビジョン管理って結構面倒なんですが、gulp使うと便利なライブラリあって簡単に実装できます。
-今回は私が遭遇した特殊なケースかもしれないので、そのままgulp-revだけで完結できることも多々あるでしょう。
-gulp-revや、その関連ライブラリには便利な機能がまだあるので、一度使ってみてください。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2015/05/02/notice-gulp-rev-replace.html">
-          <a class="twitter" data-title="gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと"></a>
-          <a class="facebook" data-title="gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1207,6 +1156,7 @@ gulp-revや、その関連ライブラリには便利な機能がまだあるの
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -1216,7 +1166,6 @@ gulp-revや、その関連ライブラリには便利な機能がまだあるの
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -1224,11 +1173,14 @@ gulp-revや、その関連ライブラリには便利な機能がまだあるの
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1336,7 +1288,7 @@ gulp-revや、その関連ライブラリには便利な機能がまだあるの
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

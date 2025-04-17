@@ -272,6 +272,104 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a></h1>
+  <p class="postdate"><a href="/2024/05/01.html" title="Permanent link">Wednesday, May 01, 2024 06:32:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/gae.html" rel="tag">GAE</a>
+      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>この記事は <a href="2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a> の続編となります。</p>
+
+<h3>GAEにデプロイして動作確認しながら修正</h3>
+
+<p>前回で Slim4 へ移行でき、少し動く様になってきたので動作確認しながら微修正していきます。</p>
+
+<h4>GAE 2nd gen 用の設定変更</h4>
+
+<p><code>app.yml</code> ファイルに定義していたデプロイ対象外ファイルの一覧 <code>skip_files</code> は別のファイル <code>.gcloudignore</code> に記述するように変更になったので、定義を移行しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/98ec0f6157778a1b37807664193d1ee0afc56ec1">コミット</a>。</p>
+
+<h4>Carbon のバージョンアップ</h4>
+
+<p>8.2 環境で動くように Carbon を 1.21 から 2.72 にアプデしました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/f33a78013a00996a30de76849abe76d40e404b1b">コミット</a>。</p>
+
+<h4>composer ファイルをデプロイ対象に追加</h4>
+
+<p>GAE 2nd gen からは composer での依存関係はGAEデプロイ時に解決されるので、デプロイ対象ファイルに composer.json と composer.lock ファイルを追加しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/33bfe6f232d1b4794a6a27cfc0ceed139159615b">コミット</a>。</p>
+
+<h4>ミドルウェアの定義を変更</h4>
+
+<p>ミドルウェアがうまく動作していないことがわかったので、調べていると書き方が変わっていることに気づきました。すでにパラメータは変更していたのですが、実行メソッド名も変更になっていました。</p>
+
+<p>そこでt PHP5.5 のときは interface を実装するコードになっていなかったので、ちゃんと <code>MiddlewareInterface</code> を実装するようなコードに修正。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Psr\Http\Server\MiddlewareInterface</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">AllowedProvidersMiddleware</span>
+<span class="kd">class</span> <span class="nc">AllowedProvidersMiddleware</span> <span class="kd">implements</span> <span class="nc">MiddlewareInterface</span>
+<span class="p">{</span>
+</code></pre></div>
+<p>そうすると、以前は <code>__invoke</code> メソッドで定義していたところを <code>process</code> に変更する必要があることがわかりました。
+その修正<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/6e737549267d4f231cc5894f88f00bd91cbf9862">コミット</a>。</p>
+
+<h4>セッションの処理も修正</h4>
+
+<p>さきほどのコミットでは、セッション保持の Memcache がうまく動作していなかったので、いったん <code>session_set_save_handler</code> はコメントアウトして、デフォルトの tmp 管理にしています。ただ複数インスタンス起動するとうまく動作しなくなるので、いったん動作確認を進める上での暫定対応です。</p>
+
+<p>またセッションミドルウェアも全体に対して有効にするのでなく、セッションが必要なAPI（ここでいうと管理画面のログイン周辺）についてだけ有効にするようにルーティングを変更しています。</p>
+
+<p>その後、Google Cloud の Cloud Datastore に <code>DatastoreSessionHandler</code> というものがあるのがわかり、以下のように設定を変更しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/d85b82286d6ec844c6e73144cbcd889d3ae8ff52">コミット</a>。</p>
+<div class="highlight"><pre class="highlight php"><code><span class="kn">use</span> <span class="nc">Google\Cloud\Datastore\DatastoreClient</span><span class="p">;</span>
+<span class="kn">use</span> <span class="nc">Google\Cloud\Datastore\DatastoreSessionHandler</span><span class="p">;</span>
+
+    <span class="nv">$datastore</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DatastoreClient</span><span class="p">();</span>
+    <span class="nv">$handler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DatastoreSessionHandler</span><span class="p">(</span><span class="nv">$datastore</span><span class="p">);</span>
+    <span class="nb">session_set_save_handler</span><span class="p">(</span><span class="nv">$handler</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nb">session_save_path</span><span class="p">(</span><span class="s1">'sessions'</span><span class="p">);</span>
+</code></pre></div>
+<h4>POST のボディに JSON を渡す場合の対応</h4>
+
+<p>Slim4 では <code>addBodyParsingMiddleware</code> を利用する必要があったので、修正しました。その<a href="https://github.com/toiletevolution/toiletevolution-server/pull/20/commits/376485104e1ac12a28b749dfc911506f57bcc27d">コミット</a>。</p>
+
+<p>併せて BASIC 認証時の before 処理も不要であることがわかったので削除しています。</p>
+
+<h3>GAE へのデプロイ方法を README に追記</h3>
+
+<p>GAE 2nd gen からはビルド結果を以下のコマンドでデプロイします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gcloud app deploy --project toiletevolution --version 2 --no-promote --appyaml=app.yml
+</code></pre></div>
+<p><code>version</code> を指定して新しいバージョンで動作確認を可能にして、 <code>--no-promote</code> をつけることで従来のURLからのアクセスは、新しいバージョンに振り分けられない様にします。</p>
+
+<h3>そしてどうなったか</h3>
+
+<p>この記事は PHP のバージョンアップをメインにしているのですが、実際には WebComponents 側も修正しています。</p>
+
+<p>そしてシュミレータで一ヶ月ぐらいの稼働テストを実施して、問題なさそうだったので某日に正式リリースを実施しました。
+その後、新しいバージョンでの問題も発生せず順調に動いています。</p>
+
+<p>これでしばらくは落ち着くのと、バージョンアップ追従もどんどんできるようになっていくので安心です。</p>
+
+<p>ブログの記事にまとめてみると、そんなに大変な修正でもなかったな？という感じですが、当時は久々に PHP 触ったりするのもあり、結構大変でした。</p>
+
+<p>今後は phpstan とか入れたりして、コードの品質も上げていければなと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">
+          <a class="twitter" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5"></a>
+          <a class="facebook" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2024/04/30/story-for-migrate-hobby-web-service-while-a-year-part-4.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 4</a></h1>
   <p class="postdate"><a href="/2024/04/30.html" title="Permanent link">Tuesday, April 30, 2024 01:52:00 PM</a></p>
   <p class="tags">
@@ -838,113 +936,6 @@ Memcache はこの移行バスに入ったようでそのままでも利用で�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a></h1>
-  <p class="postdate"><a href="/2024/02/18.html" title="Permanent link">Sunday, February 18, 2024 12:40:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/phpkansai.html" rel="tag">phpkansai</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>大阪自体はそれほど久しぶりではないけど、東京以外のカンファレンスにリアル参加するのは久しぶりだった。
-ブログを振り返ると、<a href="/2019/10/13/phpcon-okinawa-2019.html">PHPカンファレンス沖縄2019で、 標準インターフェースを使ったアプリケーション開発について発表してきました</a>がコロナ前最後に参加した地域PHP conであったようだ。
-大阪へは藤井風のパナスタライブ以来なので、1年半ぶりぐらい。</p>
-
-<h3>このところのホテル事情</h3>
-
-<p>昨年秋のシルバーウィークに九州まで車でスカイラインを巡る旅をしてきて、ホテルの混雑状況とか把握していたつもりでしたが、今回はやばかった。
-ちょうど3連休開催ということで、ホテルの値段がやばい。大阪ではいつも宿泊する本町のホテルが早々に売り切れててどうしよう？となりましたが、
-運よくリニューアルしたばかりの東横inn淀屋橋駅南が空いてて、普段の東横価格だったので安心できました。</p>
-
-<h3>前夜祭への参加</h3>
-
-<p>さらに前日入りをすることにしていたのですが、午前中に東京で用事があったので <a href="https://connpass.com/event/309163/">【非公式！前夜祭】 PHPカンファレンス関西2024</a> へも新幹線に乗るタイミングで間に合いそうだったので参加表明するという慌ただしさ。</p>
-
-<p>前夜祭で他の人の発表を聞いていて、自分も何か話したいなーという欲が出てきたので、その場でスライドをさくさくと作ってWebアクセシビリティの話をしました。
-いろいろなところで4月から義務化？！とか言われてますが、実際のところどうなのよ？みたいなところを。
-最新関係する仕事もしていてかなり調べたので、気になっている人もいるのでは？と思ったのです。</p>
-
-<p>かつてはカンファレンスを開催していた大阪産業創造館という場所も懐かしかった。</p>
-
-<p>前夜祭を楽しんだ後は、最近大阪に来たら必ずいく Bar で飲んでちゃんと終電ではホテルに戻りました。</p>
-
-<h3>カンファレンス当日</h3>
-
-<p>今回はあまり普段登壇で見かけない人の発表を聞く、久しぶりに会うコミュニティメンバーと会話する、という2つの目的で参加していました。
-どちらも当初の見込みは達成できて、たくさんの刺激をもらいました。
-午後は主にアンカンファレンスの会場にいて、枠も空いていたので前夜祭で話した内容をまたやってみたりと、聞くだけでなく積極的にイベントにも参加しました。
-ちゃんとスポンサークイズにも応募したよ！（半分ぐらいは聴けてなかったので勘で回答しちゃいましたがw）</p>
-
-<p>懇親会 -&gt; 2次会 -&gt; ホテルそばで1人3次会 をやって終了。
-翌日の月曜日も3連休ということで休みでしたが、東京で推しのライブがあるのでお昼には新幹線に乗り込みました。
-いつものネギ焼きは新幹線のフードコードで</p>
-
-<p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">いつもの(本店ではないが <a href="https://t.co/YfGW0D6zAf">pic.twitter.com/YfGW0D6zAf</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1756862605984239984?ref_src=twsrc%5Etfw">February 12, 2024</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>あ、その前にもちろん聖地巡礼（阪急梅田のタイガースショップ）もして、グッズも買いました。</p>
-
-<h3>久しぶりの地域カンファレンスに参加してのまとめ</h3>
-
-<p>昨年のPHPカンファレンス福岡に始まり、地域カンファレンスの開催も戻ってきて、今回の大阪に久しぶりに参加しました。
-大阪のPHPcon自体は <a href="/2018/08/03/phpcon-kansai-2018.html">PHPカンファレンス関西2018に参加してGAEに継続的デプロイする方法について発表してきました</a> のとき以来で、今回はこのときの登壇者Tシャツを来て参加しました。</p>
-
-<p>つまり関西では 6年ぶりということですね。
-オフライン開催のPHP系カンファレンスに関しても昨年の福岡などより前となると、おそらく <a href="/2020/02/21/phperkaigi-2020.html">PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました</a> このときの PHPerKaigi がコロナ前最後であったという記憶があります。</p>
-
-<p>それでも4年。
-つまり6年以上前からコミュニティに参加していた関西圏の人以外はほぼ初参加となるわけです。</p>
-
-<p>今年は月刊PHPカンファレンスなんて言葉が出るぐらいですが、それも昨年の福岡に始まった地域カンファレンスの楽しさから触発されたもので、しばらく行われてこなかった反動だったり、この4から6年の間に新たにこの業界で働き始めた人たちの新しい交流の場なんだなというのを実感しました。</p>
-
-<p>今回のPHPCon関西ではいくつもの素晴らしい取り組みがありました。</p>
-
-<ul>
-<li><a href="https://note.com/phpcon_kansai/">公式 note</a> で発信</li>
-<li>PHPerシール</li>
-<li>お誘いチケット</li>
-<li>おすすめトーク診断</li>
-</ul>
-
-<p>まず公式 note は X だけで発信していると流れてしまいそうな情報に簡単にアクセスできるのもあり、良いなーと思いました。
-困ったら note 見る、みたいな動線がある。もちろん公式HPに載せるのもありなんで、そこは運用の手間がどちらが少ないかという判断もあるでしょう。</p>
-
-<p>続いて PHPerシール。こちらは2020のPHPerKaigiで行われていたトレーディングカードにインスパイアされたものだと思いますが、積極的に交流できるようにするアイテムとしてとても良いと思いました。スピーカーにはレアカードがあったりしたのも良かったと思います。</p>
-
-<p>お誘いチケットは有料イベントで参加を迷っている人を誘いやすい仕組みとして良いなと思いました。
-PHPerシールとか当日の交流の仕組みがあっても、まず参加してくれないと届きませんね。</p>
-
-<p>おすすめトーク診断も、誘ってもらったり紹介してもらったので参加するけど、カンファレンスの歩き方ってわからんな？という人も向けて楽しみながら参加できる仕掛けだったと思います。</p>
-
-<p>つまりPHP関西自体に初参加、ましてやコロナで勉強会を含めオフラインのイベントそのものに初参加ということが6年というブランクから容易に想像できる環境での地域コミュニティの盛り上げ方に優れた戦略が練られていたことがわかります。</p>
-
-<ol>
-<li>お誘いチケットで誘って参加してもらい</li>
-<li>おすすめトーク診断で当日迷わないようにして</li>
-<li>PHPer シールで当日は交流してもらう</li>
-<li>なんなら X のアカウント持ってなかったけど、シール経由で作ってもらって今後の交流やPHP関西からの発信を受け取ってもらえるようにする</li>
-</ol>
-
-<p>委員長の閉会の挨拶でもこれらを話されていましたが、関西でのPHPコミュニティを盛り上げたいという熱い想いを聞いて、また来年開催されたら参加したいな、発表もしてみたいなと思いました。</p>
-
-<p>久しぶりということで運営の経験値とかもリセットされた中での開催だったと思うけど、そういうのを感じさせない良いカンファレンスでした。
-参加のみなさま、久しぶりに再会したみなさま。そして何より運営のみなさまありがとうございました。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/02/18/php-conference-kansai-2024.html">
-          <a class="twitter" data-title="PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた"></a>
-          <a class="facebook" data-title="PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -972,6 +963,7 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -981,7 +973,6 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -989,11 +980,14 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1101,7 +1095,7 @@ PHPerシールとか当日の交流の仕組みがあっても、まず参加し
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

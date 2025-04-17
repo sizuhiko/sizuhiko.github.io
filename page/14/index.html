@@ -272,6 +272,46 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/06/16/karakuri.html">合宿に参加してKARAKURIを作った</a></h1>
+  <p class="postdate"><a href="/2019/06/16.html" title="Permanent link">Sunday, June 16, 2019 03:25:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+      <a href="/tags/karakuri.html" rel="tag">karakuri</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>会社の合宿に参加するため6/7と6/8で福井の<a href="https://www.takasusou.jp/">鷹巣荘</a>に行ってました。
+海沿いの景色の良い温泉宿だったと思うのですが、生憎梅雨入り直後で雨でした。</p>
+
+<p>まぁ開発に集中できるということで、 <code>edo-blogcard</code> で使うスクレイピングサーバーを作ってました。</p>
+
+<p>名前は <a href="https://github.com/Edo-Elements/edo-karakuri">edo-karakuri</a> です。</p>
+
+<p>成果発表のスライドがあるので、こちらから。</p>
+
+<script async class="speakerdeck-embed" data-id="831d3dc0f327492d9c2f090d24eec5d8" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>スクレイピングしてCORSを回避するのってカラクリだし、なんか江戸っぽいな、ということで、こういうネーミングにしました。
+これを実際にサービスにするには、<a href="https://github.com/GoogleChrome/puppeteer">Puppeteer</a>が重いので、先頭で受けるサービスにするとお金もかかる、ということで手前にキャッシュから打ち返すサービスを作って、キャッシュにない場合はスクレイピングするようにしたいと思います。</p>
+
+<p>現在 GitHub に上がっているコードは、まだGAEにデプロイするようになっていないので、次の <a href="#">Polymer.co-edoのmeetup</a>では、ここを作ろうと思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/06/16/karakuri.html">
+          <a class="twitter" data-title="合宿に参加してKARAKURIを作った"></a>
+          <a class="facebook" data-title="合宿に参加してKARAKURIを作った"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/06/09/jsfes-2019-spring.html">初夏のJavaScript祭りに参加して、Import mapsについてLTをしました</a></h1>
   <p class="postdate"><a href="/2019/06/09.html" title="Permanent link">Sunday, June 09, 2019 02:43:00 PM</a></p>
   <p class="tags">
@@ -1327,221 +1367,6 @@ GPUが利用されるから</p>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/05/13/generate-import-maps-json.html">import-mapsのjsonファイルを生成するツールを作ってみた</a></h1>
-  <p class="postdate"><a href="/2019/05/13.html" title="Permanent link">Monday, May 13, 2019 06:18:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/import-maps.html" rel="tag">import maps</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>前回 <a href="/2019/05/05/try-import-maps.html">TRY import maps</a> ということで、<a href="https://github.com/WICG/import-maps">import maps</a> を試してみる記事を書きました。
-最後に</p>
-
-<blockquote>
-<p>JSON定義を自動生成するスクリプトが出ないか期待したいですね（がんばって自作するのもあり）。</p>
-</blockquote>
-
-<p>という記述をしたのですが、その後調べたら <a href="https://github.com/WICG/import-maps/issues/60">How to convert package-lock.json to import maps? #60</a> というissue が上がっているのを見て、いくつか <code>yarn</code> のサンプルが出ていたりして、これ自作できるのでは？と思い、作ってみました。</p>
-
-<p><a href="https://www.npmjs.com/package/gen-import-maps-json">gen-import-maps-json</a> です。</p>
-
-<p>READMEのとおりで簡単に動きます。</p>
-
-<h3>しくみ</h3>
-
-<p>とても小さいJavaScriptのコードです。以下のような手順で処理しています。</p>
-
-<ol>
-<li>コマンドが実行されたディレクトリにある <code>package-lock.json</code> ファイルを読み込む</li>
-<li>devDependencies のモジュールは除外する</li>
-<li>Web Components の polyfill は除外する</li>
-<li>対象モジュールの <code>package.json</code> を読み取って、 <code>main</code> ファイルのパスを入手する</li>
-<li>メインファイルのモジュール名と、相対パスをキーにした、map情報を書き出す</li>
-</ol>
-
-<h3>ためしてみる</h3>
-
-<p>前回と同じく<a href="https://github.com/Polymer-Japan/litelement-first-element">Polymer-Japan/litelement-first-element</a> のコードを使って実行してみます。</p>
-
-<p>生成できたJSONは以下のとおりです。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nl">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nl">"@polymer/font-roboto/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/font-roboto"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-demo-helpers/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-flex-layout/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icon/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icons/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icons"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-iconset-svg/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-iconset-svg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-location/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-location/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-meta/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/iron-meta"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/marked-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/marked-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/polymer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/polymer/polymer-element.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@polymer/prism-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@polymer/prism-element/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@webcomponents/shadycss/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"@webcomponents/shadycss"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/@webcomponents/shadycss/shadycss.min.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"clipboard/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"clipboard"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/clipboard/dist/clipboard.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"delegate/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"delegate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/delegate/src/delegate.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"good-listener/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"good-listener"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/good-listener/src/listen.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"lit-element/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"lit-html/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"marked/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"marked"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"prismjs/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"prismjs"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"select/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"select"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/select/src/select.js"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"tiny-emitter/"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/"</span><span class="p">,</span><span class="w">
-    </span><span class="nl">"tiny-emitter"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/node_modules/tiny-emitter/index.js"</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p>前回のJSONは以下のとおりでした。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nl">"imports"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nl">"@polymer/iron-demo-helpers/demo-pages-shared-styles"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-pages-shared-styles.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-demo-helpers/demo-snippet"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-demo-helpers/demo-snippet.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/polymer-legacy.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/polymer/polymer-legacy.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-flex-layout/iron-flex-layout.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/font-roboto/roboto.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/font-roboto/roboto.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/lib/utils/html-tag.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/polymer/lib/utils/html-tag.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/apply-shim.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@webcomponents/shadycss/entrypoints/custom-style-interface.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/marked-element/marked-element.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/marked-element/marked-element.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/prism-element/prism-highlighter.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-highlighter.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/prism-element/prism-theme-default.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/prism-element/prism-theme-default.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer-fn.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/polymer/lib/legacy/polymer.dom.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"marked/lib/marked.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/marked/lib/marked.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"prismjs/prism.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/prismjs/prism.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/polymer/lib/elements/dom-module.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/polymer/lib/elements/dom-module.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"lit-element"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/lit-element/lit-element.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"lit-html/lib/shady-render"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/lit-html/lib/shady-render.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"lit-html/lit-html"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/lit-html/lit-html.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icons/iron-icons.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-icons/iron-icons.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-icon/iron-icon.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-icon/iron-icon.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-iconset-svg/iron-iconset-svg.js"</span><span class="w">
-    </span><span class="p">],</span><span class="w">
-    </span><span class="nl">"@polymer/iron-meta/iron-meta.js"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-      </span><span class="s2">"/node_modules/@polymer/iron-meta/iron-meta.js"</span><span class="w">
-    </span><span class="p">]</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p>だいぶ違いますね！</p>
-
-<p>このツールを作ることで、<a href="https://github.com/WICG/import-maps">import maps</a> の仕様理解が深まりました。</p>
-
-<ul>
-<li>キー名に対応するパスが1つの場合、値は配列でなく文字列で良い</li>
-<li>パッケージが複数のモジュールを持っている場合、 キー名を <code>/</code> で終了すると他のファイルを参照できる。くわしくは <a href="https://github.com/WICG/import-maps#packages-via-trailing-slashes">&ldquo;Packages&rdquo; via trailing slashes</a> を参照ください</li>
-</ul>
-
-<p>これで、定義ファイルを自動生成できます。</p>
-
-<h3>実行してみる</h3>
-
-<p>前回と同じくPHPのビルトインサーバーを利用します。
-ツールで生成できた JSON をHTMLに追加しておきましょう。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ php -S localhost:8080 -t .
-</code></pre></div>
-<p>前回と同じように、無事デモが動作しました。</p>
-
-<h3>JSONを外部ファイルにしてみる</h3>
-
-<p>いろいろとissueを見たりしているうちに、JSON記述は外部ファイルが使えるかも？と思ったので、import-mapsの定義をファイルに変更してみます。
-ツールで出力されたJSONを <code>import-maps.json</code> というファイル名にして、以下のようにHTMLの記述を変更します。</p>
-<div class="highlight"><pre class="highlight html"><code>    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"importmap"</span> <span class="na">src=</span><span class="s">"import-maps.json"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>ページをリロードしてみると Dev Tool のコンソールに <strong><em>External import maps are not yet supported.</em></strong> と表示されました。
-まだサポートされてなかった&hellip;</p>
-
-<p>ということで、サポートを待ちましょう。</p>
-
-<h3>さいごに</h3>
-
-<p>仕様は文面だけで読んでいると、わかっているつもりでも、実際のユースケースではわかっていないことも多いと実感しました。
-ツールやデモプログラムを作って、実際に手に馴染ませることが重要ですね。</p>
-
-<p>それと、polyfill の除外がWeb Components固定になっているので、今後の展望としては、ignoreするモジュールを定義ファイルで指定できるようにしたいなーと思っています。</p>
-
-<p>今後も <a href="https://github.com/WICG/import-maps">import maps</a> の最新状況を追いかけていきたいと思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/13/generate-import-maps-json.html">
-          <a class="twitter" data-title="import-mapsのjsonファイルを生成するツールを作ってみた"></a>
-          <a class="facebook" data-title="import-mapsのjsonファイルを生成するツールを作ってみた"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1571,6 +1396,7 @@ GPUが利用されるから</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -1580,7 +1406,6 @@ GPUが利用されるから</p>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -1588,11 +1413,14 @@ GPUが利用されるから</p>
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1700,7 +1528,7 @@ GPUが利用されるから</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

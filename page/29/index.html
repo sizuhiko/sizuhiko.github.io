@@ -272,6 +272,171 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2015/05/02/notice-gulp-rev-replace.html">gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと</a></h1>
+  <p class="postdate"><a href="/2015/05/02.html" title="Permanent link">Saturday, May 02, 2015 03:51:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/gulp.html" rel="tag">gulp</a>
+      <a href="/tags/gulp-rev.html" rel="tag">gulp-rev</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>JavaScriptでモダンな開発をするとき、<a href="http://gulpjs.com/">gulp</a>というビルドシステムを使うと、簡単にビルド過程を自動化できます。
+さらに、JavaScriptでアプリケーションを作ったとき、ライブラリはCDNなどから取得するとして、自分で作ったスクリプトファイルは１つのファイルにまとめてミニファイズする、ということをgulpのタスクで書くでしょう。
+一般的にJavaScriptやCSSをHTML上に記述するとき、以下のようにします。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/app.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"/css/app.css"</span> <span class="na">type=</span><span class="s">"text/css"</span><span class="nt">&gt;</span>
+</code></pre></div>
+<h3>リリースしたのにファイルの変更が読み込まれない</h3>
+
+<p>良くあるシーンとして、JavaScriptファイルやCSSファイルを差し替えたのに、変更がブラウザに反映されない、というケースです。
+これはブラウザのキャッシュが有効になっていて、JavaScriptやCSSのファイルをWebサーバへ取得しに行かないために発生します。</p>
+
+<p>そこで、この課題に対応するため、以下のどちらかの方法を採用すると思います。</p>
+
+<ul>
+<li>ファイル名のGETパラメータに、乱数を付加して <code>/js/app.js?_リビジョン番号</code> のようにする</li>
+<li>ファイル名にリビジョン番号を入れて <code>/js/app-リビジョン番号.js</code> のようにする</li>
+</ul>
+
+<p>こうすると、リビジョンが変更になった（リリースした）ときにファイルが必ず読み込まれるようになります。</p>
+
+<h3>GETパラメータの付加は推奨されない</h3>
+
+<p>前記の対応のうち、GETパラメータにリビジョン番号を追加する方法はあまり推奨されません(参照:<a href="http://www.amazon.co.jp/High-Performance-Web-Sites-Essential/dp/0596529309/ref=tmm_pap_title_0?ie=UTF8&amp;qid=1430550831&amp;sr=8-1"><code>High Performance Web Sites</code></a>)。
+この方法は、ブラウザやWebサーバがキャッシュを利用しないため、サイトの負荷につながります。</p>
+
+<p>もちろん毎回リクエストが来ても問題ないサイトや、利用者が想定されていれば問題ないかもしれないですが、利用できるのであればキャッシュが有効になっていてページが速く表示できた方が良いことはいうまでもありません。</p>
+
+<p>gulp-revを使ってGETパラメータにリビジョン番号を入れたい場合は、<a href="https://github.com/bustardcelly/gulp-rev-append">gulp-rev-append</a>を使うとクエリ文字列としてハッシュ値を入れられるようになります。</p>
+
+<h3>ビルド時にファイル名を変更する</h3>
+
+<p>推奨される方法は  <code>/js/app-リビジョン番号.js</code> のように、ファイル名を変更することです。
+gulpのタスク上に、<code>gulp-rev</code>のREADMEに書いてあるとおりの方法で対応します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">rev</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp-rev</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// by default, gulp would pick `assets/css` as the base, </span>
+    <span class="c1">// so we need to set it explicitly: </span>
+    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">([</span><span class="dl">'</span><span class="s1">assets/css/*.css</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">assets/js/*.js</span><span class="dl">'</span><span class="p">],</span> <span class="p">{</span><span class="na">base</span><span class="p">:</span> <span class="dl">'</span><span class="s1">assets</span><span class="dl">'</span><span class="p">})</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">))</span>  <span class="c1">// copy original assets to build dir </span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">))</span>  <span class="c1">// write rev'd assets to build dir </span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">.</span><span class="nx">manifest</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">build/assets</span><span class="dl">'</span><span class="p">));</span> <span class="c1">// write manifest to build dir </span>
+<span class="p">});</span>
+</code></pre></div>
+<p>プロジェクトによっては、このように単純な構成ではなく、複数のストリームを使ってビルドすることもあるでしょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">build_js</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">'</span><span class="s1">src/*.js</span><span class="dl">'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">init</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">concat</span><span class="p">({</span><span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">bundle.js</span><span class="dl">'</span><span class="p">,</span> <span class="na">cwd</span><span class="p">:</span> <span class="dl">''</span><span class="p">}))</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">sourcemaps</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="dl">'</span><span class="s1">.</span><span class="dl">'</span><span class="p">))</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">))</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">rev</span><span class="p">.</span><span class="nx">manifest</span><span class="p">())</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">));</span>
+</code></pre></div>
+<p>たとえばjsとcssを分けてビルドしなくてはいけないようなケースですね。
+元ファイル名と、置き換えられたファイル名のマッピングを出力するために、<code>rev.manifest()</code>というAPIを呼び出します。
+出力先は、そのあとの<code>dest</code>API呼び出しで指定します。ファイル名は省略時には <code>manifest.json</code> というファイル名になります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="p">{</span>
+    <span class="dl">"</span><span class="s2">app.css</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">app-098f6bcd.css</span><span class="dl">"</span><span class="p">,</span>
+    <span class="dl">"</span><span class="s2">app.js</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">app-273c2cin.js</span><span class="dl">"</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3>ファイル名の変更を反映する</h3>
+
+<p>HTMLファイルのjsやcssのファイル名を書き換えるのに使うのが、<a href="https://github.com/jamesknelson/gulp-rev-replace">gulp-rev-replace</a>です。
+マニフェストファイルを入力として、HTMLファイルのビルド（コピー）過程で差し込むことができるようになっています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">"</span><span class="s2">revreplace</span><span class="dl">"</span><span class="p">,</span> <span class="p">[</span><span class="dl">"</span><span class="s2">revision</span><span class="dl">"</span><span class="p">],</span> <span class="kd">function</span><span class="p">(){</span>
+  <span class="kd">var</span> <span class="nx">manifest</span> <span class="o">=</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">"</span><span class="s2">./</span><span class="dl">"</span> <span class="o">+</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">/rev-manifest.json</span><span class="dl">"</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">"</span><span class="s2">/index.html</span><span class="dl">"</span><span class="p">)</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">revReplace</span><span class="p">({</span><span class="na">manifest</span><span class="p">:</span> <span class="nx">manifest</span><span class="p">}))</span>
+    <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span><span class="p">));</span>
+<span class="p">});</span>
+</code></pre></div>
+<p><code>revReplace()</code> というAPIを使って、指定したマニフェストの内容と一致する部分を置換します。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/app-273c2cin.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">href=</span><span class="s">"/css/app-098f6bcd.css"</span> <span class="na">type=</span><span class="s">"text/css"</span><span class="nt">&gt;</span>
+</code></pre></div>
+<h3>とても便利、でも&hellip;</h3>
+
+<p>私が遭遇したケースで説明しましょう。
+ビルド済みファイル名が <code>domain.js</code> というファイル名でそれにリビジョン番号を追加する必要がありました。
+さらにドメイン名のチェック用に、<a href="https://github.com/miguelmota/is-valid-domain">is-valid-domain.js</a>というライブラリも読み込んでいました。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>ここでビルドしたところ</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain-リビジョン番号.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/domain-リビジョン番号.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>のようになってしまいました。<code>domain.js</code> だけでなく、<code>is-valid-domain.js</code> も変わってしまいます。
+なぜこうなるか、ソースを見てみました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="nx">renames</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="nx">replaceOnce</span><span class="p">(</span><span class="nx">rename</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">contents</span> <span class="o">=</span> <span class="nx">contents</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="nx">rename</span><span class="p">.</span><span class="nx">unreved</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">rename</span><span class="p">.</span><span class="nx">reved</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">contents</span> <span class="o">=</span> <span class="nx">contents</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="dl">'</span><span class="s1">/</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">prefix</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">/</span><span class="dl">'</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>まぁですよね。ファイルを読み込んで <code>domain.js</code> に一致するところで分割、<code>domain-リビジョン番号.js</code> を追加して繰り返す、という実装です。
+ファイルのどこに入っているか厳密に識別するのは困難（正規表現を使えばできなくはないかもしれないけど）です。</p>
+
+<p>で、このようなケースにならなそうなら、そのまま gulp-rev-replace を使ってもらえば問題ないと思います。
+ライブラリの挙動がわかっていれば利用するのも安心ですね。</p>
+
+<h3>私は gulp-template を使いました</h3>
+
+<p>で、私は gulp-rev-replace 使うのやめました。</p>
+
+<p>ちょっと予期しない動作をするのは怖かったので、リビジョン番号が入って欲しいところを明示するようにしたかったのです。
+そこで使ったのが <a href="https://github.com/sindresorhus/gulp-template">gulp-template</a> です。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;h1&gt;</span>Hello <span class="nt">&lt;</span><span class="err">%=</span> <span class="na">name</span> <span class="err">%</span><span class="nt">&gt;&lt;/h1&gt;</span>
+</code></pre></div>
+<p><code>&lt;%= =&gt;</code> で囲んだ部分に値を差し込むことができるので、以下のように記述します。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/lib/is-valid-domain.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"/js/&lt;%= data['domain.js'] %&gt;"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>そこにマニフェストJSONを<code>fs-extra</code>で読み込んで、<code>template</code>APIに流し込むようにします。
+そのままだと、変換前JSファイル名が変数名になって取り出しずらいので、<code>variable</code>オプションを指定して<code>data</code>という変数名にバインドするようにします。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">gulp</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">template</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">gulp-template</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">fs-extra</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">gulp</span><span class="p">.</span><span class="nx">task</span><span class="p">(</span><span class="dl">'</span><span class="s1">build_html</span><span class="dl">'</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">manifest</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readJsonSync</span><span class="p">(</span><span class="dl">'</span><span class="s1">./</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">distFolder</span> <span class="o">+</span> <span class="dl">'</span><span class="s1">/rev-manifest.json</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span><span class="na">throws</span><span class="p">:</span> <span class="kc">false</span><span class="p">})</span>
+    <span class="k">return</span> <span class="nx">gulp</span><span class="p">.</span><span class="nx">src</span><span class="p">(</span><span class="dl">'</span><span class="s1">src/*.html</span><span class="dl">'</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">template</span><span class="p">(</span><span class="nx">manifest</span><span class="p">,</span> <span class="p">{</span><span class="na">variable</span><span class="p">:</span> <span class="dl">'</span><span class="s1">data</span><span class="dl">'</span><span class="p">}))</span>
+        <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">gulp</span><span class="p">.</span><span class="nx">dest</span><span class="p">(</span><span class="dl">'</span><span class="s1">dist</span><span class="dl">'</span><span class="p">));</span>
+<span class="p">});</span>
+</code></pre></div>
+<h3>まとめ</h3>
+
+<p>静的ファイルのリビジョン管理って結構面倒なんですが、gulp使うと便利なライブラリあって簡単に実装できます。
+今回は私が遭遇した特殊なケースかもしれないので、そのままgulp-revだけで完結できることも多々あるでしょう。
+gulp-revや、その関連ライブラリには便利な機能がまだあるので、一度使ってみてください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2015/05/02/notice-gulp-rev-replace.html">
+          <a class="twitter" data-title="gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと"></a>
+          <a class="facebook" data-title="gulp-rev-replace を使ってリビジョン管理をするときに注意したいこと"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2015/04/19/cakebox-is-awesome.html">Cakebox を使ってCakePHP3アプリケーションを作ってみよう</a></h1>
   <p class="postdate"><a href="/2015/04/19.html" title="Permanent link">Sunday, April 19, 2015 03:19:00 PM</a></p>
   <p class="tags">
@@ -1267,105 +1432,6 @@ CakePHP3では以下の流れでDBへ保存しています。</p>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2015/01/03/cakephp-agile-481-days.html">僕とPHPxAgileの481日間</a></h1>
-  <p class="postdate"><a href="/2015/01/03.html" title="Permanent link">Saturday, January 03, 2015 02:23:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/agile.html" rel="tag">Agile</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2014/12/24 に行われた<a href="http://phpstudy.doorkeeper.jp/events/18420">【12/24 クリスマスイブ】第85回 PHP勉強会</a>でLTをしました。</p>
-
-<script async class="speakerdeck-embed" data-id="eaf63b006da5013291a442717aa444ce" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>当日はもの凄く楽しく盛り上がったので、私が発表を開始する頃には会場の終了時間ギリギリになっていました。
-このため高速LTで話していろいろ溢れた話などを記事にまとめます。</p>
-
-<h3>CakePHPを使った開発現場での481日間の支援</h3>
-
-<p>コンサル会社からご指名でお話をいただいたら、コミュニティの知り合いの会社でしたよ、というなんか遠回りな形で始まったお仕事でした。</p>
-
-<p>まず参加して感じたのは、481日前のスライドにあるように、これはなかなか手強いなーという状況でした。
-コンサルの方からイロイロ事情を聞いていたので、ある程度覚悟はしていったのですが、まずの印象はチーム開発ができていないなーという印象。ここでいうチームとは、誰かが指示して動くというよりは、全員の力で進んでいくアジャイルチームをイメージしています。
-良い意味で言うとウォーターフォールのやり方としては、文化があってうまく進めている状況でした。</p>
-
-<p>とはいえ最初に見た手順書とかコードとか、もっと優先してやらないといけなそうな事がたくさんあったので、スライドの順に対策を計画し、開発しながら改善活動をゆるやかに進めるということになりました。</p>
-
-<h3>できたこと と できなかったこと</h3>
-
-<p>かなり大きな案件だったため、複数のサブシステムがあり、スライドの対象は私が直接関わった2つについて支援した内容です。
-ただ、施策のいくつかは全体として取り入れてもらったりして、現在も継続しています。</p>
-
-<p>できたことについては、スライドに含んでいるので、ここではスライドに含められなかった、主にできなかったことについて書きたいと思います。</p>
-
-<ul>
-<li>デプロイの自動化</li>
-<li>環境毎の設定切り替えの仕組み</li>
-<li>共通化されていたコードの改善</li>
-<li>プロダクトオーナーとの関わり方</li>
-<li>more チーム</li>
-</ul>
-
-<p>まずデプロイについては、独自の方法で半自動化されていました。
-ここで列挙したのは、デプロイにcapやjenkinsを使ったりは「しなかった」という意味です。このあたりの改善はすでにワークフローとして機能しているものを改善すべきか、どこまで文化に踏み込むかという判断が必要になると思います。
-本案件ではスクリプトを実行するのは手動ながらも、それによる問題はなさそうだったので、そのまま継続しています。
-ただCI、インテグレーション、ステージング、本番とある内のインテグレーションだけはJenkinsと連動して自動デプロイできるようにしても良かったかなーと今頃思っていますが、まだいるメンバーの方、これを読んだらTRYしてみてください。</p>
-
-<p>環境毎の設定切り替えの仕組みはあったのですが、当初設定を追加するのにExcelファイルを編集しないといけなくて、ひどく苦労しました（Excelファイルだと差分がわからないし）。現在はテキストファイルを直接編集して良い方式となり、これも全サブシステムに影響する箇所で対策がしにくくそのまま継続利用しました。
-CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/cakephp-environments">CakePHP Environmentsプラグイン</a> を使えると良かったのですが。ここはいずれCakePHP3対応するのであればプラグインに切り替えられると良いなーと思います。</p>
-
-<p>上記と同じような理由で、すでに全サブシステムで共通化されていたコードの改善もあまり手が付けられませんでした。サブプロジェクトによって進捗具合が異なり私が入った段階ですでに多くの機能ができあがっていたサブシステムもあり、多くの共通部分は未着手のままとなりました。
-一方で、できたことのほとんどは、まだ実施されていない自動テストだったり、サブシステム単位で改善できる箇所からの着手となったため、このような結果になっています。</p>
-
-<p>プロダクトオーナーとの関わり方については、これはどの現場でもそうですが、開発からのアプローチだけではなかなか改善が難しい部分です。文化を変えるには内側からの大きな力だったり、より大きな成功体験を求めるといったことが必要となるのではないかと思います。
-もしこのあたりを改善したいという現場があれば、プロダクトオーナーを含めて<code>ふりかえり</code>をやって、ProblemとTryを共有して改善していくと良いと思います。でも大規模システムでは… なかなかに難しいですね…</p>
-
-<p>moreチームということでは、最初に関わったサブシステムのチームでは、見積もりゲームをやって、カンバンを導入し、よりチーム力で進めたと思います。そのまま継続してやってくれると良いなーと思っています。私が離れてからもメンバー間でPull Requestに活発にコメントされていたし、とてもうまく廻っているという印象がありました。</p>
-
-<p>一方でその後に担当したサブシステムは、かなり複雑な事情で始まりました。チームの力を付けながら進むというよりは、とにかく完成を目指すような形でしたので、チーム力という意味ではまだ道半ばだったかもしれません。
-あと、年末に様々なイベントが不運なタイミングで重なってしまったのも、多少心残りですが、残ったメンバーの力を合わせて進めていって欲しいです。</p>
-
-<h3>さいごに</h3>
-
-<p>私はいろいろなところで揉めるというか、正論でズバズバ行くタイプなので衝突することが多かったと思います。
-今回支援させてもらった現場では、派遣の方が多く、そういう意味でチーム力で進めていくのはとても困難な状況であったと思います。
-特に社員ではない働き方を選んでいる人の場合、もの凄く前のめりでやりたい人と、3歩後ろをついていきたい人に別れると、これまでの経験で感じます。私もそういう意味では前者になる訳ですが…</p>
-
-<p>例えばチーム全員で要求を仕様にブレークダウンして見積もりゲームをやったり、相互にコードをレビューしたり、これはAgile開発の文化にない開発者にとって、全員が望んでいる方法でないというのは、気持ちでは理解できます。
-が、これをやらずに属人性を排除し、チームとしてより良く開発を進めていく方法が現時点ではあまり思い当たりません。
-特にWeb界隈では人の流動性も高いので、極端に生産性を落とさない為にも、コードや仕様を引き継ぐというために時間を取られるといった事はできれば避けたいはずです。</p>
-
-<p>このプロジェクトを通じて、テストデータジェネレータ <a href="https://github.com/sizuhiko/Fabricate">Fabricate</a> も作ったし、多くの実践投入実績や経験も得ることができました。</p>
-
-<p>まだ現場では開発が続いており <code>CakePHPで継続的インテグレーションを導入したモダンで大規模な開発</code> を継続しているという、貴重な体験ができていると思います。
-そういう意味で、誰か事例発表をすると良いなーと思いますので、今年のPHPカンファレンスなどで話が聞けるのを楽しみに待っています。</p>
-
-<p>そして、PHP勉強会の2日後、2014/12/26をもって、作業支援から離れました。</p>
-
-<p><img src="/images/blog/20141226_flower.jpg" alt="" /></p>
-
-<p>最後にステキなお花と色紙をいただきました。</p>
-
-<p>本当にありがとうございました。引き続き開発頑張ってください！！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2015/01/03/cakephp-agile-481-days.html">
-          <a class="twitter" data-title="僕とPHPxAgileの481日間"></a>
-          <a class="facebook" data-title="僕とPHPxAgileの481日間"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1395,6 +1461,7 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
@@ -1404,7 +1471,6 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
                   <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
-                  <li><a href="/2024/05/01/story-for-migrate-hobby-web-service-while-a-year-part-5.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 5</a> <span>2024/05/01</span></li>
               </ul>
             </div>
           </section>
@@ -1412,11 +1478,14 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
-                    <li class="size0">
-                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/cdk.html" rel="tag">CDK</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
                     </li>
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
@@ -1524,7 +1593,7 @@ CakePHPだとCI本でも解説した <a href="https://github.com/josegonzalez/ca
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (5)</li>
+                  <li><a href="/2025.html">2025</a> (6)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
