@@ -5,10 +5,147 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2025-04-17T19:02:00+09:00</updated>
+  <updated>2025-04-22T14:49:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>S3 に設置した zip ファイルから Lambda 関数をデプロイする</title>
+    <link rel="alternate" href="http://blog.url.com/2025/04/22/deploy-lambda-function-from-zip-on-s3.html"/>
+    <id>http://blog.url.com/2025/04/22/deploy-lambda-function-from-zip-on-s3.html</id>
+    <published>2025-04-22T14:49:00+09:00</published>
+    <updated>2025-04-22T18:12:31+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;CDK で Lambda をデプロイするとき、S3 にある zip ファイルからのデプロイや、ソースコードからのデプロイなどいくつかのやり方があると思います。&lt;/p&gt;
+
+&lt;p&gt;今回は S3 の zip からデプロイする方法についてです。App Runner は ECR にコンテナイメージをデプロイして、それを自動連携しているので、Lambda もアプリイメージのデプロイと実際のアプリデプロイを分離しようと思ったわけです。
+S3 の zip からデプロイする CDK のコードは以下のような感じになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;Function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;SampleFunction&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;functionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;code&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Code&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromBucket&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="nx"&gt;Bucket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromBucketName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Resource&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`lambda-packages`&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+        &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample.zip&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+      &lt;span class="p"&gt;),&lt;/span&gt;
+      &lt;span class="na"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;index.handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;architecture&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Architecture&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ARM_64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NODEJS_20_X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Bucket.fromBucketName&lt;/code&gt; でアプリ側でデプロイ済みの S3 バケットを指定して、その中に入っている &lt;code&gt;sample.zip&lt;/code&gt; からデプロイします。&lt;/p&gt;
+
+&lt;p&gt;で、このとき &lt;code&gt;sample.zip&lt;/code&gt; の中身が変化していたとき、CDK では差分があるとしてデプロイされるのかな？と思っていました。&lt;/p&gt;
+
+&lt;h3&gt;S3 の zip が異なるものでもデプロイはされない&lt;/h3&gt;
+
+&lt;p&gt;でも、実際はそんなことなく zip が変更されたあとで cdk diff しても差分にはなってくれませんでした。
+ちょうどそれらしい話題の issue 
+&lt;a href="https://github.com/aws/aws-cdk/issues/6176"&gt;Lambda Function Code.FromBucket() does not update &amp;ldquo;Code Entry Type&amp;rdquo; in AWS console&lt;/a&gt;
+がありました。&lt;/p&gt;
+
+&lt;p&gt;簡単に解説すると「CloudFormation は、変更されたテンプレートを元のテンプレートと比較し、変更セットを生成します。」ということで props に指定している箇所自体に変更がなければ変更とみなされないということですね。
+具体的にいうと zip のプロパティまでは参照されないということです。&lt;/p&gt;
+
+&lt;p&gt;解決策として提案されているのは&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Code.fromAsset() を使う。つまりソースコードからのデプロイ&lt;/li&gt;
+&lt;li&gt;objectVersionプロパティを指定。バージョン番号は別途管理する必要がある。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;という感じでした。&lt;/p&gt;
+
+&lt;h3&gt;S3 の変更イベントをトリガーにデプロイする&lt;/h3&gt;
+
+&lt;p&gt;ということで、CDK がどうとかではなく、普通に思いつく解決策は S3 への PutObject を起点にデプロイをすることです。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://qiita.com/yuta-katayama-23/items/7355e2280265fffa7c1b"&gt;S3へのレプリケーションをトリガーにLambdaのコード更新・新規バージョン発行を実行する&lt;/a&gt;
+とか、これ関係の記事はたくさんあるので、参考になります。&lt;/p&gt;
+
+&lt;p&gt;具体的な Lambda コードは、こんな感じになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;UpdateFunctionCodeCommand&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;UpdateFunctionCodeCommandInput&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/client-lambda&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;S3Handler&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-lambda&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;region&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ap-northeast-1&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;})&lt;/span&gt;
+
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;S3Handler&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;bucket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Records&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;s3&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;bucket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;object&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;event&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Records&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;].&lt;/span&gt;&lt;span class="nx"&gt;s3&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;object&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;
+
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;functionNameMap&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample.zip&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample-1.zip&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;sample1&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;FunctionName&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;functionNameMap&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;object&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;FunctionName&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="kc"&gt;undefined&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt;
+
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="na"&gt;input&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;UpdateFunctionCodeCommandInput&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;FunctionName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;S3Bucket&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;bucket&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;S3Key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;object&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;updateCommand&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;UpdateFunctionCodeCommand&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;input&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;updateCommand&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;で、それを CDK でデプロイします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;func&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;NodejsFunction&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;LambdaUpdaterFunction&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;functionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lambda-function-updater&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;entry&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;src&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;index.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+      &lt;span class="na"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;architecture&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Architecture&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;X86_64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NODEJS_20_X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="nx"&gt;func&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addToRolePolicy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+      &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;PolicyStatement&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+        &lt;span class="na"&gt;actions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lambda:UpdateFunctionCode&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+        &lt;span class="na"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+            &lt;span class="c1"&gt;// 更新対象の Lambda の ARN を列挙する&lt;/span&gt;
+        &lt;span class="p"&gt;],&lt;/span&gt;
+      &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;packageBucket&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Bucket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromBucketName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Resource&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`lambda-packages`&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;packageBucket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;grantRead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;func&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="nx"&gt;packageBucket&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addEventNotification&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+      &lt;span class="nx"&gt;EventType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;OBJECT_CREATED_PUT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;LambdaDestination&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;func&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;こちらはソースコードからデプロイするので NodejsFunction とかを使って簡易に実現します。
+Lambda に zip ファイルからデプロイする対象の Function ARN を列挙して更新の許可を与えます。&lt;/p&gt;
+
+&lt;p&gt;zip ファイルが置かれているバケットの読み込み許可を更新 Lambda につけて、バケットにファイルが追加/変更されたときのイベントで Lambda を実行するように関連づけます。&lt;/p&gt;
+
+&lt;p&gt;この記事は参考になりました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://dev.classmethod.jp/articles/cdk-s3notification-kick-lambda/"&gt;CDKを使って既存S3バケットのPUTイベントをトリガーにLambda関数を実行しようとしたらハマった話&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;おまけ: NodejsFunction では ARM アーキテクチャを使えない&lt;/h3&gt;
+
+&lt;p&gt;最初、&lt;code&gt;lambda-function-updater&lt;/code&gt; をデプロイするとき、アーキテクチャに ARM を指定していたのですが、うまく動きませんでした。&lt;/p&gt;
+
+&lt;p&gt;なんでか調べたところ、こちらの issue
+&lt;a href="https://github.com/aws/aws-cdk/issues/27370"&gt;Wrong SAM container image architecture when trying to build NodeJS lambda&lt;/a&gt;
+がありました。&lt;/p&gt;
+
+&lt;p&gt;使えなくないけど、公式にサポートしてないやり方になるよ、ってことで、まぁこの Lambda ぐらいだったら良いか&amp;hellip; ってことで X86 アーキテクチャにしました。
+もし ARM にしたいならビルドは自分でやっておいて zip からやった方が良いですね（話がループする）。&lt;/p&gt;
+
+&lt;h3&gt;おまけ2: Lambda 関数をモノレポにしているとき sam build は使えない&lt;/h3&gt;
+
+&lt;p&gt;S3 に zip ファイルをアップロードする前に TypeScript で書かれた Lambda を zip にするとき sam cli を使ってビルドしようとしたのですが、うまくいきませんでした。
+調べてみると以下の issue を見つけました。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/aws/aws-sam-cli/issues/5236"&gt;Feature request: NPM workspace support&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/aws/aws-sam-cli/issues/6567"&gt;Feature request: Skip NodejsNpmEsbuildBuilder:NpmUpdate step when using &amp;ndash;build-in-source in a js/ts &amp;ldquo;monorepo&amp;rdquo;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;モノレポでビルドするのは茨の道のようです。
+自分で esbuild を呼び出してビルドした方が簡単ですね。Lambda のコードを esbuild でビルドする方法はいろいろありますので、困らないでしょう。
+僕らは package.json に定義しておきました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;        "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js"
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+  </entry>
   <entry>
     <title>ネスト構造の Step Functions を CDK でデプロイする</title>
     <link rel="alternate" href="http://blog.url.com/2025/04/17/nested-step-functions-deploy-by-cdk.html"/>
@@ -843,103 +980,6 @@ AppRunner が環境変数にセットしてくるの？？&lt;/p&gt;
 &lt;p&gt;これでデプロイしたら無事起動しました。👏👏&lt;/p&gt;
 
 &lt;p&gt;少しでも AppRunner で Next.js アプリを動かす人の役にたてばと思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>AppRunner へのデプロイは cdk でサクッとできるのか？</title>
-    <link rel="alternate" href="http://blog.url.com/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html"/>
-    <id>http://blog.url.com/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html</id>
-    <published>2025-04-08T18:45:00+09:00</published>
-    <updated>2025-04-09T11:07:45+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;blockquote&gt;
-&lt;p&gt;AWS App Runner は、ソースコードまたはコンテナイメージから AWS クラウドのスケーラブルで安全なウェブアプリケーションに直接デプロイするための、高速でシンプル、かつ費用対効果の高い方法を提供する AWS サービスです。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;と&lt;a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/what-is-apprunner.html"&gt;公式ドキュメント&lt;/a&gt; に書かれています。&lt;/p&gt;
-
-&lt;p&gt;ソースコードからデプロイする場合は&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;GitHub&lt;/li&gt;
-&lt;li&gt;BitBucket&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;といったところのクラウドリポジトリを使っていれば簡単に連携して自動デプロイができます。&lt;/p&gt;
-
-&lt;p&gt;一方、仕事でオンプレのソースコードリポジトリ、たとえば GitHub Enterprise とか BitBucket Server とか、GitLabs とかをパブリッククラウドでなく使っている場合はソースコード連携できないので、ECR にイメージをデプロイして AppRunner と連携することになります。
-本ブログは、この方法について、ネット上で簡単にできそうに書いてある記事をやってみたら、実際はそんなことなかったということについて記録するものです。&lt;/p&gt;
-
-&lt;h2&gt;CDK で AppRunner + ECR でデプロイする&lt;/h2&gt;
-
-&lt;p&gt;&lt;code&gt;cdk apprunner DockerImageDeployment&lt;/code&gt; みたいな検索条件でググると、まぁいっぱい出てきます。&lt;/p&gt;
-
-&lt;p&gt;ここで &lt;code&gt;DockerImageDeployment&lt;/code&gt; というのは、Dockerfile をビルドして ECR に push までしてくれる CDK のライブラリです。
-で、その ECR を AppRunner に関連づけてというのが流れです。&lt;/p&gt;
-
-&lt;p&gt;ちなみに &lt;code&gt;DockerImageAsset&lt;/code&gt; というのもあって、そちらの記事も多く見受けられます。こちらはあらかじめ ECR を作っておかなくてもいい感じに作ってくれるものですが、&lt;a href="https://qiita.com/rickey0808/items/1e715b016d50f1d4c094"&gt;[AWS CDK] コンテナイメージもまとめてデプロイ！？DockerImageAssetの動作確認をしてみた&lt;/a&gt; という記事のとおりお試しで使う分には良いと思いますが、ちゃんと管理して使いたい場合は &lt;code&gt;DockerImageDeployment&lt;/code&gt; を使った方が良いでしょう。&lt;/p&gt;
-
-&lt;h2&gt;DockerImageDeployment を使って ECR にデプロイする&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/cdklabs/cdk-docker-image-deployment"&gt;DockerImageDeployment の公式GitHubリポジトリ&lt;/a&gt; にある例どおり簡単に利用できます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-cdk-lib/aws-ecr&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;cdk-docker-image-deployment&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;repo&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromRepositoryName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;MyRepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;myrepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-
-&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;DockerImageDeployment&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ExampleImageDeploymentWithTag&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;directory&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;path/to/directory&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-  &lt;span class="na"&gt;destination&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Destination&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;repo&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; 
-    &lt;span class="na"&gt;tag&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;myspecialtag&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="p"&gt;}),&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h2&gt;AppRunner と連携でデプロイする&lt;/h2&gt;
-
-&lt;p&gt;&lt;code&gt;@aws-cdk/aws-apprunner-alpha&lt;/code&gt; というまだα版ですが、CDK のコンストラクタがあるので、これを利用します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-cdk-lib/aws-ecr&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-
-&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;apprunner&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;apprunner&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-    &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
-    &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromRepositoryName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;NginxRepository&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;nginx&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;latest&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="p"&gt;}),&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;あとは CDK でいい感じにつなぎこんで、みたいな感じです。&lt;/p&gt;
-
-&lt;h2&gt;やってみたがエラーになる&lt;/h2&gt;
-
-&lt;p&gt;はい、エラーになりました。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;The deployment will wait until the CodeBuild Project completes successfully before finishing.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;というメッセージが出て失敗します。
-メッセージどおり受け取ると、ECR のデプロイが終わってないので AppRunner にデプロイできないということです。&lt;/p&gt;
-
-&lt;h2&gt;どうやって解決したか&lt;/h2&gt;
-
-&lt;p&gt;実はアプリケーションのソースコードリポジトリと、AWSのリソース構成をデプロイするインフラリポジトリは分けていたので、アプリケーションコード側の CI/CD で &lt;code&gt;DockerImageDeployment&lt;/code&gt; を使って ECR までデプロイ。
-ECR までデプロイされている状況で、インフラリポジトリ側の CI/CD で ECR と AppRunner の関連付けをやるようにしました。&lt;/p&gt;
-
-&lt;p&gt;では最初はなんで両方を一緒にやっていたかというと、アプリケーションが外部サービスに連携しているため、開発環境ではモックサーバーを使っているのですが、それは Dockerfile 1つだけなんでそのファイルをインフラリポジトリ側において AppRunner にデプロイしようとしていたという感じでした。&lt;/p&gt;
-
-&lt;p&gt;他の解決策としては、カスタムリソースを使って ECR へのデプロイを待ち合わせてデプロイするという方法があります。モノレポなどを使っているときにアプリケーションとインフラを同時にデプロイしたいときなどは有効な方法だと思います。
-カスタムリソースも Lambda を作らないといけないというわけではなく、 AWS の API を実行する程度なら Lambda が不要なので、そういった選択肢も検討できます。&lt;/p&gt;
-
-&lt;p&gt;参考記事: &lt;a href="https://dev.classmethod.jp/articles/create-custom-resources-with-aws-cdk-without-using-lambda-functions/"&gt;[AWS CDK] APIを呼び出すだけのカスタムリソースならLambda関数は不要な件&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2&gt;さいごに&lt;/h2&gt;
-
-&lt;p&gt;AppRunner を cdk を使ってデプロイしたい、というときに参考になれば幸いです。
-&lt;code&gt;@aws-cdk/aws-apprunner-alpha&lt;/code&gt; がαじゃなくなるときには、もう少し便利に（ちゃんと待ち合わせてくれるみたいな）ことができるようになるのかもしれないので期待はしたいですね。&lt;/p&gt;
-
-&lt;p&gt;ちなみにモックサーバーは &lt;a href="https://mockoon.com/"&gt;Mockoon&lt;/a&gt; を使ってます。とても便利で助かる。&lt;/p&gt;
 </content>
   </entry>
 </feed>

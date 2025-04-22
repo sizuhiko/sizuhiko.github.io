@@ -272,6 +272,34 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h1>
+  <p class="postdate"><a href="/2014/02/22.html" title="Permanent link">Saturday, February 22, 2014 08:13:26 PM</a></p>
+  <p class="tags">
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>my.opera.com の終了に伴い、ブログを移転しました。過去のコンテンツは移行していますが、リンク切れなど起きているかもしれませんので、もし見つけましたら <a href="https://github.com/sizuhiko/sizuhiko.github.io/issues">github の issue ページ</a> にてお知らせいただければ幸いです。</p>
+
+<p>このブログは <a href="http://middlemanapp.com/">Middleman</a> にて構築しています。Middlemanの導入に関する記事もアップしたいと思っていますので、興味ある方はしばらくお待ちください。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/02/22/hello-world.html">
+          <a class="twitter" data-title="Hello Middleman!"></a>
+          <a class="facebook" data-title="Hello Middleman!"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2013/12/31/2013.html">2013年ふりかえり</a></h1>
   <p class="postdate"><a href="/2013/12/31.html" title="Permanent link">Tuesday, December 31, 2013 05:12:51 PM</a></p>
   <p class="tags">
@@ -748,123 +776,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2013/02/19/cakephp-bddplugin-updates-2.html">CakePHP BddPlugin updates (2013/2/19)</a></h1>
-  <p class="postdate"><a href="/2013/02/19.html" title="Permanent link">Tuesday, February 19, 2013 02:02:05 PM</a></p>
-  <p class="tags">
-      <a href="/tags/bdd.html" rel="tag">BDD</a>
-      <a href="/tags/bddplugin.html" rel="tag">BddPlugin</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/spec.html" rel="tag">Spec</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3>v0.9.3リリース</h3>
-
-<p>本日バージョン0.9.3をリリースしました。  </p>
-
-<p>機能面での修正というわけではなく、今回は Composer の <strong>A Multi-Framework Composer Library Installer</strong> (<a href="https://github.com/composer/installers">https://github.com/composer/installers</a>) という仕組みに対応したものです。  </p>
-
-<p>なのでpluginsディレクトリでgit cloneして引き続きご利用の皆様は、今回のアップデートは無視してもらっても大丈夫です。  </p>
-
-<h3>なにが嬉しいのか</h3>
-
-<p>Composerのフレームワークプラグインを管理する機能については、ちょっと前から知っていたのですが、まぁCakePHPでは3以降中心かな？と思っていたところ <a href="http://twitter.com/abe4tawa8">@abe4tawa8</a> さんから Pull Request をいただきまして、修正を始めたといういきさつです。  </p>
-
-<p>このComposerの仕組みを使うと、appディレクトリの下に利用するプラグインとかPHPUnitとかのrequireを指定したcomposer.jsonを置いておくことでプロジェクトで必要なモジュールの依存関係を解決しようというものです。  </p>
-
-<p>例えば</p>
-<div class="highlight"><pre class="highlight plaintext"><code>{
-    "config": {
-        "vendor-dir": "Vendor"
-    },
-    "minimum-stability": "dev",
-    "repositories": [
-        {
-            "type": "pear",
-            "url": "http://pear.phpunit.de"
-        },
-
-        {
-            "type": "vcs",
-            "url": "https://github.com/sizuhiko/CommonContexts.git"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/sizuhiko/Spec-PHP.git"
-        },
-
-        {
-            "type": "vcs",
-            "url": "git://github.com/sizuhiko/Bdd.git"
-        }
-    ],
-    "require-dev": {
-        "sizuhiko/Bdd": "dev-develop",
-        "behat/mink-goutte-driver": "*",
-        "behat/mink-selenium-driver": "*",
-        "behat/mink-selenium2-driver": "*"
-    }
-}
-</code></pre></div>
-<p>のように書くと、Bddプラグインを app/Plugins ディレクトリにインストールすることが可能になります。  </p>
-
-<p>あとは app/Config/bootstrap.php に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>CakePlugin::load('Bdd');
-require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
-</code></pre></div>
-<p>BddPluginの利用と、依存関係のライブラリ群のautoloadをrequireすれば大丈夫です。  </p>
-
-<h3>残念なお知らせ</h3>
-
-<p>Composerでは依存先のライブラリのrepositories指定を参照してくれません。</p>
-
-<blockquote>
-<p>Repositories are not resolved recursively. You can only add them to your main composer.json. Repository declarations of dependencies&rsquo; composer.jsons are ignored.  </p>
-</blockquote>
-
-<p><a href="http://getcomposer.org/doc/04-schema.md#repositories">http://getcomposer.org/doc/04-schema.md#repositories</a> より  </p>
-
-<p>BddPluginではPullRequest中のCommonContextやforkしてカスタマイズしているSpec-PHPを使っており、それらのリポジトリを指定する必要があります。  </p>
-
-<p>他の依存関係はどうなっているの？と、気付いた方はするどいわけですが、Composerは<a href="https://packagist.org/">Packagist</a>というリポジトリサイトを使っており、ここに必要なリポジトリを追加すれば良い訳です。登録は無料です。  </p>
-
-<p>で、これらforkしたプロジェクトについても登録してしまえば良いと思って作業を進めていたのですが、いざ手元でも動作確認がほぼOKになったところでPackagistのサイトでSubmitしようとすると</p>
-
-<blockquote>
-<p>Do not submit forks of existing packages. If you need to test changes to a package that you forked to patch, use VCS Repositories instead. If however it is a real long-term fork you intend on maintaining feel free to submit it.  </p>
-</blockquote>
-
-<p>特に「*<em>Do not submit forks of existing packages. *</em>」の部分は太字になっていまして、他を受け付けない雰囲気を醸し出しています。まぁ要はメンテナンスを続けるならフォークしたプロジェクトでも登録可能だよ、と書いてあるわけですが、あまりの警告にビビってしまい各アプリケーションのcomposer.jsonにrepositoriesを追加してもらう方針としました。必要な部分は上記サンプルのとおりになっています。  </p>
-
-<h3>さいごに</h3>
-
-<p>そういえばBddPlugin自体はPackagistに登録しても問題ないのだった！、と今Blogを書いていて気がついたので、それはこれから実施します。そうするとBddPluginのリポジトリ宣言は必要なくなりますね（汗  </p>
-
-<p>今のcomposer.jsonではnameがsizuhiko/Bddになっていて、BddをスモールケースにしろとPackagistに怒られているので、少々時間がかかります  </p>
-
-<p>それと先日Co-Edoで行われたCakeBeerTalkの飛び入りLTでも話しましたが、使っていての不明点など何でもgithubのissueで質問ください。よろしくおねがいします。  </p>
-
-<p>BddPluginを使った勉強会もやりたいですなー</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2013/02/19/cakephp-bddplugin-updates-2.html">
-          <a class="twitter" data-title="CakePHP BddPlugin updates (2013/2/19)"></a>
-          <a class="facebook" data-title="CakePHP BddPlugin updates (2013/2/19)"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -894,6 +805,7 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
@@ -903,7 +815,6 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
-                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
               </ul>
             </div>
           </section>
@@ -913,6 +824,9 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/lambda.html" rel="tag">Lambda</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/cdk.html" rel="tag">CDK</a>
@@ -1026,7 +940,7 @@ require dirname(dirname(__FILE__)).DS.'Vendor/autoload.php';
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (6)</li>
+                  <li><a href="/2025.html">2025</a> (7)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

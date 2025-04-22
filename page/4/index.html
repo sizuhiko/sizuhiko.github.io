@@ -272,6 +272,120 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1</a></h1>
+  <p class="postdate"><a href="/2024/03/20.html" title="Permanent link">Wednesday, March 20, 2024 12:34:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/gae.html" rel="tag">GAE</a>
+      <a href="/tags/toiletevolution.html" rel="tag">toiletevolution</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2023年2月3日にGoogle Cloudからメールが届きました。</p>
+
+<p><img src="/images/blog/gae-gen1-support-mail.png" alt="" /></p>
+
+<p>ここで作っていた個人開発のサービスとは <a href="https://toiletevolution.space/#/about">Toilet Evolution</a> です。一時期に流行ったトイレ利用状況可視化のIoTサービスです。</p>
+
+<p>PHP + Web Components の SPA 構成でできていて、Google App Engine（以下GAE）の第一世代で動いています。
+当時ほぼ無料で動かせるPaaSというのはあまりなくて、GAEばかりを選択していたと記憶しています。
+その後 Heroku とか出ましたけど、実質それなりの利用で月100円もかからずに運用しつづけられている状況なのでありがたいです。</p>
+
+<p><a href="https://cloud.google.com/appengine/docs/standard/lifecycle/support-schedule?hl=ja">GAEのランタイム サポート スケジュール</a> によると PHP5.5 は 2024年1月30日にサポートの終了で、非推奨が2026年1月31日ということ。廃止は書かれていません。</p>
+
+<p>と同時にまだ使っている人もいるので、簡単にメンテ大変なんでクローズしますというのも違いますね。ユーザー大事。ありがたや。</p>
+
+<p>そこで、サポート終了状態でずっと動かすのもなと思い、最新版のPHPへの移行を検討し始めました。</p>
+
+<h3>一番最後のメンテナンス</h3>
+
+<p>このWebサービスは長いことやっているのですが、直近で記事にしたのは <a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">Toilet EvolutionのフロントエンドをPolymer3対応する(4)</a> で、2019年4月。あのあとコロナがあっての5年ぶりのメンテになります。</p>
+
+<h3>移行前の composer.json</h3>
+
+<p>以下のような依存バージョンでした。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"php"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&gt;=5.5.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"slim/slim"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^3.1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"monolog/monolog"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.17"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tomwalder/php-gds"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"tuupola/slim-basic-auth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"nesbot/carbon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.21"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"league/oauth2-client"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.4"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"league/oauth2-google"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"akrabat/rka-slim-session-middleware"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0.0-RC1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"sizuhiko/slim3-csrf-utilities"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dev-master"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"justinrainbow/json-schema"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"phpunit/phpunit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^4.8"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"helmich/phpunit-psr7-assert"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"gecko-packages/gecko-memcache-mock"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^2.1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"google/appengine-php-sdk"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^1.9"</span><span class="w">    
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>歴史を感じますね。</p>
+
+<h3>GAE gen1 から gen2 で何が変わるのか</h3>
+
+<p>GAEでの移行ガイドが出ていて、PHPだと <a href="https://cloud.google.com/appengine/migration-center/standard/migrate-to-second-gen/php-differences?hl=ja">PHP 5.5 と PHP 7 / 8 の違い</a> というドキュメントがあります。</p>
+
+<p>PHP公式ドキュメントの移行ガイドへのリンクと、GAE特有のアップグレードガイドが書かれています。
+タイトルだけ拾うと、以下のような移行が必要になるということでした。</p>
+
+<ul>
+<li>app.yaml ファイルを移行する</li>
+<li>ランタイム制限の緩和</li>
+<li>App Engine の PHP SDK から移行する（レガシーバンドルサービスAPI利用方法）</li>
+<li>ローカルでの実行方法</li>
+</ul>
+
+<p>レガシーバンドルサービスとは <a href="https://cloud.google.com/appengine/docs/standard/php-gen2/services/access?hl=ja">PHP 7 / 8 用の以前のバンドル サービスにアクセスする</a> で書かれているサービスで、今回のサービスで言うと Memcache とセッションを利用していました。</p>
+
+<p>で、これらは使えるので、使い続けて良いのか？という選択を迫られます。
+もう少し関連するドキュメントを読んでみましょう。
+<a href="https://cloud.google.com/appengine/docs/standard/bundled-services-overview?hl=ja">以前のバンドル サービスの概要</a> によると</p>
+
+<blockquote>
+<p>レガシー ランタイムの一部はオープンソース コミュニティで管理されなくなったため、App Engine デベロッパーは、新しいランタイムに移行すべきかどうか難しい判断に迫られる可能性があります。こうした移行には時間と労力がかかりますが、レガシー ランタイムの使用を継続すれば、アプリの維持コストが増大する結果になります。
+こうした課題を踏まえ、Google Cloud では新しいランタイムへの移行パスを段階的に提供していく予定です。Google Cloud では、ランタイム移行の複雑さを軽減するために、Python 3、Java 11、Go 1.12 以降、PHP 7 / 8 などの第 2 世代ランタイムで App Engine の従来のバンドル サービスとその関連 API をサポートしています。</p>
+</blockquote>
+
+<p>移行大変なんで段階的な移行パスを用意するよってことですね。
+Memcache はこの移行バスに入ったようでそのままでも利用できたんですが、あとでまた移行するのが面倒そうなんで、このタイミングでやっておきたいと考えました。</p>
+
+<p>レガシーランタイムからの移行に関してのドキュメントは <a href="https://cloud.google.com/appengine/migration-center/standard/services/migrating-services?hl=ja&amp;tab=php">レガシー バンドル サービスからの移行</a> にあって、参考になります。</p>
+
+<h3>実行目標</h3>
+
+<ul>
+<li>PHPのバージョンを最新化する</li>
+<li>GAEのレガシーランタイムからの脱却</li>
+</ul>
+
+<p>というのを掲げてみました。</p>
+
+<p>けど、PHP自体あんまり触ってない（たぶん7を少しやったぐらいで、実質5系の知識で止まっている）ため、長期戦は予想していました。当時はまだ1年ぐらいあるから何とかなるやろ、ぐらいに思っていた自分がいました。</p>
+
+<p>そして、その後の1年ぐらいで移行を完了させて、現在は GAE gen2 の PHP8.2 で稼働しています。👏👏</p>
+
+<p>このあと数回にわたって、どうやって移行してきたかをコミットログと共にふりかえっていきたいと思います。
+少しでも PHP のバージョンアップや GAE gen2 へ移行する人の助けになればな、と思っています。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/03/20/story-for-migrate-hobby-web-service-while-a-year-part-1.html">
+          <a class="twitter" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1"></a>
+          <a class="facebook" data-title="GAE gen1 で動いている PHP5.5 で作った個人開発サービスを gen2 PHP8.2 へ移行した1年記 〜 その 1"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2024/02/18/php-conference-kansai-2024.html">PHPカンファレンス関西2024に参加して、オフラインカンファレンスの盛り上がりを体験してきた</a></h1>
   <p class="postdate"><a href="/2024/02/18.html" title="Permanent link">Sunday, February 18, 2024 12:40:00 PM</a></p>
   <p class="tags">
@@ -745,232 +859,6 @@ CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a></h1>
-  <p class="postdate"><a href="/2023/04/18.html" title="Permanent link">Tuesday, April 18, 2023 12:21:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>このところ何度か aws-sdk v3 について記事を書いてきましたが、こちらは現時点でのベストプラクティスというか、追記を含むまとめ記事になります。</p>
-
-<h3>ランタイムに含まれないモジュールがある？</h3>
-
-<p>aws-sdk を使って Lambda から Lambda を実行するときのコードは、公式のExampleコードを見ると以下のようになっています。</p>
-
-<p><a href="https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js">https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/javascriptv3/example_code/lambda/actions/invoke.js</a></p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: Apache-2.0
- */</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">InvokeCommand</span><span class="p">,</span> <span class="nx">LambdaClient</span><span class="p">,</span> <span class="nx">LogType</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">@aws-sdk/client-lambda</span><span class="dl">"</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">createClientForDefaultRegion</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">../../libs/utils/util-aws-sdk.js</span><span class="dl">"</span><span class="p">;</span>
-
-<span class="cm">/** snippet-start:[javascript.v3.lambda.actions.Invoke] */</span>
-<span class="kd">const</span> <span class="nx">invoke</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">funcName</span><span class="p">,</span> <span class="nx">payload</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">createClientForDefaultRegion</span><span class="p">(</span><span class="nx">LambdaClient</span><span class="p">);</span>
-  <span class="kd">const</span> <span class="nx">command</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">InvokeCommand</span><span class="p">({</span>
-    <span class="na">FunctionName</span><span class="p">:</span> <span class="nx">funcName</span><span class="p">,</span>
-    <span class="na">Payload</span><span class="p">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">payload</span><span class="p">),</span>
-    <span class="na">LogType</span><span class="p">:</span> <span class="nx">LogType</span><span class="p">.</span><span class="nx">Tail</span><span class="p">,</span>
-  <span class="p">});</span>
-
-  <span class="kd">const</span> <span class="p">{</span> <span class="nx">Payload</span><span class="p">,</span> <span class="nx">LogResult</span> <span class="p">}</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">command</span><span class="p">);</span>
-  <span class="kd">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="k">from</span><span class="p">(</span><span class="nx">Payload</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
-  <span class="kd">const</span> <span class="nx">logs</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="k">from</span><span class="p">(</span><span class="nx">LogResult</span><span class="p">,</span> <span class="dl">"</span><span class="s2">base64</span><span class="dl">"</span><span class="p">).</span><span class="nx">toString</span><span class="p">();</span>
-  <span class="k">return</span> <span class="p">{</span> <span class="nx">logs</span><span class="p">,</span> <span class="nx">result</span> <span class="p">};</span>
-<span class="p">};</span>
-<span class="cm">/** snippet-end:[javascript.v3.lambda.actions.Invoke] */</span>
-
-<span class="k">export</span> <span class="p">{</span> <span class="nx">invoke</span> <span class="p">};</span>
-</code></pre></div>
-<p>ここで注目して欲しいのは</p>
-
-<blockquote>
-<div class="highlight"><pre class="highlight plaintext"><code>Payload: JSON.stringify(payload),
-</code></pre></div></blockquote>
-
-<p>の部分なのですが、これは TypeScript で記述すると型違反でエラーになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code>    <span class="cm">/**
-     * &lt;p&gt;The JSON that you want to provide to your Lambda function as input.&lt;/p&gt;
-     *          &lt;p&gt;You can enter the JSON directly. For example, &lt;code&gt;--payload '\{ "key": "value" \}'&lt;/code&gt;. You can also
-     *       specify a file path. For example, &lt;code&gt;--payload file://payload.json&lt;/code&gt;.&lt;/p&gt;
-     */</span>
-    <span class="nx">Payload</span><span class="p">?:</span> <span class="nb">Uint8Array</span><span class="p">;</span>
-</code></pre></div>
-<p>公式 Example のコードの意味とは&hellip; というところですが、</p>
-
-<p>で、そういう issue やら SlackOverflow があって</p>
-
-<p><a href="https://github.com/aws/aws-sdk-js-v3/issues/4623">https://github.com/aws/aws-sdk-js-v3/issues/4623</a></p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">InvocationType</span><span class="p">,</span> <span class="nx">InvokeCommand</span><span class="p">,</span> <span class="nx">LambdaClient</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">@aws-sdk/client-lambda</span><span class="dl">"</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">toUint8Array</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">@aws-sdk/util-utf8</span><span class="dl">"</span><span class="p">;</span>
-
-<span class="kd">const</span> <span class="nx">lambda</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LambdaClient</span><span class="p">({});</span>
-<span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">lambda</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span>
-    <span class="k">new</span> <span class="nx">InvokeCommand</span><span class="p">({</span>
-      <span class="na">FunctionName</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">LAMBDA_ARN</span> <span class="k">as</span> <span class="nx">string</span><span class="p">,</span>
-      <span class="na">InvocationType</span><span class="p">:</span> <span class="nx">InvocationType</span><span class="p">.</span><span class="nx">RequestResponse</span><span class="p">,</span>
-      <span class="na">Payload</span><span class="p">:</span> <span class="nx">toUint8Array</span><span class="p">(</span><span class="nx">payload</span><span class="p">),</span>
-    <span class="p">}),</span>
-  <span class="p">);</span>
-</code></pre></div>
-<p>こんな感じで <code>Uint8Array</code> に変換する必要があります。
-そこで <code>@aws-sdk/util-utf8</code> を使ったのですが、これが Node.js v18 の Lambda インスタンスだと見つからないとエラーになります。</p>
-
-<h3>執筆時点での Lambda インスタンスの sdk バージョンは 3.188.0</h3>
-
-<p>以下のページから現在のランタイムに入っている sdk バージョンがわかります。</p>
-
-<p><a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html">https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/lambda-runtimes.html</a></p>
-
-<p>執筆時点では 3.188.0 なので、 GitHub リポジトリでそのタグのコードを見てみると、確かにそんなパッケージはありません。
-それどころか、 <code>@aws-sdk/util-utf8-node</code> と <code>@aws-sdk/util-utf8-browser</code> という2つのパッケージに分かれていました。
-どうも、3.300.0 あたりでパッケージを統合したようです。</p>
-
-<p>NPMのレジストリをみると、</p>
-
-<p><a href="https://www.npmjs.com/package/@aws-sdk/util-utf8-node">https://www.npmjs.com/package/@aws-sdk/util-utf8-node</a></p>
-
-<blockquote>
-<p>Deprecated package</p>
-
-<p>This internal package is deprecated in favor of @aws-sdk/util-utf8.</p>
-</blockquote>
-
-<p>のように書いてあります。</p>
-
-<p>ちなみに、最新の GitHub リポジトリからは、 <code>util-utf8-node</code> が完全に削除されています。</p>
-
-<h3>状況を整理し、これから発生することを整理</h3>
-
-<p>つまり、 3.188.0 で <code>@aws-sdk/util-utf8-node</code> を使っていて、Lambda の zip に sdk を含めていない人は、ランタイムのアップデートで突然 Lambda が動かなくなる可能性があるということです。</p>
-
-<p>これはセマンティックバージョニングとしては破壊的変更なのでメジャーバージョンアップ相当ですが、そもそも aws-sdk がセマンティックバージョニングされているかどうかはわかりません（たぶんされていない）。</p>
-
-<p>僕は長い間、公式ドキュメント「.zip ファイルアーカイブで Node.js Lambda 関数をデプロイする」に書いてある</p>
-
-<blockquote>
-<p>関数が標準ライブラリまたは AWS SDK ライブラリにのみ依存する場合は、これらのライブラリを .zip ファイルに含める必要はありません</p>
-</blockquote>
-
-<p><a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html">https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/nodejs-package.html</a></p>
-
-<p>というポリシーを信じていました。
-著名な Serverless Framework でもデフォルトの挙動では zip ファイルを作成するときに aws-sdk を除外するようになってます。</p>
-
-<h3>道を間違える前に AWS さんに確認してみた</h3>
-
-<p>僕の懸念は</p>
-
-<ul>
-<li>aws-sdk は zip に含めるべきか？</li>
-<li>後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？</li>
-</ul>
-
-<p>というあたりです。</p>
-
-<h4>aws-sdk は zip に含めるべきか？</h4>
-
-<p>こちらは「はい」が正解ということです。
-<a href="https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/best-practices.html">AWS Lambda 関数を使用するためのベストプラクティス</a> に <code>関数のデプロイパッケージ内で依存関係を制御します</code> という部分があり、zip に含めた方が良いとなっています。</p>
-
-<p>しかし aws-sdk のサイズはモジュール化されているとはいえ、Lambdaの上限サイズを考えるとかなりの割合を占めてしまうので、できればランタイムを使いたいとことです。</p>
-
-<h4>後方互換性がなくなる変更があるけど、アップデートの方針はどうなっているか？</h4>
-
-<p>こちらの回答をふりかえる前に、aws-sdk v3 のモジュール構造について補足しておきます。
-GitHub のリポジトリにある README <a href="https://github.com/aws/aws-sdk-js-v3#generated-code">Generated Code</a>] によると以下のとおりです。ざっくり要約しました。</p>
-
-<blockquote>
-<p>v3 コードベースは、AWSサービスが公開しているモデルから生成されています。
-smithy-typescript で <code>/clients</code> サブディレクトリ内のコードを生成し、これらのパッケージは @aws-sdk/client-XXXX のような名前になります。</p>
-
-<p>クライアントは、 <code>/packages</code> にあるユーティリティコードに依存します。これらのコードは手動で記述されていて、通常あまり役に立ちません。</p>
-
-<p><code>/lib</code> には高レベルのライブラリがあります。 client をラップして操作しやすくするライブラリです。よくある例は <code>@aws-sdk/lib-dynamodb</code> で Amazon DynamoDB のアイテムの操作を簡素化するものや、 <code>@aws-sdk/lib-storage</code> で S3 の multipartUpload での並列アップロードを簡素化するものです。</p>
-</blockquote>
-
-<p>続けて、以下のようにも書いてあります。</p>
-
-<ol>
-<li>/packages 手動でコード更新が行われる場所で、 NPM に @aws-sdk/XXXX で公開されています。特別なプレフィックスはありません。</li>
-<li>/clients  このディレクトリのコードは自動生成され、 /packages に依存します。AWS のサービスと 1 対 1 です。通常、手動編集はここでは行わないでください。@aws-sdk/client-XXXX で NPM に公開されます。</li>
-<li>/lib このディレクトリは、 /clients に依存します。既存の AWS サービスと操作をラップして、Javascript での作業を容易にします。@aws-sdk/lib-XXXX で NPM に公開されています。</li>
-</ol>
-
-<p>上記以外にも private というのもあったりしますが、これは名前からも明らかに非公開のモジュールだとわかります。
-NPM 公開されていて、僕らが利用することができるものが client / packages / lib にあるといった感じでしょうか。</p>
-
-<p>上記3つのディレクトリについての AWS アップデートポリシーは以下のようなものになるそうです。</p>
-
-<ul>
-<li>client ユーザーが利用する想定のモジュールであり、破壊的変更は行われない</li>
-<li>lib ユーザーが利用する想定のモジュールであり、破壊的変更は行われない</li>
-<li>package client からの利用を想定している内部モジュールなので破壊的変更の可能性がある（ただしドキュメントに明示されていない）</li>
-</ul>
-
-<p>package に入っているもので、README に利用方法が解説されているもの、たとえば S3 の署名付きURLを発行するためのライブラリ <a href="https://github.com/aws/aws-sdk-js-v3/tree/main/packages/s3-request-presigner">@aws-sdk/s3-request-presigner</a> はユーザーからの利用が想定されていて、破壊的変更は行われないようです。
-しかし、README にAPIの解説がないものについては内部利用を想定しているため、破壊的変更もありえると。</p>
-
-<p>後者は private ディレクトリに入れた方が良いのでは？と思わなくはないですが、何か理由があるんでしょうかね。</p>
-
-<p>今回のようにドキュメントに記述がない <code>@aws-sdk/util-utf8-node</code> を使いたい場合は zip に必ず含むようにしましょう。
-それ以外は zip の容量が厳しければ v2 のときと同じようにランタイムに依存する方が良いと思います。aws-sdk の更新頻度がかなり多いので、どれがセキュリティパッチかわからないし、できればランタイムでの更新に期待したいという思いもあります。</p>
-
-<h3>さいごに</h3>
-
-<p>これまでの aws-sdk v3 / Node.js v18 への移行記事を一覧にしてみます。</p>
-
-<ul>
-<li><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a></li>
-<li><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a></li>
-<li><a href="/2023/04/03/aws-sdk-v3-ts2345.html">aws-sdk v3 で TS2345 が出てコンパイルエラーになる</a></li>
-<li><a href="/2023/04/04/aws-sdk-v3-compile-error-2.html">aws-sdk v3 でコンパイルエラーになる - その２</a></li>
-<li><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a></li>
-<li><a href="/2023/04/11/aws-sdk-v3-to-peer-for-your-library.html">aws-sdk v3 を使うライブラリを作ったときは、なるべく peerDependencies に設定しよう</a></li>
-<li>本記事</li>
-</ul>
-
-<h4>私の思う現時点でのベストプラクティス</h4>
-
-<ul>
-<li>CIのイメージは公式の Lambda Docker イメージが便利</li>
-<li>aws-sdk v3 のユニットテストには aws-sdk-client-mock が良い</li>
-<li>aws-sdk の各モジュールのバージョンは揃えて、なるべく最新を使おう</li>
-<li>aws-sdk 関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
-<li>peerDependencies に書いてあるモジュールもバージョンを揃えてインストールしよう</li>
-<li>packages にあるドキュメントなしのモジュールを使う場合は、zip に含める
-
-<ul>
-<li>zip の容量に余裕があれば aws-sdk はすべて含めた方が良い</li>
-</ul></li>
-</ul>
-
-<p>現時点はかなりクセがあるというか、ノウハウが必要であるというのが現実だと思います。
-とくに AWS Lambda + aws-sdk v3 + TypeScript の場合にはですね。</p>
-
-<p>ぶっちゃけ TypeScript でなければコンパイルエラーや型違反についての問題もないし、しいていえば zip に含めるかどうか？ぐらいです。
-とはいえ、みんなもう Node.js ランタイム選ぶなら TypeScript 使うだろうと思うので、これまでの記事のノウハウが役に立てば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/18/generation-code-aws-sdk-v3.html">
-          <a class="twitter" data-title="AWS SDK v3 のモジュールと利用方法"></a>
-          <a class="facebook" data-title="AWS SDK v3 のモジュールと利用方法"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -999,6 +887,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
@@ -1008,7 +897,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
-                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
               </ul>
             </div>
           </section>
@@ -1018,6 +906,9 @@ NPM 公開されていて、僕らが利用することができるものが cli
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/lambda.html" rel="tag">Lambda</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/cdk.html" rel="tag">CDK</a>
@@ -1131,7 +1022,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (6)</li>
+                  <li><a href="/2025.html">2025</a> (7)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

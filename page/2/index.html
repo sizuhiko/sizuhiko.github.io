@@ -272,6 +272,154 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a></h1>
+  <p class="postdate"><a href="/2025/04/11.html" title="Permanent link">Friday, April 11, 2025 05:59:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/next-hs.html" rel="tag">Next.hs</a>
+      <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
+      <a href="/tags/cdk.html" rel="tag">CDK</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>こちらの記事は <a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> の続編となります。
+前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。</p>
+
+<p>まず前編でも触れてますが、アプリケーションのリポジトリ構成は以下のようになっています。</p>
+
+<ul>
+<li>Next.js のアプリケーションリポジトリ</li>
+<li>AWSのリソースを管理するインフラリポジトリ</li>
+</ul>
+
+<p>アプリのリポジトリでは、ECR へのデプロイまでやってます。
+インフラのリポジトリで、AppRunner など AWS リソースを CDK で構築しています。</p>
+
+<h2>AppRunner で Next.js アプリケーションを動かすには</h2>
+
+<p>Next.js を standalone モードでビルドして、Docker コンテナで起動する。これだけで ok です。</p>
+
+<h3>ECR に Next.js の standalone モードビルドしたコンテナイメージを push する</h3>
+
+<p>まずは Next.js のアプケーションリポジトリの CI/CD で ECR に Docker イメージを push します。
+アプリケーションリポジトリ側にも CDK を入れてあるので、以下のようなコードで ECR にデプロイしています。
+タグは <code>package.json</code> の <code>version</code> から入手します。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">imagedeploy</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">cdk-docker-image-deployment</span><span class="dl">'</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">ecr</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-cdk-lib/aws-ecr</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">DeployStack</span> <span class="kd">extends</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">Stack</span> <span class="p">{</span>
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="p">:</span> <span class="nx">Construct</span><span class="p">,</span> <span class="nx">id</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">props</span><span class="p">?:</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">StackProps</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span>
+
+    <span class="kd">const</span> <span class="nx">projectRoot</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">'</span><span class="s1">../..</span><span class="dl">'</span><span class="p">)</span>
+    <span class="kd">const</span> <span class="p">{</span> <span class="nx">version</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">projectRoot</span><span class="p">,</span> <span class="dl">'</span><span class="s1">package.json</span><span class="dl">'</span><span class="p">)).</span><span class="nx">toString</span><span class="p">())</span>
+    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ecr</span><span class="p">.</span><span class="nx">Repository</span><span class="p">.</span><span class="nx">fromRepositoryName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">webapp-ect</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">webapp</span><span class="dl">'</span><span class="p">)</span>
+    <span class="k">new</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">DockerImageDeployment</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">DockerImageDeployment</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Source</span><span class="p">.</span><span class="nx">directory</span><span class="p">(</span><span class="nx">projectRoot</span><span class="p">),</span>
+      <span class="na">destination</span><span class="p">:</span> <span class="nx">imagedeploy</span><span class="p">.</span><span class="nx">Destination</span><span class="p">.</span><span class="nx">ecr</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="p">{</span>
+        <span class="na">tag</span><span class="p">:</span> <span class="nx">version</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>Dockerfile は Next.js の公式サンプル<a href="https://github.com/vercel/next.js/tree/canary/examples/with-docker">With Docker</a> を参考に（というかほぼそのまま流用）すれば大丈夫です。
+ベースイメージの Node.js バージョンが古かったりするので、そこは自分たちが使うバージョンに変更しておきましょう。</p>
+
+<h3>AppRunner で ECR からデプロイする</h3>
+
+<p>こちらは前編でも触れた <code>@aws-cdk/aws-apprunner-alpha</code> が使えるので簡単にデプロイできます。
+以下のような感じで書けば良いでしょう。ヘルスチェックを何でやるかは、いろいろだと思いますが、ここではいったん <code>favicon</code> にしています。
+CDK で作成した ECR のリポジトリと、デプロイ対象のアプリケーションバージョンはコンストラクタの引数で渡せるようにしています。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">Service</span><span class="p">,</span> <span class="nx">Source</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-cdk/aws-apprunner-alpha</span><span class="dl">'</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">WebAppConstruct</span> <span class="kd">extends</span> <span class="nx">cdk</span><span class="p">.</span><span class="nx">Stack</span> <span class="p">{</span>
+  <span class="kd">constructor</span><span class="p">(</span><span class="nx">scope</span><span class="p">:</span> <span class="nx">Construct</span><span class="p">,</span> <span class="nx">id</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="nx">props</span><span class="p">?:</span> <span class="nx">WebAppConstructProps</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">scope</span><span class="p">,</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span>
+
+    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span> <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span> <span class="p">},</span>
+        <span class="na">repository</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">ecrRepository</span><span class="p">,</span>
+        <span class="na">tagOrDigest</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">webAppVersion</span><span class="p">,</span>
+      <span class="p">}),</span>
+      <span class="na">serviceName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">webapp-service</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">autoDeploymentsEnabled</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="na">healthCheck</span><span class="p">:</span> <span class="nx">HealthCheck</span><span class="p">.</span><span class="nx">http</span><span class="p">({</span>
+        <span class="na">healthyThreshold</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="na">interval</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">path</span><span class="p">:</span> <span class="dl">'</span><span class="s1">/favicon.ico</span><span class="dl">'</span><span class="p">,</span>
+        <span class="na">timeout</span><span class="p">:</span> <span class="nx">Duration</span><span class="p">.</span><span class="nx">seconds</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+        <span class="na">unhealthyThreshold</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+      <span class="p">}),</span>
+    <span class="p">})</span>
+</code></pre></div>
+<h4>コラム: ヘルスチェックについて、いろいろと参考になった記事</h4>
+
+<p>実はヘルスチェックはちょっといろいろあって実際も <code>favicon</code> にしたんですけど、そのときに参考になった記事があるので、載せておきます</p>
+
+<ul>
+<li><a href="https://zenn.dev/seelog/articles/next_js_health_check">Next.js App Router でヘルスチェックをする</a></li>
+<li><a href="https://stackoverflow.com/questions/57956476/how-to-set-up-an-endpoint-for-health-check-on-next-js">How to set up an endpoint for Health check on Next.js?</a></li>
+<li><a href="https://repost.aws/questions/QUq9Sqy5hKQrSZdIuDgEJoSw/heath-check-failing-only-after-enabling-vpc-connector">Heath check failing only after enabling VPC connector</a></li>
+</ul>
+
+<h2>デプロイできたので動かしてみるが動かない</h2>
+
+<blockquote>
+<p>Error: listen EADDRNOTAVAIL: address not available 10.0.1.2:3000</p>
+</blockquote>
+
+<p>何か動きません。</p>
+
+<p>あれ、Dockerfile に <code>HOSTNAME=0.0.0.0</code> 入ってるのに何でだろう？
+ローカルで build したイメージ動かしたときは大丈夫だったんだけど？と思ったら、1つ罠があります。</p>
+
+<p>こちらの記事がとても参考になりました。
+<a href="https://zenn.dev/kojipole/articles/7e0472e71dc19b">AWS App RunnerでNext.jsのstandaloneモードを動かす時のTips(ないしは失敗談)</a></p>
+
+<blockquote>
+<p>App Runnerの環境では環境変数HOSTNAMEに対して、暗黙的にアタッチされているENIのprivate DNSが指定されるようです。</p>
+</blockquote>
+
+<p>なんですって？
+AppRunner が環境変数にセットしてくるの？？</p>
+
+<p>だから <code>10.0.1.2:3000</code> みたいな ENI の private アドレスになるんですね。Dockerfile では</p>
+<div class="highlight"><pre class="highlight docker"><code><span class="k">ENV</span><span class="s"> HOSTNAME="0.0.0.0"</span>
+<span class="k">CMD</span><span class="s"> ["node",  "server.js"]</span>
+</code></pre></div>
+<p>のように指定されていても、コンテナ起動時に HOSTNAME を指定されるので環境変数が上書きされてセットされます。</p>
+
+<h2>CDK で HOSTNAME を設定する</h2>
+
+<p>ということで、AppRunner のサービスを作るときに環境変数 <code>HOSTNAME</code> を指定してあげます。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Service</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">WebAppService</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">source</span><span class="p">:</span> <span class="nx">Source</span><span class="p">.</span><span class="nx">fromEcr</span><span class="p">({</span>
+        <span class="na">imageConfiguration</span><span class="p">:</span> <span class="p">{</span>
+            <span class="na">port</span><span class="p">:</span> <span class="mi">3000</span><span class="p">,</span>
+            <span class="na">environmentVariables</span><span class="p">:</span> <span class="p">{</span>
+                <span class="na">HOSTNAME</span><span class="p">:</span> <span class="dl">'</span><span class="s1">0.0.0.0</span><span class="dl">'</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+</code></pre></div>
+<p>これでデプロイしたら無事起動しました。👏👏</p>
+
+<p>少しでも AppRunner で Next.js アプリを動かす人の役にたてばと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/11/next-js-deploy-to-apprunner.html">
+          <a class="twitter" data-title="Next.js で作ったアプリケーションを AppRunner にデプロイする"></a>
+          <a class="facebook" data-title="Next.js で作ったアプリケーションを AppRunner にデプロイする"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a></h1>
   <p class="postdate"><a href="/2025/04/08.html" title="Permanent link">Tuesday, April 08, 2025 06:45:00 PM</a></p>
   <p class="tags">
@@ -954,263 +1102,6 @@ Renovate の対象リポジトリごとにリポジトリルートにファイ�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a></h1>
-  <p class="postdate"><a href="/2024/05/28.html" title="Permanent link">Tuesday, May 28, 2024 03:44:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/codecommit.html" rel="tag">CodeCommit</a>
-      <a href="/tags/codebuild.html" rel="tag">CodeBuild</a>
-      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
-      <a href="/tags/eventbridge.html" rel="tag">EventBridge</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は AWS の CodeCommit と CodeBuild を使って「 GitHub と Actions だったら簡単にできる PR のビルドが成功したときだけマージ可能になる」仕組みを作ってみたので、その手順をまとめました。</p>
-
-<h3>それって標準でできないの？</h3>
-
-<p>はい、 AWS の Code 兄弟だけでソースコードを管理している場合、CodeCommit には PR の機能と承認フローの制御はあるけど、ビルド結果と連動した仕組みは用意されていません。
-僕も担当するプロジェクトで使うまで、それぐらいあるやろーと思っていたのですが、無いと聞いて衝撃を受けました。</p>
-
-<h3>前提</h3>
-
-<p>CodeCommit 上のリポジトリのブランチ戦略は git-flow で運用しています。
-なので、 以下のようなブランチやタグが存在します。</p>
-
-<ul>
-<li>master</li>
-<li>develop</li>
-<li>release/v9.9.9</li>
-<li>hotfix/v9.9.9</li>
-<li>feature/xxxx-xxx</li>
-</ul>
-
-<h3>CodeCommit と CodeBuild で git-flow を取り扱う</h3>
-
-<p>この時点でかなり面倒なのですが、以下のQiita記事が参考になります。</p>
-
-<ul>
-<li><a href="https://qiita.com/yoshii0110/items/0eb427cb7331647f2c12">AWS CodeシリーズをAWS Step Functionsで実行し継続的デプロイする</a></li>
-</ul>
-
-<p>なんで StepFunctions を使うかというと、Code兄弟を組み合わせて使ったとき、 <code>feature/*</code> のような動的ブランチの PR に対してビルドを実行できないといった問題があるためです。 <code>feature/*</code> に PUSH されたときに CodeBuild が動くとかはできるんですけど、そういうことじゃないんだよ Code兄弟よ。わかってないな、というとこ。</p>
-
-<h4>EventBridge -&gt; StepFunctions への連携</h4>
-
-<p>CodeCommit への PR や PUSH のイベントを EventBridge で受け取って StepFunctions へ受け流します。</p>
-
-<p>こちらの記事が参考になります。</p>
-
-<ul>
-<li><a href="https://qiita.com/isamuJazz/items/c8e4a4c27b46b87e01f3">AWS StepFunctionsを使って CodeCommitでプルリク時にそのブランチ名を自動的に既存のCodeBuildの対象ブランチにしてテスト実行する。</a></li>
-<li><a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/">新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築</a></li>
-</ul>
-
-<p>CodeCommit の PR や PUSH のイベントが発生したら、StepFunctions を呼び出すように設定します。</p>
-
-<p>基本的には事前定義パターンでも問題ないと思いますが、EventBridgeの段階でイベントを絞り込みたい場合は、カスタムで絞り込んでも良いと思います。
-対象イベントをどうするかは EventBridge でも StepFunctions で判定してもどちらでも良いでしょう。実行コストを機にするなら EventBridge でフィルタしたほうが良いですね。</p>
-
-<p>たとえば PR の作成とソースの更新時にだけ動かしたい場合は、以下のようなJSONになります。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nl">"detail"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nl">"event"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"pullRequestCreated"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pullRequestSourceBranchUpdated"</span><span class="p">]</span><span class="w">
-  </span><span class="p">},</span><span class="w">
-  </span><span class="nl">"detail-type"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"CodeCommit Pull Request State Change"</span><span class="p">],</span><span class="w">
-  </span><span class="nl">"resources"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"CodeCommitのARN"</span><span class="p">],</span><span class="w">
-  </span><span class="nl">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"aws:codecommit"</span><span class="p">]</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre></div>
-<p>GitHub Actions に置き換えると、以下のような部分を EventBridge や StepFunctions で設定すると思っていれば間違いないです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">on</span><span class="pi">:</span>
-  <span class="na">pull_request</span><span class="pi">:</span>
-    <span class="na">types</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">opened</span><span class="pi">,</span> <span class="nv">synchronize</span><span class="pi">]</span>
-    <span class="na">branches</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">feature/**'</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">release/**'</span>
-      <span class="pi">-</span> <span class="s">develop</span>
-      <span class="pi">-</span> <span class="s">master</span>
-  <span class="na">push</span><span class="pi">:</span>
-    <span class="na">branches</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">release/**'</span>
-      <span class="pi">-</span> <span class="s">develop</span>
-    <span class="na">tags</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s1">'</span><span class="s">v[0-9]+.[0-9]+.[0-9]+'</span>
-</code></pre></div>
-<h4>StepFunctions のフロー</h4>
-
-<p>参考記事に StepFunctions から CodeBuild を実行する例が出ているので、そちらを参考にしてください。</p>
-
-<p>フローとしては以下の様な流れを設定しています。</p>
-
-<ol>
-<li>PR かどうか判定する <code>$.detail-type</code> を <code>Choise</code> で判定して分岐
-
-<ol>
-<li>PR だったら CodeBuild の <code>build</code> を実行して、 <code>ResultPath: $.BuildResult</code> に結果を格納</li>
-<li>ビルド結果を CodeCommit に通知する Lambda を実行</li>
-</ol></li>
-<li>1 の ELSE
-
-<ol>
-<li>PUSH になるので、ブランチ <code>$.detail.sourceReference</code> が <code>refs/heads/develop</code> や <code>refs/heads/master</code> , <code>refs/heads/release</code> にマッチしていたら CodeBuild の <code>deploy</code> を実行して、 <code>ResultPath: $.BuildResult</code> に結果を格納</li>
-</ol></li>
-</ol>
-
-<p>実際はチャットにもビルド結果を通知したりしているので、フローはもう少し複雑ですが、大まかには上記のとおりです。</p>
-
-<p>StepFunctions から CodeBuild を呼び出す時の設定可能なパラメータなど。AWSの公式ドキュメントを見るとわかりやすいです（翻訳のタイトル変だけどw）</p>
-
-<p><a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/connect-codebuild.html">Step AWS CodeBuild Functions による呼び出し</a></p>
-
-<p>git-flow の CodeBuild プロジェクトを設定するときは、ソースの設定を指定せずに PR のソースブランチに対してビルドするようにします。</p>
-
-<p><a href="https://aws.amazon.com/jp/blogs/news/new-building-a-continuous-integration-workflow-with-step-functions-and-aws-codebuild/">新機能 – Step Functions と AWS CodeBuild を使用した継続的インテグレーションワークフローの構築</a>の記事で CodeBuild を実行するときの StepFunctions 定義は以下のようになっています。</p>
-<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"Trigger CodeBuild Build With Tests"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nl">"Type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Task"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"Resource"</span><span class="p">:</span><span class="w"> </span><span class="s2">"arn:${AWS::Partition}:states:::codebuild:startBuild.sync"</span><span class="p">,</span><span class="w">
-        </span><span class="nl">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nl">"ProjectName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"${projectName}"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nl">"Next"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Get Test Results"</span><span class="w">
-    </span><span class="p">}</span><span class="err">,</span><span class="w">
-</span></code></pre></div>
-<p><code>Parameters</code> に以下のパラメータを追加して、特定のソースブランチに対してビルドできるように設定します。</p>
-
-<ul>
-<li>SouceTypeOverride: &ldquo;CODECOMMIT&rdquo;</li>
-<li>SourceLocationOverride: CodeCommit のURL</li>
-<li>BuildspecOverride: 実行するビルドスペックのパス</li>
-<li>SourceVersion: ブランチ名（event.detail.sourceReference）</li>
-</ul>
-
-<h4>CodeBuild でやること</h4>
-
-<p>CodeBuild では分岐処理を書くとしてもシェルの if 文を使うことになるので、そういったケース分けは StepFunctions で分岐して、buildspecfile を分けておいて <code>BuildspecOverride</code> で切り替える様にしておいた方が良いです。</p>
-
-<p>GitHub Actions でいうと、単純なジョブが1つ書けるだけと思っていたほうが良いです。</p>
-
-<h4>CodeCommit にビルド結果を通知する</h4>
-
-<p>では CodeBuild の結果を CodeCommit に通知してみましょう。
-ここは連携の仕組みはないので、 CodeCommit のコメント欄と承認機能を利用します。</p>
-
-<p>まずビルド結果を CodeCommit にコメントして、ビルドが成功していたら承認する Lambda を実装します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">CodeCommitClient</span><span class="p">,</span> <span class="nx">PostCommentForPullRequestCommand</span><span class="p">,</span> <span class="nx">UpdatePullRequestApprovalStateCommand</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">"</span><span class="s2">@aws-sdk/client-codecommit</span><span class="dl">"</span><span class="p">:</span>
-
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">handler</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CodeCommitClient</span><span class="p">();</span>
-    <span class="kd">const</span> <span class="nx">buildResult</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span> <span class="p">?</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nx">Cause</span><span class="p">)</span> <span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">;</span>
-    <span class="kd">const</span> <span class="nx">buildUrl</span> <span class="o">=</span> <span class="s2">`https://リージョン.console.aws.amazon.com/codesuite/codebuild/コードビルドID/projects/</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">ProjectName</span><span class="p">}</span><span class="s2">/build/</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">Id</span><span class="p">}</span><span class="s2">`</span><span class="p">;</span>
-    <span class="kd">const</span> <span class="nx">icon</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span> <span class="p">?</span> <span class="dl">'</span><span class="s1">❌</span><span class="dl">'</span> <span class="p">:</span> <span class="dl">'</span><span class="s1">✅</span><span class="dl">'</span><span class="p">;</span>
-    <span class="kd">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="s2">`</span><span class="p">${</span><span class="nx">icon</span><span class="p">}</span><span class="s2"> ビルド [</span><span class="p">${</span><span class="nx">buildResult</span><span class="p">.</span><span class="nx">Build</span><span class="p">.</span><span class="nx">Id</span><span class="p">}</span><span class="s2">](</span><span class="p">${</span><span class="nx">buildUrl</span><span class="p">}</span><span class="s2">)`</span><span class="p">;</span>
-    <span class="kd">const</span> <span class="nx">input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="na">pullRequestId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">pullRequestId</span><span class="p">,</span>
-        <span class="na">repositoryName</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">repositoryNames</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="na">beforeCommitId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">sourceCommit</span><span class="p">,</span>
-        <span class="na">afterCommitId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">destinationCommit</span><span class="p">,</span>
-        <span class="nx">content</span><span class="p">,</span>
-    <span class="p">};</span>
-    <span class="kd">const</span> <span class="nx">command</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PostCommentForPullRequestCommandI</span><span class="p">(</span><span class="nx">input</span><span class="p">);</span>
-    <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">command</span><span class="p">);</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span> <span class="o">||</span> <span class="nx">event</span><span class="p">.</span><span class="nx">BuildResult</span><span class="p">.</span><span class="nb">Error</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="kd">const</span> <span class="nx">approvalInput</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="na">pullRequestId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">pullRequestId</span><span class="p">,</span>
-        <span class="na">revisionId</span><span class="p">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">revisionId</span><span class="p">,</span>
-        <span class="na">approvalState</span><span class="p">:</span> <span class="dl">"</span><span class="s2">APPROVE</span><span class="dl">"</span><span class="p">,</span>
-    <span class="p">};</span>
-    <span class="kd">const</span> <span class="nx">approvalCommand</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">UpdatePullRequestApprovalStateCommand</span><span class="p">(</span><span class="nx">approvalInput</span><span class="p">);</span>
-    <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">approvalCommand</span><span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>本当は絵文字じゃなくて、バッジを使いたかったのですけど、CodeCommit では利用できる Markdown 記法に制限があって、外部画像は利用できないようです。
-CodeBuild にもバッジ機能はありますが、 git-flow のように <code>feature/*</code> のワイルドカードブランチで、 StepFunctions からビルド対象ブランチを指定して実行する場合にはバッジが作れないので、それも使えません。
-ここは絵文字一択でしょう。
-あとは、ビルドが成功していても失敗していても、ビルド結果に飛べるリンクを付けることで確認しやすくなります。</p>
-
-<p>この Lambda からは以下の2つのコマンドを利用するためのポリシーが必要になるので、忘れずにアタッチしましょう。</p>
-
-<ul>
-<li>PostCommentForPullRequest</li>
-<li>UpdatePullRequestApprovalState</li>
-</ul>
-
-<h4>ビルドが成功したときだけマージ可能にする</h4>
-
-<p>上記の Lambda でビルドに成功したときだけ承認を実行するようにしました。
-CodeCommit では「承認ルールテンプレート」を設定できます。</p>
-
-<p>以下のルールを前提とします。</p>
-
-<ul>
-<li>CI でのビルドが成功している</li>
-<li>PR 作成者以外の人が承認している</li>
-</ul>
-
-<p>まず前者の承認ルールテンプレートを設定してみましょう。</p>
-
-<ul>
-<li>必要な承認の数: 1</li>
-<li>承認プールのメンバー
-
-<ul>
-<li>IAMユーザー名または引き受けたロール</li>
-<li>値: ビルドが成功していたら承認する Lambda のロール名</li>
-</ul></li>
-<li>ブランチ名: develop</li>
-</ul>
-
-<p>git-flow では <code>feature/*</code> から <code>develop</code> に向けて PR を出すので、ブランチフィルターを設定しておくと良いです。
-また、Lambda からの承認であることを判定するには、Lambda に割り当てているロール名で判定するのが楽だと思うので、ロール名で判定すると良いでしょう。</p>
-
-<p>続いて後者の承認ルールテンプレートを設定してみましょう。</p>
-
-<ul>
-<li>必要な承認の数: 2</li>
-<li>ブランチ名: develop</li>
-</ul>
-
-<p>ここでは承認者の絞り込みはしておらず、2つの承認があったらというルールにしています。
-プロジェクトによっては特定の人の承認を必要とする場合もあるでしょうから、そのあ場合は承認プールのメンバーを設定して必要な承認数を指定してください。
-ここでは誰かしら1人以上が承認してくれたら、という前提になっています。</p>
-
-<p>ではなぜ必要な承認の数が 2 なのか？というと、CIでの承認数1と人の承認数1を合わせて2以上という形にしています。
-人が2人以上承認していてもCIが失敗していた場合は、前者の承認ルールを満たしていないのでマージすることはできません。</p>
-
-<p>ビルド成功で1、人の承認が1つ以上でルールが満たされます。</p>
-
-<h3>さいごに</h3>
-
-<p>これらの手順で CodeCommit / CodeBuild を使ったときに GitHub と Actions で簡単にできていたワークフローを実現できます。</p>
-
-<p>面倒だ、面倒すぎる、と思いますよね。</p>
-
-<p>できれば Code兄弟を避けていきたいのですが、プロジェクト事情でそれ以外の選択肢が選べないこともあるでしょう。
-そのようなときに、この記事が参考になればと思います。
-ここまで全体の手順を解説してくれる記事が見当たらなかったので、細かい設定は置いておいて大まかなら流れをベースに解説しました。
-それぞれの部分（たとえばStepFunctionsとCodeBuildの連携）といった記事は検索すると見つかるので、具体的な実装方法はそれぞれの最新情報を確認ください。</p>
-
-<p>Code兄弟さん、もっと便利になってくれないかな、と願う日々です。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">
-          <a class="twitter" data-title="CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う"></a>
-          <a class="facebook" data-title="CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1237,6 +1128,7 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
@@ -1246,7 +1138,6 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
-                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
               </ul>
             </div>
           </section>
@@ -1256,6 +1147,9 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/lambda.html" rel="tag">Lambda</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/cdk.html" rel="tag">CDK</a>
@@ -1369,7 +1263,7 @@ CodeCommit では「承認ルールテンプレート」を設定できます。
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (6)</li>
+                  <li><a href="/2025.html">2025</a> (7)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

@@ -272,6 +272,102 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a></h1>
+  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 04:04:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/faker.html" rel="tag">Faker</a>
+      <a href="/tags/jsonschema.html" rel="tag">JsonSchema</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>AWS Lambda ハンドラをテストしたいとき、多くはリクエストのバリデーションの結果で 400 エラーを返すのか、ロジックが正常終了したとき 200 を戻すのか、みたいなことを書きたいことがあると思います。</p>
+
+<p>TypeScript で Lambda ハンドラを記述する場合は、以下のようになると思います。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">APIGatewayProxyHandler</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-lambda</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">hello</span><span class="p">:</span> <span class="nx">APIGatewayProxyHandler</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// バリデーションやロジックの呼び出し</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>このとき <code>event</code> は <code>APIGatewayProxyEvent</code> 型になるのですが、項目がたくさんあります。
+自分で定義した interface などの場合、 <a href="https://github.com/willryan/factory.ts">factory.ts</a> だったり、<a href="https://github.com/ratson/factory-bot">factory-bot</a> みたいなライブラリを使って書けば良いのですが、 Lambda ハンドラのイベントはとても項目が多いので、 factory 定義を書くのも大変です。</p>
+
+<h2>faker-ts の利用</h2>
+
+<p>そこで以前は <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> というライブラリを使っていて <code>@types/aws-lambda</code> から適当な値を生成していました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">tsMock</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">faker-ts</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">mocker</span> <span class="o">=</span> <span class="nx">tsMock</span><span class="p">([</span><span class="dl">'</span><span class="s1">/node_modules/@types/aws-lambda/index.d.ts</span><span class="dl">'</span><span class="p">]);</span>
+<span class="kd">const</span> <span class="nx">event</span> <span class="o">=</span> <span class="nx">mocker</span><span class="p">.</span><span class="nx">generateMock</span><span class="p">(</span><span class="dl">'</span><span class="s1">APIGatewayProxyEvent</span><span class="dl">'</span><span class="p">);</span>
+</code></pre></div>
+<p>しばらくこの方法で問題はなかったのですが、 Node.js v16 と jest の組み合わせになり、メモリ不足エラーが出るようになってしまったので、見直しが必要になりました。</p>
+
+<h3>faker-ts の仕組み</h3>
+
+<p>faker-ts は以下の2つのステップから構成されていました。</p>
+
+<ul>
+<li><a href="https://www.npmjs.com/package/typescript-json-schema">typescript-json-schema</a> で TypeScript コードからJSONスキーマの生成</li>
+<li><a href="https://www.npmjs.com/package/json-schema-faker">json-schema-faker</a> でJSONスキーマからJSONオブジェクトの生成</li>
+</ul>
+
+<p>これを別々に実行して試していくプランとしました。</p>
+
+<h2>typescript-json-schema の利用</h2>
+
+<p>まずはJSONスキーマの生成から。
+このNPMパッケージには CLI ツールも付いているので、npm script でスキーマファイルを生成できるようにしました。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="dl">"</span><span class="s2">scripts</span><span class="dl">"</span><span class="p">:</span> <span class="p">{</span>
+  <span class="dl">"</span><span class="s2">tjs</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">typescript-json-schema --required</span><span class="dl">"</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>のように package.json に記述したら、コマンドを実行して JSONスキーマファイルを生成します。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm run tjs <span class="nt">--</span> <span class="nt">-o</span> <span class="nb">test</span>/schema/APIGatewayProxyEvent.json node_modules/@types/aws-lambda/index.d.ts APIGatewayProxyEvent
+</code></pre></div>
+<p>このようにして、必要な型のJSONスキーマを <code>test/schema</code> の下に生成していきます。</p>
+
+<h2>json-schema-faker の利用</h2>
+
+<p>テストコードでは、以下のようにすることでJSONオブジェクトを生成します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">JSONSchemaFaker</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">json-schema-faker</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">faker</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@faker-js/faker/locale/ja</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">useExamplesValue</span><span class="dl">'</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">useDefaultValue</span><span class="dl">'</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+<span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">option</span><span class="p">(</span><span class="dl">'</span><span class="s1">faker</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">faker</span><span class="p">);</span>
+
+<span class="kd">const</span> <span class="nx">event</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">APIGatewayProxyEvent</span><span class="o">&gt;</span><span class="nx">JSONSchemaFaker</span><span class="p">.</span><span class="nx">generate</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">test/schema/APIGatewayProxyEvent.json</span><span class="dl">'</span><span class="p">));</span>
+<span class="nx">event</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="cm">/** テストで使う入力値 */</span>
+</code></pre></div>
+<h2>さいごに</h2>
+
+<p>これで TypeScript Interface から型定義に従った Fake オブジェクトが作れるようになりました。
+<code>faker-ts</code> はあまりメンテされていなかったので、コードを fork してライブラリを最新追従したりして使っていたのですが、その手間も不要となりました。</p>
+
+<p>2つに処理を分割してわかったのは、 <code>typescript-json-schema</code> が結構時間がかかっていたので、これを CLI にすることでメモリの利用状況も少なくなりました。
+そのため、毎回JSONスキーマを生成しなくなった分、テストも速くなり良いことが多かったです。
+この方法だと自分で作った TypeScript の型などでも一度 JSONスキーマを生成しておけば、複数の factory ライブラリを使わなくても良くなるので、良いかもしれません。（ただ現時点では factory-bot とかの方が使い勝手が良いとは思います。たとえば buildList みたいなことができないので）</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/12/18/fake-aws-events-for-testing-on-node-js.html">
+          <a class="twitter" data-title="Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する"></a>
+          <a class="facebook" data-title="Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/12/18/sqs-test-on-node-js.html">Node.js で AWS SQS を使ったコードの自動テストを記述する</a></h1>
   <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 02:53:00 PM</a></p>
   <p class="tags">
@@ -833,114 +929,6 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/05/06/bump-middleman-4-4-2-from-3-x.html">Middleman を 3系から 4系にアップグレードした</a></h1>
-  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 10:59:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/middleman.html" rel="tag">Middleman</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>GWどこ行っても混んでそうなんで、月-金はブログを書くと決めた今年。
-ここ2年コロナでコミュニティ活動やらもできず、ブログを書くのもモチベ下がりまくりだったけど、良いきっかけになりました。
-さて、久々にブログやるのだから、せっかくなんで執筆環境もアップデートしようということで、確認すると Middleman は 4系にアップデートされていました。</p>
-
-<p>Middleman公式のアップデートガイド<a href="https://middlemanapp.com/jp/basics/upgrade-v4/">v4 へのアップグレード</a>をまずはチェック。</p>
-
-<p>ふむふむ、 config には影響ありそうだけど、それ以外は外部ライブラリやテンプレート関係っぽいので、まずはビルドしてみてかな、という感じ。
-そういえば Middleman で使ってる Ruby のバージョンも古いなーと思って、 Middleman v4 で対応している Ruby バージョンは何だろう？と調べました。</p>
-
-<p>特に記述がないので Ruby 3系でも動くのかなーと思っていたら、<a href="https://github.com/middleman/middleman/issues/2539">Cannot start server ( or use cli) with Ruby 3.0 and Middleman 4</a>なんて issue がありました。</p>
-
-<blockquote>
-<p>Which 4.4.0 tried to add some support for Ruby 3, I would not suggest relying on it. It is far too much work to support projects as old as 2008 and a language released in 2020 at the same time.</p>
-
-<p>Patches welcome or if you want to live dangerously the master branch and 5.0x series will be Ruby 3.1+ only</p>
-</blockquote>
-
-<p>とのこと。Middleman 5系になると Ruby 3.1以上のみになるんですね。まぁそれまでは Ruby 2系かぁということで、とはいえ2系も古いバージョンが手元に入っていたので、これを最新にすることにしました。</p>
-
-<h3>Ruby 2.7.6 へのアップデート</h3>
-
-<p>Ruby のバージョン管理には rbenv + ruby-build を使っているので、まずはそれ自体のアップデートを。
-brew 使っても良いのですが、僕は git から clone して使っているので、 pull して最新に。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>rbenv <span class="nb">install </span>2.7.6
-Downloading openssl-...
-
-BUILD FAILED 
-</code></pre></div>
-<p>あれ？なんかopensslダウンロードしようとして、失敗するな&hellip;</p>
-
-<p><code>rbenv brew openssl</code> でググるとありました。<a href="https://qiita.com/kazutosato/items/9c4ff7711ca992dd67e5">rbenv installがopensslで失敗する</a>、そして解決策をみて「あーこれ昔もハマった記憶があるような、ないような」という気分に。</p>
-
-<p>ということで、以下のコマンドを実行して無事アップデートできました。</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">RUBY_CONFIGURE_OPTS</span><span class="o">=</span><span class="s2">"--with-openssl-dir=/opt/local/bin/openssl"</span> rbenv <span class="nb">install </span>2.7.6
-</code></pre></div>
-<h3>Middleman 4.4.2 へのアップデート</h3>
-
-<p>まず <code>bundle outdated</code> で、アップデート可能なバージョンがあるか確認します。
-Gemfileは以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code># the following line to use "https"
-source 'http://rubygems.org'
-
-gem "middleman", "~&gt; 3.2.2"
-gem "middleman-blog", "~&gt; 3.5.1"
-gem "middleman-deploy"
-
-# For feed.xml.builder
-gem "builder", "~&gt; 3.0"
-gem "middleman-syntax"
-gem "redcarpet"
-</code></pre></div>
-<p>すると、 <code>middleman</code> と <code>middleman-blog</code> には、ともに 4系のアップデートがあったので、 <code>Gemfile</code> のバージョンを更新して <code>bundle update</code> を実行しました。</p>
-
-<h3>middleman-deploy の更新</h3>
-
-<p>ライブラリのバージョンも無事アップデートできたので、 <code>bundle exec middleman server</code> を実行してみたところ、 <code>middleman-deploy</code> でエラーが出ます。
-このライブラリは <code>outdated</code> で調べたとき更新がなかったので、何でだろう？と思い、まずは issue を調べてみることに。
-そうしたら、ありました。
-<a href="https://github.com/karlfreeman/middleman-deploy/issues/132">Error with Middleman 4.2 and middleman-deploy 1.0</a></p>
-
-<p>なるほど、まだステーブルではない <a href="https://rubygems.org/gems/middleman-deploy/versions/2.0.0.pre.alpha">2.0.0.pre.alpha</a> バージョンを利用しないといけないようです。これだと <code>outdated</code> には出ないですね。
-それに伴い condfig も変更になっていました。</p>
-<div class="highlight"><pre class="highlight ruby"><code><span class="n">activate</span> <span class="ss">:deploy</span> <span class="k">do</span> <span class="o">|</span><span class="n">deploy</span><span class="o">|</span>
-  <span class="n">deploy</span><span class="p">.</span><span class="nf">build_before</span> <span class="o">=</span> <span class="kp">true</span> <span class="c1"># default: false</span>
-  <span class="c1"># deploy.method = :git 1系の指定方法</span>
-  <span class="n">deploy</span><span class="p">.</span><span class="nf">deploy_method</span> <span class="o">=</span> <span class="ss">:git</span> <span class="c1"># 2系の指定方法</span>
-</code></pre></div>
-<p>しかし、alpha から 7年経過&hellip;。Middleman も一時期は流行ったのですが、SSG(Static Site Generator)の移り変わりも速いですね。
-今は何が流行っているのだろうか？</p>
-
-<h3>さいごに</h3>
-
-<p><a href="https://github.com/sizuhiko/sizuhiko.github.io/commit/cbcec8474610850da2bca9f61ef46ed9b0a019ec">これらを修正した commit はこちら</a>になります。</p>
-
-<p>実は古い記事の demo コードもブログに混ぜていたのですが、これを入れると何故か UTF-8 じゃないファイルがある、みたいなエラーになってしまいました。
-エラー箇所は、バイナリー判定してバイナリーでないファイルだったら、みたいなコードもあったりするので、 html が置いてあるといけないのかな。なんでとりあえず demo はディレクトリごと削除することに。
-まぁ古い jQuery 関係の demo なんで、そのうちそれらはライブラリ側の github pages に移そうと思います（もう需要ないだろうけど）。</p>
-
-<p>あと middleman コマンド実行すると</p>
-<div class="highlight"><pre class="highlight plaintext"><code>Deprecation warning: Expected string default value for '--instrument'; got false (boolean).
-This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
-You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
-</code></pre></div>
-<p>みたいなワーニングが出ているので、時間があったらこちらも調査したいなと思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/06/bump-middleman-4-4-2-from-3-x.html">
-          <a class="twitter" data-title="Middleman を 3系から 4系にアップグレードした"></a>
-          <a class="facebook" data-title="Middleman を 3系から 4系にアップグレードした"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -970,6 +958,7 @@ You can silence deprecations warning by setting the environment variable THOR_SI
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
@@ -979,7 +968,6 @@ You can silence deprecations warning by setting the environment variable THOR_SI
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
                   <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
-                  <li><a href="/2024/05/28/using-codecommit-codebuild-like-a-github-and-the-actions.html">CodeCommit と CodeBuild を GitHub と Actions の組み合わせのように使う</a> <span>2024/05/28</span></li>
               </ul>
             </div>
           </section>
@@ -989,6 +977,9 @@ You can silence deprecations warning by setting the environment variable THOR_SI
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/lambda.html" rel="tag">Lambda</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/cdk.html" rel="tag">CDK</a>
@@ -1102,7 +1093,7 @@ You can silence deprecations warning by setting the environment variable THOR_SI
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (6)</li>
+                  <li><a href="/2025.html">2025</a> (7)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
