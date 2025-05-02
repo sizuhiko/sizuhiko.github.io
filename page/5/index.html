@@ -272,6 +272,78 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a></h1>
+  <p class="postdate"><a href="/2023/04/19.html" title="Permanent link">Wednesday, April 19, 2023 04:12:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
+      <a href="/tags/localstack.html" rel="tag">LocalStack</a>
+      <a href="/tags/test.html" rel="tag">test</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="/2023/01/04/migrate-aws-sdk-node-js-v2-to-v3.html">AWS Lambda の Node.js 14 を 18 に移行する（aws-sdk v3 移行編）</a> の中でも書いたように、aws-sdk v3 を使ったコードを UnitTest するには <a href="https://github.com/m-radzikowski/aws-sdk-client-mock">AWS SDK v3 Client mock</a> を利用してモックした方が簡単です。</p>
+
+<p>一方で少し IntegrationTest をしたいと思うこともあるでしょう。そうしたときは LocalStack の利用が便利です。
+手元も環境なら Docker の Extension で動きます。
+CI 環境、たとえば GitHub Actions ならサービスでコンテナ起動すれば大丈夫です。</p>
+
+<h3>インテグレーションテストでのエンドポイント</h3>
+
+<p>こんな感じでテストコードで endpoint を切り替えられるようにしておくとローカルとCI環境のどちらでもテストを実行しやすくなります。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="na">credentials</span><span class="p">:</span> <span class="p">{</span> <span class="na">accessKeyId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">dummy</span><span class="dl">'</span><span class="p">,</span> <span class="na">secretAccessKey</span><span class="p">:</span> <span class="dl">'</span><span class="s1">summy</span><span class="dl">'</span> <span class="p">},</span>
+  <span class="na">endpoint</span><span class="p">:</span> <span class="s2">`http://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">TEST_AWS_HOSTNAME</span> <span class="o">??</span> <span class="dl">'</span><span class="s1">localhost</span><span class="dl">'</span><span class="p">}</span><span class="s2">:4566`</span><span class="p">,</span>
+  <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span><span class="p">,</span>
+<span class="p">};</span>
+<span class="kd">const</span> <span class="nx">stepFunctions</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SFNClient</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+</code></pre></div>
+<p>手元では localhost で良いし、CI環境（たとえば GitHub Actions ） なら、以下のようにしておくと良いです。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
+    <span class="na">services</span><span class="pi">:</span>
+      <span class="na">localstack</span><span class="pi">:</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
+    <span class="na">env</span><span class="pi">:</span>
+      <span class="na">TEST_AWS_HOSTNAME</span><span class="pi">:</span> <span class="s">localstack</span>
+    <span class="na">steps</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">run</span><span class="pi">:</span> <span class="s">npm t</span>
+</code></pre></div>
+<h3>LocalStack v2.0 以降での変更点</h3>
+
+<p>最近バージョンが 2.0 になった LocalStack ですが Lambda 関連で大きな変更がありました。
+基本的に Lambda を利用しなければ問題はありませんが、特に問題なければ localstack サービスを以下のように設定しておくと安心です。</p>
+<div class="highlight"><pre class="highlight yaml"><code>    <span class="na">container</span><span class="pi">:</span> <span class="s">node:18</span>
+    <span class="na">services</span><span class="pi">:</span>
+      <span class="na">localstack</span><span class="pi">:</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">localstack/localstack</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="na">LAMBDA_SYNCHRONOUS_CREATE</span><span class="pi">:</span> <span class="m">1</span>
+        <span class="na">volumes</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="s">/var/run/docker.sock:/var/run/docker.sock</span>
+</code></pre></div>
+<p>Actions のホストコントローラの docker.sock をマウントすることで LocalStack の中で Lambda が起動できるようになります。</p>
+
+<p>詳しくは<a href="https://github.com/localstack/localstack/releases/tag/v2.0.0">公式の v2.0.0 リリースノート</a> の <code>Lambda</code> 部分に書いてありますので、読んでみてください。</p>
+
+<h3>さいごに</h3>
+
+<p>単体テストで LocalStack 使うのはやりすぎだと思いますが、部分的にインテグレーションテストしたい、といった場合には有用な方法かな、と思いますので、用途に応じて使い分けられると良いですね。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/19/integration-test-using-localstack.html">
+          <a class="twitter" data-title="LocalStack を使って aws-sdk の Integration Test を実行する"></a>
+          <a class="facebook" data-title="LocalStack を使って aws-sdk の Integration Test を実行する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2023/04/18/generation-code-aws-sdk-v3.html">AWS SDK v3 のモジュールと利用方法</a></h1>
   <p class="postdate"><a href="/2023/04/18.html" title="Permanent link">Tuesday, April 18, 2023 12:21:00 PM</a></p>
   <p class="tags">
@@ -689,168 +761,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる</a></h1>
-  <p class="postdate"><a href="/2023/04/05.html" title="Permanent link">Wednesday, April 05, 2023 05:08:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v3.html" rel="tag">aws-sdk@v3</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>「Lambda アプリが突然動かなくなる」なんて、どうせバグなんでしょーというのが当然のリアクションですが、これは本当にバグなのか&hellip;</p>
-
-<p>本当にあった怖い話をします。</p>
-
-<h3>ある日、Lambda アプリが突然動かなくなる</h3>
-
-<p>Node.js v18 のライタイムで動く Lambda にデプロイされているアプリで、ある日突然エラーが出るようになりました。</p>
-
-<blockquote>
-<p>original: TypeError: Cannot read properties of undefined (reading ‘RUNNING’)</p>
-</blockquote>
-
-<p>この部分ですが TypeScript のコードでは以下のようになっていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span>
-  <span class="nx">DescribeExecutionCommand</span><span class="p">,</span>
-  <span class="nx">ExecutionDoesNotExist</span><span class="p">,</span>
-  <span class="nx">ExecutionStatus</span><span class="p">,</span>
-  <span class="nx">SFNClient</span><span class="p">,</span>
-  <span class="nx">StartExecutionCommand</span><span class="p">,</span>
-  <span class="nx">paginateListExecutions</span><span class="p">,</span>
-<span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-sfn</span><span class="dl">'</span><span class="p">;</span>
-
-<span class="c1">// 省略</span>
-
-<span class="k">if</span> <span class="p">(</span><span class="nx">latest</span><span class="p">?.</span><span class="nx">status</span> <span class="o">===</span> <span class="nx">ExecutionStatus</span><span class="p">.</span><span class="nx">RUNNING</span><span class="p">)</span> <span class="p">{</span>
-</code></pre></div>
-<p><code>ExecutionStatus</code> は StepFunctions のクライアントで export されている値です。
-StepFuntions のジョブが実行中かどうか判定している箇所で。少し前まで普通に動いていたのに&hellip;.</p>
-
-<h3>Lambda アプリの構成</h3>
-
-<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
-
-<h3>node コンソールで確認してみる</h3>
-
-<p>手元では devDependencies に <code>@aws-sdk/client-sfn</code> が入っているので、 node コンソールに入って require を実行してみました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&gt; ExecutionStatus
-{
-  ABORTED: 'ABORTED',
-  FAILED: 'FAILED',
-  RUNNING: 'RUNNING',
-  SUCCEEDED: 'SUCCEEDED',
-  TIMED_OUT: 'TIMED_OUT'
-}
-</code></pre></div>
-<p>ふむ、問題なさそうだが？</p>
-
-<p>最新版の aws-sdk で変わったのだろうか？
-一時的に最新版にバージョンアップをしてみて、確認してみます</p>
-<div class="highlight"><pre class="highlight plaintext"><code>&gt; const { ExecutionStatus} = require('@aws-sdk/client-sfn')
-undefined
-&gt; ExecutionStatus
-undefined
-</code></pre></div>
-<p>えええええええーーー</p>
-
-<h3>aws-sdk の該当箇所の修正履歴をチェックする</h3>
-
-<p><a href="https://github.com/aws/aws-sdk-js-v3/pull/4587">hore(codegen): export enums as const</a></p>
-
-<h4>元のコード</h4>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
- * @public
- */</span>
-<span class="k">export</span> <span class="kr">enum</span> <span class="nx">ExecutionStatus</span> <span class="p">{</span>
-  <span class="nx">ABORTED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">FAILED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">RUNNING</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">SUCCEEDED</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="nx">TIMED_OUT</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4>変更後のコード</h4>
-<div class="highlight"><pre class="highlight javascript"><code><span class="cm">/**
- * @public
- * @enum
- */</span>
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">ABORTED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">FAILED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">RUNNING</span><span class="p">:</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">SUCCEEDED</span><span class="p">:</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">,</span>
-  <span class="na">TIMED_OUT</span><span class="p">:</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">,</span>
-<span class="p">}</span> <span class="k">as</span> <span class="kd">const</span><span class="p">;</span>
-</code></pre></div>
-<p>おいおい、これって <code>@public</code> なのに後方互換性なくなっとるだろ&hellip;.</p>
-
-<h3>なぜ undefined になるのか</h3>
-
-<p>enum はコンパイルされて JavaScript になると以下のようなコードになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">var</span> <span class="nx">ExecutionStatus</span><span class="p">;</span>
-<span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ExecutionStatus</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">ABORTED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">FAILED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">RUNNING</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">SUCCEEDED</span><span class="dl">"</span><span class="p">;</span>
-    <span class="nx">ExecutionStatus</span><span class="p">[</span><span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">]</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">TIMED_OUT</span><span class="dl">"</span><span class="p">;</span>
-<span class="p">})(</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">||</span> <span class="p">(</span><span class="nx">exports</span><span class="p">.</span><span class="nx">ExecutionStatus</span> <span class="o">=</span> <span class="p">{}));</span>
-</code></pre></div>
-<p>でも <code>export const as const</code> になると、JavaScript にはコンパイルされることなく、変数の利用箇所に埋め込みの形になります。</p>
-
-<p>最初にも書きましたが、 aws-sdk v2 では普通だった</p>
-
-<blockquote>
-<p>AWS Lambda は aws-sdk がランタイムにグローバルインストールされているので、最新版に追従して問題なければパッケージに含める必要はありません。
-Lambda にデプロイするアプリケーションのサイズを少しでも減らすために、 aws-sdk は入れないようにしています。</p>
-</blockquote>
-
-<p>こういう運用はすでにオワコンなんでしょうか？
-いやでも、v3 になってもランタイムに aws-sdk は入っています。</p>
-
-<p>少なくとも <code>ExecutionStatus</code> が内部変数で export されてない private な値だったら良いのですが、これはさすがにマズイんじゃないですかね？awsさん。</p>
-
-<h3>この問題が発生するケース</h3>
-
-<ul>
-<li>AWS Lambda でランタイムの aws-sdk を使っていて、TypeScript から enum の値を参照していた場合（同一の変更ですべての enum が const に書き変わっています）</li>
-</ul>
-
-<p>amplify とか Lambda でなくコンパイルされているケースでは問題は起きませんが、いやこういうのサクッと変更しちゃダメだと思うんですが&hellip;
-しかもランタイム側に入っているので、動作している Lambda アプリケーションが突然動作しなくなります。</p>
-
-<h3>aws-sdk v3 を安心して使うためには（追記）</h3>
-
-<ul>
-<li>基本的にバージョンは最新版、もしくは最新に近い同じバージョンに揃える</li>
-<li><code>peerDependencies</code> が指定されていたら、バージョンを揃えるために自分でインストールする</li>
-<li>関数/クラス以外、たとえば enum の値などは基本的に利用しない</li>
-</ul>
-
-<p>大事なこと3つ目を追加しました。</p>
-
-<p>aws-sdk@v3 のパッケージ管理に日々不安が募りますが、同様の問題に遭遇した人の解決に役立てれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/05/aws-sdk-v3-changed-enum-to-const.html">
-          <a class="twitter" data-title="Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる"></a>
-          <a class="facebook" data-title="Node.js v18 / aws-sdk v3 の Lambda アプリが突然動かなくなる"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -880,6 +790,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -889,7 +800,6 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -899,6 +809,9 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -1015,7 +928,7 @@ Lambda にデプロイするアプリケーションのサイズを少しでも�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

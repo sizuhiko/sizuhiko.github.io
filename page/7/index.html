@@ -272,6 +272,120 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）</a></h1>
+  <p class="postdate"><a href="/2022/12/30.html" title="Permanent link">Friday, December 30, 2022 03:39:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/lambda.html" rel="tag">Lambda</a>
+      <a href="/tags/node-js.html" rel="tag">Node.js</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>クラメソさんの <a href="https://dev.classmethod.jp/articles/aws-lambda-support-node-js-18/">[アップデート] AWS Lambdaが Node.js 18をサポートしました</a> 記事のとおり、やっと AWS Lambda でも Node.js 18 が使えるようになりました。</p>
+
+<p>現在 Node.js 14 を使って AWS Lambda で API サーバーを構築しているのですが、 Node.js 16 の LTS が 9ヶ月終了が早まったこともあり、
+このタイミングで Node.js 18 へ移行することにしました。</p>
+
+<p>本稿では CI/CD 環境を Node.js 14 から Node.js 18 へ移行するときに実施した作業を振り返って、まとめておきます。</p>
+
+<p>現在の構成はこんな感じです。</p>
+
+<ul>
+<li>Node.js 14 / TypeScript</li>
+<li>CI/CD に GitHub Actions を利用</li>
+<li>Amazonlinux ベースの <a href="https://hub.docker.com/r/amazon/aws-cli">amazon/aws-cli</a> コンテナをベースにパッケージを追加した独自コンテナイメージで CI/CD を実施</li>
+<li>Serverless Framework でビルド/デプロイ</li>
+</ul>
+
+<h2>CI/CD イメージの Node.js を 18 にする</h2>
+
+<p>まずはビルド/デプロイをするコンテナイメージを Node.js 18 にしていきます。
+実際に Node.js 18 をインストールしようとしたのですが、エラーになってしまいます。</p>
+
+<p>具体的なエラーは <a href="https://stackoverflow.com/questions/50564999/lib64-libc-so-6-version-glibc-2-14-not-found-why-am-i-getting-this-error">/lib64/libc.so.6: version `GLIBC_2.14&rsquo; not found. Why am I getting this error?</a> と一緒で、調べていくと Amazonlinux2 ベースである CentOS7 と Node.js 18 は <a href="https://it.ama2pro.net/2022/05/31/node%E3%81%AEv18%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E3%82%89%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%EF%BC%88centos7%EF%BC%89/">nodeのv18を使ったらエラーになった（CentOS7）</a> などにもあるように単純な話ではないようです。</p>
+
+<p>おや？でも Lambda は Node.js 18 が使えるんですよね？どういうこと？と思いますよね。</p>
+
+<p>Node.js のディストリビューション issue を確認すると <a href="https://github.com/nodesource/distributions/issues/1367">distribution package Amazon Linux 2022 not supported</a> なんてのがありました。</p>
+
+<h3>で、Amazon Linux 2022 って何なん？！</h3>
+
+<p><a href="https://hub.docker.com/_/amazonlinux">amazonlinux のコンテナイメージ</a>をみると、 <code>latest</code> は <code>amazonlinux2</code> なんですが、タグをみていくと確かに <code>2022</code> があります。
+あと現時点では aws-cli のイメージは 2022 には追従していません。</p>
+
+<p>そこで、 amazonlinux2022 をベースにして Node.js 18 をインストールするのを試してみます。</p>
+
+<p>しかし、ここでプロビジョニングツールが amazonlinux 2022 に対応していないことがわかります（グルグル循環して脳が溶けてくる&hellip; 溶けてやがる、まだ早すぎたんだ&hellip;.）。違うプロビジョニングツールも調べてみたのですが、どれも 2022 には対応していませんでした。ここでプロビジョニングツールを捨てる選択となりました。</p>
+
+<p>（実際僕らは Chef を使っているんですが、Chef Workstation 自体に amazonlinux 2022 の対応は入っていました（<a href="https://github.com/chef/omnitruck/issues/569">Omnitruck artifact does not exist for version 17 on platform Amazon Linux 2022 </a>）。ただまだリリースパッケージに含まれていないので、いずれリリースされるバージョンでは対応されているでしょう。Ansibleも調べましたが、同様にまだリリースパッケージには含まれていませんでした。）</p>
+
+<p>調べていたら、<a href="https://www.geekfeed.co.jp/geekblog/amazonlinx3-amazonlinux2022-al2022">AmazonLinux3じゃなくってAmazon Linux 2022 (AL2022) だってさ。</a> という記事が見つかりました。
+そんで </p>
+
+<blockquote>
+<p>AmazonLinux2022以降はメジャーバージョンが2年ごとにリリースされる</p>
+</blockquote>
+
+<p>まじかー。まぁ今までの AmazonLinux2 が長かったですね。そのぐらいで OS イメージを最新にしていかないとですよね。
+ということで、今後も踏まえて CI/CD のフローを含め利用するコンテナイメージを検討しなおすことにしました。
+（2年ごとの変更がプロビジョニングツールを捨てる決定的な要因になったのは間違いない）</p>
+
+<h2>CI/CD フローの変更</h2>
+
+<p>現時点のフローを整理してみました</p>
+
+<ol>
+<li>チェックアウト</li>
+<li>ビルド</li>
+<li>デプロイが必要な場合
+
+<ol>
+<li>環境のスイッチロール</li>
+<li>デプロイ</li>
+</ol></li>
+</ol>
+
+<p>だいたいこんな感じです。
+これを今までは全部1つのコンテナでやっていたのですが、それぞれ分割していくことにしました。</p>
+
+<ol>
+<li>チェックアウト -&gt; alpine/git</li>
+<li>ビルド -&gt; amazon/aws-lambda-nodejs:18 ベースに zip/unzip を追加したもの</li>
+<li>デプロイが必要な場合
+
+<ol>
+<li>環境のスイッチロール -&gt; amazon/aws-cli ベースに jq を追加したもの</li>
+<li>デプロイ -&gt; node:18</li>
+</ol></li>
+</ol>
+
+<p>ビルドに関しては <code>node:18</code> でも良かったのですが、ここは以前と同じく稼働する OS イメージと合わせています。
+今後 OS イメージを追従するというより、実際の Lambda 実行コンテナイメージを使うことで、 Node.js ランタイムにあった OS バージョンを気にせず利用できるメリットがあると考えました（サイズ大きいけど）。</p>
+
+<p>それ以外は必要な部分に最低限のコンテナという感じですね。</p>
+
+<h2>さいごに</h2>
+
+<p>LTS に合わせて開発環境をアップデートしていくのは、とても大事ですね。
+記事にすると、さらっと解決したように見えますが、それぞれのツールのソースコードや issue を確認しながら進んでいたので、かなり時間を取られてしまいました。
+ただ、今後同じようにな環境でアップデートしていこうと思う人の助けになればと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/12/30/migrate-aws-lambda-node-js-14-to-18.html">
+          <a class="twitter" data-title="AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）"></a>
+          <a class="facebook" data-title="AWS Lambda の Node.js 14 を 18 に移行する（CI/CD環境移行編）"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/12/18/fake-aws-events-for-testing-on-node-js.html">Node.js で Lambda ハンドラのテストを書くときに AWS イベントを生成する</a></h1>
   <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 04:04:00 PM</a></p>
   <p class="tags">
@@ -807,128 +921,6 @@ TypeScript は tsconfig でパスエイリアスを指定するとき <code>./*<
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h1>
-  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 05:03:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/import-maps.html" rel="tag">import maps</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://github.com/WICG/import-maps">import maps</a> については 2019年ごろに度々当ブログにて紹介してきました。
-で、それからもずっと issue なんかを追いかけてはきたのですが、昨年 Rails 7 に import maps が入るっていう驚きがあったのと、
-社内で発表する機会もあったので、少しスライドにまとめて発表しました。</p>
-
-<script async class="speakerdeck-embed" data-id="eb44656534a14719bfcb2847d29cf690" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>で、これを発表したのが 2021/11/29 （いい肉の日だった）のですが、それからすぐ 2021/12/15 Rails 7 がリリースされました。</p>
-
-<h3>Rails 7 における import maps</h3>
-
-<p><a href="https://rubyonrails.org/2021/12/15/Rails-7-fulfilling-a-vision">Rails 7.0: Fulfilling a vision</a></p>
-
-<p>で、import maps に関連する部分として <a href="https://github.com/rails/importmap-rails">Importmap for Rails</a> というライブラリができました。
-<a href="https://github.com/rails/rails/blob/main/Gemfile#L24">Rails本体の Gemfile に入っている</a>ので Rails 7+ をインストールすると、自動的に入ります。
-Railsのアプリケーションジェネレータを使うとき、 <code>javascript</code> オプション( <code>-j</code> )のデフォルトも <code>importmap</code> のようです。
-<a href="https://github.com/rails/rails/blob/2a98e28a31d3b9a720c4a9571c23b40433a035df/railties/lib/rails/generators/rails/app/app_generator.rb#L260">/railties/lib/rails/generators/rails/app/app_generator.rb#L26</a></p>
-
-<p>ドキュメントにも書いてあるとおり、現時点は Chrome/Edge 89+ だけが import maps をサポートしているので、<a href="https://github.com/guybedford/es-module-shims">es-module-shims</a>を使っているようです。</p>
-
-<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap<em>tags</em>helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
-ドキュメントによると、設定は <code>config/importmap.rb</code> にするようです。</p>
-
-<p>公式ドキュメントによると、以下のように記述するようです。</p>
-<div class="highlight"><pre class="highlight ruby"><code><span class="c1"># config/importmap.rb</span>
-<span class="n">pin</span> <span class="s2">"react"</span><span class="p">,</span> <span class="ss">to: </span><span class="s2">"https://ga.jspm.io/npm:react@17.0.2/index.js"</span>
-</code></pre></div>
-<p>もしくはコマンド実行すると、最新のバージョンで <code>config/importmap.rb</code> に追記してくれるようです。
-<a href="https://github.com/rails/importmap-rails#using-npm-packages-via-javascript-cdns">Using npm packages via JavaScript CDNs</a></p>
-<div class="highlight"><pre class="highlight shell"><code>./bin/importmap pin react react-dom
-</code></pre></div>
-<p>なるほど、といいたいところですが、ここで一つ疑問がおきます。
-これって <code>npm outdated</code> や <code>npm audit</code> てきなことや、 dependabot での脆弱性チェックってどうなっちゃうのかしら？と。</p>
-
-<h3>パッケージの最新追従はどうなるのか？</h3>
-
-<p>さきほどの <code>importmap</code> コマンドですが、 <code>unpin</code> という削除するオプションはあるようですが、アップデート系は書いてないので無いのかな？
-あとは import maps の json を出力する <code>json</code> オプションがあるだけみたいだ（執筆時点のソースコードを確認した）。</p>
-
-<p>脆弱性があったパッケージのアップデートとか気にしないのかな？気にするよね？
-少し <code>package-lock.json</code> から <code>config/importmap.rb</code> に変換するライブラリとかないかな？と調べてみたりもしたのですが、
-見つかりませんでした。</p>
-
-<p>まぁそれより、ちゃんと issue 見るか、と思っていたらちゃんとありました。
-<a href="https://github.com/rails/importmap-rails/issues/19">/bin/importmap outdated</a></p>
-
-<p>で、上記に対するPRもありました。
-<a href="https://github.com/rails/importmap-rails/pull/109">Add outdated and audit commands</a></p>
-
-<p>こんな感じで出力されるようです。</p>
-
-<h4>Audit</h4>
-
-<pre>
-+-------------+----------+---------------------+--------------------------------------------------------+
-| Package     | Severity | Vulnerable versions | Vulnerability                                          |
-+-------------+----------+---------------------+--------------------------------------------------------+
-| glob-parent | high     | <5.1.2              | Regular expression denial of service                   |
-| is-svg      | high     | >=2.1.0 <4.3.0      | ReDOS in IS-SVG                                        |
-| is-svg      | high     | >=2.1.0 <4.2.2      | Regular Expression Denial of Service (ReDoS)           |
-| lodash      | critical | <4.17.12            | Prototype Pollution in lodash                          |
-| lodash      | high     | <4.17.21            | Command Injection in lodash                            |
-| lodash      | high     | <4.17.19            | Prototype Pollution in lodash                          |
-| lodash      | high     | <4.17.11            | Prototype Pollution in lodash                          |
-| lodash      | low      | <4.17.5             | Prototype Pollution in lodash                          |
-| lodash      | moderate | <4.17.21            | Regular Expression Denial of Service (ReDoS) in lodash |
-| lodash      | moderate | <4.17.11            | Prototype pollution in lodash                          |
-| nth-check   | moderate | <2.0.1              | Inefficient Regular Expression Complexity in nth-check |
-+-------------+----------+---------------------+--------------------------------------------------------+
-  11 vulnerabilities found: 6 high, 3 moderate, 1 low, 1 critical
-</pre>
-
-<h4>Outdated</h4>
-
-<pre><code>
-+-----------------+---------------+---------------+
-| Package         | Current       | Latest        |
-+-----------------+---------------+---------------+
-| @jspm/core      | 2.0.0-beta.18 | 2.0.0-beta.19 |
-| @jspm/core      | 2.0.0-beta.2  | 2.0.0-beta.19 |
-| aaaasssstimulus | 2.0.0         | Not found     |
-| glob-parent     | 3.1.0         | 6.0.2         |
-| is-glob         | 3.1.0         | 4.0.3         |
-| is-svg          | 3.0.0         | 4.3.2         |
-| lodash          | 4.17.1        | 4.17.21       |
-| nth-check       | 1.0.0         | 2.0.1         |
-| react           | 16.0.0        | 17.0.2        |
-| stimulus        | 2.0.0         | 3.0.1         |
-+-----------------+---------------+---------------+
-  10 outdated packages found
-</code></pre>
-
-<p>CI で dependabot みたいなのがどう検知するかといった課題はあるかもですが、いったんコマンド結果が出力できるので、それをシェルでゴニョゴニョすれば
-アップデートの検知や脆弱性の発見はできるようになりそうですね。</p>
-
-<h3>合わせて読みたい</h3>
-
-<p>さいごに Zenn にも良い記事があったので、紹介しておきます。
-<a href="https://zenn.dev/takeyuweb/articles/996adfac0d58fb">Rails 7.0 で標準になった importmap-rails とは何なのか？</a></p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html">
-          <a class="twitter" data-title="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..."></a>
-          <a class="facebook" data-title="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..."></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -958,6 +950,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -967,7 +960,6 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -977,6 +969,9 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -1093,7 +1088,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

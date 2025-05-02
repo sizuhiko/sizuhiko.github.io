@@ -272,6 +272,134 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2014/03/08/middleman-install-memo.html">Middleman インストールメモ</a></h1>
+  <p class="postdate"><a href="/2014/03/08.html" title="Permanent link">Saturday, March 08, 2014 11:13:26 AM</a></p>
+  <p class="tags">
+      <a href="/tags/middleman.html" rel="tag">middleman</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <!-- more -->
+
+<p>ブログを Middleman で作る（厳密に言うとmy.opera.comから移行）するにあたり、いくらかハマりポイントがあったので、メモとして残しておきます。</p>
+
+<h3>参考になったサイト</h3>
+
+<p>以下のサイトを参照しながら、作業を実施しました。</p>
+
+<ul>
+<li><a href="http://middlemanapp.com/jp/">Middleman公式</a> </li>
+<li><a href="http://risin.jp/blog/2013/10/16/middleman/">middlemanの設定</a></li>
+<li><a href="http://blog.awairo.net/blog/2013/12/14/custom-domain-for-gh-pages/">GitHub Pagesで独自ドメインを使う方法</a></li>
+<li><a href="http://qiita.com/inouet/items/478f4228dbbcd442bfe8">rbenv を使って ruby をインストールする(CentOS編)</a></li>
+</ul>
+
+<h3>HTMLジェネレータは何を使うの？</h3>
+
+<p>ブログを移行するにあたり、利用可能なフォーマットは WordPress<code>互換</code>フォーマット ということで、「WordPressで良くない？」とか、「my.opera作った人がスピンアウトして作ったサービスがあるらしいよ」とか様々な誘惑があったものの、今時は GitHub Pagesでやるんでしょ？という勝手な妄想（実際そういう人が増えているわけですが）から、そうなれば静的サイトジェネレータが必要だなぁと。</p>
+
+<p>最初に思いついたのはChatWorkが作成したPHP製のデザイナ向け静的サイトジェネレーター「Phest」だったのですが、前提となるWordPressフォーマットからの変換どうするかなーと思っているうちに、気持ちは他のものへ&hellip;.</p>
+
+<p>で、<code>GitHub Pages ブログ</code> なんてキーワードで検索すると出てくるページと言えば Octopress jekyll あたりなわけです。もちろん jekyll にしておくと GitHub Pagesの公式にも出てくるぐらいで良いなーと思ったのですが、世の中の流れは Middleman みたいな記事をいくつか見かけるうちにすっかりと方向は Middleman に決まりました。それに WordPress XMLからインポートできるプラグイン <a href="https://github.com/salmansqadeer/wordpress-to-middleman">Wordpress to Middleman Exporter</a> があるということ。</p>
+
+<h3>Middleman インストール</h3>
+
+<p>しばらく ruby の環境とか触ってなかったので、一番最後の記憶を頼りに「まずは RVM + bundler で環境構築やー」と意気込んで Gemfile に middleman を追加して <code>bundle install</code>を実行したところ、うんともすんともならずインストールできない&hellip;.
+もう今時はRVMじゃないのかな? と思っていたら、rbenvなんですね。そうですか、そうとわかればすぐに切り替えて参考サイトを参照しながら呆気なく構築は完了。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gem install middleman
+</code></pre></div>
+<p>でインストールも楽々完了です。</p>
+
+<p>ブログモジュールを使うので、middleman の Gemfile に</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gem "middleman-blog", "~&gt; 3.5.1"
+</code></pre></div>
+<p>を追加して</p>
+<div class="highlight"><pre class="highlight plaintext"><code>bundle install
+middleman init blog --template=blog
+</code></pre></div>
+<p>と実行すると blog ディレクトリに環境が生成されます。</p>
+
+<h3>WorkPress からのインポート</h3>
+
+<p>my.opera から WordPress <code>互換</code> フォーマットのファイルをダウンロードして、画像やらも全部ダウンロード。
+いよいよ先程の変換ツールで実行&hellip;. エラーだよ！！（泣）</p>
+
+<p>rubyのエラーだったので、調べて直す事もできたのかもしれないのですが、そのとき思ったのは「要はWordPress.xml をmarkdownに変換すれば良いのだから他にもあるんじゃない？」という誘惑。
+イロイロ調べたところ、</p>
+
+<ul>
+<li>wp2middleman</li>
+<li>wordpress-to-jekyll</li>
+<li>ruby-wpdb</li>
+<li>wp_conversion</li>
+</ul>
+
+<p>などがあるようで、とりあえず1つずつ試みるという泥臭い作戦に。
+どれもうまくいかない&hellip;.</p>
+
+<p>python系のライブラリもあるらしく</p>
+
+<ul>
+<li>wp2md</li>
+<li>prlican-import</li>
+<li>exitwp</li>
+</ul>
+
+<p>順番に試して行くと、<code>exitwp</code> がいくつか失敗するものの良い感じに変換できることがわかった。
+しかしいくつか失敗する&hellip; なんでだろうと思っていたところで、もう一度my.operaのクローズ本文を読んでいたら WordPress <code>互換</code> フォーマットなんですよ。「互換」&hellip;..
+もしかして、WordPressに取り込んで、そこから再度エクスポートすると「互換」じゃなくて「正式」なXMLになるんじゃないか！と</p>
+
+<h3>WordPress インストール</h3>
+
+<p>ちょっと迂回している感じですが、PHPの環境は手元にいくらでもあるのでテキパキとインストールしてXMLをインポート、何もせずそのままエクスポート。2つのファイルを diff で比較してみると確かにちょっと違う。
+これを先程一番うまく変換できた exitwp にかけると&hellip;&hellip;.</p>
+
+<p>あらー全部奇麗に変換できるじゃないですかー</p>
+
+<h3>デザイン</h3>
+
+<p>ここまで来ると後は erb と css なので、既存のmy.operaから html, css, js やらをすべてダウンロードして erb を html と同じになるように編集し、cssとjsも不要な部分を取り除いて設置。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>middleman server
+</code></pre></div>
+<p>で見た目を確認しながら調整して CNAME ファイルも設置。</p>
+
+<p>GitHub Pages へデプロイするために Gemfile に</p>
+<div class="highlight"><pre class="highlight plaintext"><code>gem "middleman-deploy"
+</code></pre></div>
+<p>モジュールを追加して bundle install。</p>
+
+<p>config.rg に</p>
+<div class="highlight"><pre class="highlight plaintext"><code>activate :deploy do |deploy|
+  deploy.build_before = true # default: false
+  deploy.method = :git
+  deploy.branch   = "master" # default: gh-pages
+end
+</code></pre></div>
+<p>な感じで設定したら </p>
+<div class="highlight"><pre class="highlight plaintext"><code>middleman deproy
+</code></pre></div>
+<p>でビルドした内容をgithubへ連携してくれます。</p>
+
+<h3>今後</h3>
+
+<p>ローカル（手元）のmiddleman使えば簡単にデプロイまでできるのですが、たまたま外で自分のPCじゃないときとか、githubにmarkdownをpushしたらビルドしてGitHub Pagesにデプロイしてくれたら良いな、とか思っているので、そのあたりはこれからやっていこうと思います。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/03/08/middleman-install-memo.html">
+          <a class="twitter" data-title="Middleman インストールメモ"></a>
+          <a class="facebook" data-title="Middleman インストールメモ"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2014/02/22/hello-world.html">Hello Middleman!</a></h1>
   <p class="postdate"><a href="/2014/02/22.html" title="Permanent link">Saturday, February 22, 2014 08:13:26 PM</a></p>
   <p class="tags">
@@ -680,102 +808,6 @@ attributes<em>forで作ったレコードをすべてデータベースに保存
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2013/09/13/cakephp-2.html">CakePHPのコントローラテストで注意すること</a></h1>
-  <p class="postdate"><a href="/2013/09/13.html" title="Permanent link">Friday, September 13, 2013 02:09:19 PM</a></p>
-  <p class="tags">
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/controller.html" rel="tag">Controller</a>
-      <a href="/tags/phpunit.html" rel="tag">PHPUnit</a>
-      <a href="/tags/test.html" rel="tag">Test</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <!-- more -->
-
-<h3>コントローラのテストは難解である</h3>
-
-<p>とは言え、テストを書かないというのも何なのでテストを書くわけですが。  </p>
-
-<p>CakePHPではControllerTestCaseというテストケースクラスを継承してテストケースを書くのですが、Cakeのテストにモックが導入される前は testAction のオプションに PostsTestController のような PostsController を継承したクラスを作成し、内部的にそれを利用するように渡していました。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>class PostsTestController extends PostsController {
-// モックしたい処理
-....
-}
-class PostsControllerTest extends ControllerTestCase {
-
-    public function testアクションをテストする() {
-        $this-&gt;testAction('url', array('controller'=&gt;'PostsTestController'));
-    }
-}
-</code></pre></div>
-<p>ただし現在のCakePHP 2.3や2.4系では、モックオブジェクトを利用します。  </p>
-
-<h3>なぜモックが必要？</h3>
-
-<p>もしこの記事を読んでいる方で、testActionがブラウザからも、コンソールからも成功するよ、という場合は依存関係が少ないか、たまたまなのかもしれません。  </p>
-
-<p>Webアプリケーションのコントローラは様々な依存関係があり、簡単にテストを通過させることができません。特にSessionComponentを使ったactionをテストする場合、問題が発生します。<br>
-Sessionはブラウザからテストを実行している範囲では問題が起きないのですが、コンソールで実行するとエラーになるという事があります。まぁコンソールにはセッションなんてないからね。当然です。  </p>
-
-<p>しかし実装上はセッションから値を取り出して何か処理をするという事がありえるわけです。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>// 実際のコントローラ
-    $components = ['Session', 'Auth'];
-
-    public function index() {
-        $hoge = $this-&gt;Session-&gt;read('hoge');
-        .....
-    }
-
-// テストケース
-    public function testIndex() {
-        CakeSession::write('hoge', 'fuga');
-        $this-&gt;testAction('/posts/index');
-        ......
-    }
-</code></pre></div>
-<p>みたいなコードがあった場合にindexアクションをテストすると、ブラウザからは成功するのですが、コンソールからだと失敗する。経験したことありませんか？  </p>
-
-<h3>どうやってモックを使うのか</h3>
-
-<p>で、調べてみたら意外と解説してある部分がない。こういうときはCakePHPのコアテストコードを見るのが一番です。<br>
-具体的には lib/Cake/Test/Case/TestSuite/ControllerTestCaseTest.php です（lib/Cake/Test/Case/Controller/&hellip;でないところがミソ）。  </p>
-
-<p>で、上記コードを参照した上で先ほどのテストコードを改修すると、以下のようになります。  </p>
-<div class="highlight"><pre class="highlight plaintext"><code>    public function testIndex() {
-        $this-&gt;controller = $this-&gt;generate("Posts", ['components' =&gt; ['Session']]);
-        $this-&gt;controller-&gt;Session-&gt;expects($this-&gt;any())
-             -&gt;method('read')
-             -&gt;will($this-&gt;returnValueMap([['hoge', 'fuga']]));
-        $this-&gt;testAction('/posts/index');
-</code></pre></div>
-<p>$this-&gt;generate() はControllerTestCaseが定義しているモックを作成するためのメソッドで、第一引数は PostsController の Controller 部分を除いた名前です。第二引数には components や helper、model など、コントローラから依存関係にあるモジュールを同時にモックしたい場合に配列形式で記述します。今回はSessionコンポーネントをモックしたいので、第二引数に指定します。<br>
-このgenerate()はコントローラの初期化や依存関係のモック処理もやってくれるとても強力な機能を持っています。PHPUnitのgetMockでモックするのではなく、必ずこのメソッドを使うようにしましょう。  </p>
-
-<p>generate()の戻り値はコントローラのモックオブジェクトになっています。さらにSessionもモックしているので、 $this-&gt;controller-&gt;Session に対して、read(&lsquo;hoge&rsquo;)はいつでも&#39;fuga&#39;を返すという記述をすることが可能です。<br>
-モック自体はPHPUnitのモックオブジェクトなので、詳しい記法はPHPUnitのマニュアルからモックオブジェクトの章を参照してください。  </p>
-
-<p><a href="http://phpunit.de/manual/3.7/ja/test-doubles.html#test-doubles.mock-objects">PHPUnit3.7のモックオブジェクト解説</a>  </p>
-
-<h3>最後に</h3>
-
-<p>コントローラのテストは本当に難解です。ただコアのテストコードを見るだけでもだいぶ理解が深まります。一度自分のアプリでテストを書く前に、その親クラス(ModelとかControllerなど)やテストケースのテストコードを見ると、これまでにテストの書き方がわからなかったところも、腑に落ちることがあるはずです。  </p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2013/09/13/cakephp-2.html">
-          <a class="twitter" data-title="CakePHPのコントローラテストで注意すること"></a>
-          <a class="facebook" data-title="CakePHPのコントローラテストで注意すること"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -805,6 +837,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -814,7 +847,6 @@ Sessionはブラウザからテストを実行している範囲では問題が�
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -824,6 +856,9 @@ Sessionはブラウザからテストを実行している範囲では問題が�
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -940,7 +975,7 @@ Sessionはブラウザからテストを実行している範囲では問題が�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

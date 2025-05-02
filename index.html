@@ -272,6 +272,133 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a></h1>
+  <p class="postdate"><a href="/2025/05/02.html" title="Permanent link">Friday, May 02, 2025 06:34:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/aws.html" rel="tag">AWS</a>
+      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
+      <a href="/tags/eventbridge.html" rel="tag">EventBridge</a>
+      <a href="/tags/lattice.html" rel="tag">Lattice</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>Step Functions には <a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/call-https-apis.html">HTTP タスク</a>という便利な統合機能があり、ワークフローで HTTPS API を呼び出すことができるようになっています。
+そうすることで Step Functions から単に HTTP の API を呼び出すだけなら Lambda を作らなくても良くなりました。便利ですね。</p>
+
+<h3>2024 Re:Invent の発表でプライベートAPIへのアクセスがサポートされた</h3>
+
+<p>ただ、これには制限があって、インターネットからアクセス可能なパブリックな API にしかアクセスできませんでした。つまり VPC 経由でアクセスする必要がある API には依然として VPC Lambda が必要だったのです。
+しかし2024年の Re:Invent でプライベートAPIへのアクセスがサポートされることになり、益々利用シーンが増えそうです。</p>
+
+<h4>参考記事:</h4>
+
+<ul>
+<li>クラスメソッドブログ:  <a href="https://dev.classmethod.jp/articles/stepfunctions-to-private-api-with-eventbridge/">[アップデート]StepFunctionsからEventBridge経由でプライベートなAPIの呼び出しが可能になりました！</a></li>
+<li>AWS公式ブログ <a href="https://aws.amazon.com/jp/blogs/news/securely-share-aws-resources-across-vpc-and-account-boundaries-with-privatelink-vpc-lattice-eventbridge-and-step-functions/">PrivateLink、VPC Lattice、EventBridge、Step Functions により、VPC やアカウントの境界を越えて AWS リソースを安全に共有</a></li>
+</ul>
+
+<h3>CDK では？</h3>
+
+<p>さっそく使ってみたいと思ったのですが、当然すぐにCDK ではゴニョゴニョできないのかな？とインターネットを調べてみたところ、さっそくサンプルがあるようです。</p>
+
+<h4>参考記事:</h4>
+
+<ul>
+<li><a href="https://benoitboure.com/private-api-gateway-as-eventbridge-api-destination">Private API Gateway as EventBridge API Destination</a></li>
+</ul>
+
+<p>L2コンストラクタはまだないので、 <code>CfnResourceGateway</code> 、 <code>CfnResourceConfiguration</code> を使って作っていくようです。</p>
+
+<p>具体的なCDKのコードは<a href="https://github.com/bboure/cdk-step-functions-private-api-gateway/blob/main/lib/step-functions-private-api-stack.ts">こちら</a>です。</p>
+
+<h3>やってみた</h3>
+
+<p>とりあえず、あっさりできました。</p>
+
+<p>注意点としてはプライベートAPIといいつつ、EventBridge Connection は HTTPs しか使えないので、 HTTP のプライベートAPIにアクセスしたい！という要望がある場合は工夫が必要です。まぁ VPC の中に LB をおいて、そこにプライベートAPIにアクセスするHTTPsエンドポイントを置いて、HTTPに変換して通すみたいな感じですかね。</p>
+
+<h3>めっちゃハマること</h3>
+
+<h4>プライベートAPIのドメイン名を変更したい</h4>
+
+<p>0 -&gt; 1 で作るときは問題ないんですけどね。</p>
+
+<p>たとえば仮のドメイン名とかで構築していて、いざ実際の名前が決まったら置き換えたい、みたいなこと普通にあるじゃないですか。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="nx">resourceConfig</span><span class="p">.</span><span class="nx">addPropertyOverride</span><span class="p">(</span><span class="dl">'</span><span class="s1">ResourceConfigurationDefinition.DnsResource</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">DomainName</span><span class="p">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">apiDomainName</span><span class="p">,</span>
+      <span class="na">IpAddressType</span><span class="p">:</span> <span class="dl">'</span><span class="s1">IPV4</span><span class="dl">'</span><span class="p">,</span>
+    <span class="p">})</span>
+</code></pre></div>
+<p>たとえばリソースコンフィグでプライベートAPIのドメイン名を設定しておく必要があるんですが、このプロパティの値を変えるみたいなケースです。</p>
+
+<p>変更するとき <code>cdk diff</code> するとちゃんと差分になって変更できそうに見えます。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>Resources
+[~] AWS::VpcLattice::ResourceConfiguration Api/ResourceConfig ApiResourceConfig50DED18C
+ └─ [~] ResourceConfigurationDefinition
+     └─ [~] .DnsResource:
+         └─ [~] .DomainName:
+             ├─ [-] 変更前のドメイン名
+             └─ [+] 変更後のドメイン名
+✨  Number of stacks with differences: 1
+</code></pre></div>
+<p>なんで、そのまま <code>cdk deploy</code> するじゃないですか。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>DeployStack | 0/4 | 10:07:54 AM | UPDATE_IN_PROGRESS   | AWS::CloudFormation::Stack                 | DeployStack User Initiated
+DeployStack | 0/4 | 10:08:00 AM | UPDATE_IN_PROGRESS   | AWS::VpcLattice::ResourceConfiguration     | Api/ResourceConfig (ApiResourceConfig50DED18C) 
+DeployStack | 1/4 | 10:08:02 AM | UPDATE_COMPLETE      | AWS::VpcLattice::ResourceConfiguration     | Api/ResourceConfig (ApiResourceConfig50DED18C) 
+DeployStack | 2/4 | 10:08:04 AM | UPDATE_COMPLETE_CLEA | AWS::CloudFormation::Stack                 | DeployStack 
+DeployStack | 3/4 | 10:08:05 AM | UPDATE_COMPLETE      | AWS::CloudFormation::Stack                 | DeployStack 
+ ✅  DeployStack
+✨  Deployment time: 38s
+</code></pre></div>
+<p>成功しているように見えるじゃないですか。</p>
+
+<p>でも、AWSのマネコンから確認すると&hellip;.. 変わってません！！！！（衝撃、マジか</p>
+
+<p>原因は不明です&hellip;</p>
+
+<h4>プライベートAPIのドメイン名を変更したいときの解決方法</h4>
+
+<p>一度 EventBridge Connection をパブリックAPIに戻します。
+下のプライベートAPIの設定や、 <code>CfnResourceGateway</code> 、 <code>CfnResourceConfiguration</code> も全部削除します（ソースコード的にはコメントアウトでも良いけど）。</p>
+<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">connection</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Connection</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">ApiConnection</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">authorization</span><span class="p">:</span> <span class="nx">Authorization</span><span class="p">.</span><span class="nx">apiKey</span><span class="p">(</span><span class="dl">'</span><span class="s1">Authorization</span><span class="dl">'</span><span class="p">,</span> <span class="nx">props</span><span class="p">.</span><span class="nx">secret</span><span class="p">.</span><span class="nx">secretValue</span><span class="p">),</span>
+      <span class="na">connectionName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">api-connection</span><span class="dl">'</span><span class="p">,</span>
+      <span class="na">description</span><span class="p">:</span> <span class="dl">'</span><span class="s1">プライベートAPIコネクション</span><span class="dl">'</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="c1">// ここから</span>
+    <span class="kd">const</span> <span class="nx">cfnConnection</span><span class="p">:</span> <span class="nx">CfnConnection</span> <span class="o">=</span> <span class="nx">connection</span><span class="p">.</span><span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">as</span> <span class="nx">unknown</span> <span class="k">as</span> <span class="nx">CfnConnection</span>
+    <span class="nx">cfnConnection</span><span class="p">.</span><span class="nx">addPropertyOverride</span><span class="p">(</span><span class="dl">'</span><span class="s1">InvocationConnectivityParameters</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">ResourceParameters</span><span class="p">:</span> <span class="p">{</span>
+        <span class="na">ResourceConfigurationArn</span><span class="p">:</span> <span class="nx">resourceConfig</span><span class="p">.</span><span class="nx">attrArn</span><span class="p">,</span>
+      <span class="p">},</span>
+    <span class="p">})</span>
+    <span class="c1">// ここまでを削除</span>
+</code></pre></div>
+<p>して、一度デプロイしてリソースを削除して、再度元に戻してドメイン名の変更を適用して 0 -&gt; 1 の状態で作り直します。</p>
+
+<p>ちなみに、AWSのマネコンからドメイン名を変更しようと思っても GUI からもできないので、そういうものなのかもしれません。（diff と deploy は何をもって成功したのかはわからん&hellip;</p>
+
+<h3>まとめ</h3>
+
+<p>ということで、あまりスマートな解決策ではありませんが、現時点ではこういうやり方しかないのかなと思います。
+いい感じに CDK からでも変更できるようになると良いなーと願っています（時間できたら issue 書こうかな</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">
+          <a class="twitter" data-title="Step Functions の HTTP タスクでプライベート API にアクセスする"></a>
+          <a class="facebook" data-title="Step Functions の HTTP タスクでプライベート API にアクセスする"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a></h1>
   <p class="postdate"><a href="/2025/04/22.html" title="Permanent link">Tuesday, April 22, 2025 02:49:00 PM</a></p>
   <p class="tags">
@@ -1075,117 +1202,6 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a></h1>
-  <p class="postdate"><a href="/2025/04/14.html" title="Permanent link">Monday, April 14, 2025 02:31:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は <a href="https://phpcon-odawara.jp/2025/">PHPカンファレンス小田原2025</a> に参加したレポートです。</p>
-
-<p>今年も月刊PHPカンファレンスなようですが、昨年末ぐらいから多忙のため通常のPHP勉強会にも出れない日々が続いておりました。
-ようやく落ち着いてきてイベントにも出れるようになってきたので、久々のイベント参加です（というか、もう小田原ぐらいには落ち着いてないとダメだろうという前提でチケットを購入していた）。</p>
-
-<p>小田原は新宿駅から乗り換えなしで行けるし、都民にとってはPHPカンファレンス東京と並んで行きやすいカンファレンスです。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ロマンスカー満車で乗れず。快速急行で行きます</p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1910832536760037457?ref_src=twsrc%5Etfw">April 11, 2025</a></blockquote> 
-
-<p>なんか去年もそうだった記憶があるけど、ロマンスカーあんまり乗らないので事前に購入するという発想がなかった。ロマンスカーなら70分、快速急行だと100分ぐらいなのでギリ間に合うかなという感じ。</p>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ギリ間に合ったー。着席<br> <a href="https://twitter.com/hashtag/phpcon_odawara?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon_odawara</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1910860831165739432?ref_src=twsrc%5Etfw">April 12, 2025</a></blockquote>
-
-<p>はい。</p>
-
-<p>受付してノベルティをGETして会場へ急足。小田原のノベルティTシャツが今年もステキだった（写真撮り忘れた）。まだ着てないけど昨年のもお気に入りなんで、今年のも何度も切る場面がありそう。</p>
-
-<h3>参加したセッション</h3>
-
-<h4>AM</h4>
-
-<p>午前中はメイン会場の <code>かま</code> で</p>
-
-<ul>
-<li>キーノート OSSコントリビュートをphp-srcメンテナの立場から語る</li>
-<li>PHP 8.x 時代のクラス設計</li>
-<li>PHPと旅する OSI 7階層</li>
-<li>PHPバージョンアップから始めるOSSコントリビュート</li>
-<li>古き良きLaravelのシステムは関数型スタイルでリファクタできるのか</li>
-</ul>
-
-<p>OSSコントリビュートは普段から心がけているので、自分が使うライブラリだったり、自分が作るライブラリだったり、いろいろあるけど貢献する意識づけとかはチームメンバーにも植え付けていきたいし、カンファレンスとかにも出て刺激をうけてほしいですね。会場アンケートでコントリビュートしたことある人、というアンケートに、こういうところに来る人なんでバイアスかかってますけどね、というコメントがありましたけど、確かにーと思うところ。</p>
-
-<p>PHPは個人サービスを作る時のバックエンドで長らく使っていたけど、最近はNode.jsばかりなので昔のサービスのメンテぐらいでしか書いてないけど、クラス設計の話を聞くと昔から他の言語のいいところを取り入れて進化してきたので、クラスの話を聞くとJavaっぽいと思うのは自然な感じかな。いろいろ最新状況が知れてよかった。</p>
-
-<p>OSI7階層の話は、別のカンファレンスでそれぞれの層の話を聞いたりしてるので、全体の流れの話で聞けるのもよかった。僕はそういう突き詰める系はあんまりやらないけど、自分の好きな開発ができるときって楽しいですよね。僕だと個人Webサービス作ってる時が楽しいです。</p>
-
-<p>リファクタリングは、どのタイミングでやるかは非常に重要だけど、聞いた話レベルでやるのは大変そうだなーと思った。改善は一気にできないことが多いので、少しでもやりやすい方法で進められると良いですね。</p>
-
-<h4>ランチ</h4>
-
-<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">美味しそう <a href="https://twitter.com/hashtag/phpcon_odawara?src=hash&amp;ref_src=twsrc%5Etfw">#phpcon_odawara</a> <a href="https://t.co/P3k13wST1Z">pic.twitter.com/P3k13wST1Z</a></p>&mdash; しずひこ (@sizuhiko) <a href="https://twitter.com/sizuhiko/status/1910906627236253983?ref_src=twsrc%5Etfw">April 12, 2025</a></blockquote> 
-
-<p>ランチではランチコラボで、地元のお店でプチサービスが受けられるところが準備されていたり、ぼっち飯にならないようにランチマッチング企画が準備されていたり、すごい充実してました。
-とはいえ、僕はタイミングを逃して1人で美味しそうな料理とお水があるお店に吸い込まれていきました。
-小田原の路地にあるお店、どこも入り口が広くて開放していたので、様子が伺えてよかったです。</p>
-
-<h4>PM</h4>
-
-<p>午後は <code>あじ</code> で</p>
-
-<ul>
-<li>恣意性から考える、変更に強いモデルの作り方</li>
-<li>タイムゾーンの奥地は思ったよりも闇深いかもしれない</li>
-</ul>
-
-<p>最後は <code>かま</code> に戻って</p>
-
-<ul>
-<li>New RelicのAPMを活用したECサービスにおけるメール遅延解消の舞台裏</li>
-<li>スポンサーエレベータピッチ</li>
-<li>LT</li>
-<li>ぺちおだ大合戦</li>
-</ul>
-
-<p>恣意性はふむふむ、そうだなーと思うところがあったり、自分はこうだなーと思うところがあったりして、考え方の整理ができてよかったです。</p>
-
-<p>タイムゾーンはちょっと思ってた内容と違ってたけど、まぁUTCにしとけってとことはそうですね！</p>
-
-<p>アプリの計測は大事で、最近はAWS使うことが多いのでX-Rayを使っていることが多いけど、何を使うにせよデータがないと困りますしね。最近業務でX-Ray使っていて新しい知見もあったので、ブログにも書いていこうと思います。</p>
-
-<p>ぺちおだ大合戦、最初はどんなことが起きるんだろう？と思ったけど、終わってみてこれはすごい企画だなーというのと、運営の準備大変だっただろうな、お疲れ様でした。とても楽しかったです！という一言です。とにかくすごい。</p>
-
-<h4>懇親会</h4>
-
-<p>万葉の湯で豪華な懇親会がありました。畳部屋での立食形式もあんまり体験したことない感じだった。こちらも写真は撮ってませんでした&hellip;（楽しかったという記憶は間違いない）。
-最終のロマンスカーの時間があるので、少し早く離脱して無事帰宅できました。</p>
-
-<h3>全体的な感想</h3>
-
-<p>昨年も参加して、今年もいろいろ考えられてて企画力がすごいですよね。</p>
-
-<p>来年のことについてはコメントしませんが、これだけの企画をやると燃え尽き症候群とかになっても不思議ではないと思うので、ゆっくり休んで他のカンファレンスに参加して充電？してかな。</p>
-
-<p>参加した方もためになったし、元気がもらえたし、楽しかったし、とても充実した1日でした。</p>
-
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/14/phpcon-odawara-2025.html">
-          <a class="twitter" data-title="PHPカンファレンス小田原2025に参加しました"></a>
-          <a class="facebook" data-title="PHPカンファレンス小田原2025に参加しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1210,6 +1226,7 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -1219,7 +1236,6 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -1229,6 +1245,9 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -1345,7 +1364,7 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

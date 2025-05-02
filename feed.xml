@@ -5,10 +5,121 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2025-04-22T14:49:00+09:00</updated>
+  <updated>2025-05-02T18:34:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Step Functions の HTTP タスクでプライベート API にアクセスする</title>
+    <link rel="alternate" href="http://blog.url.com/2025/05/02/step-functions-connect-to-private-api-through-lattice.html"/>
+    <id>http://blog.url.com/2025/05/02/step-functions-connect-to-private-api-through-lattice.html</id>
+    <published>2025-05-02T18:34:00+09:00</published>
+    <updated>2025-05-02T19:15:46+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Step Functions には &lt;a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/call-https-apis.html"&gt;HTTP タスク&lt;/a&gt;という便利な統合機能があり、ワークフローで HTTPS API を呼び出すことができるようになっています。
+そうすることで Step Functions から単に HTTP の API を呼び出すだけなら Lambda を作らなくても良くなりました。便利ですね。&lt;/p&gt;
+
+&lt;h3&gt;2024 Re:Invent の発表でプライベートAPIへのアクセスがサポートされた&lt;/h3&gt;
+
+&lt;p&gt;ただ、これには制限があって、インターネットからアクセス可能なパブリックな API にしかアクセスできませんでした。つまり VPC 経由でアクセスする必要がある API には依然として VPC Lambda が必要だったのです。
+しかし2024年の Re:Invent でプライベートAPIへのアクセスがサポートされることになり、益々利用シーンが増えそうです。&lt;/p&gt;
+
+&lt;h4&gt;参考記事:&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;クラスメソッドブログ:  &lt;a href="https://dev.classmethod.jp/articles/stepfunctions-to-private-api-with-eventbridge/"&gt;[アップデート]StepFunctionsからEventBridge経由でプライベートなAPIの呼び出しが可能になりました！&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;AWS公式ブログ &lt;a href="https://aws.amazon.com/jp/blogs/news/securely-share-aws-resources-across-vpc-and-account-boundaries-with-privatelink-vpc-lattice-eventbridge-and-step-functions/"&gt;PrivateLink、VPC Lattice、EventBridge、Step Functions により、VPC やアカウントの境界を越えて AWS リソースを安全に共有&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;CDK では？&lt;/h3&gt;
+
+&lt;p&gt;さっそく使ってみたいと思ったのですが、当然すぐにCDK ではゴニョゴニョできないのかな？とインターネットを調べてみたところ、さっそくサンプルがあるようです。&lt;/p&gt;
+
+&lt;h4&gt;参考記事:&lt;/h4&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://benoitboure.com/private-api-gateway-as-eventbridge-api-destination"&gt;Private API Gateway as EventBridge API Destination&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;L2コンストラクタはまだないので、 &lt;code&gt;CfnResourceGateway&lt;/code&gt; 、 &lt;code&gt;CfnResourceConfiguration&lt;/code&gt; を使って作っていくようです。&lt;/p&gt;
+
+&lt;p&gt;具体的なCDKのコードは&lt;a href="https://github.com/bboure/cdk-step-functions-private-api-gateway/blob/main/lib/step-functions-private-api-stack.ts"&gt;こちら&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;h3&gt;やってみた&lt;/h3&gt;
+
+&lt;p&gt;とりあえず、あっさりできました。&lt;/p&gt;
+
+&lt;p&gt;注意点としてはプライベートAPIといいつつ、EventBridge Connection は HTTPs しか使えないので、 HTTP のプライベートAPIにアクセスしたい！という要望がある場合は工夫が必要です。まぁ VPC の中に LB をおいて、そこにプライベートAPIにアクセスするHTTPsエンドポイントを置いて、HTTPに変換して通すみたいな感じですかね。&lt;/p&gt;
+
+&lt;h3&gt;めっちゃハマること&lt;/h3&gt;
+
+&lt;h4&gt;プライベートAPIのドメイン名を変更したい&lt;/h4&gt;
+
+&lt;p&gt;0 -&amp;gt; 1 で作るときは問題ないんですけどね。&lt;/p&gt;
+
+&lt;p&gt;たとえば仮のドメイン名とかで構築していて、いざ実際の名前が決まったら置き換えたい、みたいなこと普通にあるじゃないですか。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="nx"&gt;resourceConfig&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addPropertyOverride&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ResourceConfigurationDefinition.DnsResource&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;DomainName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;apiDomainName&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;IpAddressType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;IPV4&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;たとえばリソースコンフィグでプライベートAPIのドメイン名を設定しておく必要があるんですが、このプロパティの値を変えるみたいなケースです。&lt;/p&gt;
+
+&lt;p&gt;変更するとき &lt;code&gt;cdk diff&lt;/code&gt; するとちゃんと差分になって変更できそうに見えます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;Resources
+[~] AWS::VpcLattice::ResourceConfiguration Api/ResourceConfig ApiResourceConfig50DED18C
+ └─ [~] ResourceConfigurationDefinition
+     └─ [~] .DnsResource:
+         └─ [~] .DomainName:
+             ├─ [-] 変更前のドメイン名
+             └─ [+] 変更後のドメイン名
+✨  Number of stacks with differences: 1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;なんで、そのまま &lt;code&gt;cdk deploy&lt;/code&gt; するじゃないですか。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;DeployStack | 0/4 | 10:07:54 AM | UPDATE_IN_PROGRESS   | AWS::CloudFormation::Stack                 | DeployStack User Initiated
+DeployStack | 0/4 | 10:08:00 AM | UPDATE_IN_PROGRESS   | AWS::VpcLattice::ResourceConfiguration     | Api/ResourceConfig (ApiResourceConfig50DED18C) 
+DeployStack | 1/4 | 10:08:02 AM | UPDATE_COMPLETE      | AWS::VpcLattice::ResourceConfiguration     | Api/ResourceConfig (ApiResourceConfig50DED18C) 
+DeployStack | 2/4 | 10:08:04 AM | UPDATE_COMPLETE_CLEA | AWS::CloudFormation::Stack                 | DeployStack 
+DeployStack | 3/4 | 10:08:05 AM | UPDATE_COMPLETE      | AWS::CloudFormation::Stack                 | DeployStack 
+ ✅  DeployStack
+✨  Deployment time: 38s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;成功しているように見えるじゃないですか。&lt;/p&gt;
+
+&lt;p&gt;でも、AWSのマネコンから確認すると&amp;hellip;.. 変わってません！！！！（衝撃、マジか&lt;/p&gt;
+
+&lt;p&gt;原因は不明です&amp;hellip;&lt;/p&gt;
+
+&lt;h4&gt;プライベートAPIのドメイン名を変更したいときの解決方法&lt;/h4&gt;
+
+&lt;p&gt;一度 EventBridge Connection をパブリックAPIに戻します。
+下のプライベートAPIの設定や、 &lt;code&gt;CfnResourceGateway&lt;/code&gt; 、 &lt;code&gt;CfnResourceConfiguration&lt;/code&gt; も全部削除します（ソースコード的にはコメントアウトでも良いけど）。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;connection&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Connection&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ApiConnection&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;authorization&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Authorization&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;apiKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Authorization&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;secret&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;secretValue&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+      &lt;span class="na"&gt;connectionName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;api-connection&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;プライベートAPIコネクション&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="c1"&gt;// ここから&lt;/span&gt;
+    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;cfnConnection&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;CfnConnection&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;connection&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;node&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;children&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;unknown&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;CfnConnection&lt;/span&gt;
+    &lt;span class="nx"&gt;cfnConnection&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addPropertyOverride&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;InvocationConnectivityParameters&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;ResourceParameters&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="na"&gt;ResourceConfigurationArn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;resourceConfig&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;attrArn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="p"&gt;})&lt;/span&gt;
+    &lt;span class="c1"&gt;// ここまでを削除&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;して、一度デプロイしてリソースを削除して、再度元に戻してドメイン名の変更を適用して 0 -&amp;gt; 1 の状態で作り直します。&lt;/p&gt;
+
+&lt;p&gt;ちなみに、AWSのマネコンからドメイン名を変更しようと思っても GUI からもできないので、そういうものなのかもしれません。（diff と deploy は何をもって成功したのかはわからん&amp;hellip;&lt;/p&gt;
+
+&lt;h3&gt;まとめ&lt;/h3&gt;
+
+&lt;p&gt;ということで、あまりスマートな解決策ではありませんが、現時点ではこういうやり方しかないのかなと思います。
+いい感じに CDK からでも変更できるようになると良いなーと願っています（時間できたら issue 書こうかな&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>S3 に設置した zip ファイルから Lambda 関数をデプロイする</title>
     <link rel="alternate" href="http://blog.url.com/2025/04/22/deploy-lambda-function-from-zip-on-s3.html"/>
@@ -847,139 +958,6 @@ Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コ�
 &lt;p&gt;参加した方もためになったし、元気がもらえたし、楽しかったし、とても充実した1日でした。&lt;/p&gt;
 
 &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Next.js で作ったアプリケーションを AppRunner にデプロイする</title>
-    <link rel="alternate" href="http://blog.url.com/2025/04/11/next-js-deploy-to-apprunner.html"/>
-    <id>http://blog.url.com/2025/04/11/next-js-deploy-to-apprunner.html</id>
-    <published>2025-04-11T17:59:00+09:00</published>
-    <updated>2025-04-11T19:03:31+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;こちらの記事は &lt;a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html"&gt;AppRunner へのデプロイは cdk でサクッとできるのか？&lt;/a&gt; の続編となります。
-前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。&lt;/p&gt;
-
-&lt;p&gt;まず前編でも触れてますが、アプリケーションのリポジトリ構成は以下のようになっています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Next.js のアプリケーションリポジトリ&lt;/li&gt;
-&lt;li&gt;AWSのリソースを管理するインフラリポジトリ&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;アプリのリポジトリでは、ECR へのデプロイまでやってます。
-インフラのリポジトリで、AppRunner など AWS リソースを CDK で構築しています。&lt;/p&gt;
-
-&lt;h2&gt;AppRunner で Next.js アプリケーションを動かすには&lt;/h2&gt;
-
-&lt;p&gt;Next.js を standalone モードでビルドして、Docker コンテナで起動する。これだけで ok です。&lt;/p&gt;
-
-&lt;h3&gt;ECR に Next.js の standalone モードビルドしたコンテナイメージを push する&lt;/h3&gt;
-
-&lt;p&gt;まずは Next.js のアプケーションリポジトリの CI/CD で ECR に Docker イメージを push します。
-アプリケーションリポジトリ側にも CDK を入れてあるので、以下のようなコードで ECR にデプロイしています。
-タグは &lt;code&gt;package.json&lt;/code&gt; の &lt;code&gt;version&lt;/code&gt; から入手します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;cdk-docker-image-deployment&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;aws-cdk-lib/aws-ecr&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nx"&gt;DeployStack&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;cdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Stack&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kd"&gt;constructor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Construct&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;?:&lt;/span&gt; &lt;span class="nx"&gt;cdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StackProps&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;super&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;projectRoot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;../..&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;version&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;JSON&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;fs&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;readFileSync&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;projectRoot&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;package.json&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="nx"&gt;toString&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;repository&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromRepositoryName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-ect&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;DockerImageDeployment&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;DockerImageDeployment&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;directory&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;projectRoot&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-      &lt;span class="na"&gt;destination&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;imagedeploy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Destination&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="na"&gt;tag&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;version&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Dockerfile は Next.js の公式サンプル&lt;a href="https://github.com/vercel/next.js/tree/canary/examples/with-docker"&gt;With Docker&lt;/a&gt; を参考に（というかほぼそのまま流用）すれば大丈夫です。
-ベースイメージの Node.js バージョンが古かったりするので、そこは自分たちが使うバージョンに変更しておきましょう。&lt;/p&gt;
-
-&lt;h3&gt;AppRunner で ECR からデプロイする&lt;/h3&gt;
-
-&lt;p&gt;こちらは前編でも触れた &lt;code&gt;@aws-cdk/aws-apprunner-alpha&lt;/code&gt; が使えるので簡単にデプロイできます。
-以下のような感じで書けば良いでしょう。ヘルスチェックを何でやるかは、いろいろだと思いますが、ここではいったん &lt;code&gt;favicon&lt;/code&gt; にしています。
-CDK で作成した ECR のリポジトリと、デプロイ対象のアプリケーションバージョンはコンストラクタの引数で渡せるようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-cdk/aws-apprunner-alpha&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nx"&gt;WebAppConstruct&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;cdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Stack&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="kd"&gt;constructor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Construct&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;?:&lt;/span&gt; &lt;span class="nx"&gt;WebAppConstructProps&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;super&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;scope&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
-        &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecrRepository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;webAppVersion&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-      &lt;span class="na"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;autoDeploymentsEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;healthCheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;HealthCheck&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;healthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;interval&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;/favicon.ico&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;timeout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;unhealthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h4&gt;コラム: ヘルスチェックについて、いろいろと参考になった記事&lt;/h4&gt;
-
-&lt;p&gt;実はヘルスチェックはちょっといろいろあって実際も &lt;code&gt;favicon&lt;/code&gt; にしたんですけど、そのときに参考になった記事があるので、載せておきます&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://zenn.dev/seelog/articles/next_js_health_check"&gt;Next.js App Router でヘルスチェックをする&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/57956476/how-to-set-up-an-endpoint-for-health-check-on-next-js"&gt;How to set up an endpoint for Health check on Next.js?&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://repost.aws/questions/QUq9Sqy5hKQrSZdIuDgEJoSw/heath-check-failing-only-after-enabling-vpc-connector"&gt;Heath check failing only after enabling VPC connector&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;デプロイできたので動かしてみるが動かない&lt;/h2&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Error: listen EADDRNOTAVAIL: address not available 10.0.1.2:3000&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;何か動きません。&lt;/p&gt;
-
-&lt;p&gt;あれ、Dockerfile に &lt;code&gt;HOSTNAME=0.0.0.0&lt;/code&gt; 入ってるのに何でだろう？
-ローカルで build したイメージ動かしたときは大丈夫だったんだけど？と思ったら、1つ罠があります。&lt;/p&gt;
-
-&lt;p&gt;こちらの記事がとても参考になりました。
-&lt;a href="https://zenn.dev/kojipole/articles/7e0472e71dc19b"&gt;AWS App RunnerでNext.jsのstandaloneモードを動かす時のTips(ないしは失敗談)&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;App Runnerの環境では環境変数HOSTNAMEに対して、暗黙的にアタッチされているENIのprivate DNSが指定されるようです。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;なんですって？
-AppRunner が環境変数にセットしてくるの？？&lt;/p&gt;
-
-&lt;p&gt;だから &lt;code&gt;10.0.1.2:3000&lt;/code&gt; みたいな ENI の private アドレスになるんですね。Dockerfile では&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
-&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node",  "server.js"]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;のように指定されていても、コンテナ起動時に HOSTNAME を指定されるので環境変数が上書きされてセットされます。&lt;/p&gt;
-
-&lt;h2&gt;CDK で HOSTNAME を設定する&lt;/h2&gt;
-
-&lt;p&gt;ということで、AppRunner のサービスを作るときに環境変数 &lt;code&gt;HOSTNAME&lt;/code&gt; を指定してあげます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-            &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;environmentVariables&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-                &lt;span class="na"&gt;HOSTNAME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;0.0.0.0&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="p"&gt;}&lt;/span&gt;
-        &lt;span class="p"&gt;},&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;これでデプロイしたら無事起動しました。👏👏&lt;/p&gt;
-
-&lt;p&gt;少しでも AppRunner で Next.js アプリを動かす人の役にたてばと思います。&lt;/p&gt;
 </content>
   </entry>
 </feed>

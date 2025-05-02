@@ -272,6 +272,102 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2019/05/02/polymer-co-edo-day-2019-spring.html">Polymer.co-edo day 2019 春を開催しました</a></h1>
+  <p class="postdate"><a href="/2019/05/02.html" title="Permanent link">Thursday, May 02, 2019 09:12:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/polymer.html" rel="tag">Polymer</a>
+      <a href="/tags/polymer-co-edo.html" rel="tag">Polymer.co-edo</a>
+      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>2019年4回目となる <a href="https://polymercoedo.doorkeeper.jp/events/91049">Polymer.co-edo ミートアップ</a> を開催しました。</p>
+
+<p><a href="https://github.com/Edo-Elements/edo-blogcard/">edo-blogcard</a>に最初のコードをアップしました。
+<a href="https://github.com/Edo-Elements/edo-blogcard/tree/develop">developブランチ</a>にpushしています。</p>
+
+<p>まだ何も動きはないのですが、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a> を使ってビルドするところまで実装しています。</p>
+
+<h3>ES Module import との戦い</h3>
+
+<p>Web Components はHTMLファイルからだと以下のように読み込みます。</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/xx-element/xx-element.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>独自のカスタムエレメントから別のエレメントを利用する場合は、以下のように記述します。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@polymer/iron-ajax/iron-ajax.js</span><span class="dl">'</span><span class="p">;</span>
+</code></pre></div>
+<p>ここでブラウザは <code>@polymer/iron-ajax/iron-ajax.js</code> のようなパスを解決できないため、webpackでコンパイルすることが必要になります。
+この話は、以前の記事<a href="/2019/04/07/phper-kaigi-2019.html">PHPer Kaigi 2019に参加しました</a>でも書いているとおり、<a href="https://github.com/WICG/import-maps">import maps</a>待ちな状況です。</p>
+
+<h3>2つのビルド結果</h3>
+
+<p>そこで、2つのビルド結果を保持するようにしました。</p>
+
+<h4>/dist/edo-blogcard.js</h4>
+
+<p>これは</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="dl">'</span><span class="s1">@edo-elements/edo-blogcard/dist/edo-blogcard.js</span><span class="dl">'</span><span class="p">;</span>
+</code></pre></div>
+<p>のように利用するためのビルド結果で、<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>形式で記述された <code>.lit</code> ファイルを <code>.js</code> にコンパイルしたものです。</p>
+
+<h4>/dist/edo-blogcard.bundle.js</h4>
+
+<p>これは</p>
+<div class="highlight"><pre class="highlight html"><code><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"module"</span> <span class="na">src=</span><span class="s">"node_modules/@edo-elements/edo-blogcard/dist/edo-blogcard.bundle.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>のように利用するためのビルド結果で、HTMLからブログパーツとして利用したい（webpackなどを実行しないWebページで使いたい）場合のためにコンパイルしたものです。
+<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使ってHTMLから利用可能な状態になっています。</p>
+
+<h3>工夫したところ</h3>
+
+<p>後者の <code>bundle.js</code> については、普通に<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>とwebpackを使うやり方なので、特にはありません。
+<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>はwebpackのloaderとして実装されているので、configに設定を追加するだけです。</p>
+
+<p>一方前者はwebpackのloaderようにできている<a href="https://github.com/PolymerX/lit-loader">LitLoader</a>を、webpack使わずにどうやって呼び出すか？というところを工夫しました。</p>
+
+<p>それが <a href="https://github.com/Edo-Elements/edo-blogcard/blob/develop/build.js">build.js</a> です。
+そして <a href="https://github.com/webpack/loader-runner#readme">loader-runner</a> という webpack のモジュールを使っています。
+このモジュールは <code>Runs (webpack) loaders</code> という説明のとおり、loaderを実行することに特化しています。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="kd">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">fs</span><span class="dl">"</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">path</span><span class="dl">"</span><span class="p">);</span>
+<span class="kd">const</span> <span class="p">{</span> <span class="nx">runLoaders</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">"</span><span class="s2">loader-runner</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="nx">runLoaders</span><span class="p">(</span>
+  <span class="p">{</span>
+    <span class="na">resource</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">"</span><span class="s2">edo-blogcard.lit</span><span class="dl">"</span><span class="p">),</span>
+    <span class="na">loaders</span><span class="p">:</span> <span class="p">[</span><span class="nx">require</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">"</span><span class="s2">lit-loader</span><span class="dl">"</span><span class="p">)]</span>
+  <span class="p">},</span>
+  <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="dl">"</span><span class="s2">dist/edo-blogcard.js</span><span class="dl">"</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>これだけで <code>.lit</code> ファイルを <code>.js</code> ファイルに(webpackなしで)コンパイルできます。</p>
+
+<h3>次回</h3>
+
+<p>通常どおりの、もくもく会として開催予定しています。
+皆様の参加をお待ちしております。</p>
+
+<p><a href="https://polymercoedo.doorkeeper.jp/">Doorkeeperのコミュニティページ</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/05/02/polymer-co-edo-day-2019-spring.html">
+          <a class="twitter" data-title="Polymer.co-edo day 2019 春を開催しました"></a>
+          <a class="facebook" data-title="Polymer.co-edo day 2019 春を開催しました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2019/05/01/psr-17-libraries.html">PSR-17 HTTP Factories のライブラリ</a></h1>
   <p class="postdate"><a href="/2019/05/01.html" title="Permanent link">Wednesday, May 01, 2019 08:15:00 PM</a></p>
   <p class="tags">
@@ -617,113 +713,6 @@ Polymer3対応した依存エレメントは、どこかのタイミングでPR�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/04/27/toilet-evolution-polymer3-vol3.html">Toilet EvolutionのフロントエンドをPolymer3対応する(3)</a></h1>
-  <p class="postdate"><a href="/2019/04/27.html" title="Permanent link">Saturday, April 27, 2019 07:16:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/polymer.html" rel="tag">Polymer</a>
-      <a href="/tags/webcomponents.html" rel="tag">WebComponents</a>
-      <a href="/tags/iot.html" rel="tag">IoT</a>
-      <a href="/tags/toiletevolution.html" rel="tag">ToiletEvolution</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>この記事は<a href="/2019/04/26/toilet-evolution-polymer3-vol2.html">Toilet EvolutionのフロントエンドをPolymer3対応する(2)</a>の続編です。</p>
-
-<p>今回も<a href="https://github.com/toiletevolution/toiletevolution-server/commit/69e3ab53048a42323db2db3af5da0ef0f7edb498">mozlier適用だけでは動かないので、ローカルで動作するように修正</a>というコミットにおける試行錯誤を書いていきます。</p>
-
-<p>前回は多くのアプリケーションや、カスタムエレメントで実施しなければならない共通的な修正箇所について解説しましたが、ここからはアプリケーションで使っている機能やエレメントについて、修正が必要だった箇所について解説していきます。</p>
-
-<h3>ES Module対応になっていないエレメントを使う</h3>
-
-<p>前回の記事で「<code>bower_components を使わないようにする</code>」について解説しました。
-PolymerチームやVaadinチームなどが作っているコンポーネントについては、ほとんど <code>ES Module</code> に対応しているのですが、場合によっては対応してないモジュールを使っていることがあるかもしれません。</p>
-
-<p>Toilet Evolutionでは以下のエレメントが <code>ES Module</code> に対応していませんでした。<code>iron-signals</code> は <code>toast-er</code> の依存に関連しています。</p>
-
-<ul>
-<li><a href="https://github.com/atotic/excess-router">excess-router</a></li>
-<li><a href="https://www.webcomponents.org/element/ebidel/geo-location">geo-location</a></li>
-<li><a href="https://www.webcomponents.org/element/GeoloeG/gold-password-input">gold-password-input</a></li>
-<li><a href="https://www.webcomponents.org/element/GoogleWebComponents/google-map">google-map</a></li>
-<li><a href="https://www.webcomponents.org/element/googlearchive/paper-menu">paper-menu</a></li>
-<li><a href="https://github.com/masonlouchart/toast-er">toast-er</a>
-
-<ul>
-<li><a href="https://www.webcomponents.org/element/googlearchive/iron-signals">iron-signals</a></li>
-</ul></li>
-</ul>
-
-<p>そこで、これらのエレメントは modulizer で変換されたものを、そのまま利用することにしました。
-また変換されたエレメントについては、前回の記事同様に共通的な修正箇所が必要になります。
-つまり自分で作ったエレメントと同様に、そのエレメントが依存している（bower.jsonに含まれている）エレメントやライブラリについても、 <code>npm install</code> で取得するように変更する必要があります。</p>
-
-<p>またPolymer1用のライブラリだったりする場合は、<a href="https://polymer-library.polymer-project.org/2.0/docs/upgrade">Polymer1から2へのアップグレードガイド</a>に書いてある <code>slot</code> の対応なども必要だったので、そのライブラリが最新版だとPolymerのどのバージョンに対応したものなのかを確認しておくことが重要です。</p>
-
-<p>そして、これらの作業が結構やっかいです（自分で作ったものでないので、ソースを理解する必要があります）。</p>
-
-<h3>以前のPolymerのビヘイビアは個別にインストールする必要がある</h3>
-
-<p>HTMLインポートで利用していた、Polymerチームが作っていたようなカスタムエレメントのビヘイビアは、個別に <code>import</code> するか、場合によっては <code>npm install</code> で導入する必要があります。
-自分で作ったエレメントでは、ビヘイビアを使っていなかったので、この段階で初めて知りました（これは意外にもドキュメントに書いていません）。</p>
-
-<p>例えば <code>&lt;gold-password-input&gt;</code> では、<code>PaperInputAddonBehavior</code> という <code>paper-input</code> に含まれていたビヘイビアを使っています。
-これは以下のように、<code>import</code> を追加してあげる必要があります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span><span class="nx">PaperInputAddonBehavior</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/paper-input/paper-input-addon-behavior.js</span><span class="dl">'</span><span class="p">;</span>
-</code></pre></div>
-<p><code>ES Module</code>対応しているエレメントであれば、<a href="https://www.webcomponents.org">webcomponents.org</a>のビヘイビアを参照すると解説が書いてあります。
-上記の <code>PaperInputAddonBehavior</code> であれば、<a href="https://www.webcomponents.org/element/@polymer/paper-input/behaviors/PaperInputAddonBehavior">こちら</a>です。</p>
-
-<h3>Polymer.dom を変更する</h3>
-
-<p>これも自分のエレメントでは使っていなかったので気付かなかったのですが、使っているエレメントがあったので修正の必要がありました。
-まず <code>dom</code> をインポートします。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span><span class="nx">dom</span><span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@polymer/polymer/lib/legacy/polymer.dom.js</span><span class="dl">'</span>
-</code></pre></div>
-<p>で、<code>Polymer.dom</code> を使っている箇所を <code>dom</code> に変更します。例えば以下のような感じです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">return</span> <span class="nx">dom</span><span class="p">(</span><span class="k">this</span><span class="p">).</span><span class="nx">parentNode</span><span class="p">;</span>
-</code></pre></div>
-<h3>bowerでカスタムエレメント以外のライブラリに依存している</h3>
-
-<p><code>&lt;gold-password-input&gt;</code> は<a href="https://github.com/dropbox/zxcvbn">zxcvbn</a>というパスワードストレングスエミュレータを使っています。
-Node.jsなどにも対応しているのですが、今回はbowerでインストールしたフォルダをそのままコピーして、リポジトリに追加しました。
-このようにカスタムエレメント以外のライブラリを使っている場合は、npmでインストールしてビルドする方法以外の検討も必要となります。
-特に<code>&lt;gold-password-input&gt;</code>では、以下のように <code>script</code> タグを動的に追加してライブラリをインポートしていたため、npmを利用するのに適していなかったという理由があります。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">ready</span><span class="p">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="k">typeof</span> <span class="nx">zxcvbn</span> <span class="o">!==</span> <span class="dl">"</span><span class="s2">undefined</span><span class="dl">"</span><span class="p">;</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isZxcvbnLoaded</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-      <span class="kd">var</span> <span class="nx">oScript</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="dl">"</span><span class="s2">script</span><span class="dl">"</span><span class="p">);</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="dl">"</span><span class="s2">text</span><span class="se">\</span><span class="s2">/javascript</span><span class="dl">"</span><span class="p">;</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">onerror</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">isZxcvbnLoaded</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-        <span class="k">throw</span> <span class="k">new</span> <span class="nx">URIError</span><span class="p">(</span><span class="dl">"</span><span class="s2">The script </span><span class="dl">"</span> <span class="o">+</span> <span class="nx">err</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">src</span> <span class="o">+</span> <span class="dl">"</span><span class="s2"> is not accessible.</span><span class="dl">"</span><span class="p">);</span>
-      <span class="p">};</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">parentNode</span><span class="p">.</span><span class="nx">insertBefore</span><span class="p">(</span><span class="nx">oScript</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
-      <span class="nx">oScript</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">resolveUrl</span><span class="p">(</span><span class="dl">"</span><span class="s2">../zxcvbn/dist/zxcvbn.js</span><span class="dl">"</span><span class="p">);</span>
-    <span class="p">}</span>
-  <span class="p">},</span>
-</code></pre></div>
-<p>このぐらいまで対応が進むと、ページをロードしたときに、ブラウザのコンソールにエラーが出ることが少なくなります。
-ただし多くのページで表示が崩れていたり、うまく表示できないエレメントがあります。
-これは今回の <code>ES Modules</code> に対応してなかったエレメントに関連するところなのですが、
-これらの対応方法については<a href="/2019/04/28/toilet-evolution-polymer3-vol4.html">次回</a>解説していきます。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/04/27/toilet-evolution-polymer3-vol3.html">
-          <a class="twitter" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(3)"></a>
-          <a class="facebook" data-title="Toilet EvolutionのフロントエンドをPolymer3対応する(3)"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -753,6 +742,7 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -762,7 +752,6 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -772,6 +761,9 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -888,7 +880,7 @@ Node.jsなどにも対応しているのですが、今回はbowerでインス�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

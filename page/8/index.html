@@ -272,6 +272,128 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/05/06/rails-7-import-maps.html">Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について...</a></h1>
+  <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 05:03:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/import-maps.html" rel="tag">import maps</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://github.com/WICG/import-maps">import maps</a> については 2019年ごろに度々当ブログにて紹介してきました。
+で、それからもずっと issue なんかを追いかけてはきたのですが、昨年 Rails 7 に import maps が入るっていう驚きがあったのと、
+社内で発表する機会もあったので、少しスライドにまとめて発表しました。</p>
+
+<script async class="speakerdeck-embed" data-id="eb44656534a14719bfcb2847d29cf690" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<p>で、これを発表したのが 2021/11/29 （いい肉の日だった）のですが、それからすぐ 2021/12/15 Rails 7 がリリースされました。</p>
+
+<h3>Rails 7 における import maps</h3>
+
+<p><a href="https://rubyonrails.org/2021/12/15/Rails-7-fulfilling-a-vision">Rails 7.0: Fulfilling a vision</a></p>
+
+<p>で、import maps に関連する部分として <a href="https://github.com/rails/importmap-rails">Importmap for Rails</a> というライブラリができました。
+<a href="https://github.com/rails/rails/blob/main/Gemfile#L24">Rails本体の Gemfile に入っている</a>ので Rails 7+ をインストールすると、自動的に入ります。
+Railsのアプリケーションジェネレータを使うとき、 <code>javascript</code> オプション( <code>-j</code> )のデフォルトも <code>importmap</code> のようです。
+<a href="https://github.com/rails/rails/blob/2a98e28a31d3b9a720c4a9571c23b40433a035df/railties/lib/rails/generators/rails/app/app_generator.rb#L260">/railties/lib/rails/generators/rails/app/app_generator.rb#L26</a></p>
+
+<p>ドキュメントにも書いてあるとおり、現時点は Chrome/Edge 89+ だけが import maps をサポートしているので、<a href="https://github.com/guybedford/es-module-shims">es-module-shims</a>を使っているようです。</p>
+
+<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap<em>tags</em>helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
+ドキュメントによると、設定は <code>config/importmap.rb</code> にするようです。</p>
+
+<p>公式ドキュメントによると、以下のように記述するようです。</p>
+<div class="highlight"><pre class="highlight ruby"><code><span class="c1"># config/importmap.rb</span>
+<span class="n">pin</span> <span class="s2">"react"</span><span class="p">,</span> <span class="ss">to: </span><span class="s2">"https://ga.jspm.io/npm:react@17.0.2/index.js"</span>
+</code></pre></div>
+<p>もしくはコマンド実行すると、最新のバージョンで <code>config/importmap.rb</code> に追記してくれるようです。
+<a href="https://github.com/rails/importmap-rails#using-npm-packages-via-javascript-cdns">Using npm packages via JavaScript CDNs</a></p>
+<div class="highlight"><pre class="highlight shell"><code>./bin/importmap pin react react-dom
+</code></pre></div>
+<p>なるほど、といいたいところですが、ここで一つ疑問がおきます。
+これって <code>npm outdated</code> や <code>npm audit</code> てきなことや、 dependabot での脆弱性チェックってどうなっちゃうのかしら？と。</p>
+
+<h3>パッケージの最新追従はどうなるのか？</h3>
+
+<p>さきほどの <code>importmap</code> コマンドですが、 <code>unpin</code> という削除するオプションはあるようですが、アップデート系は書いてないので無いのかな？
+あとは import maps の json を出力する <code>json</code> オプションがあるだけみたいだ（執筆時点のソースコードを確認した）。</p>
+
+<p>脆弱性があったパッケージのアップデートとか気にしないのかな？気にするよね？
+少し <code>package-lock.json</code> から <code>config/importmap.rb</code> に変換するライブラリとかないかな？と調べてみたりもしたのですが、
+見つかりませんでした。</p>
+
+<p>まぁそれより、ちゃんと issue 見るか、と思っていたらちゃんとありました。
+<a href="https://github.com/rails/importmap-rails/issues/19">/bin/importmap outdated</a></p>
+
+<p>で、上記に対するPRもありました。
+<a href="https://github.com/rails/importmap-rails/pull/109">Add outdated and audit commands</a></p>
+
+<p>こんな感じで出力されるようです。</p>
+
+<h4>Audit</h4>
+
+<pre>
++-------------+----------+---------------------+--------------------------------------------------------+
+| Package     | Severity | Vulnerable versions | Vulnerability                                          |
++-------------+----------+---------------------+--------------------------------------------------------+
+| glob-parent | high     | <5.1.2              | Regular expression denial of service                   |
+| is-svg      | high     | >=2.1.0 <4.3.0      | ReDOS in IS-SVG                                        |
+| is-svg      | high     | >=2.1.0 <4.2.2      | Regular Expression Denial of Service (ReDoS)           |
+| lodash      | critical | <4.17.12            | Prototype Pollution in lodash                          |
+| lodash      | high     | <4.17.21            | Command Injection in lodash                            |
+| lodash      | high     | <4.17.19            | Prototype Pollution in lodash                          |
+| lodash      | high     | <4.17.11            | Prototype Pollution in lodash                          |
+| lodash      | low      | <4.17.5             | Prototype Pollution in lodash                          |
+| lodash      | moderate | <4.17.21            | Regular Expression Denial of Service (ReDoS) in lodash |
+| lodash      | moderate | <4.17.11            | Prototype pollution in lodash                          |
+| nth-check   | moderate | <2.0.1              | Inefficient Regular Expression Complexity in nth-check |
++-------------+----------+---------------------+--------------------------------------------------------+
+  11 vulnerabilities found: 6 high, 3 moderate, 1 low, 1 critical
+</pre>
+
+<h4>Outdated</h4>
+
+<pre><code>
++-----------------+---------------+---------------+
+| Package         | Current       | Latest        |
++-----------------+---------------+---------------+
+| @jspm/core      | 2.0.0-beta.18 | 2.0.0-beta.19 |
+| @jspm/core      | 2.0.0-beta.2  | 2.0.0-beta.19 |
+| aaaasssstimulus | 2.0.0         | Not found     |
+| glob-parent     | 3.1.0         | 6.0.2         |
+| is-glob         | 3.1.0         | 4.0.3         |
+| is-svg          | 3.0.0         | 4.3.2         |
+| lodash          | 4.17.1        | 4.17.21       |
+| nth-check       | 1.0.0         | 2.0.1         |
+| react           | 16.0.0        | 17.0.2        |
+| stimulus        | 2.0.0         | 3.0.1         |
++-----------------+---------------+---------------+
+  10 outdated packages found
+</code></pre>
+
+<p>CI で dependabot みたいなのがどう検知するかといった課題はあるかもですが、いったんコマンド結果が出力できるので、それをシェルでゴニョゴニョすれば
+アップデートの検知や脆弱性の発見はできるようになりそうですね。</p>
+
+<h3>合わせて読みたい</h3>
+
+<p>さいごに Zenn にも良い記事があったので、紹介しておきます。
+<a href="https://zenn.dev/takeyuweb/articles/996adfac0d58fb">Rails 7.0 で標準になった importmap-rails とは何なのか？</a></p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/06/rails-7-import-maps.html">
+          <a class="twitter" data-title="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..."></a>
+          <a class="facebook" data-title="Rails 7の採用提案で注目を集め始めた Import maps の過去、現在、そして未来について..."></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/05/06/bump-middleman-4-4-2-from-3-x.html">Middleman を 3系から 4系にアップグレードした</a></h1>
   <p class="postdate"><a href="/2022/05/06.html" title="Permanent link">Friday, May 06, 2022 10:59:00 AM</a></p>
   <p class="tags">
@@ -800,218 +922,6 @@ TypeORM 独自のルールを使ったインデックス名で SQL が生成さ�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/05/04/upgrade-typeorm-0-3.html">TypeORM を 0.3 系にアップグレードする</a></h1>
-  <p class="postdate"><a href="/2022/05/04.html" title="Permanent link">Wednesday, May 04, 2022 11:34:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
-      <a href="/tags/typeorm.html" rel="tag">TypeORM</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>TypeORM 0.2 系をずっと使ってきて、 2022/03/23 の Dependabot 更新で、 0.3 系へのアップデートを確認しました。
-CIのテストが失敗していたので、何か大きな変更があるのか Release notes を確認してみました。</p>
-
-<p>すると、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#030-2022-03-17">0.3.0</a> と <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#031-2022-03-21">0.3.1</a> の2度に BREAKING CHANGES があることがわかりました。
-ただし後者 <code>0.3.1</code> の BREAKING CHANGES については、 <a href="https://github.com/typeorm/typeorm/blob/master/CHANGELOG.md#032-2022-03-22">0.3.2</a> で元に戻されているので <code>0.3.0</code> の変更点を見ていきましょう。</p>
-
-<h3>0.3 系での変更点</h3>
-
-<ul>
-<li>ormconfig のような接続オブションファイル利用は非推奨になった</li>
-<li>非推奨の migrations:* コマンドが削除された</li>
-<li>CLI コマンドの前面見直し</li>
-<li>未実行のマイグレーションとスキーマ同期の両方がある場合、マイグレーションがスキーマ同期の前に実行されるようになった</li>
-<li>aurora-data-api が aurora-mysql に変更</li>
-<li>aurora-data-api-pg が aurora-postgres に変更</li>
-<li>EntityManager.connection が EntityManager.dataSource に変更</li>
-<li>Repository のコンストラクタが新しくなった。カスタムクラスリポジトリは使えなくなった</li>
-<li>@TransactionRepository、@TransactionManager、@Transaction デコレータが削除された</li>
-<li>ジャンクションテーブル名だけが短縮されるようになった（@Entityデコレータでカスタム名を指定するのが理想的</li>
-<li>パラメータなしの findOne() は廃止</li>
-<li>findOne(id) は削除</li>
-<li>findOne, findOneOrFail, find, count, findAndCount メソッドは FindOptions パラメータのみに変更。その代わり FindOptions を使わずに where 条件を直接与えるために、新しいメソッドが追加された: findOneBy, findOneByOrFail, findBy, countBy, findAndCountBy</li>
-<li>findByIdsは非推奨となり、代わりにIn演算子と組み合わせてfindByメソッドを使用することが推奨となる</li>
-<li>findOne と QueryBuilder.getOne() は、データベースで何も見つからなかった場合、undefined ではなく null を返すようになった</li>
-<li>find* メソッドで使用される where の値として null はサポートされず、IsNull() 演算子を明示的に使用するようになった</li>
-<li>すべてのCLIコマンドはormconfigをサポートしなくなった</li>
-<li>DataSourceOptions 内のエンティティ、マイグレーション、サブスクライバのオプションにディレクトリ文字列を指定するのは非推奨になった</li>
-<li>すべてのコンテナ関連の機能 (UseContainerOptions, ContainedType, ContainerInterface, defaultContainer, useContainer, getFromContainer) は非推奨となった</li>
-<li>トランザクション内で使用される EntityManager の getCustomRepository は、非推奨となった。代わりに withRepository メソッドを使用する</li>
-<li>Connection.isConnected は非推奨になった。代わりに .isInitialized を使用する</li>
-<li>FindOptions (find* メソッドで使用) の select や relations でプロパティ名の配列指定は非推奨となった。代わりにオブジェクトリテラル表記を使用する</li>
-<li>FindOptions の join (find* メソッドで使用されます) は非推奨になった。結合を含むクエリを作成するには、QueryBuilder を使用する</li>
-<li>Connection、ConnectionOptions は非推奨になった。DataSource と DataSourceOptions を使用する</li>
-<li>createConnection(), createConnections() は非推奨になった。Connection は DataSource になった</li>
-<li>getConnection() は非推奨になった。グローバルな接続を持つには、データソースをエクスポートして必要な場所でそれを使用する</li>
-<li>getManager(), getMongoManager(), getSqljsManager(), getRepository(), getTreeRepository(), getMongoRepository(), createQueryBuilder() はすべて非推奨になった。これらは DataSource から取得する</li>
-<li>getConnectionManager() と ConnectionManager は非推奨になった。Connection は DataSource になり、各データソースは変数としてエクスポートできる</li>
-<li>getConnectionOptions() は非推奨になった</li>
-<li>AbstractRepository は非推奨になった</li>
-<li>Connection.name と BaseConnectionOptions.name は非推奨になった</li>
-</ul>
-
-<p>めっちゃ、いっぱいありますね。</p>
-
-<h3>修正箇所の確認</h3>
-
-<p>修正箇所に関して、型が変わったものに関しては、 <code>tsc</code> でコンパイルすればエラーになるので、対応箇所は明確です。
-findオプションが変わったり、メソッド自体が無くなったりしたものが中心です。</p>
-
-<p>コンパイルエラーが修正できたら、あとは単体テストでの失敗箇所の確認ですね。</p>
-
-<h3>非推奨になった部分にも目を向ける</h3>
-
-<p>最新のドキュメントは非推奨になった記述がすべてなくなり（そりゃそうですが）、新しい記述方法に変わっているのと、いつ <code>0.4.0</code> になっても良いように、
-どのように修正したら対応できるかを考えておく必要があります。</p>
-
-<p>また、最近新しいAPIサーバーを作ることになったので、その実装は <code>0.3</code> 系で始めるようにしました（あえて古いバージョンを使う必要はないですしね）。
-で、そこで問題になるのが、周辺ライブラリの対応状況です。
-TypeORM に対応したテストデータ作成のライブラリはいくつかあるのですが、そういったものが <code>0.3</code> 系に追従してくるまで待つか、そもそも依存ライブラリを使わずに <a href="https://www.npmjs.com/package/faker-ts">faker-ts</a> のような TypeScript のモックデータを作れるライブラリと TypeORM の create/save を組み合わせて使うかの選択になります。
-今回の新しいAPIサーバーでは、後者のやり方で進めることにしました。いずれライブラリの対応が進んだとして切り替えるか、そのままにするかは検討の余地がありますが、それほど手間は変わっていない印象です。</p>
-
-<p>ここからは、昨日の記事でもふれたのですが、私が関わっているプロジェクトでは DI フレームワークとして <a href="https://github.com/microsoft/tsyringe">tsyringe</a> を、 ORM で <a href="https://typeorm.io/">typeorm</a> を使っていますので、その範囲でどのように記述しているかを紹介していきます。</p>
-
-<h3>Connection から DataSource への変更に対応する</h3>
-
-<p>TypeORM 0.2 系では以下の書き方が一般的でした。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">if</span> <span class="p">(</span><span class="nx">getConnectionManager</span><span class="p">().</span><span class="nx">has</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">conn</span> <span class="o">=</span> <span class="nx">getConnectionManager</span><span class="p">().</span><span class="kd">get</span><span class="p">(</span><span class="dl">'</span><span class="s1">default</span><span class="dl">'</span><span class="p">);</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">conn</span><span class="p">.</span><span class="nx">isConnected</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">await</span> <span class="nx">conn</span><span class="p">.</span><span class="nx">connect</span><span class="p">();</span>
-  <span class="p">}</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="k">await</span> <span class="nx">createConnection</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span> <span class="p">});</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>これが 0.3 系では以下のようになります。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="kd">let</span> <span class="nx">ds</span><span class="p">:</span> <span class="nx">DataSource</span><span class="p">;</span>
-<span class="k">if</span> <span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">isRegistered</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span>
-  <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="nx">ds</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">({</span> <span class="cm">/* 接続オプションの指定 */</span><span class="p">});</span>
-  <span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">useValue</span><span class="p">:</span> <span class="nx">ds</span> <span class="p">});</span>
-<span class="p">}</span>
-<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">ds</span><span class="p">.</span><span class="nx">isInitialized</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">await</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>データソースのオブジェクトは tsyringe の DI コンテナに登録して利用できるようにしておきます。
-さらに DB（リポジトリ）を、ユースケースクラスで DI できるようにします。</p>
-
-<p>TypeORM 0.2 系では以下のようにしていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">getCustomRepository</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">))</span>
-<span class="p">})</span>
-</code></pre></div>
-<p>TypeORM がグローバルにアクセスできる <code>getCustomRepository</code> を用意してくれていたので、カスタムリポジトリクラスを指定するだけで良かったのですが、
-ここでは <code>getCustomRepository</code> が非推奨になったのと、クラスベースのカスタムリポジトリが非推奨になった、という2つの非推奨の影響を受け、書き方がだいぶ変わりました。</p>
-
-<p>0.3 系では以下のようにしてみました。データソースを DI コンテナから取得して新しいカスタムリポジトリの書き方 <code>extend</code> を使っています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">})</span>
-</code></pre></div>
-<h3>クラスベースのカスタムリポジトリからオブジェクトベースへの変更に対応する</h3>
-
-<p>で、 0.2 系でのカスタムリポジトリは以下のようにクラスベースになっていたのです。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>これを 0.3系では、クラスベースでなくオブジェクトベースに変更します。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">UserDatabase</span><span class="p">:</span> <span class="nx">UserRepository</span> <span class="o">&amp;</span> <span class="nx">ThisType</span><span class="o">&lt;</span><span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="o">&amp;</span> <span class="nx">UserRepository</span><span class="o">&gt;</span> <span class="o">=</span>
-<span class="p">{</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="na">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">null</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">},</span>
-<span class="p">}</span> 
-</code></pre></div>
-<p>クラスベースからオブジェクトベースになって、とても困ったことがあります。
-上記の変更では簡略化しましたが、実は find 系メソッドにはデコレータをつけていて、ロギングできるような仕組みを入れていました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="p">@</span><span class="nd">EntityRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">)</span>
-<span class="k">export</span> <span class="kd">class</span> <span class="nx">UserDatabase</span> <span class="kd">extends</span> <span class="nx">Repository</span><span class="o">&lt;</span><span class="nx">UserEntity</span><span class="o">&gt;</span> <span class="kr">implements</span> <span class="nx">UserRepository</span> <span class="p">{</span>
-  <span class="p">@</span><span class="nd">Logging</span><span class="p">()</span>
-  <span class="k">async</span> <span class="nx">findByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">:</span> <span class="nx">string</span><span class="p">):</span> <span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">UserEntity</span> <span class="o">|</span> <span class="kc">undefined</span><span class="o">&gt;</span> <span class="p">{</span>
-    <span class="c1">// 検索処理</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>こんな感じです。
-これがオブジェクトベースになると、デコレータが使えなくなります。
-いい感じの解決策はあまりなかったので、AOPのライブラリ <a href="https://www.npmjs.com/package/ts-aspect">ts-aspect</a> を使うことにしました。
-AOPのライブラリはnpmレジストリにたくさんあるので、どれか自分の好みにあうものを利用すれば良いと思います。</p>
-
-<p>で、0.3 系ではデコレータを使わず、AOPで以下のように対応しました。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">container</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="dl">'</span><span class="s1">UserRepository</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-  <span class="na">useFactory</span><span class="p">:</span> <span class="nx">instanceCachingFactory</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="nx">ds</span> <span class="o">=</span> <span class="nx">container</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="dl">'</span><span class="s1">DataSource</span><span class="dl">'</span><span class="p">);</span>
-    <span class="kd">const</span> <span class="nx">repository</span> <span class="o">=</span> <span class="nx">ds</span><span class="p">.</span><span class="nx">getRepository</span><span class="p">(</span><span class="nx">UserEntity</span><span class="p">).</span><span class="nx">extend</span><span class="p">(</span><span class="nx">UserDatabase</span><span class="p">);</span>
-    <span class="nx">addAspect</span><span class="p">(</span><span class="nx">repository</span><span class="p">,</span> <span class="dl">'</span><span class="s1">findByEmail</span><span class="dl">'</span><span class="p">,</span> <span class="nx">Advice</span><span class="p">.</span><span class="nx">Around</span><span class="p">,</span> <span class="k">new</span> <span class="nx">LoggingAspect</span><span class="p">());</span>
-    <span class="k">return</span> <span class="nx">repository</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">})</span>
-</code></pre></div>
-<p>カスタムリポジトリをインスタンス化するときに、いったん変数 <code>repository</code> にしてから <code>ts-aspect</code> を使って、メソッド単位で仕込んでいきます。</p>
-
-<h3>マイグレーションやCLIの変更に対応する</h3>
-
-<p>CLIオプションが変更になっているので、マイグレーションの書き方も変更が必要です。
-0.2 系では <code>package.json</code> の <code>scripts</code> にこんな感じで書いていたと思います。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -f db/ormconfig.ts -n Migration</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<p>ormconfig.ts の中身は以下のような感じでした。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="na">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
-  <span class="na">cli</span><span class="p">:</span> <span class="p">{</span>
-    <span class="na">entitiesDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">domain/entities</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">migrationsDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/migrations</span><span class="dl">'</span><span class="p">,</span>
-    <span class="na">subscribersDir</span><span class="p">:</span> <span class="dl">'</span><span class="s1">db/subscribers</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</code></pre></div>
-<p>0.3 系では、まずスクリプトが以下のように変更になります。</p>
-<div class="highlight"><pre class="highlight javascript"><code>  <span class="dl">"</span><span class="s2">migration:generate</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">ts-node ./node_modules/.bin/typeorm migration:generate -d db/datasouce.ts db/migrations</span><span class="dl">"</span><span class="p">,</span>
-</code></pre></div>
-<p><code>-f</code> オプションがデータソース <code>-d</code> 指定となり、マイグレーションファイルの出力先を最後に指定するようになりました。
-<code>datasource.ts</code> は以下のようになります。データソースに変わった関係で、 <code>cli</code> オプションはなくなっています。</p>
-<div class="highlight"><pre class="highlight javascript"><code><span class="k">export</span> <span class="kd">const</span> <span class="nx">AppDataSource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">DataSource</span><span class="p">{</span>
-  <span class="c1">// データベース接続オプション</span>
-  <span class="nl">migrations</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">db/migrations/*.ts</span><span class="dl">'</span><span class="p">]</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>migration:run や migration:show は、データソースに指定した <code>migrations</code> のパスからファイルを探索してくれるので、 <code>-f</code> が <code>-d</code> に変わったぐらいの影響範囲で大丈夫です。</p>
-
-<h3>さいごに</h3>
-
-<p>typeorm は 0.2 -&gt; 0.3 -&gt; 0.4 と 0.x 系なので 0.1 ごとに破壊的変更が実施されてきます。
-バージョン 2.0 -&gt; 3.0 -&gt; 4.0 にすれば良いのに&hellip; とか思いますが。</p>
-
-<p>次の 0.4 系に備えて、修正の方針を見つけていきたいですね。
-もしこの記事が参考になれば幸いです。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/04/upgrade-typeorm-0-3.html">
-          <a class="twitter" data-title="TypeORM を 0.3 系にアップグレードする"></a>
-          <a class="facebook" data-title="TypeORM を 0.3 系にアップグレードする"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1041,6 +951,7 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
@@ -1050,7 +961,6 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
                   <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
-                  <li><a href="/2024/05/30/renovate-on-codecommit.html">CodeCommit で Renovate を使う</a> <span>2024/05/30</span></li>
               </ul>
             </div>
           </section>
@@ -1060,6 +970,9 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
               <ul class="nobullets clearfix">
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/lambda.html" rel="tag">Lambda</a>
@@ -1176,7 +1089,7 @@ AOPのライブラリはnpmレジストリにたくさんあるので、どれ�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (7)</li>
+                  <li><a href="/2025.html">2025</a> (8)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
