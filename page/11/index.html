@@ -272,6 +272,152 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a></h1>
+  <p class="postdate"><a href="/2020/02/15.html" title="Permanent link">Saturday, February 15, 2020 11:17:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
+      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>昨今のWebアプリケーション開発では、多数のOSSライブラリに依存しています。
+私たちが開発するアプリケーションの脆弱性対応はもちろんのこと、これらのライブラリもセキュリティアップデートやバグフィックスなどが行われていきます。</p>
+
+<p>では、ライブラリのバージョンを最新に追従するにはどうしたら良いでしょうか？</p>
+
+<ul>
+<li>ライブラリのソースリポジトリをチェックする。GitHubのことが多いので、Watchしておけば通知が届きます。</li>
+<li>依存関係をチェックしてくれるBotを入れて、Slackなどに通知する。たとえば <a href="https://github.com/frankthelen/npmcheck2slack">npmcheck2slack</a>のようなもの</li>
+<li>依存関係をチェックしてPRを出してくれるツールを導入する。</li>
+</ul>
+
+<p>3つ目のPRを出すツールに関しては、対応する言語ごとに様々なものがありますが、今回は<a href="https://dependabot.com/blog/hello-github/">GitHubに買収された</a>ことでも有名になった<a href="https://dependabot.com/">Dependabot</a>を導入してみたので解説します。</p>
+
+<p>でもDependabotって、普通にGitHubから使えるでしょ？</p>
+
+<p>そうなんです。ただ今回はGitHubでも<a href="https://github.co.jp/enterprise.html">GitHub Enterprise</a>を利用している場合には(まだ？)Dependabotを利用することができないので、CIで実行できるようにしてみたよ！という記事です。</p>
+
+<h3>想定されるプロジェクト環境</h3>
+
+<ul>
+<li>ソースコードリポジトリはGHE</li>
+<li>CIサーバーに<a href="https://drone.io">Drone.io</a>をオンプレ利用</li>
+</ul>
+
+<p>ですが、GHEやDroneでなくても、この記事を理解してもらえれば利用可能になると思います。</p>
+
+<p>つまりリポジトリやらCIやらをオンプレしているプライベートな開発環境で、依存関係更新ツールを使ってみようろいうことです。</p>
+
+<h3>Dependabotをオンプレで動かす</h3>
+
+<p>Dependabotには<a href="https://github.com/dependabot/dependabot-script">Dependabot Update Script</a>というものがあり、オンプレ環境で動かせるようになっています。</p>
+
+<p>READMEに書いてあるとおり設定すれば良いのですが、私たちのプロジェクトでは以下のようにしました。</p>
+
+<ol>
+<li><code>dependabot-drone</code> というリポジトリをGHEに作成。これをDroneのdaily cronで実行してPRを日次で作成させる</li>
+<li>Dependabot Update Scriptは <code>dependabot-drone</code> に git submodule で追加する</li>
+<li>Dependabot Update Scriptの更新もチェックしたいので、 <code>dependabot-drone</code> 自身の更新もチェックする</li>
+</ol>
+
+<p>これをDrone.ioで実行するには、以下のような <code>.drone.yml</code> ファイルを記述します。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="na">clone</span><span class="pi">:</span>
+  <span class="na">git</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">plugins/git</span>
+    <span class="na">recursive</span><span class="pi">:</span> <span class="no">true</span> <span class="c1"># 2のとおり submodule を使う場合指定</span>
+
+<span class="na">pipeline</span><span class="pi">:</span>
+  <span class="c1"># READMEに書いてあるインストール手順を定義</span>
+  <span class="na">install</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">pull</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle install -j 3 --path vendor</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+  <span class="c1"># 3の自身をアップデートする定義</span>
+  <span class="na">dependabot-drone</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxxxx/dependabot-drone</span>
+      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=submodules</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+</code></pre></div>
+<p>Dependabotのコア機能は <code>dependabot/dependabot-core</code> というDockerイメージで提供されているので、このイメージを使って <code>dependabot-script</code> を実行するということです。
+このときに環境変数を指定します。</p>
+
+<ul>
+<li>GITHUB<em>ACCESS</em>TOKEN パッケージマネージャ(npmやcomposer, bundlerなど)が参照するリポジトリにGitHub APIを使ってアクセスするため、アクセストークンを設定しないとAPI上限に引っかかってしまいます。このため必ず設定しましょう。</li>
+<li>GITHUB<em>ENTERPRISE</em>HOSTNAME GHEのホスト名を指定します</li>
+<li>GITHUB<em>ENTERPRISE</em>ACCESS_TOKEN GHEにアクセスするためのアクセストークンを設定します</li>
+<li>PROJECT_PATH GHEのプロジェクトパスを指定します</li>
+<li>PACKAGE_MANAGER ここではsubmodulesを指定しています。他の候補はREADMEに書いてあるとおり<a href="https://github.com/dependabot/dependabot-script/blob/master/generic-update-script.rb#L27">ソースコードを参照</a>します</li>
+</ul>
+
+<h3>アプリケーションリポジトリをチェックしていく</h3>
+
+<p>あとは、先ほど作った <code>.drone.yml</code> ファイルにアプリケーションリポジトリを追加してくだけです。</p>
+
+<p>たとえば <code>frontend-app</code> というリポジトリをチェックしたい場合は、このようになります。</p>
+<div class="highlight"><pre class="highlight yaml"><code><span class="c1"># 省略...</span>
+
+<span class="na">pipeline</span><span class="pi">:</span>
+  <span class="c1"># 省略...</span>
+  <span class="na">dependabot-drone</span><span class="pi">:</span>
+    <span class="c1"># 省略...</span>
+  <span class="na">frontend-app</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
+      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
+      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxx/frontend-app</span>
+      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=npm_and_yarn</span>
+    <span class="na">commands</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
+      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
+    <span class="na">when</span><span class="pi">:</span>
+      <span class="na">status</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">success</span><span class="pi">,</span> <span class="nv">failure</span><span class="pi">]</span>
+      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
+</code></pre></div>
+<p><code>PROJECT_PATH</code> と <code>PACKAGE_MANAGER</code> 、パイプラインの名前が違うだけで他の定義はすべて一緒です。
+<code>status: [success, failure]</code> を入れているのは、複数リポジトリある場合に、途中で失敗しても継続したいための設定です。</p>
+
+<h3>PRがやってくる日々</h3>
+
+<p>daily cron に従って Dependabot からPRが送られてきます。</p>
+
+<p><img src="/images/blog/dependabot-drone.png" alt="" /></p>
+
+<p>これでWatchしてPRしなくて良いし、とても便利ですよね。
+PRのコメントに Changelog や Commit など変更のリンクがあるので、内容をチェックすることもできます。</p>
+
+<p>プライベートでも依存関係の更新をちゃんとやれるよ！ということでした。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2020/02/15/dependabot-with-ghe.html">
+          <a class="twitter" data-title="DependabotをGHEのプロジェクトに適用する"></a>
+          <a class="facebook" data-title="DependabotをGHEのプロジェクトに適用する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2020/01/03/2020-first.html">2020年の目標と昨年のふりかえり</a></h1>
   <p class="postdate"><a href="/2020/01/03.html" title="Permanent link">Friday, January 03, 2020 04:00:00 PM</a></p>
   <p class="tags">
@@ -535,96 +681,6 @@
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2019/12/08/jsfes2019-winter.html">冬のJavaScript祭りに参加して、E2Eテストについて登壇しました</a></h1>
-  <p class="postdate"><a href="/2019/12/08.html" title="Permanent link">Sunday, December 08, 2019 08:01:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/e2e%E3%83%86%E3%82%B9%E3%83%88.html" rel="tag">E2Eテスト</a>
-      <a href="/tags/puppeteer.html" rel="tag">puppeteer</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p><a href="https://javascript-fes.doorkeeper.jp/events/99978">11/30に開催されたJavaScript祭りに参加しました</a></p>
-
-<p><img src="https://dzpp79ucibp5a.cloudfront.net/events_banners/99978_normal_1572511571_jsfes_2019_winter.png" alt="" /></p>
-
-<p>早速ですが、私のスライドは以下のとおりです。</p>
-
-<script async class="speakerdeck-embed" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<h2>なぜこのテーマを選んだか？</h2>
-
-<p>最近E2Eテストの課題について、いろいろなところで話題になっていたのと、
-CakeFestでJoseがテストに関連する講演をしていたのですが、
-実はE2Eテストの理解って意外とされていないのでは？と思い、このテーマを選びました。</p>
-
-<p>内容自体は、各種引用から成り立っていて、現時点では最適な解決策は<a href="https://pptr.dev/">Puppeteer</a>を使うことなのでは？という話の流れです。</p>
-
-<h2>講演の概要</h2>
-
-<script async class="speakerdeck-embed" data-slide="4" data-id="3ed7fccb98de486bab723d3e588db7cd" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>まずはTesting Pyramidの話ですが、これはGoogleが提唱した割合の話としてよく出没する3段の簡易な画像です。
-Joseの発表でも、この簡易版の画像を引用していました。</p>
-
-<p><a href="https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html">Just Say No to More End-to-End Tests</a>というGoogleのTesting Blogの記事なのですが、
-これはテストの比率を説明する資料としてはわかりやすいものです。しかし具体性に欠けています。
-そこで出典の記事を確認する必要があります。</p>
-
-<p>記事の中で</p>
-
-<blockquote>
-<p>Here is a simplified version of the testing pyramid from the opening keynote of the 2014 Google Test Automation Conference:</p>
-</blockquote>
-
-<p>と書かれているように、<a href="https://docs.google.com/presentation/d/15gNk21rjer3xo-b1ZqyQVGebOp_aPvHU3YH7YnOMxtE/edit#slide=id.g437663ce1_53_98">Google Test Automationカンファレンスのオープニングキーノート</a>を確認してみましょう。</p>
-
-<p>そうすると、Testing Pyramidの話をしています。
-よく見ると、これ自体が引用であることがわかります。さらに出典を辿ってみます。</p>
-
-<p><a href="https://watirmelon.blog/tag/testing-pyramid/">WatirMelon - A Software Testing Blog by Alister Scott</a>というブログがあります。
-先ほどのキーノートのスライドの説明で、このブログの著者Alisterが観客の中にいることが示唆されています。</p>
-
-<p><img src="https://watirmelon.files.wordpress.com/2014/05/automated-testing-pyramid.png" alt="" /></p>
-
-<p>最初のTesting Pyramidの例では、ざっくりとしていた各層は、実はもう少しブレイクダウンされています。</p>
-
-<p>これらは全て2014年の内容ですが、今でもこの理解がされていないのでは？という気がします。
-E2Eはマニュアル（手動）テストも含んでいるのです。
-自動化にばかりフォーカスされている気がしますね。</p>
-
-<p>で、Testing Pyramidについて、新しい記事がないかな？というときに、ありましたよ。
-我らが martinFowler.com の<a href="https://martinfowler.com/articles/practical-test-pyramid.html">The Practical Test Pyramid</a>です。
-こちらは2018年の技術背景を元に書かれています。
-とても良い内容なので、これを読むことでテストに対する理解がぐっと深まります。</p>
-
-<p>で、現時点で使うツールは<a href="https://pptr.dev/">Puppeteer</a>で良いのでは？という、私の提案で終わります。
-Puppeteerがなぜ良いかというのはスライドに書いてある内容で理解していただけると思います。</p>
-
-<p>また、もしUIテスト(単体や結合)で使いたい場合の機能についても、簡単にふれています。</p>
-
-<h2>さいごに</h2>
-
-<p>同日に<a href="https://jsconf.jp/2019/">JSConf JP</a>が開催されていて、JavaScriptのイベント同士で被るのかー、と思っていたら結構参加者も多く、
-他にもとても楽しいセッションが多く、盛り上がりました。</p>
-
-<p>次回もぜひ参加したいと思います。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2019/12/08/jsfes2019-winter.html">
-          <a class="twitter" data-title="冬のJavaScript祭りに参加して、E2Eテストについて登壇しました"></a>
-          <a class="facebook" data-title="冬のJavaScript祭りに参加して、E2Eテストについて登壇しました"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -654,6 +710,7 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
@@ -663,7 +720,6 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
-                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
               </ul>
             </div>
           </section>
@@ -671,6 +727,12 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -792,7 +854,7 @@ Puppeteerがなぜ良いかというのはスライドに書いてある内容�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (8)</li>
+                  <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

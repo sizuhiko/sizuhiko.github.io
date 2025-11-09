@@ -272,6 +272,160 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2021/07/11/pong-swoosh.html">オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した</a></h1>
+  <p class="postdate"><a href="/2021/07/11.html" title="Permanent link">Sunday, July 11, 2021 05:40:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/onlinetool.html" rel="tag">OnlineTool</a>
+      <a href="/tags/svelte.html" rel="tag">Svelte</a>
+      <a href="/tags/socket-io.html" rel="tag">Socket.io</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>前回のBlog更新が1年半近く前の、最後のオフラインイベントだったでしょうか&hellip;.
+それから、書くまでもありませんが、イベントや仕事がすべてオンラインで行われるようになりました。</p>
+
+<p>私たちインターネットに関連する仕事をしているものは、特に在宅でも同じように仕事を進めています（僕の場合は家の環境が劣悪というのはありますが）。</p>
+
+<p>変わったのは勉強会やカンファレンス、コミュニティ活動がオンラインになったり、そもそも開催されなくなったりといったことがあります。</p>
+
+<p>僕も昨年中はずっとモチベーションもダダ下がりで、ただ仕事をして何となくYoutubeで動画見るみたいな繰り返しを送っていました。
+オンラインの勉強会やカンファレンスにも参加する気になれなかった、というのが本当のところです。</p>
+
+<p>お前は懇親会とか飲み会メインだろ？とか言われると、まぁ否定もできないのですが、リアルな共感が得られない（廊下カンファレンスができない）とか、ちゃんとした理由もあったりします。
+僕は必ず前方の席で参加するし、リアクションも他の人と比べるとある方かなーと思っています。
+オンラインは、どうしても講義形式になりがちだし、参加している人同士がこういうことに関心があるんだとか、面白いと思ったり感動したりするんだな、ということは得られないな、と思っています。
+もちろんチャットやTwitterなど、文字と盛り上がりが共有できたり、ログとして残ったりするんですが、どうしてもWeb会議システムで登壇者の顔、スライドを観ながらチャットも、となると注意力が分散したり、スクリーン数の限界とかにも達するなーと思っています。</p>
+
+<p>目は2つしかない。</p>
+
+<h3>社内勉強会きっかけ</h3>
+
+<p>さて少し話題は変わりますが、僕は所属している会社でIoT勉強会というのを主催していて、これまでトイレ利用状況可視化サービス<a href="https://toiletevolution.space/#/about">Toilet Evolution</a>、常駐先などから社員証で出退勤できるデバイスとサービス<a href="https://github.com/its-succ/dakoku-web">dakoku</a>といったものを開発してきました。
+IoT勉強会はデバイスなんかを作ることもあったので、会社で購入した工具なんかを共有で使ったりしていたわけですが、同様にオンラインとなると難しくなります。
+そこで、何とかオンライン時代のサービスをIoTという文脈で作り出せないかな、と思い続けてきて今回の効果音共有サービスを開発するに至りました。
+IoTはモノのインターネットですが、オンラインイベントに参加する盛り上がりや人の感情をモノと見立てて、インターネットで共有するのがオンラインイベントでは有益なのでは？と思っています。</p>
+
+<h2>pong-swoosh</h2>
+
+<p>在宅になって、ずっとFMラジオを聴きながら仕事をしていたりするのですが、DJの人が拍手なんかをサウンドマシーンで出すシーンがありますよね。
+あれを <code>ポン出し</code> なんて言ったりします。
+今回作ったサービスは、ポン（効果音）を投げる（チャットの文字送信みたいなイメージ）というところから、pong swoosh という名前にしました。
+（日本酒が好きだからポンシュ、なんてことじゃないです。）</p>
+
+<h2>どんなサービスか</h2>
+
+<p>pong-swooshは、Web会議システムを利用しながら効果音を送受信して、盛り上がりを共有するシステムです。
+使い方は簡単なので、まずは使ってみましょう。</p>
+
+<h3>まずはチャンネルを作成する</h3>
+
+<p>チャンネルとは効果音を共有する部屋の単位です。pong-swooshは効果音チャットシステムのようなものなので、チャットでよく使うチャンネルという単語を利用しています。</p>
+
+<p><a href="https://its-succ.github.io/pong-swoosh/">トップページ</a>にアクセスして、チャンネル名を入力して作成します。</p>
+
+<p><img src="/images/blog/pong-swoosh-top.png" alt="" /></p>
+
+<p>そうすると、チャンネルのURLが表示されるので、これを参加者に共有します。
+1URLだけなので、イベントサイトだったり、Web会議のチャットだったりで共有できますね。</p>
+
+<p><img src="/images/blog/pong-swoosh-created.png" alt="" /></p>
+
+<p>コピーアイコンで簡単にクリップボードにもコピーできます。</p>
+
+<h3>参加者がアクセスする</h3>
+
+<p>共有されたURLにアクセスすると、エントランスページが表示されます。</p>
+
+<p><img src="/images/blog/pong-swoosh-entrance.png" alt="" /></p>
+
+<p>pong-swooshには</p>
+
+<ul>
+<li>コントローラー画面（効果音を送信する画面</li>
+<li>スピーカー画面（効果音を再生する画面</li>
+</ul>
+
+<p>というものがあります。
+なぜ画面を分けたか？というのには理由があります。</p>
+
+<p>オンラインでイベントに参加すると、参加者一覧の画面と、スライドなど画面共有された画面の2つを常に表示していると思います。
+かなり大きなディスプレイを使っていれば、余裕があるかもしれないのですが、ノートPCとそれほど大きくない外部モニターだと、それぞれが最大表示されていて、画面には余白がないのでは？と思います（私もそうです）。</p>
+
+<p>そこで、コントローラー画面はスマホでアクセスして利用しやすいように設計されています。
+スピーカー画面は、最初に音量調整すれば特に前面に表示している必要がないので、Web会議システムと同じPCで開くことが想定されています。
+もちろんWeb会議の音と混じるのが嫌な人もいると思うので、どちらもスマホからアクセスしやすいようにQRコードを表示するようにしています。</p>
+
+<h3>コントローラー画面</h3>
+
+<p>このスクショは、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
+
+<p><img src="https://user-images.githubusercontent.com/132000/125040797-01ed9200-e0d3-11eb-813d-9def687f7c9a.png" width="300px" border="1"></p>
+
+<p>コントローラー画面には効果音を参加者に共有(送信)するボタンと、実際にどんな音が鳴るのか送信せずに確認する <code>視聴</code> リンクがあります。</p>
+
+<h3>スピーカー画面</h3>
+
+<p>このスクショも、PullRequest中のものなので、この記事を読んですぐ試した方は違う画面になります（近いうちに変わります）。</p>
+
+<p><img src="https://user-images.githubusercontent.com/132000/125053337-f48ad480-e0df-11eb-9c2e-77dbfb522b47.png" alt="" /></p>
+
+<p>ボリュームのスライダーがあるので、各自の環境に応じて音量を調整できます。
+音量は参加者の人数と同じ効果音を同時(1秒以内)にリアクションした人の数で変化します。
+計算式は以下のとおりです。</p>
+
+<blockquote>
+<p>Math.sin(Math.PI * 90 * (同時にリアクションした人の数 / チャンネル参加者数) /180) * 2;</p>
+</blockquote>
+
+<p>最初は直線的に音量が上がるようになっていたのですが、途中から円弧に沿って上がるように変更しています。
+同時にリアクションした人の数を集計するのに、RedisのINCR/DECRコマンドを使っています。
+チャンネル名と効果音IDをキーにINCRで人数を加算して、1秒後にDECRするといったことで音量が変化します。</p>
+
+<h3>技術的な話</h3>
+
+<p>前にも書きましたが、pong-swooshは効果音チャットシステムのようなものです。
+サーバーとの送受信には<a href="https://socket.io/">socket.io</a>が使われていて、効果音が送信されてくるとチャンネル参加者にブロードキャストされます。
+簡単なチャットプログラムを作ったことがあれば容易に想像できるシステムです。
+バックエンドはNode.jsで書かれていて、現在はHeroku（無料プラン）にデプロイされています。
+フロントエンドはSvelteを使っていて、GitHub Pagesにデプロイされています。
+バックエンドは手動デプロイですが、フロントエンドはGitHub Actionsでmainにマージされると自動的にデプロイされるようになっています。</p>
+
+<p>勉強会メンバーで開発していますが、ソースコードは公開されています。
+https://github.com/its-succ/pong-swoosh</p>
+
+<h3>さいごに</h3>
+
+<p>pong-swooshは、現在自分が担当しているプロジェクトのスクラムイベントと、会社の部門メンバーが月一で集まるミーティングで利用して改善を重ねてきました。
+スプリントレビューのデモや、ふりかえり、プレゼンテーションなどの場で効果音を使ってリアクションを共有しています。</p>
+
+<p>それまでは画面越しに拍手をしてみたり（音は出さず映像で）だったのですが、pong-swooshを使うことで賑やかになったといったフィードバックをもらったりしています。</p>
+
+<p>もちろんこういった共有の方法が合う場面、合わない場面などあるかもしれないのですが、もし興味があれば使ってみてください。
+そんなに重い処理もないので、Herokuの無料枠で使ってもらっていても問題ないかな？と思っています。</p>
+
+<p>もし使ってみてフィードバックがあれば、GitHubのissueなどに報告してもらえると嬉しいです。
+もちろんPRという形で参加いただくのもWelcomeです。</p>
+
+<p>いつかオフラインで昔のように勉強会やカンファレンスができるときが来ると良いのですが、
+もうしばらくオンラインが続きそうな感じでもあります。
+そんなとき pong-swoosh が少しでもお役に立てれば幸いです。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2021/07/11/pong-swoosh.html">
+          <a class="twitter" data-title="オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した"></a>
+          <a class="facebook" data-title="オンラインイベントの盛り上がりを効果音で共有するサービス pong-swoosh を作成した"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2020/02/21/phperkaigi-2020.html">PHPerKaigi 2020で「E2Eテストに向き合う」ついて発表してきました</a></h1>
   <p class="postdate"><a href="/2020/02/21.html" title="Permanent link">Friday, February 21, 2020 10:49:00 AM</a></p>
   <p class="tags">
@@ -757,152 +911,6 @@ tch.git#22141d66ca58e25b9c6f9d5907004802f55afcc4"</span><span class="p">,</span>
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2020/02/15/dependabot-with-ghe.html">DependabotをGHEのプロジェクトに適用する</a></h1>
-  <p class="postdate"><a href="/2020/02/15.html" title="Permanent link">Saturday, February 15, 2020 11:17:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
-      <a href="/tags/dependabot.html" rel="tag">dependabot</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>昨今のWebアプリケーション開発では、多数のOSSライブラリに依存しています。
-私たちが開発するアプリケーションの脆弱性対応はもちろんのこと、これらのライブラリもセキュリティアップデートやバグフィックスなどが行われていきます。</p>
-
-<p>では、ライブラリのバージョンを最新に追従するにはどうしたら良いでしょうか？</p>
-
-<ul>
-<li>ライブラリのソースリポジトリをチェックする。GitHubのことが多いので、Watchしておけば通知が届きます。</li>
-<li>依存関係をチェックしてくれるBotを入れて、Slackなどに通知する。たとえば <a href="https://github.com/frankthelen/npmcheck2slack">npmcheck2slack</a>のようなもの</li>
-<li>依存関係をチェックしてPRを出してくれるツールを導入する。</li>
-</ul>
-
-<p>3つ目のPRを出すツールに関しては、対応する言語ごとに様々なものがありますが、今回は<a href="https://dependabot.com/blog/hello-github/">GitHubに買収された</a>ことでも有名になった<a href="https://dependabot.com/">Dependabot</a>を導入してみたので解説します。</p>
-
-<p>でもDependabotって、普通にGitHubから使えるでしょ？</p>
-
-<p>そうなんです。ただ今回はGitHubでも<a href="https://github.co.jp/enterprise.html">GitHub Enterprise</a>を利用している場合には(まだ？)Dependabotを利用することができないので、CIで実行できるようにしてみたよ！という記事です。</p>
-
-<h3>想定されるプロジェクト環境</h3>
-
-<ul>
-<li>ソースコードリポジトリはGHE</li>
-<li>CIサーバーに<a href="https://drone.io">Drone.io</a>をオンプレ利用</li>
-</ul>
-
-<p>ですが、GHEやDroneでなくても、この記事を理解してもらえれば利用可能になると思います。</p>
-
-<p>つまりリポジトリやらCIやらをオンプレしているプライベートな開発環境で、依存関係更新ツールを使ってみようろいうことです。</p>
-
-<h3>Dependabotをオンプレで動かす</h3>
-
-<p>Dependabotには<a href="https://github.com/dependabot/dependabot-script">Dependabot Update Script</a>というものがあり、オンプレ環境で動かせるようになっています。</p>
-
-<p>READMEに書いてあるとおり設定すれば良いのですが、私たちのプロジェクトでは以下のようにしました。</p>
-
-<ol>
-<li><code>dependabot-drone</code> というリポジトリをGHEに作成。これをDroneのdaily cronで実行してPRを日次で作成させる</li>
-<li>Dependabot Update Scriptは <code>dependabot-drone</code> に git submodule で追加する</li>
-<li>Dependabot Update Scriptの更新もチェックしたいので、 <code>dependabot-drone</code> 自身の更新もチェックする</li>
-</ol>
-
-<p>これをDrone.ioで実行するには、以下のような <code>.drone.yml</code> ファイルを記述します。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">clone</span><span class="pi">:</span>
-  <span class="na">git</span><span class="pi">:</span>
-    <span class="na">image</span><span class="pi">:</span> <span class="s">plugins/git</span>
-    <span class="na">recursive</span><span class="pi">:</span> <span class="no">true</span> <span class="c1"># 2のとおり submodule を使う場合指定</span>
-
-<span class="na">pipeline</span><span class="pi">:</span>
-  <span class="c1"># READMEに書いてあるインストール手順を定義</span>
-  <span class="na">install</span><span class="pi">:</span>
-    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
-    <span class="na">pull</span><span class="pi">:</span> <span class="no">true</span>
-    <span class="na">commands</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
-      <span class="pi">-</span> <span class="s">bundle install -j 3 --path vendor</span>
-    <span class="na">when</span><span class="pi">:</span>
-      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
-  <span class="c1"># 3の自身をアップデートする定義</span>
-  <span class="na">dependabot-drone</span><span class="pi">:</span>
-    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
-    <span class="na">environment</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
-      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxxxx/dependabot-drone</span>
-      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=submodules</span>
-    <span class="na">commands</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
-      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
-    <span class="na">when</span><span class="pi">:</span>
-      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
-</code></pre></div>
-<p>Dependabotのコア機能は <code>dependabot/dependabot-core</code> というDockerイメージで提供されているので、このイメージを使って <code>dependabot-script</code> を実行するということです。
-このときに環境変数を指定します。</p>
-
-<ul>
-<li>GITHUB<em>ACCESS</em>TOKEN パッケージマネージャ(npmやcomposer, bundlerなど)が参照するリポジトリにGitHub APIを使ってアクセスするため、アクセストークンを設定しないとAPI上限に引っかかってしまいます。このため必ず設定しましょう。</li>
-<li>GITHUB<em>ENTERPRISE</em>HOSTNAME GHEのホスト名を指定します</li>
-<li>GITHUB<em>ENTERPRISE</em>ACCESS_TOKEN GHEにアクセスするためのアクセストークンを設定します</li>
-<li>PROJECT_PATH GHEのプロジェクトパスを指定します</li>
-<li>PACKAGE_MANAGER ここではsubmodulesを指定しています。他の候補はREADMEに書いてあるとおり<a href="https://github.com/dependabot/dependabot-script/blob/master/generic-update-script.rb#L27">ソースコードを参照</a>します</li>
-</ul>
-
-<h3>アプリケーションリポジトリをチェックしていく</h3>
-
-<p>あとは、先ほど作った <code>.drone.yml</code> ファイルにアプリケーションリポジトリを追加してくだけです。</p>
-
-<p>たとえば <code>frontend-app</code> というリポジトリをチェックしたい場合は、このようになります。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="c1"># 省略...</span>
-
-<span class="na">pipeline</span><span class="pi">:</span>
-  <span class="c1"># 省略...</span>
-  <span class="na">dependabot-drone</span><span class="pi">:</span>
-    <span class="c1"># 省略...</span>
-  <span class="na">frontend-app</span><span class="pi">:</span>
-    <span class="na">image</span><span class="pi">:</span> <span class="s">dependabot/dependabot-core</span>
-    <span class="na">environment</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_HOSTNAME=github.xxxxx.com</span>
-      <span class="pi">-</span> <span class="s">GITHUB_ENTERPRISE_ACCESS_TOKEN=xxxxxxxxxxxxxxxxx</span>
-      <span class="pi">-</span> <span class="s">PROJECT_PATH=xxxx/frontend-app</span>
-      <span class="pi">-</span> <span class="s">PACKAGE_MANAGER=npm_and_yarn</span>
-    <span class="na">commands</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s">cd dependabot-script</span>
-      <span class="pi">-</span> <span class="s">bundle exec ruby ./generic-update-script.rb</span>
-    <span class="na">when</span><span class="pi">:</span>
-      <span class="na">status</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">success</span><span class="pi">,</span> <span class="nv">failure</span><span class="pi">]</span>
-      <span class="na">event</span><span class="pi">:</span> <span class="s">cron</span>
-</code></pre></div>
-<p><code>PROJECT_PATH</code> と <code>PACKAGE_MANAGER</code> 、パイプラインの名前が違うだけで他の定義はすべて一緒です。
-<code>status: [success, failure]</code> を入れているのは、複数リポジトリある場合に、途中で失敗しても継続したいための設定です。</p>
-
-<h3>PRがやってくる日々</h3>
-
-<p>daily cron に従って Dependabot からPRが送られてきます。</p>
-
-<p><img src="/images/blog/dependabot-drone.png" alt="" /></p>
-
-<p>これでWatchしてPRしなくて良いし、とても便利ですよね。
-PRのコメントに Changelog や Commit など変更のリンクがあるので、内容をチェックすることもできます。</p>
-
-<p>プライベートでも依存関係の更新をちゃんとやれるよ！ということでした。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2020/02/15/dependabot-with-ghe.html">
-          <a class="twitter" data-title="DependabotをGHEのプロジェクトに適用する"></a>
-          <a class="facebook" data-title="DependabotをGHEのプロジェクトに適用する"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -932,6 +940,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
@@ -941,7 +950,6 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
-                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
               </ul>
             </div>
           </section>
@@ -949,6 +957,12 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -1070,7 +1084,7 @@ PRのコメントに Changelog や Commit など変更のリンクがあるの�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (8)</li>
+                  <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>

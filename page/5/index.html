@@ -272,6 +272,75 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2023/05/02/tsyringe-with-typescript-5.html">tsyringe を TypeScript 5 で使う方法</a></h1>
+  <p class="postdate"><a href="/2023/05/02.html" title="Permanent link">Tuesday, May 02, 2023 03:00:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/tsyringe.html" rel="tag">tsyringe</a>
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="https://github.com/microsoft/tsyringe">tsyringe</a> は、Microsoft のオーガナイゼーションにある、JavaScript/TypeScript用のDIコンテナです。</p>
+
+<p>Microsoft は TypeScript の親だし、DIコンテナあるんだったら使うよなーというぐらいの理由で使っていましたが、ここ数年はアップデートのリリースがありません。
+この記事を書いている時点での最新版は、2020/11/9 に出た <a href="https://github.com/microsoft/tsyringe/releases/tag/v4.4.0">v4.4.0</a> です。</p>
+
+<h3>TypeScript 5 でコンパイルエラーになる</h3>
+
+<p>tsyringe を TypeScript 5 で利用しようとすると、コンパイルエラーになります。
+で、さすがに利用者が多いライブラリだけあって、すぐ issue <a href="https://github.com/microsoft/tsyringe/issues/221">TypeScript 5.0 Support of tighter parameter decorator checking</a> が出ました。
+しばらくしたら PR <a href="https://github.com/microsoft/tsyringe/pull/226">fix: allow propertyKey to be undefined</a> も出ました。PRが 2023/3/26 に出て、マージされたのは 2023/4/17 です。</p>
+
+<p>それから2週間ぐらい経過しましたが、リリースされる気配はありません&hellip;.</p>
+
+<h3>でも TypeScript 5 を使いたいんや</h3>
+
+<p>まぁそう思いますよね。
+僕らのプロジェクトでもそう思ったんで、パッチを作りました。</p>
+
+<p>プロジェクトルート(package.json とか置いているディレクトリ)に <code>tsyringe.d.ts</code> を置いて、型定義をオーバーライドする感じです。
+例えば以下のような感じです。</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="nx">tsyringe</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">tsyringe/dist/typings/index</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="nx">declare</span> <span class="nx">namespace</span> <span class="nx">t</span> <span class="p">{</span>
+  <span class="kd">function</span> <span class="nx">inject</span><span class="p">(</span>
+    <span class="nx">token</span><span class="p">:</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">InjectionToken</span><span class="o">&lt;</span><span class="nx">any</span><span class="o">&gt;</span>
+  <span class="p">):</span> <span class="p">(</span><span class="nx">target</span><span class="p">:</span> <span class="nx">any</span><span class="p">,</span> <span class="nx">propertyKey</span><span class="p">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="nx">symbol</span> <span class="o">|</span> <span class="kc">undefined</span><span class="p">,</span> <span class="nx">parameterIndex</span><span class="p">:</span> <span class="nx">number</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">any</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">injectable</span><span class="p">:</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">injectable</span><span class="p">;</span>
+  <span class="kd">const</span> <span class="nx">container</span><span class="p">:</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">container</span><span class="p">;</span>
+  <span class="nx">type</span> <span class="nx">DependencyContainer</span> <span class="o">=</span> <span class="k">typeof</span> <span class="nx">tsyringe</span><span class="p">.</span><span class="nx">container</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="o">=</span> <span class="nx">t</span><span class="p">;</span>
+</code></pre></div>
+<p>まずコンパイルエラーになるのは <code>inject</code> 関数なので、それをオーバーライドします。
+次に、プロジェクトで import している関数や型があれば、それぞれ <code>const</code> や <code>type</code> で宣言して require した内容からそのまま export するようにしました。</p>
+
+<p>これはマージされている PR が型定義ぐらいしか修正しておらず、実装に関しては何も修正されていなかったので、問題なしと判断して型定義だけをオーバーライドしたパッチを作ることにしました。</p>
+
+<h3>で、どうなの？</h3>
+
+<p>現時点動作に問題はなく、普通に TypeScript 5 で tsyringe が使えています。
+PRがマージされて、すぐリリースされるんじゃないか？と思ったので、この内容を記事にする必要もないかな？と思っていたのですが、
+リリースされる気配を感じないので、僕らのやっている方法が少しでも役に立てばと思い、記事にしました。
+はやく TypeScript 5 対応が正式リリースされて欲しいですね。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/05/02/tsyringe-with-typescript-5.html">
+          <a class="twitter" data-title="tsyringe を TypeScript 5 で使う方法"></a>
+          <a class="facebook" data-title="tsyringe を TypeScript 5 で使う方法"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2023/04/19/integration-test-using-localstack.html">LocalStack を使って aws-sdk の Integration Test を実行する</a></h1>
   <p class="postdate"><a href="/2023/04/19.html" title="Permanent link">Wednesday, April 19, 2023 04:12:00 PM</a></p>
   <p class="tags">
@@ -698,69 +767,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">aws-sdk v2 が 2023 年中にメンテナンスモードになる</a></h1>
-  <p class="postdate"><a href="/2023/04/06.html" title="Permanent link">Thursday, April 06, 2023 06:24:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws-sdk.html" rel="tag">aws-sdk</a>
-      <a href="/tags/aws-sdk-v2.html" rel="tag">aws-sdk@v2</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>aws-sdk v2 を使っている CLI ツールで aws 環境を操作していたら、見慣れないメッセージが出てきました。</p>
-
-<blockquote>
-<p>(node:9129) NOTE: The AWS SDK for JavaScript (v2) will be put into maintenance mode in 2023.</p>
-</blockquote>
-
-<p>AWS SDK v2 ってメンテナンスモードに入るんだ&hellip;</p>
-
-<p>Twitter でも書いている人がいました</p>
-
-<p><blockquote class="twitter-tweet"><p lang="en" dir="ltr">Anyone else seeing this new error from <a href="https://twitter.com/awscloud?ref_src=twsrc%5Etfw">@awscloud</a> sdk? <br><br>This is showing to our CLI users and is&hellip; annoying to say the least. <a href="https://t.co/KabEtFDKnl">pic.twitter.com/KabEtFDKnl</a></p>&mdash; David Wells (@DavidWells) <a href="https://twitter.com/DavidWells/status/1626321488742862848?ref_src=twsrc%5Etfw">February 16, 2023</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
-
-<p>これまでも複数回にわたって aws-sdk v3 の記事を書いてきましたが、これは Lambda にデプロイするアプリだから v3 に移行したのであって、CLIツールとかなら v3 に移行するモチベがあるかな&hellip;.</p>
-
-<p>ぶっちゃけ Lambda とかだとランタイムに追従すると sdk も上げないといけないので対応したけど、ツールなら対応しないですよね。</p>
-
-<p>公式のリポジトリにも、サポートについて書かれています。</p>
-
-<p>https://github.com/aws/aws-sdk-js#version-2x-support</p>
-
-<p>そこにリンクされている <a href="https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html">メンテナンスポリシーページ</a> にいくと、以下のような内容が記入されていました。</p>
-
-<blockquote>
-<p>メンテナンス (フェーズ 3) -メンテナンス モードの間、AWS は SDK リリースを制限して、重大なバグ修正とセキュリティ問題のみに対処します。SDK は、新規または既存のサービスの API 更新を受け取ることも、新しいリージョンをサポートするために更新されることもありません。特に指定がない限り、メンテナンス モードのデフォルト期間は 12 か月です。</p>
-
-<p>サポート終了 (フェーズ 4) - SDK がサポート終了に達すると、更新またはリリースを受け取ることができなくなります。以前に公開されたリリースは引き続きパブリック パッケージ マネージャーから入手でき、コードは GitHub に残ります。GitHub リポジトリはアーカイブされる場合があります。サポートが終了した SDK の使用は、ユーザーの判断で行われます。ユーザーが新しいメジャー バージョンにアップグレードすることをお勧めします。</p>
-</blockquote>
-
-<p>v2 自体がリポジトリから無くなることはなさそうですが、膨大にありそうな v2 を使った CLI ツール群はどうするのかなぁ&hellip;</p>
-
-<p>ちなみに Serverless Framerwork は PR <a href="https://github.com/serverless/serverless/pull/11769">Suppress AWS SDK v2 deprecation message</a> でいったんメッセージ出力を OFF にしていますが、 v3 移行は大変だろうなぁ、という感想しかないです。</p>
-
-<p>AWS SDK v3 は、これまでの記事でも書いてますが、結構パッケージ管理が残念な感じだったりするのと、書き方もめっちゃ変わっているので Serverless Framework 規模になると書き換えもかなり工数かかりそうだなぁと（いつかはやるんだろうけど）。</p>
-
-<p>AWS さんが簡易にコンバートできるツールを作ってくれると良いんだろうけど、オプションの書き方も変わっているところがあったりするので、単純な変換も大変そうですね。</p>
-
-<p>上記の引用ツイートのレスの中にもあるけど、v3 のドキュメントが不親切だというのは事実だし、良い解決策が 2023 年中に見つかると良いですね。
-なんか感想ブログになっちゃいましたが、僕らのプロジェクトも v2 依存している CLI ツールは移行対象にしてなかったので、これから移行計画作らないとな、と思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2023/04/06/aws-sdk-v2-will-be-mentenance-mode-in-2023.html">
-          <a class="twitter" data-title="aws-sdk v2 が 2023 年中にメンテナンスモードになる"></a>
-          <a class="facebook" data-title="aws-sdk v2 が 2023 年中にメンテナンスモードになる"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -790,6 +796,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
@@ -799,7 +806,6 @@ NPM 公開されていて、僕らが利用することができるものが cli
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
                   <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
-                  <li><a href="/2024/06/03/get-started-with-graphql-api-server-with-appsync-js.html">APPSYNC_JS (AppSync JavaScript) で始める GraphQL API サーバー</a> <span>2024/06/03</span></li>
               </ul>
             </div>
           </section>
@@ -807,6 +813,12 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
+                    </li>
                     <li class="size1">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
@@ -928,7 +940,7 @@ NPM 公開されていて、僕らが利用することができるものが cli
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2025.html">2025</a> (8)</li>
+                  <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
                   <li><a href="/2022.html">2022</a> (14)</li>
