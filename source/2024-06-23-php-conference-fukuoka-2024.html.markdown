@@ -6,6 +6,7 @@ tags:
 - PHP
 - PHPcon
 - fukuoka
+- phpconfuk
 ---
 
 [PHP カンファレンス福岡2024](https://phpcon.fukuoka.jp/2024/)に参加しました。
