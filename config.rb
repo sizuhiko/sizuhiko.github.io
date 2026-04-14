@@ -117,5 +117,10 @@ end
 
 activate :syntax
 set :markdown_engine, :redcarpet
-set :markdown, :fenced_code_blocks => true, :smartypants => true, :strikethrough => true
-
+set :markdown,
+  :fenced_code_blocks => true,
+  :smartypants => true,
+  :strikethrough => true,
+  :no_intra_emphasis => true,
+  :tables => true,
+  :lax_spacing => true
