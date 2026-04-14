@@ -252,6 +252,16 @@
   background-color: #f8f8f8;
 }
     </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ]
+        });"></script>
   </head>
   <body id="myopera" data-twttr-rendered="true">
     <!--[if IE 6]><div class="ie6"><![endif]-->
@@ -272,6 +282,236 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2022/12/18/bigquery-test-on-node-js.html">Node.js で BigQuery を使ったコードの自動テストを記述する</a></h1>
+  <p class="postdate"><a href="/2022/12/18.html" title="Permanent link">Sunday, December 18, 2022 11:15:00 AM</a></p>
+  <p class="tags">
+      <a href="/tags/typescript.html" rel="tag">TypeScript</a>
+      <a href="/tags/jest.html" rel="tag">Jest</a>
+      <a href="/tags/javascript.html" rel="tag">JavaScript</a>
+      <a href="/tags/bigquery.html" rel="tag">BigQuery</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>BigQuery へクエリするコードを書くとき、どうしていますか？
+ORM を使って RDB を使うコードを書いている場合などは、 SQLite などを使って UnitTest を書いていることもあるでしょう。
+BigQuery についても、何かそういったことができないかな？と思い、調べていました。</p>
+
+<h2>BigQuery Emulator</h2>
+
+<p>そんなとき、ちょうど <a href="https://github.com/goccy/bigquery-emulator">BigQuery Emulator</a> の存在を知り、試してみることにしました。</p>
+
+<p>作者の goccy さんのスライドです。</p>
+
+<iframe class="speakerdeck-iframe" frameborder="0" src="https://speakerdeck.com/player/ef6e21eded3440edafa7a8d59ec6ffef" title="BigQueryエミュレータの作り方" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" style="border: 0px; background: padding-box padding-box rgba(0, 0, 0, 0.1); margin: 0px; padding: 0px; border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.2) 0px 5px 40px; width: 560px; height: 315px;" data-ratio="1.7777777777777777"></iframe>
+
+<p>GitHub の README によると Docker コンテナでも動かせるようですので、私たちはそれを利用することにしました。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>docker pull ghcr.io/goccy/bigquery-emulator:latest
+</code></pre></div>
+<p>コードのサンプルとしては Python と Golang での書き方は提供されていたので、 Node.js でも何とかなるんじゃない？&hellip;
+と思いやり始めたのです。</p>
+
+<h2>Node.js &ndash; BigQuery Emulator</h2>
+
+<p>Node.js で BigQuery を利用するには、<a href="https://cloud.google.com/nodejs/docs/reference/bigquery/latest">公式のクライアント</a>をインストールします。</p>
+<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>npm i @google-cloud/bigquery
+</code></pre></div>
+<p>接続の方法は Python のクライアントを見る限り、</p>
+
+<ul>
+<li>エンドポイント</li>
+<li>プロジェクトID</li>
+<li>匿名接続（AnonymousCredentials）</li>
+</ul>
+
+<p>を指定すれば良さそうです。</p>
+<div class="highlight"><pre class="highlight python"><code><span class="n">client_options</span> <span class="o">=</span> <span class="n">ClientOptions</span><span class="p">(</span><span class="n">api_endpoint</span><span class="o">=</span><span class="s">"http://0.0.0.0:9050"</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">bigquery</span><span class="p">.</span><span class="n">Client</span><span class="p">(</span>
+  <span class="s">"test"</span><span class="p">,</span>
+  <span class="n">client_options</span><span class="o">=</span><span class="n">client_options</span><span class="p">,</span>
+  <span class="n">credentials</span><span class="o">=</span><span class="n">AnonymousCredentials</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Node.js だとこんな感じでしょうか？</p>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">new</span> <span class="nx">BigQuery</span><span class="p">({</span>
+  <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">credentials</span><span class="p">:</span> <span class="cm">/* 何を指定すれば良いんだ？ */</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>ここで、 <code>credentials</code> の指定に <code>AnonymousCredentials</code> みたいなものが無いことに気がつきます。
+JavaScript 以外のクライアント、上記の Python や Go には、匿名接続のオプションがあるようです。</p>
+
+<p>現時点の credentials に指定できるのは、<a href="https://cloud.google.com/nodejs/docs/reference/google-auth-library/latest/google-auth-library/googleauthoptions">公式ドキュメント</a>によると</p>
+<div class="highlight"><pre class="highlight plaintext"><code>credentials?: CredentialBody | ExternalAccountClientOptions;
+</code></pre></div>
+<p>だけです。
+<code>ExternalAccountClientOptions</code> は外部のアカウント連携を使った認証をする場合のオプションになっています。</p>
+
+<h2>@google-cloud/bigquery のコードを調べる</h2>
+
+<p>クライアントの言語違いで接続が変わるわけではないので、 BigQuery のサーバー側は匿名接続できるようになっているが、クライアント側の実装がサポートしていない、ということは想定できるでしょう。
+こういうときは、クライアントのソースコードを調べるしかありません。
+正面突破は無理でも、何かハックできる方法があるかもしれません。</p>
+
+<h3>BigQuery クラス</h3>
+
+<p>GitHubのリポジトリ<a href="https://github.com/googleapis/nodejs-bigquery">Google BigQuery: Node.js Client</a>です。
+まず、 <a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L305">BigQuery クラスのコンストラクタ</a>を調べます。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-bigquery/blob/main/src/bigquery.ts#L324-L331">このあたり</a>で、オプションを作り直して親クラスのコンストラクタを呼び出すみたいです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">config</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="na">apiEndpoint</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">apiEndpoint</span><span class="o">!</span><span class="p">,</span>
+      <span class="nx">baseUrl</span><span class="p">,</span>
+      <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
+      <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">../../package.json</span><span class="dl">'</span><span class="p">),</span>
+      <span class="na">autoRetry</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">autoRetry</span><span class="p">,</span>
+      <span class="na">maxRetries</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">maxRetries</span><span class="p">,</span>
+    <span class="p">};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">scopes</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">scopes</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">super</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+</code></pre></div>
+<p><code>credentials</code> は <code>options</code> の中に入ったままなので、 BigQuery 特有のオプションを <code>config</code> に置き換えて親クラスである <code>@google-cloud/common/Service</code> を呼び出す感じでしょうか。</p>
+
+<h3>Service クラス</h3>
+
+<p><code>Service</code> クラスは <code>@google-cloud/common</code> という共有パッケージにあるので、<a href="https://github.com/googleapis/nodejs-common">そこのリポジトリ</a>を調べます。
+<a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts">Serviceクラスのコード</a>です。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L115-L123">このあたり</a>で、リクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出すみたいです。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">reqCfg</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">({},</span> <span class="nx">config</span><span class="p">,</span> <span class="p">{</span>
+      <span class="na">projectIdRequired</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectIdRequired</span><span class="p">,</span>
+      <span class="na">projectId</span><span class="p">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">projectId</span><span class="p">,</span>
+      <span class="na">authClient</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">authClient</span><span class="p">,</span>
+      <span class="na">credentials</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">credentials</span><span class="p">,</span>
+      <span class="na">keyFile</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">keyFilename</span><span class="p">,</span>
+      <span class="na">email</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
+      <span class="na">token</span><span class="p">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span>
+    <span class="p">});</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
+      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">authClient</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">;</span>
+</code></pre></div>
+<p>なるほど、なるほど。</p>
+
+<h3>makeAuthenticatedRequestFactory</h3>
+
+<p>続いて、 <a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L596">makeAuthenticatedRequestFactory</a> を見てみましょう。</p>
+
+<p>コードには関数定義がいろいろあって、最終的には <code>makeAuthenticatedRequest</code> という関数をファクトリメソッドは戻すようです。
+ふむふむ。</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="kd">const</span> <span class="nx">mar</span> <span class="o">=</span> <span class="nx">makeAuthenticatedRequest</span> <span class="k">as</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
+    <span class="nx">mar</span><span class="p">.</span><span class="nx">getCredentials</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">getCredentials</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">authClient</span><span class="p">);</span>
+    <span class="nx">mar</span><span class="p">.</span><span class="nx">authClient</span> <span class="o">=</span> <span class="nx">authClient</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">mar</span><span class="p">;</span>
+</code></pre></div>
+<p>つまり <code>BigQuery</code> クラスのインスタンスを生成すると、認証クライアントまでは生成するけど、接続などにはいかないことがわかります。
+続いて<a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html">ファクトリメソッドの引数</a>を調べてみましょう。</p>
+
+<p>興味深いオプションが2つありますね。</p>
+
+<ul>
+<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#customEndpoint">customEndpoint</a></li>
+<li><a href="https://googleapis.dev/nodejs/common/latest/interfaces/MakeAuthenticatedRequestFactoryConfig.html#useAuthWithCustomEndpoint">useAuthWithCustomEndpoint</a></li>
+</ul>
+
+<p>認証エンドポイントをカスタマイズできるようです。
+では、ファクトリでは、このオプションをどうやって使っているのか見てみましょう。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/ca054ed89cd5ab046df45ebd70bef625d1e79bd3/src/util.ts#L766-L777">ここ</a>にありました。</p>
+<div class="highlight"><pre class="highlight javascript"><code>          <span class="kd">const</span> <span class="nx">authorizeRequest</span> <span class="o">=</span> <span class="k">async</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span>
+              <span class="nx">reqConfig</span><span class="p">.</span><span class="nx">customEndpoint</span> <span class="o">&amp;&amp;</span>
+              <span class="o">!</span><span class="nx">reqConfig</span><span class="p">.</span><span class="nx">useAuthWithCustomEndpoint</span>
+            <span class="p">)</span> <span class="p">{</span>
+              <span class="c1">// Using a custom API override. Do not use `google-auth-library` for</span>
+              <span class="c1">// authentication. (ex: connecting to a local Datastore server)</span>
+              <span class="k">return</span> <span class="nx">reqOpts</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+              <span class="k">return</span> <span class="nx">authClient</span><span class="p">.</span><span class="nx">authorizeRequest</span><span class="p">(</span><span class="nx">reqOpts</span><span class="p">);</span>
+            <span class="p">}</span>
+          <span class="p">};</span>
+</code></pre></div>
+<p>コメントを読んでください。 </p>
+
+<blockquote>
+<p>ex: connecting to a local Datastore server</p>
+</blockquote>
+
+<p>「例えば、ローカルのサーバーとかに接続するときな」って、今回の用途じゃないですか！</p>
+
+<h2>どうやったら指定できるのか？</h2>
+
+<p>さて、ここまでの調査を振り返りましょう。</p>
+
+<ul>
+<li>BigQuery クラスで Service クラスのコンストラクタを呼び出す</li>
+<li>Service クラスでリクエストコンフィグを作って、ユーティリティクラスのクレデンシャルファクトリを呼び出す</li>
+</ul>
+
+<p>BigQuery クラスからのオプションでは <code>customEndpoint</code> を指定する方法がない！という結論。</p>
+
+<p>ちょっと待てよ？</p>
+
+<p>サービスクラスで生成したファクトリどこに入れてたっけ？</p>
+<div class="highlight"><pre class="highlight javascript"><code>    <span class="k">this</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span>
+      <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">reqCfg</span><span class="p">);</span>
+</code></pre></div>
+<p><code>this</code> (=== BigQuery クラスのインスタンス) ですね。</p>
+
+<p><a href="https://github.com/googleapis/nodejs-common/blob/main/src/service.ts#L83">サービスクラスの定義</a>を見てみましょう。</p>
+<div class="highlight"><pre class="highlight javascript"><code>  <span class="nx">makeAuthenticatedRequest</span><span class="p">:</span> <span class="nx">MakeAuthenticatedRequest</span><span class="p">;</span>
+</code></pre></div>
+<p>private じゃないってことは、オーバーライドできるじゃないですか。</p>
+
+<h2>ハックする</h2>
+<div class="highlight"><pre class="highlight javascript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">BigQuery</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/bigquery</span><span class="dl">'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">util</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@google-cloud/common</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">let</span> <span class="nx">bigQuery</span><span class="p">:</span> <span class="nx">BigQuery</span><span class="p">;</span>
+
+<span class="nx">beforeAll</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="na">projectId</span><span class="p">:</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">apiEndpoint</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">baseUrl</span><span class="p">:</span> <span class="dl">'</span><span class="s1">http://0.0.0.0:9050</span><span class="dl">'</span><span class="p">,</span>
+    <span class="na">scopes</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">https://www.googleapis.com/auth/bigquery</span><span class="dl">'</span><span class="p">],</span>
+    <span class="na">packageJson</span><span class="p">:</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">@google-cloud/bigquery/package.json</span><span class="dl">'</span><span class="p">),</span>
+    <span class="na">customEndpoint</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="p">};</span>
+  <span class="nx">bigQuery</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BigQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+  <span class="nx">bigQuery</span><span class="p">.</span><span class="nx">makeAuthenticatedRequest</span> <span class="o">=</span> <span class="nx">util</span><span class="p">.</span><span class="nx">makeAuthenticatedRequestFactory</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>options の基本項目は、 BigQuery クラスのコンストラクタで指定されていた項目をそのまま流用しています。
+それに <code>customEndpoint</code> を指定して <code>makeAuthenticatedRequestFactory</code> を呼び出しインスタンス変数の値を上書きします。</p>
+
+<h2>うまくいきましたよね！</h2>
+
+<p>これで Node.js の UnitTest から BigQuery Emulator を使ってクエリのテストコードを書くことができるようになりました。
+BigQuery Emulator があって良かった！</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/12/18/bigquery-test-on-node-js.html">
+          <a class="twitter" data-title="Node.js で BigQuery を使ったコードの自動テストを記述する"></a>
+          <a class="facebook" data-title="Node.js で BigQuery を使ったコードの自動テストを記述する"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2022/07/12/swc-node-jest-path-alias.html">@swc-node/jest を使ってテストを高速化する（v1.5対応版）</a></h1>
   <p class="postdate"><a href="/2022/07/12.html" title="Permanent link">Tuesday, July 12, 2022 06:23:00 PM</a></p>
   <p class="tags">
@@ -394,7 +634,7 @@ Railsのアプリケーションジェネレータを使うとき、 <code>javas
 
 <p>ドキュメントにも書いてあるとおり、現時点は Chrome/Edge 89+ だけが import maps をサポートしているので、<a href="https://github.com/guybedford/es-module-shims">es-module-shims</a>を使っているようです。</p>
 
-<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap<em>tags</em>helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
+<p>ライブラリの中では <a href="https://github.com/rails/importmap-rails/blob/main/app/helpers/importmap/importmap_tags_helper.rb">importmap_tags_helper.rb</a> で import maps 関連のタグを出力できるヘルパー関数を用意しています。
 ドキュメントによると、設定は <code>config/importmap.rb</code> にするようです。</p>
 
 <p>公式ドキュメントによると、以下のように記述するようです。</p>
@@ -768,124 +1008,6 @@ Jest でいうところの <code>Jest.mock(&#39;ライブラリ名&#39;, {/** �
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2022/05/05/ghe-actions-cache-dependencies.html">GitHub Enterprise の Actions で依存関係を S3 にキャッシュする</a></h1>
-  <p class="postdate"><a href="/2022/05/05.html" title="Permanent link">Thursday, May 05, 2022 11:35:00 AM</a></p>
-  <p class="tags">
-      <a href="/tags/dependencies-management.html" rel="tag">Dependencies Management</a>
-      <a href="/tags/github-enterprise.html" rel="tag">GitHub Enterprise</a>
-      <a href="/tags/actions.html" rel="tag">Actions</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>GitHub の Actions で npm などの依存関係パッケージをキャッシュするのは、公式ドキュメント <a href="https://docs.github.com/ja/actions/using-workflows/caching-dependencies-to-speed-up-workflows">依存関係をキャッシュしてワークフローのスピードを上げる</a> にも書いてあるように、
-CIを高速化するのに重要です。</p>
-
-<p>公式 Example だと以下のとおりです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">name</span><span class="pi">:</span> <span class="s">Caching with npm</span>
-
-<span class="na">on</span><span class="pi">:</span> <span class="s">push</span>
-
-<span class="na">jobs</span><span class="pi">:</span>
-  <span class="na">build</span><span class="pi">:</span>
-    <span class="na">runs-on</span><span class="pi">:</span> <span class="s">ubuntu-latest</span>
-
-    <span class="na">steps</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v3</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Cache node modules</span>
-        <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/cache@v3</span>
-        <span class="na">env</span><span class="pi">:</span>
-          <span class="na">cache-name</span><span class="pi">:</span> <span class="s">cache-node-modules</span>
-        <span class="na">with</span><span class="pi">:</span>
-          <span class="c1"># npm cache files are stored in `~/.npm` on Linux/macOS</span>
-          <span class="na">path</span><span class="pi">:</span> <span class="s">~/.npm</span>
-          <span class="na">key</span><span class="pi">:</span> <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}</span>
-          <span class="na">restore-keys</span><span class="pi">:</span> <span class="pi">|</span>
-            <span class="s">${{ runner.os }}-build-${{ env.cache-name }}-</span>
-            <span class="s">${{ runner.os }}-build-</span>
-            <span class="s">${{ runner.os }}-</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Dependencies</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm install</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Build</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm build</span>
-
-      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Test</span>
-        <span class="na">run</span><span class="pi">:</span> <span class="s">npm test</span>
-</code></pre></div>
-<p><code>actions/cache</code> を利用すれば問題なく動くのですが、Enterprise 版の場合は <code>runs-on</code> にセルフホストランナーを利用するので、キャッシュがホストランナーのディスクに依存してしまいます。
-これだとホストランナーのディスク管理とか大変になるので、少し管理で楽をしたいな、と思ったところ S3 にキャッシュできるものがあり、現在もこれを利用しています。</p>
-
-<h3>actions-s3-cache</h3>
-
-<p><a href="https://github.com/shonansurvivors/actions-s3-cache">actions-s3-cache</a> は名前のとおり依存関係のキャッシュをS3に保持してくれます。
-これならディスク容量を気にすることもないし、管理が楽になりますね。</p>
-
-<p>公式 Example だと、こんな感じです。</p>
-<div class="highlight"><pre class="highlight yaml"><code><span class="na">steps</span><span class="pi">:</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
-      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
-      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">us-east-1</span>
-    <span class="na">with</span><span class="pi">:</span>
-      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">your-s3-bucket-name</span> <span class="c1"># required</span>
-      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">npm-v1-${{ hashFiles('laravel/package-lock.json') }}</span> <span class="c1"># required ('.zip' is unnecessary)</span>
-      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span> <span class="c1"># required </span>
-      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span> <span class="c1"># required</span>
-      <span class="na">zip-option</span><span class="pi">:</span> <span class="s">-ryq</span> <span class="c1"># optional (default: -ryq)</span>
-      <span class="na">unzip-option</span><span class="pi">:</span> <span class="s">-n</span> <span class="c1"># optional (default: -n)</span>
-      <span class="na">working-directory</span><span class="pi">:</span> <span class="s">laravel</span> <span class="c1"># optional (default: ./)</span>
-</code></pre></div>
-<p>僕らの運用では</p>
-
-<ul>
-<li>S3バケットは複数リポジトリで共有</li>
-<li>キー名にリポジトリ名を入れる</li>
-</ul>
-
-<p>みたいな決め事を作ったので、こんな感じにしてみました。</p>
-<div class="highlight"><pre class="highlight yaml"><code>  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">actions/checkout@v2</span>
-  <span class="pi">-</span> <span class="na">id</span><span class="pi">:</span> <span class="s">get-repository-name</span>
-    <span class="na">run</span><span class="pi">:</span> <span class="pi">|</span>
-      <span class="s">IFS=/</span>
-      <span class="s">REPO=${{ github.repository }}</span>
-      <span class="s">set -- ${REPO}</span>
-      <span class="s">echo "::set-output name=name::$2"</span>
-  <span class="pi">-</span> <span class="na">uses</span><span class="pi">:</span> <span class="s">shonansurvivors/actions-s3-cache@v1.0.1</span>
-    <span class="na">env</span><span class="pi">:</span>
-      <span class="na">AWS_ACCESS_KEY_ID</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_ACCESS_KEY_ID }}</span>
-      <span class="na">AWS_SECRET_ACCESS_KEY</span><span class="pi">:</span> <span class="s">${{ secrets.AWS_SECRET_ACCESS_KEY }}</span>
-      <span class="na">AWS_DEFAULT_REGION</span><span class="pi">:</span> <span class="s">ap-northeast-1</span>
-    <span class="na">with</span><span class="pi">:</span>
-      <span class="na">s3-bucket</span><span class="pi">:</span> <span class="s">ci-actions-cache</span>
-      <span class="na">cache-key</span><span class="pi">:</span> <span class="s">${{steps.get-repository-name.outputs.name}}-cache-${{ hashFiles('package-lock.json') }}</span>
-      <span class="na">paths</span><span class="pi">:</span> <span class="s">node_modules</span>
-      <span class="na">command</span><span class="pi">:</span> <span class="s">npm ci</span>
-</code></pre></div>
-<p><code>get-repository-name</code> でリポジトリ名を抜き出してきて、 <code>cache-key</code> で使っています。
-<code>cache-key</code> に一致するものがあれば、S3からダウンロードしてzipを展開、一致するものがなければ <code>command</code> を実行して <code>paths</code> にあるファイルを zip アーカイブして S3 に保持といったことをやってくれるので、便利ですね。</p>
-
-<p>あとは S3 のバケットにファイルの有効期限を設定しておくようにすれば、古いキャッシュがいつまでも残ることもなく、とても便利です。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2022/05/05/ghe-actions-cache-dependencies.html">
-          <a class="twitter" data-title="GitHub Enterprise の Actions で依存関係を S3 にキャッシュする"></a>
-          <a class="facebook" data-title="GitHub Enterprise の Actions で依存関係を S3 にキャッシュする"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -915,6 +1037,7 @@ CIを高速化するのに重要です。</p>
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a> <span>2026/04/14</span></li>
                   <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
@@ -924,7 +1047,6 @@ CIを高速化するのに重要です。</p>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
-                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
               </ul>
             </div>
           </section>
@@ -932,14 +1054,17 @@ CIを高速化するのに重要です。</p>
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/next-js.html" rel="tag">Next.js</a>
+                    </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">phpcon</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
@@ -1059,6 +1184,7 @@ CIを高速化するのに重要です。</p>
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026.html">2026</a> (1)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>

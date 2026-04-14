@@ -5,10 +5,169 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2025-11-09T11:03:00+09:00</updated>
+  <updated>2026-04-14T16:19:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</title>
+    <link rel="alternate" href="http://blog.url.com/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html"/>
+    <id>http://blog.url.com/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html</id>
+    <published>2026-04-14T16:19:00+09:00</published>
+    <updated>2026-04-14T18:29:35+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Next.js アプリを AWS にデプロイしたとき、SSR などでサーバーサイドで実行した処理から Lambda など別の AWS サービスを呼び出すことがあると思います。
+アプリケーションのオブザーバビリティを確保するため、AWS 上のアプリケーションでは X-RAY を使ったログ集積をやることが多いと思います。&lt;/p&gt;
+
+&lt;p&gt;ここでは Lambda など別のAWSサービスを呼び出したとき、トレースを追跡できるようにする方法について記録していきます。&lt;/p&gt;
+
+&lt;p&gt;また本記事での Next.js のバージョンは v15 を想定しています。それ以前のバージョンでは &lt;code&gt;instrumentation&lt;/code&gt; が  &lt;code&gt;experimental&lt;/code&gt; になっていますのでご注意ください。&lt;/p&gt;
+
+&lt;h2&gt;Next.js で X-RAY に出力できるように設定する&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;instrumentation.ts&lt;/code&gt; で以下のようにします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;register&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NEXT_RUNTIME&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;nodejs&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;pino&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;next-logger&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="k"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;./instrumentation.node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;ログが JSON で保持されていると X-RAY と相性が良いので、ロガーを pino にしておくと吉でお勧めです。&lt;/p&gt;
+
+&lt;p&gt;重要なのは &lt;code&gt;NEXT_RUNTIME&lt;/code&gt; が &lt;code&gt;nodejs&lt;/code&gt; の場合に &lt;code&gt;instrumentation.node&lt;/code&gt; というファイルをダイナミックインポートすることです。
+つまりサーバーサイドの処理のときの計測コードを使うようにします。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;instrumentation.node.ts&lt;/code&gt; の内容は以下のようになります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/exporter-trace-otlp-grpc&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/id-generator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/propagator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;defaultResource&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;resourceFromAttributes&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/resources&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-trace-base&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/semantic-conventions&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;sdk&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
+  &lt;span class="na"&gt;idGenerator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;
+  &lt;span class="na"&gt;textMapPropagator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;
+  &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;defaultResource&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;merge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;resourceFromAttributes&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;your-app-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;})),&lt;/span&gt;
+  &lt;span class="na"&gt;instrumentations&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;suppressInternalInstrumentation&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;}),&lt;/span&gt;
+  &lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="na"&gt;spanProcessors&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt;&lt;span class="p"&gt;())],&lt;/span&gt;
+&lt;span class="p"&gt;})&lt;/span&gt;
+
+&lt;span class="nx"&gt;sdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;OTEL 系のライブラリを使って計測の設定を行いますが、X-RAY を使うときは &lt;code&gt;@opentelemetry/id-generator-aws-xray&lt;/code&gt; と &lt;code&gt;@opentelemetry/propagator-aws-xray&lt;/code&gt; が重要になります。
+あと、aws-sdk を使った呼び出しを計測できるようにラッパーである &lt;code&gt;@opentelemetry/instrumentation-aws-sdk&lt;/code&gt; を入れておくと楽になります。&lt;/p&gt;
+
+&lt;p&gt;この例では Next.js を App Runner（新規申込が終了してしまいました。残念ですね）にデプロイしているのでリソース定義も &lt;code&gt;defaultResource().merge(resourceFromAttributes({ [ATTR_SERVICE_NAME]: &amp;#39;your-app-service&amp;#39; }))&lt;/code&gt; のようにしています。ここは Next.js をデプロイしたリソースによって書き方が変わります。&lt;/p&gt;
+
+&lt;p&gt;あとはいい感じに AWS のサービスを SDK で呼び出すと、Next.js（App Runner）から DynamoDB へのリクエストとか、S3 へのアクセスとか全部 X-RAY 上で線がつながって表示されるので、システムトレースの追跡がしやすくなります。&lt;/p&gt;
+
+&lt;h2&gt;なぜか Lambda だけ線がつながらない？&lt;/h2&gt;
+
+&lt;p&gt;さて、DynamoDBとかS3などのマネージドサービスは線が接続されていて問題がなさそうに思うのですが、Lambdaの呼び出し（InvokeFunction）だけは、うまく線が接続されません。Lambdaから外部のAPIサーバーを実行していたり、Aurora DBを実行するトレースなどの情報が AppRunner とは結合されておらず、App Runner から Lambda の呼び出し、Lambda から HTTP(API) 呼び出しみたいな別の線が出来上がっていて、システムトレースの追跡ができません。&lt;/p&gt;
+
+&lt;h3&gt;調べてみた&lt;/h3&gt;
+
+&lt;p&gt;そうすると &lt;code&gt;X-Amzn-Trace-Id&lt;/code&gt; がセグメントドキュメントの http.request に記録されておらず、Lambdaへ正しく伝播されてないことがわかりました。
+&lt;code&gt;X-Amzn-Trace-Id&lt;/code&gt; が X-RAY で線を結びつけるための値です。&lt;/p&gt;
+
+&lt;h2&gt;OpenTelemetry の仕様を調べてみる&lt;/h2&gt;
+
+&lt;p&gt;公式ドキュメント &lt;a href="https://opentelemetry.io/ja/docs/languages/js/propagation/#manual-context-propagation"&gt;手動コンテキスト伝搬&lt;/a&gt; などが参考になります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="nx"&gt;propagation&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;inject&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;active&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="nx"&gt;output&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;上記のようにアクティブコンテキストに追加すれば良さそうです。
+さらに AWS-SDK の Lambda クライアントでコマンドが送信されたときにフックするにはミドルウェアを使います。&lt;/p&gt;
+
+&lt;p&gt;公式ドキュメント &lt;a href="https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v3/developer-guide/logging-sdk-calls.html#middleware-logger"&gt;ミドルウェアを使用してリクエストをログに記録する&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;上記サイトの例は DynamoDB クライアントですが、他のクライアントでも同様に実装できます。&lt;/p&gt;
+
+&lt;h3&gt;メモ&lt;/h3&gt;
+
+&lt;p&gt;通常、AwsInstrumentation は多くの AWS サービスをカバーしていますが、Lambda の Invoke においては、ペイロードや呼び出し形式の都合上、自動でのコンテキスト注入が期待通りに動かないケースがあります。
+これを解決するために、AWS SDK v3 の Middleware Stack を利用して、リクエストが送出される直前に OpenTelemetry のアクティブコンテキストからトレース情報を抽出し、HTTP ヘッダーに明示的にねじ込む処理を追加します。&lt;/p&gt;
+
+&lt;h2&gt;やってみた&lt;/h2&gt;
+
+&lt;h3&gt;手動伝搬するコードの追加&lt;/h3&gt;
+
+&lt;p&gt;まず &lt;code&gt;x-ray.ts&lt;/code&gt; を作ります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;FinalizeHandlerArguments&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;HttpRequest&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;MiddlewareStack&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@aws-sdk/types&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;propagation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/api&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+
+&lt;span class="kr"&gt;interface&lt;/span&gt; &lt;span class="nx"&gt;HasMiddlewareStack&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nl"&gt;middlewareStack&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;MiddlewareStack&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kr"&gt;any&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kr"&gt;any&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;headerSetter&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;set&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="na"&gt;carrier&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;Record&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;unknown&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="na"&gt;value&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="nx"&gt;carrier&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;value&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;addXRayInjector&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;T&lt;/span&gt; &lt;span class="kd"&gt;extends&lt;/span&gt; &lt;span class="nx"&gt;HasMiddlewareStack&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;T&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="k"&gt;void&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;middlewareStack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;next&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;finalizeArgs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;args&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;FinalizeHandlerArguments&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;object&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;request&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;finalizeArgs&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;request&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;HttpRequest&lt;/span&gt;
+
+      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;?.&lt;/span&gt;&lt;span class="nx"&gt;headers&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;activeContext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;active&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;carrier&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;request&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;headers&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nb"&gt;Record&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kr"&gt;string&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nx"&gt;propagation&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;inject&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;activeContext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;carrier&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;headerSetter&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="p"&gt;}&lt;/span&gt;
+
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;next&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;args&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;},&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="na"&gt;step&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;serialize&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;xRayContextInjector&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="na"&gt;override&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;このコードでは AWS-SDK のクライアントから X-RAY のコンテキストにリクエストヘッダーを手動伝搬しています。&lt;/p&gt;
+
+&lt;p&gt;トレースコンテキスト $C$ は、スパン ID $S$ とトレース ID $T$、およびフラグ $F$ の集合として定義されます。&lt;/p&gt;
+
+&lt;div&gt;
+$$
+C = \{T, S, F\}
+$$
+&lt;/div&gt;
+
+&lt;p&gt;この $C$ を X-Amzn-Trace-Id ヘッダーとして $C_{AppRunner} \rightarrow C_{Lambda}$ へ手動で注入（Inject）することが、今回のコードのキモです。&lt;/p&gt;
+
+&lt;h3&gt;Lambda クライアントのインスタンスに設定する&lt;/h3&gt;
+
+&lt;p&gt;そして &lt;code&gt;LambdaClient&lt;/code&gt; インスタンスを生成したら、 &lt;code&gt;addXRayInjector&lt;/code&gt; で手動伝搬するためのミドルウェアを設定するようにします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;  &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;LambdaClient&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+  &lt;span class="nx"&gt;addXRayInjector&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;client&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;最後に&lt;/h2&gt;
+
+&lt;p&gt;今回は Lambda クライアントについて手動伝搬できるような記事となっていますが、S3やDynamoDBのようにさらにその先がない場合は伝搬を気にしなくて良いのですが、Lambdaと同様に以下のサービスについても手動伝搬は必要になります。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;StepFunctions&lt;/li&gt;
+&lt;li&gt;SQS&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;つまりリクエストが伝搬して、さらに別のサービスまでトレースを伝搬するようなサービスを利用するときは、リクエストを受け取ったサービス（今回の例でいうと Next.js）から、さきほどの &lt;code&gt;addXRayInjector&lt;/code&gt; を設定して &lt;code&gt;X-Amzn-Trace-Id&lt;/code&gt; を伝搬できるようにしましょう。&lt;/p&gt;
+
+&lt;p&gt;これで良きオブザーバビリティが実現できますように！&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>PHPカンファレンス福岡2025に参加した</title>
     <link rel="alternate" href="http://blog.url.com/2025/11/09/phpconfuk-2025.html"/>
@@ -758,225 +917,6 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
 &lt;p&gt;Next.js standalone ビルドしたアプリを App Runner で動かしていたところに、 X-Ray での計測を追加してみました。
 他の AWS サービスと違って X-Ray を有効にするのがちょっと面倒だったり、 &lt;code&gt;pageExtensions&lt;/code&gt; いじっているとビルド時に工夫が必要だったりとか、いくつかハマりポイントはありますが、わかってしまえば対策は難しくありませんでした。
 実際はものすごい調べるの時間かかったりするところもあったので、同じような課題になった人の解決に役立てば幸いです。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</title>
-    <link rel="alternate" href="http://blog.url.com/2025/04/15/next-js-standalone-build-with-iast-agent.html"/>
-    <id>http://blog.url.com/2025/04/15/next-js-standalone-build-with-iast-agent.html</id>
-    <published>2025-04-15T10:36:00+09:00</published>
-    <updated>2025-04-15T18:45:39+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;こちらの記事は &lt;a href="/2025/04/11/next-js-deploy-to-apprunner.html"&gt;Next.js で作ったアプリケーションを AppRunner にデプロイする&lt;/a&gt; の続編となります。
-前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。&lt;/p&gt;
-
-&lt;p&gt;前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。&lt;/p&gt;
-
-&lt;p&gt;そのアプリでテスト環境のとき New Relic エージェントを入れたいということでやってみたんですが、ものすごいハマりどころが多かったので誰かの役に立てばと思い記事にします。&lt;/p&gt;
-
-&lt;h3&gt;エージェントのインストールと起動方法&lt;/h3&gt;
-
-&lt;p&gt;New Relic の Node.js エージェントは &lt;a href="https://github.com/newrelic/node-newrelic"&gt;node-newrelic&lt;/a&gt; というリポジトリにある OSS ライブラリです。
-利用するときは以下のように &lt;a href="https://nodejs.org/api/cli.html#-r---require-module"&gt;Node.js の &amp;ndash;require module&lt;/a&gt; オプションを使って起動するようです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight shell"&gt;&lt;code&gt;&lt;span class="nv"&gt;$ &lt;/span&gt;node &lt;span class="nt"&gt;-r&lt;/span&gt; newrelic your-program.js
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Next.js で利用する場合の例として &lt;a href="https://github.com/newrelic/node-newrelic/tree/main?tab=readme-ov-file#nextjs-instrumentation"&gt;Next.js example projects&lt;/a&gt; というのも用意されていますが、今回は standalone モードでビルドされてますので、 &lt;code&gt;Custom Next.js servers&lt;/code&gt; というところのやり方と一緒で結局 &lt;code&gt;--require module&lt;/code&gt; モードで起動することになります。&lt;/p&gt;
-
-&lt;h3&gt;やってみる&lt;/h3&gt;
-
-&lt;p&gt;まず &lt;code&gt;npm install newrelic&lt;/code&gt; でパッケージを追加しておいて、 Next.js のリポジトリにある standalone ビルドの Dockerfile で起動スクリプトを以下のように変更します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# server.js is created by next build from the standalone output&lt;/span&gt;
-&lt;span class="c"&gt;# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output&lt;/span&gt;
-&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
-&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node", "-r", "newrelic", "server.js"]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;はい、起動しません。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Error: Cannot find module &amp;lsquo;/app/node&lt;em&gt;modules/lodash/lodash.js&amp;rsquo;. Please verify that the package.json has a valid &amp;ldquo;main&amp;rdquo; entry
-at Object.&lt;anonymous&gt; (/app/node&lt;/em&gt;modules/@newrelic/security-agent/lib/nr-security-agent/lib/core/commonUtils.js:20:16)&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h3&gt;調べよう&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/newrelic/csec-node-agent/blob/main/package.json"&gt;newrelic/csec-node-agent という依存モジュールの package,json&lt;/a&gt; の中に &lt;code&gt;lodash&lt;/code&gt; があるのを見つけました。&lt;/p&gt;
-
-&lt;p&gt;で、使っている場所は&lt;a href="https://github.com/newrelic/csec-node-agent/blob/main/lib/nr-security-agent/lib/core/commonUtils.js#L20"&gt;この行&lt;/a&gt;なんですが、いやな使い方をしていますね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;lodash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lodash&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="c1"&gt;// ここを&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;isEmpty&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lodash/isEmpty&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;下のように記述してくれていれば良い（実際 &lt;code&gt;isEmpty&lt;/code&gt; しか使ってない）のですけど&amp;hellip;
-まぁとはいえ動きません。&lt;/p&gt;
-
-&lt;p&gt;まず何でかっていうと、そもそも Next.js は standalone モードでビルドされていて、コンテナサイズを小さくするために Next.js から依存関係にないパッケージは入りません。
-つまり New Relic のエージェントを &lt;code&gt;--require module&lt;/code&gt; モードで起動すると、依存しているパッケージがないので動かないという、まぁ至極その通りな感じであります。&lt;/p&gt;
-
-&lt;p&gt;で、いろいろネットの情報を調べていたら、サーバー起動する直前で &lt;code&gt;npm i newrelic&lt;/code&gt; すると良いよというのを見つけました。
-&lt;a href="https://gist.github.com/bizob2828/0fa170a9194838cab5dc8fbb00109425"&gt;以下のソース&lt;/a&gt;&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install the next.js plugin after it copies the standalone server and static bits to workdir&lt;/span&gt;
-&lt;span class="c"&gt;# I cannot figure out why If I just install `@newrelic/next` and add to project's package.json&lt;/span&gt;
-&lt;span class="c"&gt;# why it does not copy them over but it does not for some reason so we will add it after all the copying&lt;/span&gt;
-&lt;span class="c"&gt;# occurs&lt;/span&gt;
-&lt;span class="k"&gt;RUN &lt;/span&gt;npm i newrelic
-
-&lt;span class="k"&gt;USER&lt;/span&gt;&lt;span class="s"&gt; nextjs&lt;/span&gt;
-
-&lt;span class="k"&gt;EXPOSE&lt;/span&gt;&lt;span class="s"&gt; 3000&lt;/span&gt;
-
-&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; PORT 3000&lt;/span&gt;
-
-&lt;span class="c"&gt;# server.js is created by next build from the standalone output&lt;/span&gt;
-&lt;span class="c"&gt;# https://nextjs.org/docs/pages/api-reference/next-config-js/output&lt;/span&gt;
-&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
-
-&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node", "-r", "newrelic", "server.js"]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;なるほどねー、ってことでやってみました。&lt;/p&gt;
-
-&lt;p&gt;&amp;hellip;. 動かない&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;なんでかって言うと、僕らのアプリでは、依存関係で（厳密にいうと依存の依存に）すでに lodash があったんですね。つまりこの状況( &lt;code&gt;/app/node_modules/lodash/&lt;/code&gt; が存在する )で依存の依存で lodash 入れようと思ってもすでに入っているので、追加(上書き)では入りません。
-まぁそうですよね。npm とはそういうものです。で、その lodash は standalone モードで使ってないモジュールは消されているので &lt;code&gt;lodash.js&lt;/code&gt; という一等地の全部インポートファイルはありません。せめて &lt;code&gt;require(&amp;#39;lodash/isEmpty&amp;#39;)&lt;/code&gt; なっていれば&amp;hellip;（isEmptyはあった）。
-とはいえ、他にも依存モジュールあったんで、lodash だけの問題とも言い切れませんね。&lt;/p&gt;
-
-&lt;h3&gt;先人が通った道&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href="https://zenn.dev/collabostyle/articles/c13ca438a37874"&gt;Next.js に New Relic 導入し、docker コンテナの起動に失敗した話&lt;/a&gt; に出会いました。
-&lt;code&gt;node_modules&lt;/code&gt; の下のファイルをコピーする&amp;hellip;.。まぁ動きそうな気はするけど、コピーはいやだなぁ&amp;hellip;.ということで違う方法を模索します。&lt;/p&gt;
-
-&lt;p&gt;過去には、Next.js 用のライブラリがあったようで、そのときの issue も見つけました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://forum.newrelic.com/s/hubtopic/aAX8W0000008d6sWAA/node-nextjs-with-newrelicnext-and-outputstandalone"&gt;[Node] Next.js with @newrelic/next and outputStandalone&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;でそのときの対応が &lt;code&gt;node-newrelic&lt;/code&gt; リポジトリになるときのマイグレーション issue も見つけました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://github.com/newrelic/node-newrelic/issues/2127#issuecomment-2125591318"&gt;Migrate @newrelic/next into repo&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;ということで、何だか standalone モードへの対応は考慮されているようですが、前述のとおり Web アプリ側でも依存関係にあってエージェント側でも使っているみたいなケースでは失敗してしまうこともありえます。
-僕がソースコードを見回った結果は lodash だけっぽかったので、そこだけ修正すれば大丈夫なのかもですけど。&lt;/p&gt;
-
-&lt;h3&gt;グローバルインストールという脇道（ハック）&lt;/h3&gt;
-
-&lt;p&gt;アプリケーションの下の node_modules だと入らないので、別のところでクリーンインストールすれば良いのでは？という結論に至りました。
-とりあえずアプリと別のディレクトリを掘ってやってもよかったんですけど、面倒だったのでグローバルインストールを使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install dependencies only when needed&lt;/span&gt;
-&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;deps&lt;/span&gt;
-
-&lt;span class="c"&gt;# 長いので省略 一番下に追加&lt;/span&gt;
-&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; newrelic
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;マルチステージビルドの  &lt;code&gt;deps&lt;/code&gt; の最後でグローバルインストールします。
-続いて standalone ビルドしたファイルをコピーした後で、グローバルインストールフォルダを丸っとコピーして持ってきます。
-で、そこに &lt;code&gt;NODE_PATH&lt;/code&gt; 環境変数を通すというハックを入れました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Automatically leverage output traces to reduce image size&lt;/span&gt;
-&lt;span class="c"&gt;# https://nextjs.org/docs/advanced-features/output-file-tracing&lt;/span&gt;
-&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/.next/standalone ./&lt;/span&gt;
-&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static&lt;/span&gt;
-
-&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /usr/local/lib/node_modules /usr/local/lib/node_modules&lt;/span&gt;
-&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; NODE_PATH=/usr/local/lib/node_modules&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;おそらく gist の例とかは newrelic が依存しているライブラリを Next.js のアプリが使っていない前提で書かれていると思われる。&lt;/p&gt;
-
-&lt;p&gt;結局 newrelic が依存しているものを Next が良い感じに standalone ビルドすると当然 newrelic なんぞ？みたいになって動かないからな。ライブラリ作者はそこまで気が回ってないのだろう&lt;/p&gt;
-
-&lt;p&gt;グローバルはハックな方法だと思うけど、正しいやり方をサポートは対応してくれるんかな&amp;hellip;.&lt;/p&gt;
-
-&lt;p&gt;ライブラリは OSS なんで issue 書いてよ、というのは、まぁそのとおり（まだやってません、すみません）。&lt;/p&gt;
-
-&lt;h3&gt;やってみる（2回目）&lt;/h3&gt;
-
-&lt;p&gt;動きません&amp;hellip;.. 😭&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Cannot find module &amp;lsquo;@newrelic/native-metrics&amp;rsquo;\nRequire stack:\n- /usr/local/lib/node&lt;em&gt;modules/newrelic/lib/sampler.js\n- /usr/local/lib/node&lt;/em&gt;modules/newrelic/lib/agent.js\n- /usr/local/lib/node_modules/newrelic/index.js\n- internal/preload&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;code&gt;Cannot find module&lt;/code&gt; ？？なんですって？&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="nl"&gt;"optionalDependencies"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"@contrast/fn-inspect"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^4.2.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"@newrelic/native-metrics"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^11.0.0"&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-    &lt;/span&gt;&lt;span class="nl"&gt;"@prisma/prisma-fmt-wasm"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"^4.17.0-16.27eb2449f178cd9fe1a4b892d732cc4795f75085"&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;なんか &lt;a href="https://github.com/newrelic/node-newrelic/blob/main/package.json#L221-L224"&gt;optionalDependencies&lt;/a&gt; があるんですけど、 &lt;code&gt;npm i newrelic&lt;/code&gt; だけじゃないの？ドキュメントに書いてあった？&lt;/p&gt;
-
-&lt;h3&gt;調べよう（2回目）&lt;/h3&gt;
-
-&lt;p&gt;ありましたよ、ドキュメント。
-&lt;a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/extend-your-instrumentation/nodejs-vm-measurements/#install-modules"&gt;Node.jsのVM測定&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;New Relic Node.js エージェントの v2.0.0 以降、ネイティブモジュールはオプションの依存関係となり、自動的にインストールされるようになりました。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;じゃぁインストールされんのかな？と思うじゃないですか。ダメです。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;展開プラットフォームでネイティブ モジュールをコンパイルするには、 node-gypパッケージの手順に従います。ネイティブ Node.js モジュールをインストールするための前提条件は次のとおりです。
-プラットフォーム 前提条件
-Unix/Linux Python（v2.7推奨、v3.x.xは未サポート）、make、C/C++コンパイラ（GCCなど）&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;いやいや、 Python 必要なん？ （&lt;code&gt;node-gyp&lt;/code&gt; だから当然だけど）。
-つまり自動インストールしようとした結果、インストールに必要なもの（今回でいうとgccとかPytnonとか）がインストールされてないので、自動インストール自体が失敗するということになります。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://docs.newrelic.com/jp/docs/apm/agents/nodejs-agent/installation-configuration/install-nodejs-agent/"&gt;Node.jsエージェントのインストール&lt;/a&gt; という公式ドキュメントをみると&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;オプション：追加のNode.jsランタイムレベル統計情報を取得するため、@newrelic/native-metricsパッケージがインストールされていることを確認してください。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;ってことで、まぁこれは必要なようです。&lt;/p&gt;
-
-&lt;p&gt;結局のところの &lt;code&gt;deps&lt;/code&gt; は以下のようになりました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# Install dependencies only when needed&lt;/span&gt;
-&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;deps&lt;/span&gt;
-&lt;span class="c"&gt;# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.&lt;/span&gt;
-&lt;span class="c"&gt;# RUN apk add --no-cache libc6-compat&lt;/span&gt;
-&lt;span class="k"&gt;RUN &lt;/span&gt;apk update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  apk upgrade &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  apk add &lt;span class="nt"&gt;--no-cache&lt;/span&gt; libc6-compat make gcc g++ python3
-&lt;span class="k"&gt;WORKDIR&lt;/span&gt;&lt;span class="s"&gt; /app&lt;/span&gt;
-
-&lt;span class="c"&gt;# Install dependencies based on the preferred package manager&lt;/span&gt;
-&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./&lt;/span&gt;
-&lt;span class="k"&gt;RUN &lt;/span&gt;&lt;span class="se"&gt;\
-&lt;/span&gt;  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; yarn.lock &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;yarn &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; package-lock.json &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;npm ci&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; pnpm-lock.yaml &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;corepack &lt;span class="nb"&gt;enable &lt;/span&gt;pnpm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; pnpm i &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  &lt;span class="k"&gt;else &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"Lockfile not found."&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;exit &lt;/span&gt;1&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
-&lt;/span&gt;  &lt;span class="k"&gt;fi&lt;/span&gt;
-
-&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; newrelic
-&lt;span class="k"&gt;RUN &lt;/span&gt;npm i &lt;span class="nt"&gt;-g&lt;/span&gt; @newrelic/native-metrics
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;やってみる（3回目）&lt;/h3&gt;
-
-&lt;p&gt;動いたー🎉&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;以下、苦労したところ&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;ドキュメントが分散していてわかりずらい（最初から github でなく公式 Docs みておいた方が良かったかも）&lt;/li&gt;
-&lt;li&gt;Next.js の standalone モードとは驚くほど相性が悪い&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;前者は改善の余地ありそうだけど、後者は何ともならなそうですね。
-今回は別の場所で入れて &lt;code&gt;NODE_PATH&lt;/code&gt; するというハックを使いましたが、結局エージェントとWebアプリで依存関係の競合が起きたときに困ると言うことには違いないです。たとえば違うバージョン使っていたら？とかそれが原因で動かなかったら？ということは今後容易に起きそうです。
-希望としてはエージェントは1ファイルにパッキングしておいて欲しいということですね。というか &lt;code&gt;require module&lt;/code&gt; で動くんだから自分が必要なパッケージは固めておいて欲しいですよね。Node.js のアプリだったらみんながみんなフルセットの node_modules を使っていないことがあるのは Node.js 使っている人ならわかりそうなのになぁという気分です。&lt;/p&gt;
-
-&lt;p&gt;ちゃんと時間が取れて、良い感じの英文が書けたら issue 出そうかな。それも OSS への貢献ですね。
-この記事で同じような境遇になった人が、解決の助けになったら、と思います。&lt;/p&gt;
 </content>
   </entry>
 </feed>

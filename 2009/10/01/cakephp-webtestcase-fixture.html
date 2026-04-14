@@ -252,6 +252,16 @@
   background-color: #f8f8f8;
 }
     </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ]
+        });"></script>
   </head>
   <body id="myopera" data-twttr-rendered="true">
     <!--[if IE 6]><div class="ie6"><![endif]-->
@@ -289,7 +299,7 @@
 <p>CakePHPはユニットテスト実行時にテストデータを投入するfixture機能をサポートしています。CakePHPのユニットテストはSimpleTestをベースにしており、UnitTestCaseと、それを継承してWebブラウザ動作のテストを行うWebTestCase、２つのテストケースを持っています。CakeではそれぞれCakeTestCase、CakeWebTestCaseという名前になります。
 ただしCakeWebTestCaseはWebTestCaseを継承しているだけで、何も機能拡張をしていません。</p>
 
-<p>cake/tests/lib/cake<em>web</em>test_case.php</p>
+<p>cake/tests/lib/cake_web_test_case.php</p>
 <div class="highlight"><pre class="highlight plaintext"><code>class CakeWebTestCase extends WebTestCase {
 }
 </code></pre></div>
@@ -311,14 +321,14 @@
 <li>いつかは本体に組み込んで欲しい</li>
 </ol>
 
-<p>そこで、今回はUnitTestCaseを継承している、cake<em>test</em>case.php を流用して差分のみ別クラスに作成することにしました。こうすると、後でCakeのバージョンが変わったても問題が少ないし、後で本体に組み込んでもらうときもわかりやすいと思ったからです。</p>
+<p>そこで、今回はUnitTestCaseを継承している、cake_test_case.php を流用して差分のみ別クラスに作成することにしました。こうすると、後でCakeのバージョンが変わったても問題が少ないし、後で本体に組み込んでもらうときもわかりやすいと思ったからです。</p>
 
 <h3>実施</h3>
 
 <p>実施の手順は以下のとおりです。</p>
 
 <ol>
-<li>cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</li>
+<li>cake_test_case.php をコピーして、 fixturable_web_base_test_case.php に変更</li>
 <li>上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</li>
 <li>FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</li>
 <li>FixturableWebTestCase を作成</li>
@@ -328,7 +338,7 @@
 
 <p>それぞれの手順を詳細に解説します。</p>
 
-<h4>1.cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更</h4>
+<h4>1.cake_test_case.php をコピーして、 fixturable_web_base_test_case.php に変更</h4>
 
 <p>まず流用元のテストケースをコピして、継承する元になるクラスを作成します。</p>
 <div class="highlight"><pre class="highlight plaintext"><code>cd {アプリケーションのHOMEディレクトリ}
@@ -339,7 +349,7 @@ cp cake/tests/lib/cake_test_case.php app/vendors/webtest/fixturable_web_base_tes
 <h4>2.上記ファイルの「CakeTest」 部分を 「FixturableWebBaseTest」に変換</h4>
 
 <p>これはお使いのエディタを開いて、置換機能を使えばあっという間に完了です。
-app/vendors/webtest/ fixturable<em>web</em>base<em>test</em>case.php を編集してください。</p>
+app/vendors/webtest/ fixturable_web_base_test_case.php を編集してください。</p>
 
 <h4>3.FixturableWebBaseTestのスーパークラスをWebTestCaseに変更</h4>
 
@@ -363,7 +373,7 @@ FixturableWebBaseTestを継承したクラスを作成します。このクラ�
 <p>まずUserAgentでテスト中か判断する方法を思いついたのですが、Webテストの場合UserAgentそのものを判断してビューを切り替えたり（特に携帯など）するので、これは方法としては最適ではないと判断し却下。
 HTTP独自ヘッダは、やはり通常運用しているときにセキュリティホールを作る事にも繋がるので、微妙なところです。ただし通常（本番）運用する場合はCakeのデバッグレベルを0にして運用すると思うので、独自ヘッダの判定前にデバッグレベルを判定すれば問題ないということも言えます。
 そこで今回は、tmp/tests以下にテンポラリファイルを作って判定するという方法を採用しています。
-app/vendors/webtest/fixturable<em>web</em>test_case.php</p>
+app/vendors/webtest/fixturable_web_test_case.php</p>
 <div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
 <span class="nc">App</span><span class="o">::</span><span class="nf">import</span><span class="p">(</span><span class="s1">'Vendor'</span><span class="p">,</span> <span class="s1">'webtest'</span> <span class="mf">.</span> <span class="no">DS</span> <span class="mf">.</span> <span class="s1">'fixturable_web_base_test_case'</span><span class="p">);</span>
 
@@ -480,7 +490,7 @@ app/config/bootstrap.php</p>
 </ol>
 
 <p>テストコードに目を向けると、最初にApp::importでテストケースの親クラスを取り込んで、テストケースの親クラスをFixturableWebTestCaseに指定する以外、ほとんど通常のモデルなどのテストコードと書き方は同じだということに気がつくでしょう。特にfixtureの記法に関しては、まったく同じです。
-これは「cake<em>test</em>case.php をコピーして、 fixturable<em>web</em>base<em>test</em>case.php に変更」したために、CakeTestCaseと同じ機能が利用できるようになっているのです。
+これは「cake_test_case.php をコピーして、 fixturable_web_base_test_case.php に変更」したために、CakeTestCaseと同じ機能が利用できるようになっているのです。
 もちろん記述方法が同じなら、実行方法も同じで、<a href="http://localhost/test.php">http://localhost/test.php</a>のようにブラウザからの実行や、コンソールからの実行なども問題ありません。CakeMateを使ってTextMate上からもテストが実行できます。もちろんコンソールやTextMateなどCLI環境から実行する場合なども、裏でHTTPアクセスするので、Apacheは動作している必要があります。
 Webテストで、どのようなブラウザ動作ができるのかは、本家のSimpleTestサイトか、こちらも私が執筆に参加した「<a href="http://www.amazon.co.jp/Web%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%B9%E3%83%88%E6%89%8B%E6%B3%95-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4839924309/ref=sr_1_2?ie=UTF8&amp;s=books&amp;qid=1254396747&amp;sr=1-2">Webアプリケーションテスト手法</a>」にて確認してください。</p>
 
@@ -524,6 +534,7 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a> <span>2026/04/14</span></li>
                   <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
@@ -533,7 +544,6 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
-                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
               </ul>
             </div>
           </section>
@@ -541,14 +551,17 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/next-js.html" rel="tag">Next.js</a>
+                    </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">phpcon</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
@@ -668,6 +681,7 @@ Webテストで、どのようなブラウザ動作ができるのかは、本�
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026.html">2026</a> (1)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>

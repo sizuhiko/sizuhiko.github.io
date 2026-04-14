@@ -252,6 +252,16 @@
   background-color: #f8f8f8;
 }
     </style>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" 
+        onload="renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ]
+        });"></script>
   </head>
   <body id="myopera" data-twttr-rendered="true">
     <!--[if IE 6]><div class="ie6"><![endif]-->
@@ -376,7 +386,7 @@ $steps-&gt;ならば('/^"([^"]*)"と表示されていること$/', function($wo
 
 <h3>ステップファイルの作成</h3>
 
-<p>stepファイル「web<em>test</em>step.php」に前節のスケルトンを貼付けます。以下のようになるでしょう。</p>
+<p>stepファイル「web_test_step.php」に前節のスケルトンを貼付けます。以下のようになるでしょう。</p>
 <div class="highlight"><pre class="highlight php"><code><span class="cp">&lt;?php</span>
 
 <span class="nv">$steps</span><span class="o">-&gt;</span><span class="nf">前提</span><span class="p">(</span><span class="s1">'/^"([^"]*)"ページを表示している$/'</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="nv">$world</span><span class="p">,</span> <span class="nv">$arg1</span><span class="p">)</span> <span class="p">{</span>
@@ -556,7 +566,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
 
 <h3>さいごに</h3>
 
-<p>今回はbehat<em>webstepsをベースにしましたが、HTTPクライアントは何でも大丈夫です。今回goutteでしたが、BehatはPHPUnitを使うのでPHPUnitのPHPUnit</em>Extensions_SeleniumTestCaseを使うのも１つでしょう。Javascriptが使われているサイトなどでは、こちらの選択になりますね。  </p>
+<p>今回はbehat_webstepsをベースにしましたが、HTTPクライアントは何でも大丈夫です。今回goutteでしたが、BehatはPHPUnitを使うのでPHPUnitのPHPUnit_Extensions_SeleniumTestCaseを使うのも１つでしょう。Javascriptが使われているサイトなどでは、こちらの選択になりますね。  </p>
 
 <p>大事なことはアジャイルでドキュメントを書く事と、無駄なドキュメントでなく実行可能なドキュメントである、ということですね。プレーンテキストなのでプログラマじゃなくても、お客さんでも読めるし、書いてもらう事も可能かもしれません。打ち合わせでフィーチャファイルを議事録的に書きながら進めることもできると思います。  </p>
 
@@ -596,6 +606,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a> <span>2026/04/14</span></li>
                   <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
@@ -605,7 +616,6 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
                   <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
                   <li><a href="/2025/04/08/apprunner-deploy-from-cdk-is-easy-really.html">AppRunner へのデプロイは cdk でサクッとできるのか？</a> <span>2025/04/08</span></li>
-                  <li><a href="/2024/06/23/php-conference-fukuoka-2024.html">PHP カンファレンス福岡2024に参加した</a> <span>2024/06/23</span></li>
               </ul>
             </div>
           </section>
@@ -613,14 +623,17 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size2">
+                      <a href="/tags/aws.html" rel="tag">AWS</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/next-js.html" rel="tag">Next.js</a>
+                    </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">phpcon</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
-                    </li>
-                    <li class="size1">
-                      <a href="/tags/aws.html" rel="tag">AWS</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/stepfunctions.html" rel="tag">StepFunctions</a>
@@ -740,6 +753,7 @@ bash-3.2$ Behat/bin/behat sandbox/features/sample.feature
             <h2>By Year</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026.html">2026</a> (1)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
