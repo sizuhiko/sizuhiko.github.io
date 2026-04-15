@@ -5,10 +5,191 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2026-04-14T16:19:00+09:00</updated>
+  <updated>2026-04-15T17:38:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>モノレポ構成の Next.js を standalone ビルドして Docker で動かす（404エラー対策）</title>
+    <link rel="alternate" href="http://blog.url.com/2026/04/15/build-next-js-standalone-on-monorepo.html"/>
+    <id>http://blog.url.com/2026/04/15/build-next-js-standalone-on-monorepo.html</id>
+    <published>2026-04-15T17:38:00+09:00</published>
+    <updated>2026-04-15T18:37:32+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;このブログは NPM workspaces を使ったモノレポ構成のリポジトリ内にある Next.js アプリを standalone するときに注意すべき点についてまとめた記事です。&lt;/p&gt;
+
+&lt;h2&gt;NPM workspaces を使ったモノレポ構成&lt;/h2&gt;
+
+&lt;p&gt;たとえば以下のようなディレクトリ階層を想定しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;apps/webapp : Next.js の web アプリのワークスペース&lt;/li&gt;
+&lt;li&gt;infra : AWS CDK など IaC コードのワークスペース&lt;/li&gt;
+&lt;li&gt;packages/components : React コンポーネントのワークスペース&lt;/li&gt;
+&lt;li&gt;packages/functions/xxxxx : AWS Lambda 関数ごとのワークスペース&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;これ以外にも packages の下にいろいろなパッケージを入れるような構成はよくあると思います。&lt;/p&gt;
+
+&lt;h2&gt;Next.js アプリを standalone ビルドする&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;next.config.ts&lt;/code&gt; が以下のような感じで  &lt;code&gt;standalone&lt;/code&gt; ビルドする想定です。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;NextConfig&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;next&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;join&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;node:path&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;fileURLToPath&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;node:url&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;__dirname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;dirname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;fileURLToPath&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;import&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;meta&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;url&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;nextConfig&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;NextConfig&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;reactStrictMode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;transpilePackages&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@packages/components&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="na"&gt;images&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;unoptimized&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="na"&gt;output&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;standalone&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;poweredByHeader&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;typescript&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;ignoreBuildErrors&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="na"&gt;experimental&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;webpackMemoryOptimizations&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;一般的に Dockerfile は &lt;a href="https://github.com/vercel/next.js/tree/canary/examples/with-docker"&gt;Next.js の公式サンプル&lt;/a&gt;からもってきます。&lt;/p&gt;
+
+&lt;h2&gt;コンテナイメージをビルドしてみる&lt;/h2&gt;
+
+&lt;p&gt;はい、いきなりビルドが通りません。
+どうやら、モノレポの上位階層にある node_modules（依存パッケージ）を standalone ディレクトリにコピー対象として含めたいのですが、&lt;code&gt;apps/webapp&lt;/code&gt; ディレクトリにないのが原因なようです。&lt;/p&gt;
+
+&lt;p&gt;これは &lt;code&gt;next.config.ts&lt;/code&gt; が以下のような感じで  &lt;code&gt;outputFileTracingRoot&lt;/code&gt; を追加します。それによりルートディレクトリの &lt;code&gt;node_modules&lt;/code&gt;  を参照してくれます（これがないと、Next.js は自分のディレクトリ（apps/webapp）内しかトレースしてくれません）。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;nextConfig&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;NextConfig&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="na"&gt;reactStrictMode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;transpilePackages&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@packages/components&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+  &lt;span class="na"&gt;images&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;unoptimized&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="na"&gt;outputFileTracingRoot&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;../../&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+  &lt;span class="na"&gt;output&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;standalone&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;poweredByHeader&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="na"&gt;typescript&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;ignoreBuildErrors&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+  &lt;span class="na"&gt;experimental&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="na"&gt;webpackMemoryOptimizations&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;これでビルドは成功するようになります。&lt;/p&gt;
+
+&lt;h2&gt;動かしてみる&lt;/h2&gt;
+
+&lt;p&gt;なんか全部のページが404エラーになります。&lt;/p&gt;
+
+&lt;p&gt;イメージビルド結果に &lt;code&gt;public&lt;/code&gt; ディレクトリが入ってないことがまずわかりました。&lt;/p&gt;
+
+&lt;h2&gt;ビルド方法を疑って調べてみてわかったこと&lt;/h2&gt;
+
+&lt;p&gt;ここで Gemini とか生成AIを使って解決策を壁打ちしてたんですが、適切な回答はまったく得られませんでした。
+で、それっぽいキーワードでネットを検索していると、良い記事を見つけました。&lt;a href="https://zenn.dev/glassonion1/articles/734b8db0f5a47e"&gt;モノレポ構成のNext.jsプロジェクトをDocker化する方法&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;大事なのは、記事の中でビルド結果のファイルをコピーしているとことです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;で、元の公式サンプルでは以下のようになっていました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=node:node /app/.next/standalone ./&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=node:node /app/.next/static ./.next/static&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=node:node /app/public ./public&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;差分がわかりやすいですね。つまりモノレポの場合は、モノレポのパスを含めた状態で &lt;code&gt;.next/static&lt;/code&gt; と &lt;code&gt;public&lt;/code&gt; のフォルダをコピーする必要があるということです。&lt;/p&gt;
+
+&lt;p&gt;今回は &lt;code&gt;.next/standalone&lt;/code&gt; の中身をこうすることになります：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;└── apps/
+    └── webapp/
+        ├── server.js  &amp;lt;-- これを起動する
+        ├── public/    &amp;lt;-- ここにコピーが必要
+        └── .next/
+            └── static/ &amp;lt;-- ここにコピーが必要
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;これで解決&lt;/h2&gt;
+
+&lt;p&gt;結果としてできあがった Dockerfile は以下のような感じです&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight docker"&gt;&lt;code&gt;&lt;span class="c"&gt;# syntax=docker.io/docker/dockerfile:1&lt;/span&gt;
+
+&lt;span class="k"&gt;ARG&lt;/span&gt;&lt;span class="s"&gt; NODE_VERSION=24.13.0-alpine&lt;/span&gt;
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;node:${NODE_VERSION}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;
+
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;deps&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;apk update &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  apk upgrade &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  apk add &lt;span class="nt"&gt;--no-cache&lt;/span&gt; libc6-compat make gcc g++ python3
+&lt;span class="k"&gt;WORKDIR&lt;/span&gt;&lt;span class="s"&gt; /app&lt;/span&gt;
+
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; . .&lt;/span&gt;
+&lt;span class="k"&gt;RUN &lt;/span&gt;&lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; yarn.lock &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;yarn &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; package-lock.json &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;npm ci&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; pnpm-lock.yaml &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;corepack &lt;span class="nb"&gt;enable &lt;/span&gt;pnpm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; pnpm i &lt;span class="nt"&gt;--frozen-lockfile&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;else &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"Lockfile not found."&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;exit &lt;/span&gt;1&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;fi&lt;/span&gt;
+
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;builder&lt;/span&gt;
+&lt;span class="k"&gt;WORKDIR&lt;/span&gt;&lt;span class="s"&gt; /app&lt;/span&gt;
+&lt;span class="c"&gt;# モノレポのため、全階層の node_modules が必要。webapp から参照するワークスペースについてはコピーする&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /app/node_modules ./node_modules&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /app/apps/webapp/node_modules* ./apps/webapp/node_modules/&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /app/functions/command/node_modules* ./functions/command/node_modules/&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=deps /app/packages/components/node_modules* ./packages/components/node_modules/&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; . .&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN &lt;/span&gt;&lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; yarn.lock &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;yarn run build&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; package-lock.json &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;npm run &lt;span class="nt"&gt;-w&lt;/span&gt; apps/webapp build&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; &lt;span class="nt"&gt;-f&lt;/span&gt; pnpm-lock.yaml &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then &lt;/span&gt;corepack &lt;span class="nb"&gt;enable &lt;/span&gt;pnpm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; pnpm run build&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;else &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;"Lockfile not found."&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;exit &lt;/span&gt;1&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;  &lt;span class="k"&gt;fi&lt;/span&gt;
+
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;base&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;runner&lt;/span&gt;
+&lt;span class="k"&gt;WORKDIR&lt;/span&gt;&lt;span class="s"&gt; /app&lt;/span&gt;
+
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; NODE_ENV=production&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN &lt;/span&gt;addgroup &lt;span class="nt"&gt;--system&lt;/span&gt; &lt;span class="nt"&gt;--gid&lt;/span&gt; 1001 nodejs
+&lt;span class="k"&gt;RUN &lt;/span&gt;adduser &lt;span class="nt"&gt;--system&lt;/span&gt; &lt;span class="nt"&gt;--uid&lt;/span&gt; 1001 nextjs
+
+&lt;span class="c"&gt;# モノレポのディレクトリパスを含める&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/webapp/.next/standalone ./&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/webapp/.next/static ./apps/webapp/.next/static&lt;/span&gt;
+&lt;span class="k"&gt;COPY&lt;/span&gt;&lt;span class="s"&gt; --from=builder --chown=nextjs:nodejs /app/apps/webapp/public ./apps/webapp/public&lt;/span&gt;
+
+&lt;span class="k"&gt;USER&lt;/span&gt;&lt;span class="s"&gt; nextjs&lt;/span&gt;
+
+&lt;span class="k"&gt;EXPOSE&lt;/span&gt;&lt;span class="s"&gt; 3000&lt;/span&gt;
+
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; PORT=3000&lt;/span&gt;
+
+&lt;span class="k"&gt;ENV&lt;/span&gt;&lt;span class="s"&gt; HOSTNAME="0.0.0.0"&lt;/span&gt;
+&lt;span class="c"&gt;# モノレポのディレクトリパスを含める&lt;/span&gt;
+&lt;span class="k"&gt;CMD&lt;/span&gt;&lt;span class="s"&gt; ["node",  "apps/webapp/server.js"]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;COPY でモノレポの node_modules が必要になる理由&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;シンボリックリンクの解決: NPM workspaces は、packages/components などを node_modules 内にシンボリックリンクとして配置します。Docker の COPY プロセスでこのリンク関係が崩れたり、リンク先のパスが正しく参照できなかったりすることがあります。&lt;/li&gt;
+&lt;li&gt;依存関係の分離: 一部のビルドツールや Next.js の outputFileTracing は、各ワークスペース直下の node_modules を探しに行く挙動をすることがあります。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;server.js にモノレポのディレクトリパスを含める理由&lt;/h3&gt;
+
+&lt;p&gt;Next.js の standalone モードは、デフォルトでは &lt;code&gt;server.js&lt;/code&gt; をカレントディレクトリとして動作しようとしますが、モノレポだと &lt;code&gt;outputFileTracingRoot&lt;/code&gt; の影響で &lt;code&gt;apps/webapp/server.js&lt;/code&gt; のような深い階層に生成されるので、実行パスにも注意が必要です。&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;意外とよくあるシーンだと思うのですが、意外と情報に辿り着くまでに時間がかかりました。
+僕の記事も追加することで、同じ問題で困っている人の解決になればと思います。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</title>
     <link rel="alternate" href="http://blog.url.com/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html"/>
@@ -670,253 +851,6 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
 でも Workflow Studio みたいなビジュアルエディタでワークフロー書くのが便利なんで、それはそれで使いたいんですよね。&lt;/p&gt;
 
 &lt;p&gt;grant メソッドの CDK コードを確認して、公式ドキュメントと見比べながら適切な権限があたっているか確認しながら進めていくとハマることなく進められると思います。&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</title>
-    <link rel="alternate" href="http://blog.url.com/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html"/>
-    <id>http://blog.url.com/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html</id>
-    <published>2025-04-16T10:40:00+09:00</published>
-    <updated>2025-04-17T19:06:09+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;こちらの記事は &lt;a href="/2025/04/11/next-js-deploy-to-apprunner.html"&gt;Next.js で作ったアプリケーションを AppRunner にデプロイする&lt;/a&gt; の続編となります。
-前編を読まないとわからない内容ではないですが、もし良ければ事前に確認してください。&lt;/p&gt;
-
-&lt;p&gt;前の記事で Next.js を standalone ビルドしたアプリを App Runner にデプロイするところまで書きました。
-さらに別の流れで&lt;a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html"&gt;Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす&lt;/a&gt;という記事も公開しましたが、こちらはテスト環境での IAST 用でした。
-本番の計測は X-Ray を使う（なぜ New Relic でない？とかは置いておいて）ので、 CDK / App Runner / Next.js standalone という構成でどうやって実現したのかを記録していきます。&lt;/p&gt;
-
-&lt;h3&gt;App Runner と X-Ray&lt;/h3&gt;
-
-&lt;p&gt;AWS のサービスで X-Ray を使うとき、たとえば Lambda や StepFunctions で利用したいなと思ったときは簡単に利用できます。&lt;/p&gt;
-
-&lt;p&gt;たとえば StepFunctions では CDK を使って、以下のように &lt;code&gt;tracingEnabled&lt;/code&gt; を &lt;code&gt;true&lt;/code&gt; すると X-Ray トレーシングが有効になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// Define a second state machine with the Task state above&lt;/span&gt;
-&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;sfn&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ParentStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;definition&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;task&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;tracingEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Lambda の場合は、以下のように &lt;code&gt;tracing&lt;/code&gt; を &lt;code&gt;Active&lt;/code&gt; にすると X-Ray トレーシングが有効になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nb"&gt;Function&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;Function&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nx"&gt;codeSigningConfig&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;runtime&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Runtime&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NODEJS_18_X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;tracing&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Tracing&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACTIVE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;index.handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;code&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;lambda&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Code&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromAsset&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;lambda-handler&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
-&lt;span class="p"&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;簡単ですね。&lt;/p&gt;
-
-&lt;p&gt;で、App Runner ではどうするのかな？と思って調べていたら、&lt;a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/"&gt;AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)&lt;/a&gt; という記事を見つけました。&lt;/p&gt;
-
-&lt;p&gt;なるほど、OpenTelemetry 必要なのか。単にフラグをONにするだけではできないんですね。&lt;/p&gt;
-
-&lt;p&gt;この時点で役に立ちそうな記事もいくつか読んでおきました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://blog.ojisan.io/next-otel/"&gt;Next.js の OpenTelemetry サポートを使う方法&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://dev.classmethod.jp/articles/trace-nextjs-with-aws-xray/"&gt;Next.jsのサーバーサイド処理をX-Rayでトレースしてみた&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;参考記事からやり方を検討する&lt;/h3&gt;
-
-&lt;p&gt;参考記事を確認して、タスクを整理しました。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;CDK で OpenTelemetry 計測を有効にする（最初の参考記事）&lt;/li&gt;
-&lt;li&gt;Next.js の OpenTelemetry サポートを有効にする（次の2つの参考記事）&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4&gt;CDK で OpenTelemetry 計測を有効にする&lt;/h4&gt;
-
-&lt;p&gt;&lt;a href="https://dev.classmethod.jp/articles/x-ray-with-cdk-with-app-runner/"&gt;AWS App RunnerでAWS X-Rayを使った分散トレースをAWS CDKで構築してみる(App Runner + Aurora Serverless v2)&lt;/a&gt; の &lt;code&gt;App Runnerサービスを作成&lt;/code&gt; でやっているように、App Runner で OpenTelemetryを有効にするにはコンストラクタではなく、CloudFormation クラスを使って作っていますが、現時点は Service の props に &lt;code&gt;observabilityConfiguration&lt;/code&gt; があるので、これにセットすると良さそうです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;observabilityConfigurationName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-observability&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;traceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;TraceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;AWSXRAY&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
-        &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecrRepository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;webAppVersion&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-      &lt;span class="na"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;autoDeploymentsEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;healthCheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;HealthCheck&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;healthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;interval&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;/favicon.ico&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;timeout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;unhealthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;元々の Service に &lt;code&gt;ObservabilityConfiguration&lt;/code&gt; で生成した設定を &lt;code&gt;observabilityConfiguration&lt;/code&gt; に渡すだけです。ここは簡単ですね。
-ポイントとしては &lt;code&gt;traceConfigurationVendor&lt;/code&gt; を &lt;code&gt;AWSXRAY&lt;/code&gt; に設定するところぐらいかな。&lt;/p&gt;
-
-&lt;h4&gt;Next.js の OpenTelemetry サポートを有効にする&lt;/h4&gt;
-
-&lt;p&gt;こちらも参考記事を元に設定していきます。&lt;/p&gt;
-
-&lt;p&gt;まず依存ライブラリを追加します。今回はこのあたりを利用しています。&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;@opentelemetry/api&lt;/li&gt;
-&lt;li&gt;@opentelemetry/exporter-trace-otlp-grpc&lt;/li&gt;
-&lt;li&gt;@opentelemetry/id-generator-aws-xray&lt;/li&gt;
-&lt;li&gt;@opentelemetry/instrumentation-aws-sdk&lt;/li&gt;
-&lt;li&gt;@opentelemetry/instrumentation-http&lt;/li&gt;
-&lt;li&gt;@opentelemetry/instrumentation-undici&lt;/li&gt;
-&lt;li&gt;@opentelemetry/propagator-aws-xray&lt;/li&gt;
-&lt;li&gt;@opentelemetry/sdk-node&lt;/li&gt;
-&lt;li&gt;@opentelemetry/sdk-trace-node&lt;/li&gt;
-&lt;li&gt;@opentelemetry/semantic-conventions&lt;/li&gt;
-&lt;li&gt;@opentelemetry/resources&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href="https://nextjs.org/docs/14/app/building-your-application/optimizing/instrumentation"&gt;Next.js の公式ドキュメント Instrumentation 章&lt;/a&gt; を読むと&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;ということなので &lt;code&gt;instrumentation.ts&lt;/code&gt; をルートディレクトリか、&lt;code&gt;src&lt;/code&gt; フォルダを使っている場合はその中に入れる必要がありそうなので、&lt;code&gt;src/instrumentation.ts&lt;/code&gt; を設置しました。&lt;/p&gt;
-
-&lt;p&gt;続きのページに &lt;a href="https://nextjs.org/docs/14/pages/building-your-application/optimizing/open-telemetry"&gt;Next.js の公式ドキュメント OpenTelemetry 章&lt;/a&gt; があったので、こちらも確認しました。&lt;/p&gt;
-
-&lt;p&gt;今回は Vercel を使うわけではないので、 &lt;code&gt;Manual OpenTelemetry configuration&lt;/code&gt; の部分を参考にしていきます。&lt;/p&gt;
-
-&lt;p&gt;そうすると以下のようにランタイム判定してダイナミックローディングする必要がありそうなので、&lt;code&gt;instrumentation.ts&lt;/code&gt; から &lt;code&gt;instrumentation.node.ts&lt;/code&gt; を呼ぶように設定します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// `instrumentation.ts`&lt;/span&gt;
-&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="nx"&gt;register&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;process&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;env&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;NEXT_RUNTIME&lt;/span&gt; &lt;span class="o"&gt;===&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;nodejs&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="k"&gt;import&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;./instrumentation.node.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;あとは &lt;code&gt;instrumentation.node.ts&lt;/code&gt; で X-Ray に出力されるような設定をします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// instrumentation.node.ts&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/exporter-trace-otlp-grpc&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/id-generator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-aws-sdk&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;HttpInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-http&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;UndiciInstrumentation&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/instrumentation-undici&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/propagator-aws-xray&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/resources&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-node&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/sdk-trace-base&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@opentelemetry/semantic-conventions&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;sdk&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;NodeSDK&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-  &lt;span class="na"&gt;idGenerator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayIdGenerator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;  &lt;span class="c1"&gt;// AWS X-RayフォーマットのIDを生成&lt;/span&gt;
-  &lt;span class="na"&gt;textMapPropagator&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AWSXRayPropagator&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// AWS X-Ray Trace ヘッダー伝播プロトコルを利用&lt;/span&gt;
-  &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;merge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;ATTR_SERVICE_NAME&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt; &lt;span class="p"&gt;})),&lt;/span&gt; &lt;span class="c1"&gt;// App Runner のサービス名を指定&lt;/span&gt;
-  &lt;span class="na"&gt;instrumentations&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt; &lt;span class="c1"&gt;// 利用する拡張機能&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;HttpInstrumentation&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// HTTP API をトレース&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;AwsInstrumentation&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt; &lt;span class="na"&gt;suppressInternalInstrumentation&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt; &lt;span class="p"&gt;}),&lt;/span&gt; &lt;span class="c1"&gt;// aws-sdk をトレース&lt;/span&gt;
-    &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;UndiciInstrumentation&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="c1"&gt;// Node fetch API をトレース&lt;/span&gt;
-  &lt;span class="p"&gt;],&lt;/span&gt;
-  &lt;span class="na"&gt;spanProcessors&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;BatchSpanProcessor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;OTLPTraceExporter&lt;/span&gt;&lt;span class="p"&gt;())],&lt;/span&gt;
-&lt;span class="p"&gt;})&lt;/span&gt;
-
-&lt;span class="nx"&gt;sdk&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;start&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;こんな感じです。&lt;/p&gt;
-
-&lt;h4&gt;ビルドして確認してみたがコードが生成されない&lt;/h4&gt;
-
-&lt;p&gt;ここで &lt;code&gt;next build&lt;/code&gt; してコードが生成されるか確認してみました。&lt;/p&gt;
-
-&lt;p&gt;すると、&lt;code&gt;instrumentation.ts&lt;/code&gt; が識別されてないのか？ビルド結果にコードが生成されません。&lt;/p&gt;
-
-&lt;p&gt;こういうときはソースコードを読むしかないですね。Next.js のビルドコードは &lt;a href="https://github.com/vercel/next.js/blob/v14.2.28/packages/next/src/build/index.ts"&gt;next.js/packages/next/src/build/index.ts&lt;/a&gt; にあるようです。&lt;/p&gt;
-
-&lt;p&gt;で、それっぽいところを検索していると、これか？という部分&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="c1"&gt;// #L882-L886&lt;/span&gt;
-      &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;instrumentationHookDetectionRegExp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nb"&gt;RegExp&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="s2"&gt;`^&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;INSTRUMENTATION_HOOK_FILENAME&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;\\.(?:&lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nx"&gt;config&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;pageExtensions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-          &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;|&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
-        &lt;span class="p"&gt;)}&lt;/span&gt;&lt;span class="s2"&gt;)$`&lt;/span&gt;
-      &lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;おやおやおや？拡張子のマッチが &lt;code&gt;pageExtensions&lt;/code&gt; なんですけど。少し前の公式ドキュメントに何て書いてありましたっけ？&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;To set up instrumentation, create instrumentation.ts|js file in the root directory of your project (or inside the src folder if using one).&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;です。&lt;code&gt;ts&lt;/code&gt; か &lt;code&gt;js&lt;/code&gt; なんでしょ。なんで &lt;code&gt;pageExtensions&lt;/code&gt; 使ってんのよ？？このファイルはページなのか？&lt;/p&gt;
-
-&lt;p&gt;おそらくほとんどの人は &lt;code&gt;ts&lt;/code&gt; のままで動くんでしょうが、僕らはこのコンフィグパラメータに覚えがあります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight javascript"&gt;&lt;code&gt;&lt;span class="cm"&gt;/** @type {import('next').NextConfig} */&lt;/span&gt;
-&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;nextConfig&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="na"&gt;reactStrictMode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="na"&gt;pageExtensions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tsx&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;api.ts&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;tsx&lt;/code&gt; と &lt;code&gt;api.ts&lt;/code&gt; だけにしてるんですわ。今回は PagesRouter 使ってるんですけど、 &lt;code&gt;/pages/api/&lt;/code&gt; の下の API コードのテストコードを同じディレクトリに設定したいんですね。
-ルートで src と test を分けたくない。めんどいじゃないですか、そういうの。なんで実装とテストコードは同じディレクトリに入れたいんです。で、テストコードは API ではないので、pageExtensions を設定してページやAPIは
-&lt;code&gt;.tsx&lt;/code&gt; か &lt;code&gt;.api.ts&lt;/code&gt; としています。たとえばこうすると &lt;code&gt;user.api.ts&lt;/code&gt; というのがあったとき、同じディレクトリに &lt;code&gt;user.test.ts&lt;/code&gt; というのを入れることができ、これはテストコードなのでビルドに含まれず、API でもないコードという対応ができます。
-あとは API ではないコードとかも入れることができます（それはやってないけど）。&lt;/p&gt;
-
-&lt;p&gt;なんで、 &lt;code&gt;instrumentation&lt;/code&gt; のファイル名を &lt;code&gt;pageExtensions&lt;/code&gt; にするとは、何やってくれてんねん！って感じなんですけど、いったん従うしかないので、 &lt;code&gt;instrumentation.api.ts&lt;/code&gt; というファイル名にし&amp;hellip;.ませんでした。&lt;/p&gt;
-
-&lt;p&gt;いろいろ理由はあるんですけど、CI/CD でビルドする直前に &lt;code&gt;instrumentation.ts&lt;/code&gt; を &lt;code&gt;instrumentation.api.ts&lt;/code&gt;  にコピーする対応にしています。
-たとえば、これは &lt;code&gt;pageExtensions&lt;/code&gt; じゃおかしい！という issue を僕が出して &lt;code&gt;ts|js&lt;/code&gt; になったときファイル名をリネームするのは嫌だなぁというとこで、CI/CDでコピーするところだけなら修正しても良いかなと。&lt;/p&gt;
-
-&lt;p&gt;で、手元では手動でファイルをコピーして &lt;code&gt;next build&lt;/code&gt; したらファイルがビルドされていることが確認できました👏&lt;/p&gt;
-
-&lt;h3&gt;デプロイして動かしてみる&lt;/h3&gt;
-
-&lt;p&gt;出ない&amp;hellip;&amp;hellip;&lt;/p&gt;
-
-&lt;p&gt;全体的には良さそうなんですが、何でかねー&lt;/p&gt;
-
-&lt;p&gt;困ったときは初心に戻って AWS の公式ドキュメントを漁ります。
-&lt;a href="https://docs.aws.amazon.com/ja_jp/apprunner/latest/dg/monitor-xray.html"&gt;X-Ray を使用した App Runner アプリケーションのトレース&lt;/a&gt; というのが App Runner のドキュメントの中にありました。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;App Runner サービスで X-Ray トレースを使用するには、サービスのインスタンスに X-Ray サービスとやり取りするためのアクセス許可を付与する必要があります。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;なるほどー、それはそうか。OpenTelemetry 指定で X-Ray のポリシー適用されるかな？と思ったけど、ObservabilityConfiguration の vendor 判断してまではやってくれないようです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ObservabilityConfiguration&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;observabilityConfigurationName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-observability&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;traceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;TraceConfigurationVendor&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;AWSXRAY&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;service&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppService&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Source&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromEcr&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;imageConfiguration&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="na"&gt;port&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;3000&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
-        &lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ecrRepository&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;tagOrDigest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;webAppVersion&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-      &lt;span class="na"&gt;serviceName&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;webapp-service&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;autoDeploymentsEnabled&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="nx"&gt;observabilityConfiguration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;healthCheck&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;HealthCheck&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;healthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;interval&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;/favicon.ico&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-        &lt;span class="na"&gt;timeout&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;seconds&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;unhealthyThreshold&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-      &lt;span class="na"&gt;instanceRole&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;Role&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;WebAppServiceXRayWrite&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-        &lt;span class="na"&gt;assumedBy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;ServicePrincipal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;tasks.apprunner.amazonaws.com&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="na"&gt;managedPolicies&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;ManagedPolicy&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromAwsManagedPolicyName&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;AWSXRayDaemonWriteAccess&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;)],&lt;/span&gt;
-      &lt;span class="p"&gt;}),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;CDK で Service を作るときのプロパティに &lt;code&gt;instanceRole&lt;/code&gt; を追加しました。&lt;/p&gt;
-
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;Next.js standalone ビルドしたアプリを App Runner で動かしていたところに、 X-Ray での計測を追加してみました。
-他の AWS サービスと違って X-Ray を有効にするのがちょっと面倒だったり、 &lt;code&gt;pageExtensions&lt;/code&gt; いじっているとビルド時に工夫が必要だったりとか、いくつかハマりポイントはありますが、わかってしまえば対策は難しくありませんでした。
-実際はものすごい調べるの時間かかったりするところもあったので、同じような課題になった人の解決に役立てば幸いです。&lt;/p&gt;
 </content>
   </entry>
 </feed>
