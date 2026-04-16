@@ -282,6 +282,111 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2026/04/16/use-svg-image-into-monorepo-common-components-package.html">React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略</a></h1>
+  <p class="postdate"><a href="/2026/04/16.html" title="Permanent link">Thursday, April 16, 2026 05:07:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/react.html" rel="tag">React</a>
+      <a href="/tags/component.html" rel="tag">Component</a>
+      <a href="/tags/svg.html" rel="tag">SVG</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>デザインシステムの共通化などで React コンポーネントをプロジェクト横断で使うことはよくあると思います。
+もしくはモノレポ構成で複数のWebアプリがあったとき、その間で利用する共通コンポーネントだったりするかもしれません。</p>
+
+<p>そんなとき SVG 画像をどうやって管理したら <strong>気持ちいいか</strong>  を考えてみたので、記事にしました。</p>
+
+<h2>SVG のままインポートすれば良いのでは？</h2>
+
+<p>いや、まぁそうなんです。</p>
+
+<p><a href="https://chaika.hatenablog.com/entry/2023/12/11/083000">Vite React (TypeScript) vite-plugin-svgr で SVG をコンポーネントとして扱う</a> のようにプラグインを使ったり、直接 <code>.svg</code> をインポートできるように tsconfig を設定したりすればできなくはないです。</p>
+
+<p>アプリケーション側のアセット管理であれば、それで良いと思っています。</p>
+
+<p>でも共通コンポーネントパッケージとしたとき、どうやって import するかという話になってきます。
+もちろん <code>package.json</code> の import で拡張子が <code>.svg</code> だったとき <code>public</code> フォルダを参照させるとか方法はいくらでもあります。</p>
+
+<p>今回の記事では、共通コンポーネント側で JavaScript ファイルにバンドルしたときに含まれてくれることをゴールにしたいと思います。
+なので、アセット参照で良いや、という方はゴメンなさい。</p>
+
+<h2>SVG をどうやってコンポーネント化するか</h2>
+
+<p><a href="https://react-svgr.com/">SVGR</a> というツールを使います。これがとても便利です。</p>
+
+<p>モノレポだと以下のようなディレクトリ構成になっているとします。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>└── packages/
+    └── components/
+        ├── icons/    &lt;-- ここにFigmaなどから取得したsvgファイルを保存
+        │     └── warning.svg
+        └── src/
+              ├── Button/    &lt;-- ボタンコンポーネント
+              └── Icons/    &lt;-- ここに React コンポーネント化された svg が生成される
+</code></pre></div>
+<p>package.json の <code>scripts</code> に <code>gen:icons</code> を設定します。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">  </span><span class="nl">"scripts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"gen:icons"</span><span class="p">:</span><span class="w"> </span><span class="s2">"npx @svgr/cli -d src/Icons icons"</span><span class="w">
+  </span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p><code>icons</code> ディレクトリにある svg 画像がすべて React コンポーネントになって <code>src/Icons</code> の下に変換されます。
+<code>warning.svg</code> は <code>Warning.tsx</code> に変換されます。</p>
+<div class="highlight"><pre class="highlight tsx"><code><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">React</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">react</span><span class="dl">'</span>
+<span class="k">import</span> <span class="kd">type</span> <span class="p">{</span> <span class="nx">SVGProps</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">react</span><span class="dl">'</span>
+<span class="kd">const</span> <span class="nx">SvgWarning</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">:</span> <span class="nx">SVGProps</span><span class="o">&lt;</span><span class="nx">SVGSVGElement</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span>
+    <span class="c1">// 実際のSVGタグが入る</span>
+<span class="p">)</span>
+<span class="k">export</span> <span class="k">default</span> <span class="nx">SvgWarning</span>
+</code></pre></div>
+<p>あとは <code>src/Icons/index.ts</code> を作って export すれば良いだけです。簡単ですね</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="k">export</span> <span class="p">{</span> <span class="k">default</span> <span class="k">as</span> <span class="nx">Warning</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">./Warning</span><span class="dl">'</span>
+</code></pre></div>
+<p>アプリケーション側では、共通コンポーネントを <code>npm i</code> してから以下のように利用します。</p>
+<div class="highlight"><pre class="highlight tsx"><code><span class="c1">// 使う側のイメージ</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Warning</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@common/components</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">&lt;</span><span class="nc">Warning</span> <span class="na">color</span><span class="p">=</span><span class="s">"red"</span> <span class="p">/&gt;;</span>
+</code></pre></div>
+<p>この方法の最大のメリットは、SVG がただの画像ではなく「コード」として扱えるようになることです。
+これにより、Tree Shaking の恩恵を受けられたり、型定義によって props の補完が効くようになったりと、開発体験が劇的に向上します。</p>
+
+<h2>SVG コンポーネント化すると良いこと</h2>
+
+<p><strong>Custom Templates</strong> が使える。これですね。CLIのパラメータでもある程度カスタマイズできますが、テンプレートを修正する方が見通しが良いです。</p>
+
+<ul>
+<li><a href="https://react-svgr.com/docs/custom-templates/">Custom Templates 公式ドキュメント</a></li>
+</ul>
+
+<p>たとえばアプリケーションがテーマを変更できるようになっていたとき、SVGの色を変えたいことがあります。もちろん CSS で変更できる場合もありますが、SVG側でかなり考慮されていないと難しいです。
+カスタムテンプレートを使えば fill の値を props にするよう定義することもできるので、そういった需要にも柔軟に対応できます。
+これは <strong>共通コンポーネント</strong> という共通化では重要になってくるのではないでしょうか？</p>
+
+<p>さらに共通コンポーネント集を作る際、悩ましいのが「各プロジェクトで微妙に異なる命名規則や型定義」です。
+Custom Template を使えば、例えば IconProps という独自の型を自動で付与したり、aria-label などのアクセシビリティ属性を必須にするような出力も自由自在です。</p>
+
+<p>単なる変換ツールとしてではなく、<strong>「SVG の形をした React コンポーネントを量産する工場」</strong>を定義できるのが SVGR の真価だと言えます。</p>
+
+<h2>さいごに</h2>
+
+<p>今回は<a href="https://react-svgr.com/">SVGR</a> というツールの紹介でした。
+実際使ってみてとても便利なので、みなさんも使ってみてくださいね。</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2026/04/16/use-svg-image-into-monorepo-common-components-package.html">
+          <a class="twitter" data-title="React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略"></a>
+          <a class="facebook" data-title="React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2026/04/15/build-next-js-standalone-on-monorepo.html">モノレポ構成の Next.js を standalone ビルドして Docker で動かす（404エラー対策）</a></h1>
   <p class="postdate"><a href="/2026/04/15.html" title="Permanent link">Wednesday, April 15, 2026 05:38:00 PM</a></p>
   <p class="tags">
@@ -908,158 +1013,6 @@ DeployStack | 3/4 | 10:08:05 AM | UPDATE_COMPLETE      | AWS::CloudFormation::St
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a></h1>
-  <p class="postdate"><a href="/2025/04/22.html" title="Permanent link">Tuesday, April 22, 2025 02:49:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/lambda.html" rel="tag">Lambda</a>
-      <a href="/tags/cdk.html" rel="tag">CDK</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>CDK で Lambda をデプロイするとき、S3 にある zip ファイルからのデプロイや、ソースコードからのデプロイなどいくつかのやり方があると思います。</p>
-
-<p>今回は S3 の zip からデプロイする方法についてです。App Runner は ECR にコンテナイメージをデプロイして、それを自動連携しているので、Lambda もアプリイメージのデプロイと実際のアプリデプロイを分離しようと思ったわけです。
-S3 の zip からデプロイする CDK のコードは以下のような感じになります。</p>
-<div class="highlight"><pre class="highlight typescript"><code>    <span class="k">return</span> <span class="k">new</span> <span class="nb">Function</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">SampleFunction</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-      <span class="na">functionName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sample</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">code</span><span class="p">:</span> <span class="nx">Code</span><span class="p">.</span><span class="nx">fromBucket</span><span class="p">(</span>
-        <span class="nx">Bucket</span><span class="p">.</span><span class="nx">fromBucketName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">Resource</span><span class="dl">'</span><span class="p">,</span> <span class="s2">`lambda-packages`</span><span class="p">),</span>
-        <span class="dl">'</span><span class="s1">sample.zip</span><span class="dl">'</span>
-      <span class="p">),</span>
-      <span class="na">handler</span><span class="p">:</span> <span class="dl">'</span><span class="s1">index.handler</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">architecture</span><span class="p">:</span> <span class="nx">Architecture</span><span class="p">.</span><span class="nx">ARM_64</span><span class="p">,</span>
-      <span class="na">runtime</span><span class="p">:</span> <span class="nx">Runtime</span><span class="p">.</span><span class="nx">NODEJS_20_X</span><span class="p">,</span>
-    <span class="p">})</span>
-</code></pre></div>
-<p><code>Bucket.fromBucketName</code> でアプリ側でデプロイ済みの S3 バケットを指定して、その中に入っている <code>sample.zip</code> からデプロイします。</p>
-
-<p>で、このとき <code>sample.zip</code> の中身が変化していたとき、CDK では差分があるとしてデプロイされるのかな？と思っていました。</p>
-
-<h3>S3 の zip が異なるものでもデプロイはされない</h3>
-
-<p>でも、実際はそんなことなく zip が変更されたあとで cdk diff しても差分にはなってくれませんでした。
-ちょうどそれらしい話題の issue 
-<a href="https://github.com/aws/aws-cdk/issues/6176">Lambda Function Code.FromBucket() does not update &ldquo;Code Entry Type&rdquo; in AWS console</a>
-がありました。</p>
-
-<p>簡単に解説すると「CloudFormation は、変更されたテンプレートを元のテンプレートと比較し、変更セットを生成します。」ということで props に指定している箇所自体に変更がなければ変更とみなされないということですね。
-具体的にいうと zip のプロパティまでは参照されないということです。</p>
-
-<p>解決策として提案されているのは</p>
-
-<ul>
-<li>Code.fromAsset() を使う。つまりソースコードからのデプロイ</li>
-<li>objectVersionプロパティを指定。バージョン番号は別途管理する必要がある。</li>
-</ul>
-
-<p>という感じでした。</p>
-
-<h3>S3 の変更イベントをトリガーにデプロイする</h3>
-
-<p>ということで、CDK がどうとかではなく、普通に思いつく解決策は S3 への PutObject を起点にデプロイをすることです。</p>
-
-<p><a href="https://qiita.com/yuta-katayama-23/items/7355e2280265fffa7c1b">S3へのレプリケーションをトリガーにLambdaのコード更新・新規バージョン発行を実行する</a>
-とか、これ関係の記事はたくさんあるので、参考になります。</p>
-
-<p>具体的な Lambda コードは、こんな感じになります。</p>
-<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">LambdaClient</span><span class="p">,</span> <span class="nx">UpdateFunctionCodeCommand</span><span class="p">,</span> <span class="nx">UpdateFunctionCodeCommandInput</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/client-lambda</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">S3Handler</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">aws-lambda</span><span class="dl">'</span>
-
-<span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LambdaClient</span><span class="p">({</span> <span class="na">region</span><span class="p">:</span> <span class="dl">'</span><span class="s1">ap-northeast-1</span><span class="dl">'</span> <span class="p">})</span>
-
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">handler</span><span class="p">:</span> <span class="nx">S3Handler</span> <span class="o">=</span> <span class="k">async</span> <span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">bucket</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">Records</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">s3</span><span class="p">.</span><span class="nx">bucket</span><span class="p">.</span><span class="nx">name</span>
-  <span class="kd">const</span> <span class="nx">object</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">Records</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">s3</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">key</span>
-
-  <span class="kd">const</span> <span class="nx">functionNameMap</span> <span class="o">=</span>  <span class="p">{</span>
-    <span class="dl">'</span><span class="s1">sample.zip</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sample</span><span class="dl">'</span><span class="p">,</span>
-    <span class="dl">'</span><span class="s1">sample-1.zip</span><span class="dl">'</span><span class="p">:</span> <span class="dl">'</span><span class="s1">sample1</span><span class="dl">'</span><span class="p">,</span>
-  <span class="p">}</span>
-  <span class="kd">const</span> <span class="nx">FunctionName</span> <span class="o">=</span> <span class="nx">functionNameMap</span><span class="p">[</span><span class="nx">object</span><span class="p">]</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">FunctionName</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="k">return</span>
-
-  <span class="kd">const</span> <span class="na">input</span><span class="p">:</span> <span class="nx">UpdateFunctionCodeCommandInput</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">FunctionName</span><span class="p">,</span> <span class="na">S3Bucket</span><span class="p">:</span> <span class="nx">bucket</span><span class="p">,</span> <span class="na">S3Key</span><span class="p">:</span> <span class="nx">object</span> <span class="p">}</span>
-  <span class="kd">const</span> <span class="nx">updateCommand</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">UpdateFunctionCodeCommand</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
-  <span class="k">await</span> <span class="nx">client</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">updateCommand</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>で、それを CDK でデプロイします。</p>
-<div class="highlight"><pre class="highlight typescript"><code>    <span class="kd">const</span> <span class="nx">func</span> <span class="o">=</span>  <span class="k">new</span> <span class="nx">NodejsFunction</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">LambdaUpdaterFunction</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
-      <span class="na">functionName</span><span class="p">:</span> <span class="dl">'</span><span class="s1">lambda-function-updater</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">entry</span><span class="p">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="dl">'</span><span class="s1">src</span><span class="dl">'</span><span class="p">,</span> <span class="dl">'</span><span class="s1">index.ts</span><span class="dl">'</span><span class="p">),</span>
-      <span class="na">handler</span><span class="p">:</span> <span class="dl">'</span><span class="s1">handler</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">architecture</span><span class="p">:</span> <span class="nx">Architecture</span><span class="p">.</span><span class="nx">X86_64</span><span class="p">,</span>
-      <span class="na">runtime</span><span class="p">:</span> <span class="nx">Runtime</span><span class="p">.</span><span class="nx">NODEJS_20_X</span><span class="p">,</span>
-    <span class="p">})</span>
-    <span class="nx">func</span><span class="p">.</span><span class="nx">addToRolePolicy</span><span class="p">(</span>
-      <span class="k">new</span> <span class="nx">PolicyStatement</span><span class="p">({</span>
-        <span class="na">actions</span><span class="p">:</span> <span class="p">[</span><span class="dl">'</span><span class="s1">lambda:UpdateFunctionCode</span><span class="dl">'</span><span class="p">],</span>
-        <span class="na">resources</span><span class="p">:</span> <span class="p">[</span>
-            <span class="c1">// 更新対象の Lambda の ARN を列挙する</span>
-        <span class="p">],</span>
-      <span class="p">})</span>
-    <span class="p">)</span>
-    <span class="kd">const</span> <span class="nx">packageBucket</span> <span class="o">=</span> <span class="nx">Bucket</span><span class="p">.</span><span class="nx">fromBucketName</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="dl">'</span><span class="s1">Resource</span><span class="dl">'</span><span class="p">,</span> <span class="s2">`lambda-packages`</span><span class="p">)</span>
-    <span class="nx">packageBucket</span><span class="p">.</span><span class="nx">grantRead</span><span class="p">(</span><span class="nx">func</span><span class="p">)</span>
-    <span class="nx">packageBucket</span><span class="p">.</span><span class="nx">addEventNotification</span><span class="p">(</span>
-      <span class="nx">EventType</span><span class="p">.</span><span class="nx">OBJECT_CREATED_PUT</span><span class="p">,</span>
-      <span class="k">new</span> <span class="nx">LambdaDestination</span><span class="p">(</span><span class="nx">func</span><span class="p">)</span>
-    <span class="p">)</span>
-</code></pre></div>
-<p>こちらはソースコードからデプロイするので NodejsFunction とかを使って簡易に実現します。
-Lambda に zip ファイルからデプロイする対象の Function ARN を列挙して更新の許可を与えます。</p>
-
-<p>zip ファイルが置かれているバケットの読み込み許可を更新 Lambda につけて、バケットにファイルが追加/変更されたときのイベントで Lambda を実行するように関連づけます。</p>
-
-<p>この記事は参考になりました。</p>
-
-<ul>
-<li><a href="https://dev.classmethod.jp/articles/cdk-s3notification-kick-lambda/">CDKを使って既存S3バケットのPUTイベントをトリガーにLambda関数を実行しようとしたらハマった話</a></li>
-</ul>
-
-<h3>おまけ: NodejsFunction では ARM アーキテクチャを使えない</h3>
-
-<p>最初、<code>lambda-function-updater</code> をデプロイするとき、アーキテクチャに ARM を指定していたのですが、うまく動きませんでした。</p>
-
-<p>なんでか調べたところ、こちらの issue
-<a href="https://github.com/aws/aws-cdk/issues/27370">Wrong SAM container image architecture when trying to build NodeJS lambda</a>
-がありました。</p>
-
-<p>使えなくないけど、公式にサポートしてないやり方になるよ、ってことで、まぁこの Lambda ぐらいだったら良いか&hellip; ってことで X86 アーキテクチャにしました。
-もし ARM にしたいならビルドは自分でやっておいて zip からやった方が良いですね（話がループする）。</p>
-
-<h3>おまけ2: Lambda 関数をモノレポにしているとき sam build は使えない</h3>
-
-<p>S3 に zip ファイルをアップロードする前に TypeScript で書かれた Lambda を zip にするとき sam cli を使ってビルドしようとしたのですが、うまくいきませんでした。
-調べてみると以下の issue を見つけました。</p>
-
-<ul>
-<li><a href="https://github.com/aws/aws-sam-cli/issues/5236">Feature request: NPM workspace support</a></li>
-<li><a href="https://github.com/aws/aws-sam-cli/issues/6567">Feature request: Skip NodejsNpmEsbuildBuilder:NpmUpdate step when using &ndash;build-in-source in a js/ts &ldquo;monorepo&rdquo;</a></li>
-</ul>
-
-<p>モノレポでビルドするのは茨の道のようです。
-自分で esbuild を呼び出してビルドした方が簡単ですね。Lambda のコードを esbuild でビルドする方法はいろいろありますので、困らないでしょう。
-僕らは package.json に定義しておきました。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>        "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js"
-</code></pre></div>
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">
-          <a class="twitter" data-title="S3 に設置した zip ファイルから Lambda 関数をデプロイする"></a>
-          <a class="facebook" data-title="S3 に設置した zip ファイルから Lambda 関数をデプロイする"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1084,6 +1037,7 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/04/16/use-svg-image-into-monorepo-common-components-package.html">React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略</a> <span>2026/04/16</span></li>
                   <li><a href="/2026/04/15/build-next-js-standalone-on-monorepo.html">モノレポ構成の Next.js を standalone ビルドして Docker で動かす（404エラー対策）</a> <span>2026/04/15</span></li>
                   <li><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a> <span>2026/04/14</span></li>
                   <li><a href="/2025/11/09/phpconfuk-2025.html">PHPカンファレンス福岡2025に参加した</a> <span>2025/11/09</span></li>
@@ -1093,7 +1047,6 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
                   <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
-                  <li><a href="/2025/04/11/next-js-deploy-to-apprunner.html">Next.js で作ったアプリケーションを AppRunner にデプロイする</a> <span>2025/04/11</span></li>
               </ul>
             </div>
           </section>
@@ -1231,7 +1184,7 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2026.html">2026</a> (2)</li>
+                  <li><a href="/2026.html">2026</a> (3)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>

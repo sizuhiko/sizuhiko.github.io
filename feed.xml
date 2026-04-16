@@ -5,10 +5,100 @@
   <id>http://blog.url.com/</id>
   <link href="http://blog.url.com/"/>
   <link href="http://blog.url.com/feed.xml" rel="self"/>
-  <updated>2026-04-15T17:38:00+09:00</updated>
+  <updated>2026-04-16T17:07:00+09:00</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略</title>
+    <link rel="alternate" href="http://blog.url.com/2026/04/16/use-svg-image-into-monorepo-common-components-package.html"/>
+    <id>http://blog.url.com/2026/04/16/use-svg-image-into-monorepo-common-components-package.html</id>
+    <published>2026-04-16T17:07:00+09:00</published>
+    <updated>2026-04-16T18:35:28+09:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;デザインシステムの共通化などで React コンポーネントをプロジェクト横断で使うことはよくあると思います。
+もしくはモノレポ構成で複数のWebアプリがあったとき、その間で利用する共通コンポーネントだったりするかもしれません。&lt;/p&gt;
+
+&lt;p&gt;そんなとき SVG 画像をどうやって管理したら &lt;strong&gt;気持ちいいか&lt;/strong&gt;  を考えてみたので、記事にしました。&lt;/p&gt;
+
+&lt;h2&gt;SVG のままインポートすれば良いのでは？&lt;/h2&gt;
+
+&lt;p&gt;いや、まぁそうなんです。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://chaika.hatenablog.com/entry/2023/12/11/083000"&gt;Vite React (TypeScript) vite-plugin-svgr で SVG をコンポーネントとして扱う&lt;/a&gt; のようにプラグインを使ったり、直接 &lt;code&gt;.svg&lt;/code&gt; をインポートできるように tsconfig を設定したりすればできなくはないです。&lt;/p&gt;
+
+&lt;p&gt;アプリケーション側のアセット管理であれば、それで良いと思っています。&lt;/p&gt;
+
+&lt;p&gt;でも共通コンポーネントパッケージとしたとき、どうやって import するかという話になってきます。
+もちろん &lt;code&gt;package.json&lt;/code&gt; の import で拡張子が &lt;code&gt;.svg&lt;/code&gt; だったとき &lt;code&gt;public&lt;/code&gt; フォルダを参照させるとか方法はいくらでもあります。&lt;/p&gt;
+
+&lt;p&gt;今回の記事では、共通コンポーネント側で JavaScript ファイルにバンドルしたときに含まれてくれることをゴールにしたいと思います。
+なので、アセット参照で良いや、という方はゴメンなさい。&lt;/p&gt;
+
+&lt;h2&gt;SVG をどうやってコンポーネント化するか&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href="https://react-svgr.com/"&gt;SVGR&lt;/a&gt; というツールを使います。これがとても便利です。&lt;/p&gt;
+
+&lt;p&gt;モノレポだと以下のようなディレクトリ構成になっているとします。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;└── packages/
+    └── components/
+        ├── icons/    &amp;lt;-- ここにFigmaなどから取得したsvgファイルを保存
+        │     └── warning.svg
+        └── src/
+              ├── Button/    &amp;lt;-- ボタンコンポーネント
+              └── Icons/    &amp;lt;-- ここに React コンポーネント化された svg が生成される
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;package.json の &lt;code&gt;scripts&lt;/code&gt; に &lt;code&gt;gen:icons&lt;/code&gt; を設定します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight json"&gt;&lt;code&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nl"&gt;"scripts"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+    &lt;/span&gt;&lt;span class="nl"&gt;"gen:icons"&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;"npx @svgr/cli -d src/Icons icons"&lt;/span&gt;&lt;span class="w"&gt;
+  &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="err"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;icons&lt;/code&gt; ディレクトリにある svg 画像がすべて React コンポーネントになって &lt;code&gt;src/Icons&lt;/code&gt; の下に変換されます。
+&lt;code&gt;warning.svg&lt;/code&gt; は &lt;code&gt;Warning.tsx&lt;/code&gt; に変換されます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight tsx"&gt;&lt;code&gt;&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;React&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;react&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="kd"&gt;type&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;SVGProps&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;react&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;SvgWarning&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;props&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;SVGProps&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nx"&gt;SVGSVGElement&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="c1"&gt;// 実際のSVGタグが入る&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt; &lt;span class="nx"&gt;SvgWarning&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;あとは &lt;code&gt;src/Icons/index.ts&lt;/code&gt; を作って export すれば良いだけです。簡単ですね&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;&lt;span class="k"&gt;export&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nx"&gt;Warning&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;./Warning&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;アプリケーション側では、共通コンポーネントを &lt;code&gt;npm i&lt;/code&gt; してから以下のように利用します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre class="highlight tsx"&gt;&lt;code&gt;&lt;span class="c1"&gt;// 使う側のイメージ&lt;/span&gt;
+&lt;span class="k"&gt;import&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;Warning&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;from&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;@common/components&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;App&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="nc"&gt;Warning&lt;/span&gt; &lt;span class="na"&gt;color&lt;/span&gt;&lt;span class="p"&gt;=&lt;/span&gt;&lt;span class="s"&gt;"red"&lt;/span&gt; &lt;span class="p"&gt;/&amp;gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;この方法の最大のメリットは、SVG がただの画像ではなく「コード」として扱えるようになることです。
+これにより、Tree Shaking の恩恵を受けられたり、型定義によって props の補完が効くようになったりと、開発体験が劇的に向上します。&lt;/p&gt;
+
+&lt;h2&gt;SVG コンポーネント化すると良いこと&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Custom Templates&lt;/strong&gt; が使える。これですね。CLIのパラメータでもある程度カスタマイズできますが、テンプレートを修正する方が見通しが良いです。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://react-svgr.com/docs/custom-templates/"&gt;Custom Templates 公式ドキュメント&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;たとえばアプリケーションがテーマを変更できるようになっていたとき、SVGの色を変えたいことがあります。もちろん CSS で変更できる場合もありますが、SVG側でかなり考慮されていないと難しいです。
+カスタムテンプレートを使えば fill の値を props にするよう定義することもできるので、そういった需要にも柔軟に対応できます。
+これは &lt;strong&gt;共通コンポーネント&lt;/strong&gt; という共通化では重要になってくるのではないでしょうか？&lt;/p&gt;
+
+&lt;p&gt;さらに共通コンポーネント集を作る際、悩ましいのが「各プロジェクトで微妙に異なる命名規則や型定義」です。
+Custom Template を使えば、例えば IconProps という独自の型を自動で付与したり、aria-label などのアクセシビリティ属性を必須にするような出力も自由自在です。&lt;/p&gt;
+
+&lt;p&gt;単なる変換ツールとしてではなく、&lt;strong&gt;「SVG の形をした React コンポーネントを量産する工場」&lt;/strong&gt;を定義できるのが SVGR の真価だと言えます。&lt;/p&gt;
+
+&lt;h2&gt;さいごに&lt;/h2&gt;
+
+&lt;p&gt;今回は&lt;a href="https://react-svgr.com/"&gt;SVGR&lt;/a&gt; というツールの紹介でした。
+実際使ってみてとても便利なので、みなさんも使ってみてくださいね。&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>モノレポ構成の Next.js を standalone ビルドして Docker で動かす（404エラー対策）</title>
     <link rel="alternate" href="http://blog.url.com/2026/04/15/build-next-js-standalone-on-monorepo.html"/>
@@ -713,144 +803,5 @@ Lambda に zip ファイルからデプロイする対象の Function ARN を列
 僕らは package.json に定義しておきました。&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre class="highlight plaintext"&gt;&lt;code&gt;        "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js"
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
-  </entry>
-  <entry>
-    <title>ネスト構造の Step Functions を CDK でデプロイする</title>
-    <link rel="alternate" href="http://blog.url.com/2025/04/17/nested-step-functions-deploy-by-cdk.html"/>
-    <id>http://blog.url.com/2025/04/17/nested-step-functions-deploy-by-cdk.html</id>
-    <published>2025-04-17T19:02:00+09:00</published>
-    <updated>2025-04-17T20:02:58+09:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;この記事はネスト構造の Step Functions を CDK でデプロイしようとしたとき、うまくいかないことがあったので記録したものです。&lt;/p&gt;
-
-&lt;p&gt;なお Step Functions のワークフロー定義は、別途 JSON で用意されていて、CDK からは生成しない前提になっています。
-ファイルは &lt;code&gt;definitions&lt;/code&gt; の下に入っている想定です。&lt;/p&gt;
-
-&lt;h3&gt;CDK でネスト構造の Step Functions を 定義する&lt;/h3&gt;
-
-&lt;p&gt;たとえば ParentStateMachine から ChildStateMachine を実行すると仮定しましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;parent&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ParentStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;definitionBody&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;DefinitionBody&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`/definitions/parent.json`&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="p"&gt;{}&lt;/span&gt;
-      &lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;child&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;StateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ChildStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;definitionBody&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;DefinitionBody&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`/definitions/child.json`&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="p"&gt;{}&lt;/span&gt;
-      &lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="c1"&gt;// 子ステートマシーンの実行を親ステートマシーンに許可する&lt;/span&gt;
-    &lt;span class="nx"&gt;child&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;grantStartExecution&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;parent&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;みたいにすれば実行できるのかな？と思ってました。&lt;/p&gt;
-
-&lt;h3&gt;デプロイしてみたが実行できない&lt;/h3&gt;
-
-&lt;p&gt;実際にデプロイしてみたところ動きませんでした。&lt;/p&gt;
-
-&lt;p&gt;AWS の公式ドキュメント&lt;a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/connect-stepfunctions.html"&gt;実行中の実行から新しい AWS Step Functions ステートマシンを起動する&lt;/a&gt;を確認しました。&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;ネストされたステートマシンの IAM アクセス許可の設定&lt;/code&gt; というところに書いてあります。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;親ステートマシンは、ポーリングとイベントを使用して子ステートマシンが実行を完了したかどうかを判断します。ポーリングには states:DescribeExecution のアクセス許可が必要ですが、EventBridge 経由で Step Functions に送信されるイベントには events:PutTargets、events:PutRule、events:DescribeRule のアクセス許可が必要です。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;というか &lt;code&gt;grantStartExecution&lt;/code&gt; ってそれらの権限当たらないの？って思うじゃないですか。&lt;/p&gt;
-
-&lt;p&gt;&lt;a href="https://github.com/aws/aws-cdk/blob/v2.190.0/packages/aws-cdk-lib/aws-stepfunctions/lib/state-machine.ts#L221-L227"&gt;CDKのソースコード&lt;/a&gt;を見てみました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;  &lt;span class="k"&gt;public&lt;/span&gt; &lt;span class="nx"&gt;grantStartExecution&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;identity&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;iam&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;IGrantable&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; &lt;span class="nx"&gt;iam&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Grant&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nx"&gt;iam&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Grant&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addToPrincipal&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-      &lt;span class="na"&gt;grantee&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;identity&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="na"&gt;actions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;states:StartExecution&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-      &lt;span class="na"&gt;resourceArns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;stateMachineArn&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-    &lt;span class="p"&gt;});&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;identity&lt;/code&gt; が &lt;code&gt;StateMachine&lt;/code&gt; だったら &lt;code&gt;actions&lt;/code&gt; を追加して欲しいなぁ&amp;hellip;.（って思いますよね）。これだと grant って言ってる割にただ単に &lt;code&gt;actions&lt;/code&gt; に関数名のを追加するだけでしょ？ってなるからなー（愚痴です）。&lt;/p&gt;
-
-&lt;h3&gt;L2コンストラクタを継承してメソッドを追加する&lt;/h3&gt;
-
-&lt;p&gt;ということで、 &lt;code&gt;StateMachine&lt;/code&gt; を継承したコンストラクタを作り、 &lt;code&gt;grantNestedExecute&lt;/code&gt; という許可メソッドを追加してみました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;  &lt;span class="nx"&gt;grantNestedExecute&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;parent&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;StateMachine&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;grantStartExecution&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;parent&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;grantRead&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;parent&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;あとは先ほどの定義を修正するだけです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;parent&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;MyStateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ParentStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;definitionBody&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;DefinitionBody&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`/definitions/parent.json`&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="p"&gt;{}&lt;/span&gt;
-      &lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;child&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;MyStateMachine&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;ChildStateMachine&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-      &lt;span class="na"&gt;definitionBody&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;DefinitionBody&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;fromFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-        &lt;span class="nx"&gt;path&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;__dirname&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;`/definitions/child.json`&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
-        &lt;span class="p"&gt;{}&lt;/span&gt;
-      &lt;span class="p"&gt;),&lt;/span&gt;
-    &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="c1"&gt;// 子ステートマシーンの実行を親ステートマシーンに許可する&lt;/span&gt;
-    &lt;span class="nx"&gt;child&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;grantNestedExecute&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;parent&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;HTTP メソッドを実行する場合&lt;/h3&gt;
-
-&lt;p&gt;Step Functions で HTTP メソッドを実行するみたいなのも同様に &lt;a href="https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/call-https-apis.html#connect-http-task-permissions"&gt;HTTP タスクを実行するための IAM アクセス許可&lt;/a&gt;を参照して許可設定を追加する必要があります。&lt;/p&gt;
-
-&lt;p&gt;先ほどの例と同じで &lt;code&gt;MyStateMachine&lt;/code&gt; に &lt;code&gt;grantConnection&lt;/code&gt; みたいなメソッドを追加しておきます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre class="highlight typescript"&gt;&lt;code&gt;  &lt;span class="nx"&gt;grantConnection&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="kd"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;stack&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;Stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="k"&gt;of&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addToRolePolicy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-      &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;PolicyStatement&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;actions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;states:InvokeHTTPEndpoint&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-        &lt;span class="na"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-          &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;formatArn&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-            &lt;span class="na"&gt;service&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;states&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;region&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;region&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;account&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;account&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;stateMachine:*&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="p"&gt;}),&lt;/span&gt;
-        &lt;span class="p"&gt;],&lt;/span&gt;
-      &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addToRolePolicy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-      &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;PolicyStatement&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;actions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;events:RetrieveConnectionCredentials&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-        &lt;span class="na"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-          &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;formatArn&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-            &lt;span class="na"&gt;service&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;events&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;region&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;region&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;account&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;account&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;connection/*&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="p"&gt;}),&lt;/span&gt;
-        &lt;span class="p"&gt;],&lt;/span&gt;
-      &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;addToRolePolicy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
-      &lt;span class="k"&gt;new&lt;/span&gt; &lt;span class="nx"&gt;PolicyStatement&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-        &lt;span class="na"&gt;actions&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;secretsmanager:GetSecretValue&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;secretsmanager:DescribeSecret&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
-        &lt;span class="na"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-          &lt;span class="nx"&gt;stack&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;formatArn&lt;/span&gt;&lt;span class="p"&gt;({&lt;/span&gt;
-            &lt;span class="na"&gt;service&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;secretsmanager&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;region&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;*&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;account&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;*&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-            &lt;span class="na"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="s1"&gt;secret:events!connection/*&lt;/span&gt;&lt;span class="dl"&gt;'&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-          &lt;span class="p"&gt;}),&lt;/span&gt;
-        &lt;span class="p"&gt;],&lt;/span&gt;
-      &lt;span class="p"&gt;})&lt;/span&gt;
-    &lt;span class="p"&gt;)&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;h3&gt;まとめ&lt;/h3&gt;
-
-&lt;p&gt;Step Functions のワークフロー定義を、別途 JSON から取り込むと、必要な権限がいい感じにはなってくれないことがわかりました。
-でも Workflow Studio みたいなビジュアルエディタでワークフロー書くのが便利なんで、それはそれで使いたいんですよね。&lt;/p&gt;
-
-&lt;p&gt;grant メソッドの CDK コードを確認して、公式ドキュメントと見比べながら適切な権限があたっているか確認しながら進めていくとハマることなく進められると思います。&lt;/p&gt;
-</content>
   </entry>
 </feed>
