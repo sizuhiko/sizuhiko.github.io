@@ -282,6 +282,148 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2014/09/13/cakephp3-debugkit-require-sqlite.html">CakePHP3(Beta1)のDebugKitではSQLiteが必要になります</a></h1>
+  <p class="postdate"><a href="/2014/09/13.html" title="Permanent link">Saturday, September 13, 2014 03:43:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/cakephp3.html" rel="tag">CakePHP3</a>
+      <a href="/tags/debugkit.html" rel="tag">DebugKit</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p><a href="http://coedo-cakephp.doorkeeper.jp/events/14670">CakePHP 3.0.0 もくもく会（勉強会） #7</a> に参加してCakePHP3ベータ1を早速試しました。</p>
+
+<p>ベータ1はアルファ版からディレクトリの変更も多く、CakePHP本体をcomposer updateしてもダメなので、再度 composer create-project でテンプレートから生成しなおします。</p>
+
+<p>最新の<a href="https://github.com/cakephp/app">cakephp/app</a>テンプレートにはDebugKitプラグインが依存関係に入っています。</p>
+<div class="highlight"><pre class="highlight json"><code><span class="w">    </span><span class="nl">"require"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"php"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&gt;=5.4.19"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cakephp/cakephp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"mobiledetect/mobiledetectlib"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.*"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"cakephp/debug_kit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3.0.*-dev"</span><span class="w">
+    </span><span class="p">}</span><span class="err">,</span><span class="w">
+</span></code></pre></div>
+<p>require-devではないのですね、と思ったり。。</p>
+
+<p>以下のコマンドでCakePHP3アプリケーションのプロジェクトスケルトンを作ります。</p>
+<div class="highlight"><pre class="highlight plaintext"><code>composer create-project -s dev cakephp/app dev-cake3 app
+</code></pre></div>
+<p>ブラウザでアクセスすると、以下のような画面が表示されます。</p>
+
+<p><img src="/images/blog/cakephp3_debugkit_sqlite.png" alt="" /></p>
+
+<p>なんかDebugKitがSQLiteを参照しているみたいなんですよ。</p>
+
+<p>そこで、DebugKitの設定を見てみます</p>
+
+<p>app/plugins/DebugKit/config/bootstrap.php</p>
+<div class="highlight"><pre class="highlight php"><code><span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">config</span><span class="p">(</span><span class="s1">'debug_kit'</span><span class="p">))</span> <span class="p">{</span>
+    <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">config</span><span class="p">(</span><span class="s1">'debug_kit'</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">'className'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Connection'</span><span class="p">,</span>
+        <span class="s1">'driver'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Driver\Sqlite'</span><span class="p">,</span>
+        <span class="s1">'database'</span> <span class="o">=&gt;</span> <span class="no">TMP</span> <span class="mf">.</span> <span class="s1">'debug_kit.sqlite'</span><span class="p">,</span>
+        <span class="s1">'encoding'</span> <span class="o">=&gt;</span> <span class="s1">'utf8'</span><span class="p">,</span>
+        <span class="s1">'cacheMetadata'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="s1">'quoteIdentifiers'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="p">]);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>そうですか、そうですか…</p>
+
+<p><a href="https://github.com/cakephp/debug_kit/tree/3.0">githubのCakePHP3用ブランチ</a>もチェックしてみました。</p>
+
+<blockquote>
+<p>Requirements</p>
+
+<p>The 3.0 branch has the following requirements:</p>
+
+<p>CakePHP 3.0.0 or greater.
+PHP 5.4.19 or greater.
+SQLite or another database driver that CakePHP can talk to. By default DebugKit will use SQLite, if you need to use a different database see the Database Configuration section below.</p>
+</blockquote>
+
+<p>そうですか、そうですか….</p>
+
+<p>でもなんか別のDB接続も可能みたいに書いてあるよ</p>
+
+<blockquote>
+<p>Database Configuration</p>
+
+<p>By default DebugKit will store panel data into a SQLite database in your application&rsquo;s tmp directory. If you cannot install pdo_sqlite, you can configure DebugKit to use a different database by defining a debug_kit connection in your config/app.php file.</p>
+</blockquote>
+
+<p>ふむふむ</p>
+
+<p><code>config/app.php</code> のDatasourceに以下のような<code>debug_kit</code>接続を追加してみます。</p>
+<div class="highlight"><pre class="highlight php"><code>        <span class="s1">'debug_kit'</span><span class="p">,</span> <span class="p">[</span>
+            <span class="s1">'className'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Connection'</span><span class="p">,</span>
+            <span class="s1">'driver'</span> <span class="o">=&gt;</span> <span class="s1">'Cake\Database\Driver\Mysql'</span><span class="p">,</span>
+            <span class="s1">'persistent'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="s1">'host'</span> <span class="o">=&gt;</span> <span class="s1">'localhost'</span><span class="p">,</span>
+            <span class="s1">'login'</span> <span class="o">=&gt;</span> <span class="s1">'hoge'</span><span class="p">,</span>
+            <span class="s1">'password'</span> <span class="o">=&gt;</span> <span class="s1">'fuga'</span><span class="p">,</span>
+            <span class="s1">'database'</span> <span class="o">=&gt;</span> <span class="s1">'database_name'</span><span class="p">,</span>
+            <span class="s1">'prefix'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="s1">'encoding'</span> <span class="o">=&gt;</span> <span class="s1">'utf8'</span><span class="p">,</span>
+            <span class="s1">'timezone'</span> <span class="o">=&gt;</span> <span class="s1">'UTC'</span><span class="p">,</span>
+            <span class="s1">'cacheMetadata'</span> <span class="o">=&gt;</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="s1">'quoteIdentifiers'</span> <span class="o">=&gt;</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="p">],</span>
+
+</code></pre></div>
+<p>ブラウザをリロード</p>
+
+<p><img src="/images/blog/cakephp3_debugkit_mysql.png" alt="" /></p>
+
+<p>ぎゃー、DebugKitの該当箇所のコードを見てみると、そんなに変じゃないように見えますが、</p>
+<div class="highlight"><pre class="highlight php"><code>        <span class="nv">$configs</span> <span class="o">=</span> <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">configured</span><span class="p">();</span>
+        <span class="k">foreach</span> <span class="p">(</span><span class="nv">$configs</span> <span class="k">as</span> <span class="nv">$name</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nv">$connection</span> <span class="o">=</span> <span class="nc">ConnectionManager</span><span class="o">::</span><span class="nf">get</span><span class="p">(</span><span class="nv">$name</span><span class="p">);</span>
+</code></pre></div>
+<p>このときの<code>$config</code>をwatchしてみると</p>
+<div class="highlight"><pre class="highlight php"><code><span class="k">array</span> <span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+  <span class="mi">0</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'default'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+  <span class="mi">1</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'test'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+  <span class="mi">2</span> <span class="o">=&gt;</span> <span class="n">int</span> <span class="mi">0</span>
+  <span class="mi">3</span> <span class="o">=&gt;</span> <span class="n">int</span> <span class="mi">1</span>
+  <span class="mi">4</span> <span class="o">=&gt;</span> <span class="n">string</span> <span class="s1">'debug_kit'</span> <span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+</code></pre></div>
+<p>上記のようになっています。2と3誰よ….</p>
+
+<p>ということで、まだベータ１だからねー。はははーという事で、現時点はSQLiteのextension入れて試しましょう。</p>
+
+<p>例えば、friendsofcakeのvagrant-chef使っているなら、cookbooks/php/recipes/install.rbに追加します。</p>
+<div class="highlight"><pre class="highlight ruby"><code>  <span class="s2">"php5-mysql"</span><span class="p">,</span>
+  <span class="s2">"php5-sqlite"</span><span class="p">,</span>
+
+</code></pre></div>
+<p>mysqlの下あたりに追加します。vagrant destroy/upを実行して環境を作り直したら、もう一度ブラウザをリロードします。</p>
+
+<p><img src="/images/blog/cakephp3_beta1_success.png" alt="" /></p>
+
+<p>おなじみの青いバーの画面が表示されました。画面の右下に出ているCakePHPアイコンがDebugKitです。
+アイコンをクリックすると以下のようにデバッグ情報を参照可能になります。</p>
+
+<p><img src="/images/blog/cakephp3_beta1_debugkit.png" alt="" /></p>
+
+<p>DebugKitも使えるし、どんどんCakePHP3のアプリケーション開発がやりやすくなっていると思います。
+CakePHP3.0.0 もくもく会で情報交換しながら、楽しく新機能を試してみませんか？</p>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/09/13/cakephp3-debugkit-require-sqlite.html">
+          <a class="twitter" data-title="CakePHP3(Beta1)のDebugKitではSQLiteが必要になります"></a>
+          <a class="facebook" data-title="CakePHP3(Beta1)のDebugKitではSQLiteが必要になります"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2014/09/07/cakephp-ci-book.html">CakePHPで学ぶ継続的インテグレーションが発売されます</a></h1>
   <p class="postdate"><a href="/2014/09/07.html" title="Permanent link">Sunday, September 07, 2014 02:04:00 PM</a></p>
   <p class="tags">
@@ -1074,257 +1216,6 @@ testharness.jsはxUnit系なんですが、equals(:actual, :expected) の記法�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2014/04/19/cake3-mokumoku-3.html">CakePHP3 もくもく会#3 に参加して Bake してきた</a></h1>
-  <p class="postdate"><a href="/2014/04/19.html" title="Permanent link">Saturday, April 19, 2014 02:04:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/php.html" rel="tag">PHP</a>
-      <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
-      <a href="/tags/co-edo.html" rel="tag">Co-Edo</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>2013/4/4(金) に <a href="http://www.coworking.tokyo.jp/">コワーキングスペース茅場町 Co-Edo（コエド）</a> で行われた「<a href="http://coedo-cakephp.doorkeeper.jp/events/10020">CakePHP3 もくもく会 #3</a>」に参加しました。</p>
-
-<p>CakePHP3もdev preview2、せっかくの機会なので初Cake3を体験しようということです。</p>
-
-<h3>環境構築する</h3>
-
-<p>イベントページからリンクされていたCo-Edo謹製Vagrantを使っても良かったのですが、私はCakePHPのコアデベロッパも参加するコミュニティ <a href="http://friendsofcake.com/">Friends Of Cake</a> の <a href="https://github.com/FriendsOfCake/vagrant-chef">Vagrant Chef</a> を使いました。</p>
-
-<p>事前に用意するものは</p>
-
-<ul>
-<li><a href="http://www.vagrantup.com/">Vagrant</a></li>
-<li><a href="https://www.virtualbox.org/">Virtual Box</a></li>
-</ul>
-
-<p>です。概ね最新版で大丈夫でしょう。
-ダウンロード＆インストールしたら、任意のディレクトリに先程のVagrant Chefをクローン（またはダウンロード）します。後は</p>
-<div class="highlight"><pre class="highlight plaintext"><code>cd vagrant-chef
-vagrant up
-</code></pre></div>
-<p>を実行してしばらく待ちましょう。Chefでインストールされるものは Vagrant Chef のREADMEに書いてあるので、そちらを参照してください。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>INFO: Chef Run complete in 541.542816 seconds
-INFO: Running report handlers
-INFO: Report handlers complete
-</code></pre></div>
-<p>なメッセージが出て、コンソールが戻ってきたらインストールの完了です。
-動作確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
-
-<p><img src="/images/blog/cakephp3_vagrant_chef.png" alt="" /></p>
-
-<p>デフォルト画面が出たら環境構築の完了です。</p>
-
-<h3>CakePHP3をインストールする</h3>
-
-<p>Vagrant ChefにはCakePHPをインストールするレシピも入っているのですが、Friends Of CakeにCakePHPの環境を作るスケルトンコマンドが別途用意されているので、レシピの編集は必要ないです。
-生成したVagrant環境にログインします。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>vagrant ssh
-</code></pre></div>
-<p>ログイン直後</p>
-<div class="highlight"><pre class="highlight plaintext"><code>vagrant@precise64:/vagrant$ ls -la
-total 20
-drwxr-xr-x  1 vagrant vagrant  306 Apr 19 05:37 .
-drwxr-xr-x 25 root    root    4096 Apr 19 05:37 ..
-drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:37 app
-drwxr-xr-x  1 vagrant vagrant  510 Apr 19 05:30 cookbooks
-drwxr-xr-x  1 vagrant vagrant  442 Apr 19 05:30 .git
--rw-r--r--  1 vagrant vagrant   12 Apr 19 05:30 .gitignore
--rw-r--r--  1 vagrant vagrant 5489 Apr 19 05:30 README.markdown
-drwxr-xr-x  1 vagrant vagrant  102 Apr 19 05:31 .vagrant
--rw-r--r--  1 vagrant vagrant 1179 Apr 19 05:30 Vagrantfile
-</code></pre></div>
-<p>のようになっていて、すでにappディレクトリが存在します。ここには先程のデフォルト画面が入っているのですが、今回は新しくアプリを作成するのでappディレクトリは削除します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>rm -rf app
-</code></pre></div>
-<p>環境構築でも利用した Friends Of Cake のリポジトリにはCakePHPのアプリケーションスケルトンを作成する app-template というリポジトリがあります。
-すでにCakePHP3用のスケルトンも(cake3ブランチとして)用意されているので、GitHubのREADMEに書いてあるとおりのコマンドでCakePHPのアプリケーション環境を構築します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>composer -sdev create-project friendsofcake/app-template app dev-cake3
-</code></pre></div>
-<p>app の部分がアプリケーション名です。Vagrant Chefを使った場合はappを指定してください。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>Do you want to remove the existing VCS (.git, .svn..) history? [Y,n]? 
-</code></pre></div>
-<p>最後に上記のような確認メッセージが出てくるので、履歴が気にならなければそのままEnterを押して終了します。
-インストールの確認として、http://192.168.13.37/ にアクセスしてみてください。</p>
-
-<p><img src="/images/blog/cakephp3_installed.png" alt="" /></p>
-
-<p>おなじみのCakePHP画面が表示されます。tmpディレクトリが書き込みできないと警告されます。これはwebサーバのデフォルトuserがvagrantでなくwww-dataであるためですが、開発環境用なの気にせず</p>
-<div class="highlight"><pre class="highlight plaintext"><code>sudo chmod -R 777 app/tmp
-</code></pre></div>
-<p>などのコマンドで権限を書き換えてください。</p>
-
-<p><img src="/images/blog/cakephp3_tmp_ok.png" alt="" /></p>
-
-<h3>データベースを設定する</h3>
-
-<p>vagrant-chefを使うとデフォルトで database_name, test_database_name というデータベースが生成されています。
-ただ文字コードの指定などの問題もあると思うので、ここは自分でデータベースを作成します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>mysql -u root -p
-</code></pre></div>
-<p>vagrant-chefのMySQL rootパスワードは、vagrant-chefのREADMEを参照ください（現時点ではbananasです）。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>mysql&gt; CREATE DATABASE cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-mysql&gt; CREATE DATABASE test_cake3_mokumoku CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-</code></pre></div>
-<p>続けておなじみのpostsテーブルを作成します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>mysql&gt; use cake3_mokumoku;
-mysql&gt; CREATE TABLE `posts` (
-          `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-          `title` varchar(50) DEFAULT NULL,
-          `body` text,
-          `created` datetime DEFAULT NULL,
-          `modified` datetime DEFAULT NULL,
-          PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
-</code></pre></div>
-<p>app-templateで作成したCakePHPアプリケーションは、<a href="https://github.com/josegonzalez/php-dotenv">php-dotenv</a>というライブラリを使って環境設定できるようになっています。
-<code>app/App/Config/.env.default</code> ファイルをコピーして <code>app/App/Config/.env</code>ファイルを作成します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// app/App/Config/.env
-export DATABASE_URL="mysql://my_app:secret@localhost/my_app?encoding=utf8"
-export DATABASE_TEST_URL="mysql://my_app:secret@localhost/test_myapp?encoding=utf8"
-</code></pre></div>
-<p>の部分を</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// mysql://ユーザ名:パスワード@URL/データベース名
-export CAKEDATABASE_URL="mysql://root:bananas@localhost/cake3_mokumoku?encoding=utf8"
-export CAKEDATABASE_TEST_URL="mysql://root:bananas@localhost/test_cake3_mokumoku?encoding=utf8"
-</code></pre></div>
-<p>のように書き換えます。データベースの詳しい設定方法は <a href="https://github.com/AD7six/php-dsn">AD7six/php-dsn</a>を参照ください。
-exportの名前を変更しているのは、nginxのfastcgiパラメータとしてvagrantインストール時に</p>
-<div class="highlight"><pre class="highlight plaintext"><code>fastcgi_param DATABASE_URL          "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/database_name?encoding=utf8";
-fastcgi_param DATABASE_TEST_URL     "mysql://root:&lt;%= node[:mysql][:server_root_password] %&gt;@localhost/test_database_name?encoding=utf8";
-</code></pre></div>
-<p>のような指定がされているため、設定値が重複してしまいfastcgi側が優先される仕組みとなっています。
-このため異なる名前に変更しておきます。
-合わせて、app.phpでDATABASE_URLを利用している箇所もCAKEDATABASE_URLに変更します。</p>
-<div class="highlight"><pre class="highlight plaintext"><code>// app/Config/app.php#L211-
-/**
- * Connection information used by the ORM to connect
- * to your application's datastores.
- */
-    'Datasources' =&gt; [
-        'default' =&gt; DbDsn::parse(env('CAKEDATABASE_URL')),
-
-        /**
-         * The test connection is used during the test suite.
-         */
-        'test' =&gt; DbDsn::parse(env('CAKEDATABASE_TEST_URL'))
-    ],
-</code></pre></div>
-<h3>Cakeシェルを利用する</h3>
-
-<p>コンソールから</p>
-<div class="highlight"><pre class="highlight plaintext"><code>cd app/App
-Console/cake -h
-</code></pre></div>
-<p>とヘルプを表示してみたいのですが、もし</p>
-<div class="highlight"><pre class="highlight plaintext"><code>Exception: Shell class for "-working" could not be found. in [/vagrant/app/vendor/cakephp/cakephp/src/Console/ShellDispatcher.php, line 178]
-</code></pre></div>
-<p>というエラーが表示されたら、app/App/Console/cake を編集して</p>
-<div class="highlight"><pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php -working "$APP" "$@"
-</code></pre></div>
-<p>の行を</p>
-<div class="highlight"><pre class="highlight plaintext"><code>exec php -q "$CONSOLE"/cake.php "$@"
-</code></pre></div>
-<p>のように変更してください。現時点では -working オプションがあるとうまく動作しないためです。
-うまく動作した場合は</p>
-<div class="highlight"><pre class="highlight shell"><code><span class="nv">$ </span>Console/cake <span class="nt">-h</span>
-
-Welcome to CakePHP v3.0.0-dev2 Console
-<span class="nt">---------------------------------------------------------------</span>
-App : App
-Path: /vagrant/app/App/
-<span class="nt">---------------------------------------------------------------</span>
-Current Paths:
-
-<span class="k">*</span> app: App
-<span class="k">*</span> root: /vagrant/app
-<span class="k">*</span> core: /vagrant/app/vendor/cakephp/cakephp
-
-Available Shells:
-
-<span class="o">[</span>CORE] bake, i18n, server, <span class="nb">test</span>
-
-<span class="o">[</span>app] console
-
-To run an app or core <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="o">[</span>args]
-To run a plugin <span class="nb">command</span>, <span class="nb">type </span>cake Plugin.shell_name <span class="o">[</span>args]
-To get <span class="nb">help </span>on a specific <span class="nb">command</span>, <span class="nb">type </span>cake shell_name <span class="nt">--help</span>
-</code></pre></div>
-<p>のように表示されるはずです。</p>
-
-<h3>Bakeする</h3>
-
-<p>では早速Bakeしましょう</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ Console/cake bake model Posts
-
-Welcome to CakePHP v3.0.0-dev2 Console
----------------------------------------------------------------
-App : App
-Path: /vagrant/app/App/
----------------------------------------------------------------
-One moment while associations are detected.
-
-Baking table class for Posts...
-
-Creating file /vagrant/app/App/Model/Table/PostsTable.php
-Wrote `/vagrant/app/App/Model/Table/PostsTable.php`
-
-Baking entity class for Post...
-
-Creating file /vagrant/app/App/Model/Entity/Post.php
-Wrote `/vagrant/app/App/Model/Entity/Post.php`
-
-Baking test fixture for Posts...
-
-Creating file /vagrant/app/Test/Fixture/PostFixture.php
-Wrote `/vagrant/app/Test/Fixture/PostFixture.php`
-
-Baking test case for App\Model\Table\PostsTable ...
-
-Creating file /vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php
-Wrote `/vagrant/app/Test/TestCase/Model/Table/PostsTableTest.php`
-</code></pre></div>
-<p>うまく動きます！！</p>
-
-<p>続けてコントローラとビューも</p>
-<div class="highlight"><pre class="highlight plaintext"><code>$ Console/cake bake controller Posts
-$ Console/cake bake view Posts
-</code></pre></div>
-<p>で生成します。</p>
-
-<p>一通りbakeしたら、http://192.168.13.37/posts/ にアクセスしてみます。</p>
-
-<p><img src="/images/blog/cakephp3_baked_posts.png" alt="" /></p>
-
-<p>おなじみのBake画面が表示されます。追加、変更、削除などもうまく動作するようです（執筆時においては）。</p>
-
-<p><img src="/images/blog/cakephp3_baked_saved.png" alt="" /></p>
-
-<h3>最後に</h3>
-
-<p>このブログはもくもく会から2週間ぐらい経過してしまいましたが、今回再度新しい環境を作って試しています。
-もくもく会のときも同様の手順で進めていたのですが、いくらかbake周辺でコードの変更があったようで、うまく動いていた箇所が動かなくなっていたり、動かなかった箇所が動いていたりします。
-開発者用のプレビュー2ということで、今後もコードは変わって行くと思いますが、Bakeが動く事で取り急ぎ動作するプログラムのベースは作れるようになっています。
-実際にアプリケーションを作ってみてCakePHP3の新機能について感想を書いてみたり、要望を出してみたりすることも実リリースまでの期間としては大切なことだと思うので、今回簡単ではありますがブログとして公開してみました。</p>
-
-<p>Co-Edo では今後も CakePHP3もくもく会が開かれると思うので、イベントページをチェックしておくと良いと思います。私も可能な範囲で参加していこうと思っています。</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2014/04/19/cake3-mokumoku-3.html">
-          <a class="twitter" data-title="CakePHP3 もくもく会#3 に参加して Bake してきた"></a>
-          <a class="facebook" data-title="CakePHP3 もくもく会#3 に参加して Bake してきた"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1354,6 +1245,7 @@ $ Console/cake bake view Posts
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/06/07/frontend-php-con-hokkaido-2026.html">フロントエンド・PHPカンファレンス北海道2026に参加しました</a> <span>2026/06/07</span></li>
                   <li><a href="/2026/04/16/use-svg-image-into-monorepo-common-components-package.html">React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略</a> <span>2026/04/16</span></li>
                   <li><a href="/2026/04/15/build-next-js-standalone-on-monorepo.html">モノレポ構成の Next.js を standalone ビルドして Docker で動かす（404エラー対策）</a> <span>2026/04/15</span></li>
                   <li><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a> <span>2026/04/14</span></li>
@@ -1363,7 +1255,6 @@ $ Console/cake bake view Posts
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
                   <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
                   <li><a href="/2025/04/15/next-js-standalone-build-with-iast-agent.html">Next.js を standalone ビルドしたアプリで New Relic エージェントを動かす</a> <span>2025/04/15</span></li>
-                  <li><a href="/2025/04/14/phpcon-odawara-2025.html">PHPカンファレンス小田原2025に参加しました</a> <span>2025/04/14</span></li>
               </ul>
             </div>
           </section>
@@ -1371,14 +1262,17 @@ $ Console/cake bake view Posts
             <h2>Tags</h2>
             <div class="pad">
               <ul class="nobullets clearfix">
+                    <li class="size5">
+                      <a href="/tags/php.html" rel="tag">PHP</a>
+                    </li>
+                    <li class="size0">
+                      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+                    </li>
                     <li class="size0">
                       <a href="/tags/next-js.html" rel="tag">Next.js</a>
                     </li>
                     <li class="size2">
                       <a href="/tags/aws.html" rel="tag">AWS</a>
-                    </li>
-                    <li class="size0">
-                      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpconfuk.html" rel="tag">phpconfuk</a>
@@ -1394,9 +1288,6 @@ $ Console/cake bake view Posts
                     </li>
                     <li class="size0">
                       <a href="/tags/apprunner.html" rel="tag">AppRunner</a>
-                    </li>
-                    <li class="size5">
-                      <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
                     <li class="size0">
                       <a href="/tags/phpcon.html" rel="tag">PHPcon</a>
@@ -1501,7 +1392,7 @@ $ Console/cake bake view Posts
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2026.html">2026</a> (3)</li>
+                  <li><a href="/2026.html">2026</a> (4)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
