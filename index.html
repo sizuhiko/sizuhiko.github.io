@@ -282,6 +282,199 @@
         <div id="main">
 
           <article>
+  <h1 class="title"><a href="/2026/11/16/phpcon-niigata-2026.html">PHPカンファレンス新潟 2026 で 「Wasm は PHP と JS の壁を壊せるか？ 」について登壇してきました</a></h1>
+  <p class="postdate"><a href="/2026/11/16.html" title="Permanent link">Monday, November 16, 2026 06:48:00 PM</a></p>
+  <p class="tags">
+      <a href="/tags/php.html" rel="tag">PHP</a>
+      <a href="/tags/phpcon.html" rel="tag">phpcon</a>
+      <a href="/tags/niigata.html" rel="tag">niigata</a>
+  </p>
+  <div class="content">
+    <!-- use article.summary(250) if you have Nokogiri available to show just
+       the first 250 characters -->
+    <p>初参加のPHPカンファレンス新潟。今年は応募したトークが採用されたので、スピーカーとして参加してきました。</p>
+
+<p><a href="https://fortee.jp/phpconniigata-2026/proposal/f9e5d4f3-5184-49b8-8037-2b5b7281009c">Wasm は PHP と JS の壁を壊せるか？ Extism プラグインシステムがもたらす越境開発</a></p>
+
+<p>今年はフジロック、北海道航路（フェリー）に続き3度目の新潟県です。前2回は車だったので、新幹線での新潟は過去に遡っても初めてかも？</p>
+
+<h2>前日入り</h2>
+
+<p>新潟は上越新幹線で1本で、かなり早くに東京を出れば間に合わなくもないですが、当日何かあって午前中の登壇に影響あると困るので前日入りです。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">着
+
+#phpcon_niigata https://t.co/DencwrgFXj</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121171363595714952?ref_src=twsrc%5Etfw">November 13, 2026</a></blockquote>
+
+<p>15:00ぐらいまで仕事をしてから移動です。特に公式前夜祭とかはなかったので、前に訪れたときにも来た<a href="https://suzakaya-ekimae.owst.jp/">須坂屋そば 新潟駅前店</a>へ。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">The新潟
+
+#phpcon_niigata https://t.co/Ez7JJjrZNY</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121219104770249063?ref_src=twsrc%5Etfw">November 13, 2026</a></blockquote>
+
+<p>さっそく新潟名物を堪能するところで、偶然にも翌日同時間帯発表枠の<a href="https://x.com/tadsan">@tadsan</a>と隣の席になるという（僕の方が後からの訪問でした）驚きがありました。</p>
+
+<p>だいぶ良くなってきたけど、風邪からの復帰中だったので一軒だけでホテルへ戻りました。</p>
+
+<h2>当日</h2>
+
+<p>体調もだいぶ良く当日を迎えられました。</p>
+
+<p>会場の朱鷺メッセはすごい綺麗で大きいところでした。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">会場がスゴイそ
+#phpcon_niigata https://t.co/QTGkIjcVN4</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121390883937669480?ref_src=twsrc%5Etfw">November 13, 2026</a></blockquote>
+
+<p>A会場でオープニングを見て、そのあとは自分が登壇するB会場でセッションを見てました。B会場は小さい画面だったので事前にスライドとコードを共有</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">Track Bはスライド見づらそうなので、僕の WASM セッションに参加予定の方は手元でもごらんください
+
+スライド: https://t.co/qPtxacf8hp
+デモコード: https://t.co/Z0mfsYeiJs
+
+ #phpcon_niigata</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121421177273127151?ref_src=twsrc%5Etfw">November 14, 2026</a></blockquote>
+
+<h2>登壇内容について</h2>
+
+<p>午前中最後の20分枠でしたが、ちゃんとリハしたとおりの時間で（余裕をもって）終えることができました。</p>
+
+<h3>発表内容への想い</h3>
+
+<p>今年<a href="/2026/06/07/frontend-php-con-hokkaido-2026.html">フロントエンド・PHPカンファレンス北海道2026に参加しました</a>でも書いたように &ldquo;フロントエンド x PHP という&rdquo; コラボでフロントエンドとバックエンドのロジック共通化みたいな話をいくつか聞いていたので、それが現時点でどのぐらいできるのか？という発表テーマは面白いのではないか？と思って応募しました。</p>
+
+<p>「フロントのロジックを、そのままバックエンドでも動かせたらいいのに…」というところから、以前に面白いと思って少し触っていた Extism を使えばできるんじゃないか？というのと、現時点で Laravel を使った場合の越境方法と比べてどういうことができるのか？という比較も入れたらわかりやすそう、というところからのスライド内容になっています。</p>
+
+<p>現時点では Extism を使うと PHP で FFI を有効にしないといけないという部分が本番運用ではネックになりそうですが、パフォーマンスとしてはまずまずなのではないかと思います。
+もちろん、現実はそんなに越境して共通化したいということはないよ、ということがあるかもしれませんが、1つの選択肢を提案できたのではないかと思っています。</p>
+
+<h3>デモプログラム</h3>
+
+<p>発表するデモプログラムを作るにあたり、考えたことや苦労したことは以下のようなこと</p>
+
+<ul>
+<li>簡単に誰でも試せるように Docker で動かせるようにする</li>
+<li>フレームワークは Slim（Laravel にしなかった）
+
+<ul>
+<li>Laravel も検討したのですが、Slim + PDO にした。Eloquent やサービスコンテナが入ると、本題である「PHP から Wasm（Extism）をどう呼ぶか」がコードの中で埋もれそうだったため<code>bootstrap/app.php</code> と <code>src/</code> の3クラスだけで全体が読める薄さを優先しました</li>
+</ul></li>
+<li>extism-js が動かない: <code>GLIBC_2.39&#39; not found</code>
+
+<ul>
+<li>JS PDK の <code>extism-js</code> v1.7.0 の Linux バイナリは glibc 2.39 以上を要求するので <code>node:24-bookworm-slim</code>（Debian 12 / glibc 2.36）ではビルド時に落ちてしまいます。<code>node:24-trixie-slim</code>（Debian 13 / glibc 2.41）を採用しましょう（新しい方が良い）</li>
+</ul></li>
+<li>Enhance SSR 公式 PHP パッケージには <code>EnhanceWASM</code> クラスがあるのですが、次の理由で使わず、Extism を直接呼ぶ約50行の <code>src/EnhanceRenderer.php</code> を自作しました。
+
+<ul>
+<li>wasm の読み込みパスが <code>__DIR__ . &quot;/../vendor/enhance/ssr-wasm/enhance-ssr.wasm&quot;</code> に固定されていて、依存パッケージとして入れるとパスが合わない</li>
+<li>wasm を配置する処理が、そのパッケージ自身の <code>post-install-cmd</code> に書かれているため、依存パッケージとして入れた場合は実行されない</li>
+<li><code>extism/extism: dev-main</code> に依存しているため、<code>minimum-stability: dev</code> が必要</li>
+</ul></li>
+</ul>
+
+<h3>ふれなかったこと</h3>
+
+<p>デモプログラムのコードに以下のようなコメントが入っています。</p>
+<div class="highlight"><pre class="highlight typescript"><code><span class="c1">// &lt;task-form&gt; タスクの追加・編集フォーム</span>
+<span class="c1">//</span>
+<span class="c1">// この関数はブラウザ（@enhance/element）と PHP（Enhance SSR Wasm）の両方で実行される。</span>
+<span class="c1">// SSR 側では JS に変換したあと関数のソース文字列として渡されるため、import や外部の関数を参照せず自己完結させること。</span>
+<span class="c1">// （import type はビルド時に消えるので使ってよい）</span>
+<span class="k">import</span> <span class="kd">type</span> <span class="p">{</span> <span class="nx">TaskInput</span><span class="p">,</span> <span class="nx">TaskStatus</span><span class="p">,</span> <span class="nx">ValidationErrors</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">../shared/task-schema</span><span class="dl">'</span>
+<span class="k">import</span> <span class="kd">type</span> <span class="p">{</span> <span class="nx">ElementArgs</span><span class="p">,</span> <span class="nx">FormState</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">../shared/types</span><span class="dl">'</span>
+</code></pre></div>
+<blockquote>
+<p>SSR 側では JS に変換したあと関数のソース文字列として渡されるため、import や外部の関数を参照せず自己完結させること。</p>
+</blockquote>
+
+<p>これについては、厳密に言うと TypeScript を esbuild してバンドルするので、外部の関数を参照することは可能です。
+最終的に JavaScript ファイルになったとき外部の関数を参照せず自己完結させることができていれば ok です。
+バンドルした場合も手元では試していて問題なく動くことは確認していますが、これもデモプログラムをシンプルに見せるために公開コードには入れなかった点になります。</p>
+
+<p>また、細かくソースコードについて解説すると時間がなくなるので、スライドの &ldquo;PHP から JS/Wasm を動かす仕組み&rdquo; という図での説明にとどめました。
+Ask The Speaker に来てもらった方には詳しくコードを一緒に見ながら呼び出し方法などを説明しましたが、そこはデモプログラムを参照して欲しいところです。
+シンプルな実装になるように心がけたので読みやすくはなっていると思います。</p>
+
+<h3>時間外で話したこと</h3>
+
+<p>Ask The Speaker や廊下、懇親会などで話したことについて少し</p>
+
+<ul>
+<li>フロントエンドとバックエンドでバリデーションロジックは別物なのでは？
+
+<ul>
+<li>今回のケースは Laravel の FormRequest と Zod のバリデーションといった API のリクエストボディの JSON スキーマを検証する部分についてフォーカスしていて、400エラーを戻すようなダブルチェックをするサーバーサイドのユースケースです。もちろんバックエンドではDBの状態をチェックしたり論理的なチェックをすると思いますが、あくまでそれはリクエストボディが正しかった場合に実行される処理であって、リクエストボディの検証自体は共通的であると考えます</li>
+</ul></li>
+<li>利用シーンあるかなぁ？
+
+<ul>
+<li>これは難しいですね。それぞれのプロジェクトの特徴もあると思うので、無理に探すというよりは、こういう課題がある場合に検討の候補になるかどうかというところなんでしょう</li>
+</ul></li>
+<li>面白そうなんで調べてみます
+
+<ul>
+<li>ぜひデモプログラムを触ってコードを見てください！と伝えました</li>
+</ul></li>
+<li>SSRするのにNode.js起動するのはそういうものなのでは？
+
+<ul>
+<li>まぁ確かにそうかもしれないですけど、やっぱり管理対象のランタイムが減るのはメリットがあるのではないかと思います。昨今のCVE対策とかありますし&hellip;。もちろんプロジェクトそれぞれの都合があると思います</li>
+</ul></li>
+</ul>
+
+<h2>登壇後</h2>
+
+<p>各セッションに楽しく参加して、懇親会＆2次会も腹パンになるまで楽しめました。</p>
+
+<p>体調フルの状態だったら3次会も行くところでしたが、そこまでで終了。</p>
+
+<h2>後日</h2>
+
+<p><a href="https://niigata-hitotsunagi.com/">新潟ひとつなぎ2026</a> というイベントをやることを事前に知っていたので、そちらへ見学に行きました。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">イベントに来ました
+#phpcon_niigata https://t.co/j8VfT8WTk3</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121785160505180633?ref_src=twsrc%5Etfw">November 15, 2026</a></blockquote>
+
+<p>このイベントを知ったきっかけは道マニアとしては有名なスポット &ldquo;日本一国道が集まる交差点&rdquo; に関するイベントがあるということでした。
+国道スタンプ＆クイズラリー（全問正解！）、フォトスポット、国道缶バッジガチャを楽しみました。缶バッジは2回チャレンジで 7 号と 17 号を GET 。受付の人とラッキー7続きですね、という話で盛り上がりました。</p>
+
+<p>そのあとイベント会場の日本酒ブースに行ったら、また野生のPHPerに遭遇しました。前日からヒキが強い。もうすでに飲み終わってラーメン屋巡りをするというので、少し会話をしたあとで交代するように飲み始めました。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">昼呑み
+#phpcon_niigata https://t.co/FrI1XXrk7o</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121788542435344446?ref_src=twsrc%5Etfw">November 15, 2026</a></blockquote>
+
+<p>そのあとはランチタイムになってお腹も空いてきたので、イベントエリアにある sano 食堂さんでカレー活をしてました。カレーすごく美味しかった。店主が気さくに話してくれて過ごしやすかったです。</p>
+
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">カレー活
+#phpcon_niigata https://t.co/yaEIJYCFGS</p>&mdash; しずひこ (@sizuhiko) <a href="https://x.com/sizuhiko/status/2121808679918002473?ref_src=twsrc%5Etfw">November 15, 2026</a></blockquote>
+
+<h2>最後に</h2>
+
+<p>久々の登壇に加え、PHPの話をするのもすごくレアだったと思います。</p>
+
+<p>Extism については PHP の PDK がない分、まだ未来に発展の余地はあると思いますが、今回の発表をきっかけに Wasm を使うと色々なことができそうだな？というのを感じてもらえれば僕の想いは伝わったのではないかなと思います。</p>
+
+<p>PHP の Wasm 実装としては <a href="https://github.com/seanmorris/php-wasm">php-wasm</a> というのがあり、それを参考にPDKを作れるのかもしれないので、いずれ試してみようかなぁ？とは思います。</p>
+
+<p>カンファレンス全体と新潟での体験すべてに大満足で帰宅できました。すべての現地にいた人に感謝です。また来年あれば参加したいですね。東京からも近いので参加しやすかったです。</p>
+
+<script async src="https://platform.x.com/widgets.js" charset="utf-8"></script>
+
+
+
+    <div class="row">
+      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
+        <div class="shareon" data-url="http://blog.open.tokyo.jp/2026/11/16/phpcon-niigata-2026.html">
+          <a class="twitter" data-title="PHPカンファレンス新潟 2026 で 「Wasm は PHP と JS の壁を壊せるか？ 」について登壇してきました"></a>
+          <a class="facebook" data-title="PHPカンファレンス新潟 2026 で 「Wasm は PHP と JS の壁を壊せるか？ 」について登壇してきました"></a>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+  </div>
+</article>
+<article>
   <h1 class="title"><a href="/2026/08/31/how-to-resolve-localstack-pro-core-dump.html">LocalStack Pro が Apple Silicon で起動しない（SIGILL / exit code 252）原因と解決方法</a></h1>
   <p class="postdate"><a href="/2026/08/31.html" title="Permanent link">Monday, August 31, 2026 08:14:00 PM</a></p>
   <p class="tags">
@@ -1296,180 +1489,6 @@ Custom Template を使えば、例えば IconProps という独自の型を自�
 
   </div>
 </article>
-<article>
-  <h1 class="title"><a href="/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする</a></h1>
-  <p class="postdate"><a href="/2026/04/14.html" title="Permanent link">Tuesday, April 14, 2026 04:19:00 PM</a></p>
-  <p class="tags">
-      <a href="/tags/aws.html" rel="tag">AWS</a>
-      <a href="/tags/next-js.html" rel="tag">Next.js</a>
-      <a href="/tags/x-ray.html" rel="tag">X-RAY</a>
-  </p>
-  <div class="content">
-    <!-- use article.summary(250) if you have Nokogiri available to show just
-       the first 250 characters -->
-    <p>Next.js アプリを AWS にデプロイしたとき、SSR などでサーバーサイドで実行した処理から Lambda など別の AWS サービスを呼び出すことがあると思います。
-アプリケーションのオブザーバビリティを確保するため、AWS 上のアプリケーションでは X-RAY を使ったログ集積をやることが多いと思います。</p>
-
-<p>ここでは Lambda など別のAWSサービスを呼び出したとき、トレースを追跡できるようにする方法について記録していきます。</p>
-
-<p>また本記事での Next.js のバージョンは v15 を想定しています。それ以前のバージョンでは <code>instrumentation</code> が  <code>experimental</code> になっていますのでご注意ください。</p>
-
-<h2>Next.js で X-RAY に出力できるように設定する</h2>
-
-<p><code>instrumentation.ts</code> で以下のようにします。</p>
-<div class="highlight"><pre class="highlight typescript"><code><span class="k">export</span> <span class="k">async</span> <span class="kd">function</span> <span class="nx">register</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NEXT_RUNTIME</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">nodejs</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">await</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">pino</span><span class="dl">'</span><span class="p">)</span>
-    <span class="k">await</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">next-logger</span><span class="dl">'</span><span class="p">)</span>
-    <span class="k">await</span> <span class="k">import</span><span class="p">(</span><span class="dl">'</span><span class="s1">./instrumentation.node</span><span class="dl">'</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>ログが JSON で保持されていると X-RAY と相性が良いので、ロガーを pino にしておくと吉でお勧めです。</p>
-
-<p>重要なのは <code>NEXT_RUNTIME</code> が <code>nodejs</code> の場合に <code>instrumentation.node</code> というファイルをダイナミックインポートすることです。
-つまりサーバーサイドの処理のときの計測コードを使うようにします。</p>
-
-<p><code>instrumentation.node.ts</code> の内容は以下のようになります。</p>
-<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">OTLPTraceExporter</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/exporter-trace-otlp-grpc</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">AWSXRayIdGenerator</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/id-generator-aws-xray</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">AwsInstrumentation</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/instrumentation-aws-sdk</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">AWSXRayPropagator</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/propagator-aws-xray</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">defaultResource</span><span class="p">,</span> <span class="nx">resourceFromAttributes</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/resources</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">NodeSDK</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/sdk-node</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">BatchSpanProcessor</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/sdk-trace-base</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">ATTR_SERVICE_NAME</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/semantic-conventions</span><span class="dl">'</span>
-
-<span class="kd">const</span> <span class="nx">sdk</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">NodeSDK</span><span class="p">({</span>
-  <span class="na">idGenerator</span><span class="p">:</span> <span class="k">new</span> <span class="nx">AWSXRayIdGenerator</span><span class="p">(),</span>
-  <span class="na">textMapPropagator</span><span class="p">:</span> <span class="k">new</span> <span class="nx">AWSXRayPropagator</span><span class="p">(),</span>
-  <span class="na">resource</span><span class="p">:</span> <span class="nx">defaultResource</span><span class="p">().</span><span class="nx">merge</span><span class="p">(</span><span class="nx">resourceFromAttributes</span><span class="p">({</span> <span class="p">[</span><span class="nx">ATTR_SERVICE_NAME</span><span class="p">]:</span> <span class="dl">'</span><span class="s1">your-app-service</span><span class="dl">'</span> <span class="p">})),</span>
-  <span class="na">instrumentations</span><span class="p">:</span> <span class="p">[</span>
-    <span class="k">new</span> <span class="nx">AwsInstrumentation</span><span class="p">({</span> <span class="na">suppressInternalInstrumentation</span><span class="p">:</span> <span class="kc">true</span> <span class="p">}),</span>
-  <span class="p">],</span>
-  <span class="na">spanProcessors</span><span class="p">:</span> <span class="p">[</span><span class="k">new</span> <span class="nx">BatchSpanProcessor</span><span class="p">(</span><span class="k">new</span> <span class="nx">OTLPTraceExporter</span><span class="p">())],</span>
-<span class="p">})</span>
-
-<span class="nx">sdk</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
-</code></pre></div>
-<p>OTEL 系のライブラリを使って計測の設定を行いますが、X-RAY を使うときは <code>@opentelemetry/id-generator-aws-xray</code> と <code>@opentelemetry/propagator-aws-xray</code> が重要になります。
-あと、aws-sdk を使った呼び出しを計測できるようにラッパーである <code>@opentelemetry/instrumentation-aws-sdk</code> を入れておくと楽になります。</p>
-
-<p>この例では Next.js を App Runner（新規申込が終了してしまいました。残念ですね）にデプロイしているのでリソース定義も <code>defaultResource().merge(resourceFromAttributes({ [ATTR_SERVICE_NAME]: &#39;your-app-service&#39; }))</code> のようにしています。ここは Next.js をデプロイしたリソースによって書き方が変わります。</p>
-
-<p>あとはいい感じに AWS のサービスを SDK で呼び出すと、Next.js（App Runner）から DynamoDB へのリクエストとか、S3 へのアクセスとか全部 X-RAY 上で線がつながって表示されるので、システムトレースの追跡がしやすくなります。</p>
-
-<h2>なぜか Lambda だけ線がつながらない？</h2>
-
-<p>さて、DynamoDBとかS3などのマネージドサービスは線が接続されていて問題がなさそうに思うのですが、Lambdaの呼び出し（InvokeFunction）だけは、うまく線が接続されません。Lambdaから外部のAPIサーバーを実行していたり、Aurora DBを実行するトレースなどの情報が AppRunner とは結合されておらず、App Runner から Lambda の呼び出し、Lambda から HTTP(API) 呼び出しみたいな別の線が出来上がっていて、システムトレースの追跡ができません。</p>
-
-<h3>調べてみた</h3>
-
-<p>そうすると <code>X-Amzn-Trace-Id</code> がセグメントドキュメントの http.request に記録されておらず、Lambdaへ正しく伝播されてないことがわかりました。
-<code>X-Amzn-Trace-Id</code> が X-RAY で線を結びつけるための値です。</p>
-
-<h2>OpenTelemetry の仕様を調べてみる</h2>
-
-<p>公式ドキュメント <a href="https://opentelemetry.io/ja/docs/languages/js/propagation/#manual-context-propagation">手動コンテキスト伝搬</a> などが参考になります。</p>
-<div class="highlight"><pre class="highlight typescript"><code><span class="nx">propagation</span><span class="p">.</span><span class="nx">inject</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">active</span><span class="p">(),</span> <span class="nx">output</span><span class="p">);</span>
-</code></pre></div>
-<p>上記のようにアクティブコンテキストに追加すれば良さそうです。
-さらに AWS-SDK の Lambda クライアントでコマンドが送信されたときにフックするにはミドルウェアを使います。</p>
-
-<p>公式ドキュメント <a href="https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v3/developer-guide/logging-sdk-calls.html#middleware-logger">ミドルウェアを使用してリクエストをログに記録する</a></p>
-
-<p>上記サイトの例は DynamoDB クライアントですが、他のクライアントでも同様に実装できます。</p>
-
-<h3>メモ</h3>
-
-<p>通常、AwsInstrumentation は多くの AWS サービスをカバーしていますが、Lambda の Invoke においては、ペイロードや呼び出し形式の都合上、自動でのコンテキスト注入が期待通りに動かないケースがあります。
-これを解決するために、AWS SDK v3 の Middleware Stack を利用して、リクエストが送出される直前に OpenTelemetry のアクティブコンテキストからトレース情報を抽出し、HTTP ヘッダーに明示的にねじ込む処理を追加します。</p>
-
-<h2>やってみた</h2>
-
-<h3>手動伝搬するコードの追加</h3>
-
-<p>まず <code>x-ray.ts</code> を作ります。</p>
-<div class="highlight"><pre class="highlight typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">FinalizeHandlerArguments</span><span class="p">,</span> <span class="nx">HttpRequest</span><span class="p">,</span> <span class="nx">MiddlewareStack</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@aws-sdk/types</span><span class="dl">'</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">propagation</span> <span class="p">}</span> <span class="k">from</span> <span class="dl">'</span><span class="s1">@opentelemetry/api</span><span class="dl">'</span>
-
-<span class="kr">interface</span> <span class="nx">HasMiddlewareStack</span> <span class="p">{</span>
-  <span class="nl">middlewareStack</span><span class="p">:</span> <span class="nx">MiddlewareStack</span><span class="o">&lt;</span><span class="kr">any</span><span class="p">,</span> <span class="kr">any</span><span class="o">&gt;</span>
-<span class="p">}</span>
-
-<span class="kd">const</span> <span class="nx">headerSetter</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="na">set</span><span class="p">:</span> <span class="p">(</span><span class="na">carrier</span><span class="p">:</span> <span class="nb">Record</span><span class="o">&lt;</span><span class="kr">string</span><span class="p">,</span> <span class="nx">unknown</span><span class="o">&gt;</span><span class="p">,</span> <span class="na">key</span><span class="p">:</span> <span class="kr">string</span><span class="p">,</span> <span class="na">value</span><span class="p">:</span> <span class="kr">string</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="nx">carrier</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span>
-  <span class="p">},</span>
-<span class="p">}</span>
-
-<span class="k">export</span> <span class="kd">const</span> <span class="nx">addXRayInjector</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">T</span> <span class="kd">extends</span> <span class="nx">HasMiddlewareStack</span><span class="o">&gt;</span><span class="p">(</span><span class="nx">client</span><span class="p">:</span> <span class="nx">T</span><span class="p">):</span> <span class="k">void</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="nx">client</span><span class="p">.</span><span class="nx">middlewareStack</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span>
-    <span class="p">(</span><span class="nx">next</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">async</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-      <span class="kd">const</span> <span class="nx">finalizeArgs</span> <span class="o">=</span> <span class="nx">args</span> <span class="k">as</span> <span class="nx">FinalizeHandlerArguments</span><span class="o">&lt;</span><span class="nx">object</span><span class="o">&gt;</span>
-      <span class="kd">const</span> <span class="nx">request</span> <span class="o">=</span> <span class="nx">finalizeArgs</span><span class="p">.</span><span class="nx">request</span> <span class="k">as</span> <span class="nx">HttpRequest</span>
-
-      <span class="k">if</span> <span class="p">(</span><span class="nx">request</span><span class="p">?.</span><span class="nx">headers</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kd">const</span> <span class="nx">activeContext</span> <span class="o">=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">active</span><span class="p">()</span>
-        <span class="kd">const</span> <span class="nx">carrier</span> <span class="o">=</span> <span class="nx">request</span><span class="p">.</span><span class="nx">headers</span> <span class="k">as</span> <span class="nb">Record</span><span class="o">&lt;</span><span class="kr">string</span><span class="p">,</span> <span class="kr">string</span><span class="o">&gt;</span>
-        <span class="nx">propagation</span><span class="p">.</span><span class="nx">inject</span><span class="p">(</span><span class="nx">activeContext</span><span class="p">,</span> <span class="nx">carrier</span><span class="p">,</span> <span class="nx">headerSetter</span><span class="p">)</span>
-      <span class="p">}</span>
-
-      <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span>
-    <span class="p">},</span>
-    <span class="p">{</span>
-      <span class="na">step</span><span class="p">:</span> <span class="dl">'</span><span class="s1">serialize</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">name</span><span class="p">:</span> <span class="dl">'</span><span class="s1">xRayContextInjector</span><span class="dl">'</span><span class="p">,</span>
-      <span class="na">override</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="p">}</span>
-  <span class="p">)</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>このコードでは AWS-SDK のクライアントから X-RAY のコンテキストにリクエストヘッダーを手動伝搬しています。</p>
-
-<p>トレースコンテキスト $C$ は、スパン ID $S$ とトレース ID $T$、およびフラグ $F$ の集合として定義されます。</p>
-
-<div>
-$$
-C = \{T, S, F\}
-$$
-</div>
-
-<p>この $C$ を X-Amzn-Trace-Id ヘッダーとして $C_{AppRunner} \rightarrow C_{Lambda}$ へ手動で注入（Inject）することが、今回のコードのキモです。</p>
-
-<h3>Lambda クライアントのインスタンスに設定する</h3>
-
-<p>そして <code>LambdaClient</code> インスタンスを生成したら、 <code>addXRayInjector</code> で手動伝搬するためのミドルウェアを設定するようにします。</p>
-<div class="highlight"><pre class="highlight typescript"><code>  <span class="kd">const</span> <span class="nx">client</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">LambdaClient</span><span class="p">()</span>
-  <span class="nx">addXRayInjector</span><span class="p">(</span><span class="nx">client</span><span class="p">)</span>
-</code></pre></div>
-<h2>最後に</h2>
-
-<p>今回は Lambda クライアントについて手動伝搬できるような記事となっていますが、S3やDynamoDBのようにさらにその先がない場合は伝搬を気にしなくて良いのですが、Lambdaと同様に以下のサービスについても手動伝搬は必要になります。</p>
-
-<ul>
-<li>StepFunctions</li>
-<li>SQS</li>
-</ul>
-
-<p>つまりリクエストが伝搬して、さらに別のサービスまでトレースを伝搬するようなサービスを利用するときは、リクエストを受け取ったサービス（今回の例でいうと Next.js）から、さきほどの <code>addXRayInjector</code> を設定して <code>X-Amzn-Trace-Id</code> を伝搬できるようにしましょう。</p>
-
-<p>これで良きオブザーバビリティが実現できますように！</p>
-
-
-
-    <div class="row">
-      <div class="small-12 medium-5 large-5 small-centered columns blog-social">
-        <div class="shareon" data-url="http://blog.open.tokyo.jp/2026/04/14/how-to-x-ray-trace-for-next-js-call-to-lambda.html">
-          <a class="twitter" data-title="AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする"></a>
-          <a class="facebook" data-title="AWS 環境の Next.js アプリから Lambda 呼び出しトレースを X-Rayで追跡できるようにする"></a>
-        </div>
-      </div>
-      <div class="clearfix"></div>
-    </div>
-
-  </div>
-</article>
 
 <nav aria-label="ページング">
   <p class="pagenav">
@@ -1494,6 +1513,7 @@ $$
             <h2>Recent Articles</h2>
             <div class="pad">
               <ul>
+                  <li><a href="/2026/11/16/phpcon-niigata-2026.html">PHPカンファレンス新潟 2026 で 「Wasm は PHP と JS の壁を壊せるか？ 」について登壇してきました</a> <span>2026/11/16</span></li>
                   <li><a href="/2026/08/31/how-to-resolve-localstack-pro-core-dump.html">LocalStack Pro が Apple Silicon で起動しない（SIGILL / exit code 252）原因と解決方法</a> <span>2026/08/31</span></li>
                   <li><a href="/2026/06/07/frontend-php-con-hokkaido-2026.html">フロントエンド・PHPカンファレンス北海道2026に参加しました</a> <span>2026/06/07</span></li>
                   <li><a href="/2026/04/16/use-svg-image-into-monorepo-common-components-package.html">React 共通パッケージで SVG を賢く管理する —— SVGR を活用したコンポーネント化戦略</a> <span>2026/04/16</span></li>
@@ -1503,7 +1523,6 @@ $$
                   <li><a href="/2025/05/02/step-functions-connect-to-private-api-through-lattice.html">Step Functions の HTTP タスクでプライベート API にアクセスする</a> <span>2025/05/02</span></li>
                   <li><a href="/2025/04/22/deploy-lambda-function-from-zip-on-s3.html">S3 に設置した zip ファイルから Lambda 関数をデプロイする</a> <span>2025/04/22</span></li>
                   <li><a href="/2025/04/17/nested-step-functions-deploy-by-cdk.html">ネスト構造の Step Functions を CDK でデプロイする</a> <span>2025/04/17</span></li>
-                  <li><a href="/2025/04/16/next-js-standalone-build-on-app-runner-with-x-ray-tracing.html">Next.js standalone ビルドしたアプリを App Runner で動かして X-Ray で計測する</a> <span>2025/04/16</span></li>
               </ul>
             </div>
           </section>
@@ -1514,7 +1533,7 @@ $$
                     <li class="size5">
                       <a href="/tags/php.html" rel="tag">PHP</a>
                     </li>
-                    <li class="size0">
+                    <li class="size1">
                       <a href="/tags/phpcon.html" rel="tag">phpcon</a>
                     </li>
                     <li class="size0">
@@ -1595,7 +1614,7 @@ $$
                     <li class="size0">
                       <a href="/tags/wot.html" rel="tag">WoT</a>
                     </li>
-                    <li class="size4">
+                    <li class="size3">
                       <a href="/tags/cakephp.html" rel="tag">CakePHP</a>
                     </li>
                     <li class="size0">
@@ -1641,7 +1660,7 @@ $$
             <h2>By Year</h2>
             <div class="pad">
               <ul>
-                  <li><a href="/2026.html">2026</a> (5)</li>
+                  <li><a href="/2026.html">2026</a> (6)</li>
                   <li><a href="/2025.html">2025</a> (9)</li>
                   <li><a href="/2024.html">2024</a> (10)</li>
                   <li><a href="/2023.html">2023</a> (12)</li>
